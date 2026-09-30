@@ -1,0 +1,16 @@
+- { name: "area:android", color: "3DDC84" }
+- { name: "area:desktop", color: "1D76DB" }
+- { name: "area:server", color: "5319E7" }
+- { name: "area:shared", color: "FBCA04" }
+- { name: "area:docs", color: "0075CA" }
+- { name: "area:ci", color: "BFD4F2" }
+- { name: "phase:1", color: "C2E0C6" }
+- { name: "phase:2", color: "C2E0C6" }
+- { name: "phase:3", color: "C2E0C6" }
+- { name: "phase:4", color: "C2E0C6" }
+- { name: "agent:unassigned", color: "EDEDED" }
+- { name: "type:feature", color: "A2EEEF" }
+- { name: "type:bug", color: "D73A4A" }
+- { name: "type:chore", color: "CFD3D7" }
+- { name: "status:blocked", color: "B60205" }
+- { name: "status:needs-decision", color: "D93F0B" }

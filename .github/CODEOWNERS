@@ -1,0 +1,9 @@
+# Default owner
+*                    @imbalki
+# Add agent or human owners per area as they are assigned
+/android/            @imbalki
+/desktop/            @imbalki
+/server/             @imbalki
+/packages/shared/    @imbalki
+/docs/               @imbalki
+/.github/            @imbalki
