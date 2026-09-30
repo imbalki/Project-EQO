@@ -30,5 +30,8 @@ EQO is a privacy-first personal AI assistant. Android-first (Kotlin), desktop se
 - `server/`: see `server/README.md` once created
 - Repo: `scripts/check.sh`
 
+## Agent workspaces
+Each agent role has a folder under `agents/` (instructions, context, tasks, handoff). Android: `agents/android/README.md`.
+
 ## Ownership
 Directory ownership is in `.github/CODEOWNERS`. Task-to-agent assignment is tracked in GitHub Issues and the Project board using the `agent:*` labels.
