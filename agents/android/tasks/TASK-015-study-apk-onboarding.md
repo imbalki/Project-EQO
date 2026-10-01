@@ -4,7 +4,7 @@
 - Depends on: 007 to 014
 - Area: android
 - Gate: 1 to 8 (integration)
-- Models: author `mimo-v2.6-pro` (integration), `glm-5.3-flash` (screens), copy `mimo-v2.6-flash`; reviewer `glm-5.3-flash`
+- Models: author `mimo-v2.6-pro` (integration), `glm-5.3-flash` (screens), copy `deepseek-v4.1-flash`; reviewer `glm-5.3-flash`
 - Branch: agent/android/<issue>-study-apk
 
 ## Goal

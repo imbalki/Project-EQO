@@ -4,7 +4,7 @@
 - Depends on: 015; needs devices
 - Area: android (QA)
 - Gate: all eight (DEV-15)
-- Models: author `glm-5.3-flash`, reviewer `mimo-v2.6-pro`, summary `mimo-v2.6-flash`
+- Models: author `glm-5.3-flash`, reviewer `mimo-v2.6-pro`, summary `deepseek-v4.1-flash`
 - Branch: agent/android/<issue>-exit-review
 
 ## Goal
