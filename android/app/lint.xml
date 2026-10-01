@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Targeted lint suppressions for the EQO skeleton only.
+
+     The four "newer version available" checks are disabled because the EQO
+     toolchain pins are mandated values verified by TASK-001
+     (android/Phase-One/docs/TOOLCHAIN.md): Gradle 9.7.0 with its SHA-256 pin,
+     AGP 9.3.1, Kotlin 2.4.0 (AGP built-in Kotlin, pinned via KGP on the
+     root classpath), compileSdk 36 / targetSdk 36. Lint would otherwise
+     fail the build for every deliberate pin. This is not a blanket ignore:
+     all other checks run and fail the build (warningsAsErrors = true).
+-->
+<lint>
+    <issue id="OldTargetApi" severity="ignore" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="GradleDependency" severity="ignore" />
+</lint>
