@@ -23,8 +23,8 @@ Each role ran as a **separate agent with its own verified model session**. Repor
 - `team-reports/developer-readiness.md` — 17-task implementation backlog + lint gate analysis (MiMo 2.6 Pro)
 - `team-reports/qa-feasibility-report.md` — CI/test audit (MiMo 2.6 Pro)
 - `team-reports/security-review.md` — privacy, approvals, licensing, dependency terms (MiMo 2.6 Pro)
-- `team-reports/integration-report.md` — single-APK branded helper feasibility (MiMo 2.6 Pro; first run timed out — re-run in progress)
-- `team-reports/apk-review.md` — static study-APK review of upstream release artifacts (MiMo 2.6 Pro; in progress)
+- `team-reports/integration-report.md` — single-APK branded helper feasibility: **feasible-with-conditions**, 411-line file:line change list (MiMo 2.6 Pro; first run timed out, preserved as `integration-prior-run-failure-record.md`)
+- `team-reports/apk-review-report.md` + `apk-review-controller-verification.md` + `apk-review-hashes.txt` — static study-APK review of 4 upstream release artifacts: source build mandatory for EQO (MiMo 2.6 Pro)
 
 ## Evidence
 
@@ -34,4 +34,4 @@ Each role ran as a **separate agent with its own verified model session**. Repor
 
 ## Status
 
-**Conditional GO for Phase One spikes; NO-GO for release.** See `FEASIBILITY-REPORT.md` §8 for the eight exit gates and §9 for the ordered spike plan. No combined APK exists yet; nothing here is a runtime claim.
+**Conditional GO for Phase One spikes; NO-GO for release.** See `FEASIBILITY-REPORT.md` §8 for the eight exit gates and §9 for the ordered spike plan. All seven role workstreams are complete (integration re-run and study-APK review included). No combined APK exists yet; nothing here is a runtime claim.

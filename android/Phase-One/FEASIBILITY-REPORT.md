@@ -21,7 +21,7 @@
 ## 2. What each upstream actually gives us
 
 - **OpenDroid (base):** Kotlin + Compose app, agent loop with tool calling, OpenRouter/remote-LLM support, Accessibility automation, MediaProjection + AccessibilityNodeInfo fallback, Room memory, minSdk 26 (so Android 12+ fits), JDK 21 / AGP 9 toolchain, Shizuku client already a dependency (`dev.rikka.shizuku:api/provider:13.1.5`).
-- **ClosePaw (donor):** Chrome CDP control via the `chrome_devtools_remote` abstract socket plus `/data/local/tmp/chrome-command-line` and the `enable-command-line-on-non-rooted-devices` flag (documented cold-restart requirement), wireless **ADB pairing protocol implementation** (pure-Kotlin SPAKE2-25519, BouncyCastle, bundled Conscrypt TLS exporter), virtual display via Shizuku shell-uid processes, hidden-API bypass, minSdk 31, JDK 17.
+- **ClosePaw (donor):** Chrome CDP control via the `chrome_devtools_remote` abstract socket plus `/data/local/tmp/chrome-command-line` and the `enable-command-line-on-non-rooted-devices` flag (documented cold-restart requirement; **Chrome must create the socket itself — `adb forward` does not**), wireless **ADB pairing protocol implementation** (its own pure-Kotlin SPAKE2-25519 + TLS-PSK, BouncyCastle, bundled Conscrypt — not Shizuku's), virtual display via Shizuku shell-uid processes, hidden-API bypass, minSdk 31, JDK 17.
 - **Shizuku + Shizuku-API:** the privileged manager/server/native starter that EQO must absorb into its own branded setup. Apache-2.0 reuse is allowed, but the upstream explicitly forbids reusing its name, applicationId, manager permissions, and icons — which **aligns with** the EQO-only-branding requirement (§6).
 
 ## 3. Verified build / CI state (exact inspected commits)
@@ -40,10 +40,12 @@ The agreed requirement is **one EQO APK with the helper included and EQO-branded
 | `shizuku/server/.../ServerConstants.java` L8 | `MANAGER_APPLICATION_ID = "moe.shizuku.privileged.api"` |
 | `shizuku/manager/build.gradle` L15 | `applicationId "moe.shizuku.privileged.api"` |
 | `shizuku/manager/src/main/jni/starter.cpp` L34 | `#define PACKAGE_NAME "moe.shizuku.privileged.api"` |
-| `shizuku-api/rish/.../ShizukuShellLoader.java` | `setPackage("moe.shizuku.privileged.api")` + APK-sourceDir classloader |
-| `shizuku/starter/.../ServiceStarter.java` L24/L95 | binder extra + package constants |
+| `shizuku/shell/.../ShizukuShellLoader.java` L56-57, L109 | binder-request intent, `setPackage("moe.shizuku.privileged.api")`, reflective `moe.shizuku.manager.shell.Shell` load (path corrected: this is the `shizuku` repo's `shell` module, not `shizuku-api/rish`) |
+| `shizuku/starter/.../ServiceStarter.java` L24, L44-46, L95 | binder extra, app_process main class `moe.shizuku.starter.ServiceStarter`, package constants |
 
-Coordinated changes across server, native code, client, provider authority and permissions are therefore mandatory, plus an NDK build of the starter and a decision on the manager↔server signature/permission trust model. **None of this has been compiled or device-proven yet.** An unchanged stock Shizuku install is explicitly out of scope per the product brief.
+Coordinated changes across server, native code, client, provider authority and permissions are therefore mandatory, plus an NDK build of the starter (verified toolchain requirements: Gradle 8.14 / AGP 8.10.1 / JDK 21 / NDK 29 / CMake 3.31+). **None of this has been compiled or device-proven yet.** An unchanged stock Shizuku install is explicitly out of scope per the product brief.
+
+**Trust model (verified in source):** server→manager trust is **app-id-only — no signature pin** (`ShizukuService.java:146-148`), so the rename is primarily an identity-consistency exercise (rename in lockstep at 5+ sites; permission strings `moe.shizuku.manager.permission.API_V23` at `ServerConstants.java:7`, `BinderSender.java:33`, manager manifest). Two consequences: (a) the server remains a **separate privileged process** (uid 2000/0 via `app_process` with the manager APK as CLASSPATH) — "single APK" means one *installed app* hosting manager+server+starter, not one process; (b) a compliant rename **breaks stock `dev.rikka.shizuku:api` third-party clients**, and ClosePaw's manifest hardcodes `moe.shizuku.manager.permission.API_V23` — a one-line manifest edit if EQO keeps the wire strings, or a coordinated client change if it renames them. Decision needed: rename everything (clean branding, break stock clients — irrelevant since EQO bundles its own) vs keep wire strings (smaller diff, hidden upstream identity in code only, never in UI).
 
 ## 5. Other blockers and risks
 
@@ -51,8 +53,9 @@ Coordinated changes across server, native code, client, provider authority and p
 2. **Toolchain divergence:** OpenDroid JDK 21 vs ClosePaw JDK 17; a merged build needs one pinned toolchain.
 3. **Hidden API / OEM variability** in virtual display and input injection; needs per-device probing, not a blanket capability promise.
 4. **Main-repo architecture conflict:** `AGENTS.md`/`docs/ARCHITECTURE.md` specify offline-default Gemma + hosted Composio integrations. The latest brief specifies OpenRouter bring-your-own-key and free/open-source tooling only. This conflict is **recorded, not silently resolved** — it needs an owner decision (ADR).
-5. **ClosePaw bundles a Python Termux bridge asset** (`closepaw_bridge_py`) conflicting with the Phase One "no Node/Python on the phone" constraint; it must be optional/excluded and confirmed in the APK review.
-6. **Distribution risk:** sideloaded APK, Android 13 restricted-settings flow, Play Protect scanning, and app-level anti-automation remain real limits. Android owns its own settings and permission names.
+5. **ClosePaw bundles a Python Termux bridge asset** — now **confirmed in the shipped v0.1.0 release APK** (`res/raw/closepaw_bridge_py`, 13,715 B Python source, packaged unconditionally by the `copyClosePawBridge` preBuild task). This conflicts with the Phase One "no Node/Python on the phone" constraint; it must be excluded at source-build time (drop the task + code refs). Whether it is *runtime*-optional is **not proven**.
+6. **Source build is mandatory for EQO** (study-APK conclusion): the release APKs are reference artifacts only — package name is baked into dex/authorities/Room assets, R8-minified, and resource-ID churn makes binary repack unworkable (argued from artifacts; no repack experiment was run).
+7. **Distribution risk:** sideloaded APK, Android 13 restricted-settings flow, Play Protect scanning, and app-level anti-automation remain real limits. Android owns its own settings and permission names.
 
 ## 6. Branding and licensing
 
@@ -101,11 +104,11 @@ Deliberately **not planned yet**, per the instruction to review the study APK fi
 | Architect | mimo-v2.6-pro / opencode-go | `team/architect/report.md` (+ `controller-verification.md` corrections) | conditional feasibility, major adaptation |
 | Developer | mimo-v2.6-pro / opencode-go | `team/developer/developer-readiness.md` | 17-task backlog; no-go until lint/compile gates |
 | QA | mimo-v2.6-pro / opencode-go | `team/qa/qa-feasibility-report.md` | conditionally feasible; test matrices defined |
-| Integration | mimo-v2.6-pro / opencode-go | `team/integration/report.md` | **first run timed out — re-run dispatched** |
+| Integration | mimo-v2.6-pro / opencode-go | `team/integration/report.md` (411 lines) | **feasible-with-conditions** — single-APK is a rebrand + re-host of Shizuku's own design, not an app merger; 8 decisive device proofs listed |
 | Security/Privacy/Compliance | mimo-v2.6-pro / opencode-go | `team/security/review.md` | feasible with conditions; dependency/consent gates |
 | Product/UX | mimo-v2.6-flash / opencode-go | `PRD.md`, `USER-FLOWS.md` | drafted + reviewed |
-| Study-APK static review | mimo-v2.6-pro / opencode-go | `team/apk-review/` | **in progress** |
+| Study-APK static review | mimo-v2.6-pro / opencode-go | `team/apk-review/report.md` + `hashes.txt` | **done** — 4 release APKs hashed and inspected; source build mandatory; Shizuku starter packaging confirmed (`libshizuku.so` × 4 ABIs → `app_process` → `ShizukuService`); Python bridge confirmed packaged |
 
 ## 12. Honest limits of this report
 
-No APK was built, installed, or exercised. CI outcomes are upstream metadata at the listed commits, not our own test runs. Lint failure details remain unretrieved (401 on logs). The single-APK helper integration is a **hypothesis with a concrete change list**, not a demonstrated capability. Nothing here should be read as a claim that EQO currently works.
+No EQO APK was built, installed, or exercised. The study-APK review is **static byte-level analysis of upstream release artifacts** — no installs, no execution. CI outcomes are upstream metadata at the listed commits, not our own test runs. Lint failure details remain unretrieved (401 on logs). The single-APK helper integration is a **source-verified plan with a concrete file:line change list**, not a demonstrated capability. Nothing here should be read as a claim that EQO currently works.
