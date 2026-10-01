@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EQO identity directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--page:#FAFAF8;--page-ink:#1B1B19;--page-muted:#5E5E58;--page-line:#DEDED8}
+@media (prefers-color-scheme:dark){:root{--page:#141413;--page-ink:#F2F2EE;--page-muted:#A8A8A0;--page-line:#34342F}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--page-ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:28px;margin:0 0 6px}
+.lede{color:var(--page-muted);max-width:70ch;margin:0 0 20px}
+.note{border:1px solid var(--page-line);border-radius:12px;padding:14px 16px;margin:0 0 28px;font-size:14px}
+.note b{display:block;margin-bottom:4px}
+.dir{border:1px solid var(--page-line);border-radius:20px;margin:0 0 36px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--body)}
+.dir-head{padding:22px 24px 8px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:baseline;justify-content:space-between}
+.dir-head h2{margin:0;font:var(--head-weight,700) 30px/1.1 var(--head)}
+.tag{font-size:14px;color:var(--muted);max-width:56ch}
+.pill{font-size:12px;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line);border-radius:99px;padding:3px 10px;color:var(--muted)}
+.body{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;padding:8px 24px 28px}
+@media (min-width:960px){.body{grid-template-columns:300px minmax(0,1fr)}}
+.spec h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;font-family:var(--body)}
+.spec h3:first-child{margin-top:4px}
+.chips{display:grid;gap:8px}
+.chip{display:flex;align-items:center;gap:10px;font-size:13px}
+.sw{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);flex:none}
+.chip small{color:var(--muted);display:block}
+.ok{color:var(--ready);font-weight:700}
+.fail{color:var(--stop);font-weight:700}
+.type-head{font:var(--head-weight,700) 26px/1.15 var(--head);margin:0 0 6px}
+.type-body{margin:0;font-size:15px;color:var(--ink)}
+.type-meta{margin:6px 0 0;font-size:12px;color:var(--muted)}
+.phones{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.phone{width:300px;max-width:100%;border-radius:30px;border:6px solid var(--phone-edge);background:var(--bg);overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.14)}
+.screen{padding:18px 16px 16px;min-height:540px;display:flex;flex-direction:column;gap:12px;background:var(--bg);color:var(--ink)}
+.bar{display:flex;align-items:center;justify-content:space-between}
+.wordmark{font:var(--head-weight,700) 22px/1 var(--head);letter-spacing:.02em}
+.sub{font-size:13px;color:var(--muted)}
+.h{font:var(--head-weight,700) 20px/1.2 var(--head);margin:2px 0 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.row{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .t{flex:1;font-weight:600;font-size:15px}
+.row .t small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.state{font-size:12px;font-weight:700;border-radius:99px;padding:4px 10px;white-space:nowrap}
+.s-ready{background:var(--ready-bg);color:var(--ready)}
+.s-todo{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.s-opt{background:transparent;color:var(--muted);border:1px dashed var(--line)}
+.btn{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:14px;font:700 15px var(--body);border:0;padding:0 16px;width:100%;cursor:pointer}
+.btn-primary{background:var(--primary);color:var(--primary-ink)}
+.btn-ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+.attn{background:var(--attn-bg);color:var(--attn-ink);border-radius:16px;padding:14px;border:1px solid var(--attn-line)}
+.attn b{display:block;font-size:15px;margin-bottom:6px}
+.quote{background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 12px;margin:8px 0 12px;font-size:14px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.steps{display:grid;gap:8px;font-size:14px}
+.step{display:flex;gap:10px;align-items:center}
+.dot{width:22px;height:22px;border-radius:99px;display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
+.dot.done{background:var(--ready-bg);color:var(--ready)}
+.dot.now{background:var(--attn-bg);color:var(--attn-ink)}
+.capsule{margin-top:auto;display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:6px}
+.capsule .btn{min-height:48px;border-radius:12px;font-size:13px;padding:0 4px}
+.btn-stop{background:var(--stop);color:var(--stop-ink)}
+.btn-soft{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.cap{font-size:12px;color:var(--muted);margin-top:8px;max-width:300px}
+/* directions */
+.hearth{--bg:#F7F2EA;--surface:#FFFFFF;--ink:#1F2A27;--muted:#5B6660;--line:#E3DACB;--primary:#B4461F;--primary-ink:#FFFFFF;--ready:#2F6B4A;--ready-bg:#DCEBDD;--attn-bg:#FBE7B5;--attn-ink:#4A3300;--attn-line:#E8C97A;--stop:#A32D2D;--stop-ink:#FFFFFF;--phone-edge:#2A2A27;--head:"Fraunces",Georgia,serif;--body:"Figtree",system-ui,sans-serif;--head-weight:700}
+.lantern{--bg:#0E1726;--surface:#172338;--ink:#F1EBDD;--muted:#A9B3C4;--line:#2A3A55;--primary:#F4B73F;--primary-ink:#1A1405;--ready:#6FD1A5;--ready-bg:#12382F;--attn-bg:#3B2E0B;--attn-ink:#FBE3A8;--attn-line:#6B5316;--stop:#FF8A78;--stop-ink:#2A0A05;--phone-edge:#05080F;--head:"Manrope",system-ui,sans-serif;--body:"Manrope",system-ui,sans-serif;--head-weight:800}
+.harbor{--bg:#F1F5F8;--surface:#FFFFFF;--ink:#12263A;--muted:#4A5F73;--line:#D5DFE8;--primary:#0B6E69;--primary-ink:#FFFFFF;--ready:#0B6E69;--ready-bg:#D5EEEC;--attn-bg:#FFE9A8;--attn-ink:#4A3600;--attn-line:#E9CB6A;--stop:#B3261E;--stop-ink:#FFFFFF;--phone-edge:#1B2B3C;--head:"Plus Jakarta Sans",system-ui,sans-serif;--body:"Plus Jakarta Sans",system-ui,sans-serif;--head-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>EQO identity directions</h1>
+  <p class="lede">Three directions for EQO's own look. Each shows the same two real screens from the Phase One flows (setup hub, and an approval with Pause / Stop / Take over) so you can compare them fairly. Pick one, or tell me what to mix.</p>
+  <div class="note"><b>What EQO is steering away from</b>OpenDroid's theme file uses pure OLED black or white, zinc greys, neon purple and cyan accents, and monospace text for technical detail. None of the three below use that. EQO's tone is warm, plain-spoken and trustworthy, because the app asks people to hand over screen control and approve sensitive steps.</div>
+  <div id="dirs"></div>
+  <p class="cap" style="max-width:80ch;color:var(--page-muted)">Mockup only: no app code. All three font families are open-source (SIL OFL), so they can ship inside the APK. Contrast figures are computed live from the hex values; AA needs 4.5:1 for normal text. Light and dark variants of every direction are derived in the next step once you pick.</p>
+</div>
+<script>
+const D=[
+ {id:'hearth',name:'Hearth',tag:'Warm paper and ink with a terracotta accent. Calm, human, a little editorial. Feels like a trusted notebook, not a gadget.',mode:'Light first',fonts:'Fraunces (headings) + Figtree (body)',
+  pal:[['Paper (background)','--bg'],['Ink (text)','--ink'],['Terracotta (primary action)','--primary'],['Sage (ready)','--ready'],['Honey (needs your OK)','--attn-bg'],['Brick (stop)','--stop']],
+  pairs:[['Ink on paper','--ink','--bg'],['White on terracotta','--primary-ink','--primary'],['Sage on paper','--ready','--bg'],['Ink on honey','--attn-ink','--attn-bg'],['White on brick','--stop-ink','--stop']]},
+ {id:'lantern',name:'Lantern',tag:'Deep night blue with a warm amber light. Dark-first and easy on the eyes, like a lamp left on. Reassuring when the assistant is working on your phone.',mode:'Dark first',fonts:'Manrope (headings and body)',
+  pal:[['Night (background)','--bg'],['Cream (text)','--ink'],['Amber (primary action)','--primary'],['Mint (ready)','--ready'],['Gold (needs your OK)','--attn-ink'],['Coral (stop)','--stop']],
+  pairs:[['Cream on night','--ink','--bg'],['Dark on amber','--primary-ink','--primary'],['Mint on night','--ready','--bg'],['Gold on dark gold','--attn-ink','--attn-bg'],['Dark on coral','--stop-ink','--stop']]},
+ {id:'harbor',name:'Harbor',tag:'Cool fog and deep teal with a clear butter-yellow for attention. Clean, modern and efficient, like a well-run harbour. The most conventional of the three.',mode:'Light first',fonts:'Plus Jakarta Sans (headings and body)',
+  pal:[['Fog (background)','--bg'],['Navy ink (text)','--ink'],['Deep teal (primary action)','--primary'],['Teal (ready)','--ready'],['Butter (needs your OK)','--attn-bg'],['Red (stop)','--stop']],
+  pairs:[['Navy on fog','--ink','--bg'],['White on teal','--primary-ink','--primary'],['Teal on fog','--ready','--bg'],['Ink on butter','--attn-ink','--attn-bg'],['White on red','--stop-ink','--stop']]}
+];
+function lum(h){const c=h.replace('#','').match(/../g).map(x=>parseInt(x,16)/255).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+function ratio(a,b){const x=lum(a),y=lum(b),hi=Math.max(x,y),lo=Math.min(x,y);return (hi+.05)/(lo+.05)}
+function phones(){return `
+<div>
+ <div class="phone"><div class="screen">
+  <div class="bar"><span class="wordmark">EQO</span><span class="sub">Setup</span></div>
+  <p class="h">Let's get you set up</p>
+  <p class="sub" style="margin:0">EQO can't run tasks until these are ready.</p>
+  <div class="card">
+   <div class="row"><span class="t">Model<small>Required</small></span><span class="state s-ready">&#10003; Ready</span></div>
+   <div class="row"><span class="t">Screen control<small>Required</small></span><span class="state s-todo">Not set up</span></div>
+   <div class="row"><span class="t">Helper connection<small>Required</small></span><span class="state s-todo">Not set up</span></div>
+   <div class="row"><span class="t">Browser control<small>Optional</small></span><span class="state s-opt">Off</span></div>
+   <div class="row"><span class="t">Background mode<small>Optional</small></span><span class="state s-opt">Off</span></div>
+  </div>
+  <p class="sub" style="margin:0">About 10 to 15 minutes. You'll visit a few Android settings and we'll tell you exactly where.</p>
+  <button class="btn btn-primary" style="margin-top:auto">Continue setup</button>
+ </div></div><p class="cap">Setup hub (S-03). Status is always a word plus a symbol, never colour alone.</p>
+</div>
+<div>
+ <div class="phone"><div class="screen">
+  <div class="bar"><span class="wordmark">EQO</span><span class="sub">Task running</span></div>
+  <p class="h">Text Mum I'm on my way</p>
+  <div class="steps">
+   <div class="step"><span class="dot done">&#10003;</span>Open Messages</div>
+   <div class="step"><span class="dot done">&#10003;</span>Write the message</div>
+   <div class="step"><span class="dot now">3</span><b>Send it &mdash; needs your OK</b></div>
+  </div>
+  <div class="attn"><b>EQO wants to send this message</b>
+   <div class="quote">"On my way, back in 20 minutes"<br><span class="sub">To: Mum</span></div>
+   <div class="pair"><button class="btn btn-primary">Approve</button><button class="btn btn-ghost">Deny</button></div>
+  </div>
+  <div class="capsule"><button class="btn btn-soft">Pause</button><button class="btn btn-stop">Stop</button><button class="btn btn-soft">Take over</button></div>
+ </div></div><p class="cap">Approval card (S-22) and control capsule (S-23). Back means Deny, and it says so.</p>
+</div>`}
+const root=document.getElementById('dirs');
+D.forEach(d=>{
+ const s=document.createElement('section');s.className='dir '+d.id;s.setAttribute('aria-label',d.name+' direction');
+ s.innerHTML=`<div class="dir-head"><h2>${d.name}</h2><span class="pill">${d.mode}</span><p class="tag">${d.tag}</p></div>
+ <div class="body"><div class="spec"><h3>Palette</h3><div class="chips" data-pal></div><h3>Contrast (AA = 4.5:1)</h3><div class="chips" data-con></div><h3>Type</h3><p class="type-head">Your Only Personal AI Assistant</p><p class="type-body">EQO guides you through a few Android settings, then runs tasks on your phone with your approval at every sensitive step.</p><p class="type-meta">${d.fonts}</p></div><div class="phones">${phones()}</div></div>`;
+ root.appendChild(s);
+ const cs=getComputedStyle(s),g=v=>cs.getPropertyValue(v).trim();
+ const pal=s.querySelector('[data-pal]'),con=s.querySelector('[data-con]');
+ d.pal.forEach(([n,v])=>{const hex=g(v);pal.insertAdjacentHTML('beforeend',`<div class="chip"><span class="sw" style="background:${hex}"></span><span>${n}<small>${hex}</small></span></div>`)});
+ d.pairs.forEach(([n,fg,bg])=>{const r=ratio(g(fg),g(bg));con.insertAdjacentHTML('beforeend',`<div class="chip"><span>${n}<small>${r.toFixed(2)}:1 &middot; <span class="${r>=4.5?'ok':'fail'}">${r>=4.5?'passes AA':'fails AA'}</span></small></span></div>`)});
+});
+</script>
+</body>
+</html>
