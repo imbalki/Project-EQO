@@ -9,6 +9,7 @@ Later phases are planned only after the study APK is reviewed on real devices.
 | File | What it is | Authoring agent / model |
 |---|---|---|
 | [`FEASIBILITY-REPORT.md`](FEASIBILITY-REPORT.md) | CTO synthesis: verdict, gaps, gates, ordered spikes | CTO (orchestration) |
+| [`DECISIONS.md`](DECISIONS.md) | Owner scope decisions: model strategy (OpenRouter primary, local Gemma opportunistic, advisory UX = Phase 2), connectors = Phase 2 | owner + CTO |
 | [`docs/PRD.md`](docs/PRD.md) | Product requirements with EQO-001… IDs, conflicts ledger, acceptance criteria | Product/UX — MiMo 2.6 Flash |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Source-cited architecture audit + proposed contracts | Architect — MiMo 2.6 Pro (read with [`team-reports/architect-controller-verification.md`](team-reports/architect-controller-verification.md)) |
 | [`docs/USER-FLOWS.md`](docs/USER-FLOWS.md) | Complete onboarding / task / recovery user flows, states, microcopy | Product/UX — MiMo 2.6 Flash |

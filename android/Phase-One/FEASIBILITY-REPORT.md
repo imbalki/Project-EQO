@@ -20,7 +20,7 @@
 
 ## 2. What each upstream actually gives us
 
-- **OpenDroid (base):** Kotlin + Compose app, agent loop with tool calling, OpenRouter/remote-LLM support, Accessibility automation, MediaProjection + AccessibilityNodeInfo fallback, Room memory, minSdk 26 (so Android 12+ fits), JDK 21 / AGP 9 toolchain, Shizuku client already a dependency (`dev.rikka.shizuku:api/provider:13.1.5`).
+- **OpenDroid (base):** Kotlin + Compose app, agent loop with tool calling, OpenRouter/remote-LLM support, Accessibility automation, MediaProjection + AccessibilityNodeInfo fallback, Room memory, minSdk 26 (so Android 12+ fits), JDK 21 / AGP 9 toolchain, Shizuku client already a dependency (`dev.rikka.shizuku:api/provider:13.1.5`). **On-device models are already implemented** (verified): `GemmaProvider` / `LiteRTLMProvider` / `HybridOnDeviceProvider` (`LLMProviderFactory.kt:43-71`), managed model download + SHA-256 artifact integrity + device-memory compatibility check (`ModelDownloadWorker.kt:76`, `ModelArtifactIntegrity.kt`), local `.task`/`.litertlm` import. Per D-001 this rides along in Phase One where free; EQO-specific model-advisory UX is Phase 2.
 - **ClosePaw (donor):** Chrome CDP control via the `chrome_devtools_remote` abstract socket plus `/data/local/tmp/chrome-command-line` and the `enable-command-line-on-non-rooted-devices` flag (documented cold-restart requirement; **Chrome must create the socket itself — `adb forward` does not**), wireless **ADB pairing protocol implementation** (its own pure-Kotlin SPAKE2-25519 + TLS-PSK, BouncyCastle, bundled Conscrypt — not Shizuku's), virtual display via Shizuku shell-uid processes, hidden-API bypass, minSdk 31, JDK 17.
 - **Shizuku + Shizuku-API:** the privileged manager/server/native starter that EQO must absorb into its own branded setup. Apache-2.0 reuse is allowed, but the upstream explicitly forbids reusing its name, applicationId, manager permissions, and icons — which **aligns with** the EQO-only-branding requirement (§6).
 
@@ -52,7 +52,7 @@ Coordinated changes across server, native code, client, provider authority and p
 1. **Auth planes are separate and must stay separate in testing:** wireless-ADB *pairing/auth* vs helper *authorization* vs Accessibility vs CDP consent. One passing does not prove another.
 2. **Toolchain divergence:** OpenDroid JDK 21 vs ClosePaw JDK 17; a merged build needs one pinned toolchain.
 3. **Hidden API / OEM variability** in virtual display and input injection; needs per-device probing, not a blanket capability promise.
-4. **Main-repo architecture conflict:** `AGENTS.md`/`docs/ARCHITECTURE.md` specify offline-default Gemma + hosted Composio integrations. The latest brief specifies OpenRouter bring-your-own-key and free/open-source tooling only. This conflict is **recorded, not silently resolved** — it needs an owner decision (ADR).
+4. **Main-repo architecture conflict — RESOLVED by owner decision** (see `DECISIONS.md` D-001/D-002/D-003): Phase One = OpenRouter BYOK primary + opportunistic reuse of OpenDroid's existing Gemma/LiteRT-LM local inference; Composio/OpenConnector/ActivePieces integrations are **Phase 2** (selection there must respect the free/open-source rule). Main-repo `AGENTS.md`/`docs/ARCHITECTURE.md` to be reconciled at implementation start.
 5. **ClosePaw bundles a Python Termux bridge asset** — now **confirmed in the shipped v0.1.0 release APK** (`res/raw/closepaw_bridge_py`, 13,715 B Python source, packaged unconditionally by the `copyClosePawBridge` preBuild task). This conflicts with the Phase One "no Node/Python on the phone" constraint; it must be excluded at source-build time (drop the task + code refs). Whether it is *runtime*-optional is **not proven**.
 6. **Source build is mandatory for EQO** (study-APK conclusion): the release APKs are reference artifacts only — package name is baked into dex/authorities/Room assets, R8-minified, and resource-ID churn makes binary repack unworkable (argued from artifacts; no repack experiment was run).
 7. **Distribution risk:** sideloaded APK, Android 13 restricted-settings flow, Play Protect scanning, and app-level anti-automation remain real limits. Android owns its own settings and permission names.
@@ -95,7 +95,7 @@ Coordinated changes across server, native code, client, provider authority and p
 
 ## 10. Later phases
 
-Deliberately **not planned yet**, per the instruction to review the study APK first. The roadmap will be drafted after S6 acceptance, informed by what the device matrix actually proves.
+Deliberately **not planned yet**, per the instruction to review the study APK first. The roadmap will be drafted after S6 acceptance, informed by what the device matrix actually proves. Already reserved for Phase 2 by owner decision: **local-model UX** (per-device model advisory, rebranded download/import flows — D-001) and **app-integration connectors** (Composio / OpenConnector / ActivePieces — D-002).
 
 ## 11. Agent team record (real separate workers, model verified per session)
 
