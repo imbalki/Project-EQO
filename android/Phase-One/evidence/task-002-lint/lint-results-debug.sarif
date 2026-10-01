@@ -1,0 +1,2595 @@
+{
+    "$schema" : "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+    "version" : "2.1.0",
+    "runs" : [
+        {
+            "tool": {
+                "driver": {
+                    "name": "Android Lint",
+                    "fullName": "Android Lint (in gradle)",
+                    "version": "9.3.1",
+                    "semanticVersion": "9.3.1",
+                    "organization": "Google",
+                    "informationUri": "https://developer.android.com/studio/write/lint",
+                    "fullDescription": {
+                        "text": "Static analysis originally for Android source code but now performing general analysis"
+                    },
+                    "language": "en-US",
+                    "rules": [
+                        {
+                            "id": "AutoboxingStateCreation",
+                            "shortDescription": {
+                                "text": "State<T> will autobox values assigned to this state. Use a specialized state type instead.",
+                                "markdown": "`State<T>` will autobox values assigned to this state. Use a specialized state type instead."
+                            },
+                            "fullDescription": {
+                                "text": "Calling mutableStateOf<T>() when T is either backed by a primitive type on the JVM or is a value class results in a state implementation that requires all state values to be boxed. This usually causes an additional allocation for each state write, and adds some additional work to auto-unbox values when reading the value of the state. Instead, prefer to use a specialized primitive state implementation for Int, Long, Float, and Double when the state does not need to track null values and does not override the default SnapshotMutationPolicy. See mutableIntStateOf(), mutableLongStateOf(), mutableFloatStateOf(), and mutableDoubleStateOf() for more information.",
+                                "markdown": "Calling `mutableStateOf<T>()` when `T` is either backed by a primitive type on the JVM or is a value class results in a state implementation that requires all state values to be boxed. This usually causes an additional allocation for each state write, and adds some additional work to auto-unbox values when reading the value of the state. Instead, prefer to use a specialized primitive state implementation for `Int`, `Long`, `Float`, and `Double` when the state does not need to track null values and does not override the default `SnapshotMutationPolicy`. See `mutableIntStateOf()`, `mutableLongStateOf()`, `mutableFloatStateOf()`, and `mutableDoubleStateOf()` for more information."
+                            },
+                            "defaultConfiguration": {
+                                "level": "note",
+                                "rank": 80
+                            },
+                            "properties": {
+                                "tags": [
+                                    "Performance"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "DefaultLocale",
+                            "shortDescription": {
+                                "text": "Implied default locale in case conversion"
+                            },
+                            "fullDescription": {
+                                "text": "Calling String#toLowerCase() or #toUpperCase() without specifying an explicit locale is a common source of bugs. The reason for that is that those methods will use the current locale on the user's device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for i is not I.\n\nIf you want the methods to just perform ASCII replacement, for example to convert an enum name, call String#toUpperCase(Locale.ROOT) instead. If you really want to use the current locale, call String#toUpperCase(Locale.getDefault()) instead.",
+                                "markdown": "Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an explicit locale** is a common source of bugs. The reason for that is that those methods will use the current locale on the user's device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for `i` is **not** `I`.\n\nIf you want the methods to just perform ASCII replacement, for example to convert an enum name, call `String#toUpperCase(Locale.ROOT)` instead. If you really want to use the current locale, call `String#toUpperCase(Locale.getDefault())` instead."
+                            },
+                            "defaultConfiguration": {
+                                "level": "warning",
+                                "rank": 50
+                            },
+                            "properties": {
+                                "tags": [
+                                    "Correctness"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "LintBaseline",
+                            "shortDescription": {
+                                "text": "Baseline Applied"
+                            },
+                            "fullDescription": {
+                                "text": "Lint can be configured with a \"baseline\"; a set of current issues found in a codebase, which future runs of lint will silently ignore. Only new issues not found in the baseline are reported.\n\nNote that while opening files in the IDE, baseline issues are not filtered out; the purpose of baselines is to allow you to get started using lint and break the build on all newly introduced errors, without having to go back and fix the entire codebase up front. However, when you open up existing files you still want to be aware of and fix issues as you come across them.\n\nThis issue type is used to emit an informational-only warning if any issues were filtered out due to baseline matching. That way, you don't have a false sense of security if you forgot that you've checked in a baseline file."
+                            },
+                            "defaultConfiguration": {
+                                "level": "note",
+                                "rank": 10
+                            },
+                            "properties": {
+                                "tags": [
+                                    "Lint"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "LintBaselineFixed",
+                            "shortDescription": {
+                                "text": "Baselined Issues Fixed"
+                            },
+                            "fullDescription": {
+                                "text": "If a lint baseline describes a problem which is no longer reported, then the problem has either been fixed, or perhaps the issue type has been disabled. In any case, the entry can be removed from the baseline (such that if the issue is reintroduced at some point, lint will complain rather than just silently starting to match the old baseline entry again.)"
+                            },
+                            "defaultConfiguration": {
+                                "level": "note",
+                                "rank": 10
+                            },
+                            "properties": {
+                                "tags": [
+                                    "Lint"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "ModifierParameter",
+                            "shortDescription": {
+                                "text": "Guidelines for Modifier parameters in a Composable function"
+                            },
+                            "fullDescription": {
+                                "text": "The first (or only) Modifier parameter in a Composable function should follow the following rules:\n- Be named modifier\n- Have a type of Modifier\n- Either have no default value, or have a default value of Modifier\n- If optional, be the first optional parameter in the parameter list",
+                                "markdown": "The first (or only) Modifier parameter in a Composable function should follow the following rules:\n- Be named `modifier`\n- Have a type of `Modifier`\n- Either have no default value, or have a default value of `Modifier`\n- If optional, be the first optional parameter in the parameter list"
+                            },
+                            "defaultConfiguration": {
+                                "level": "warning",
+                                "rank": 80
+                            },
+                            "properties": {
+                                "tags": [
+                                    "Correctness"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "NonObservableLocale",
+                            "shortDescription": {
+                                "text": "Reading locale in a non-observable way in a composable function"
+                            },
+                            "fullDescription": {
+                                "text": "Calling java.util.Locale.getDefault(), android.os.LocaleList.getAdjustedDefault() or androidx.core.os.LocaleListCompat.getAdjustedDefault() within a composable function is not recommended. Calling these functions does not read observable state and will not be updated if the user changes the locale. This can lead to subtle bugs in your UI where the wrong locale is used for formatting dates, times, numbers, and other locale-sensitive information. To fix this, you should use androidx.compose.ui.platform.LocalLocale.current.platformLocale instead. This will ensure that your UI is always up-to-date with the current locale.",
+                                "markdown": "Calling `java.util.Locale.getDefault()`, `android.os.LocaleList.getAdjustedDefault()` or `androidx.core.os.LocaleListCompat.getAdjustedDefault()` within a composable function is not recommended. Calling these functions does not read observable state and will not be updated if the user changes the locale. This can lead to subtle bugs in your UI where the wrong locale is used for formatting dates, times, numbers, and other locale-sensitive information. To fix this, you should use `androidx.compose.ui.platform.LocalLocale.current.platformLocale` instead. This will ensure that your UI is always up-to-date with the current locale."
+                            },
+                            "defaultConfiguration": {
+                                "level": "error",
+                                "rank": 60
+                            },
+                            "properties": {
+                                "tags": [
+                                    "Correctness"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "ObsoleteSdkInt",
+                            "shortDescription": {
+                                "text": "Obsolete SDK_INT Version Check"
+                            },
+                            "fullDescription": {
+                                "text": "This check flags version checks that are not necessary, because the minSdkVersion (or surrounding known API level) is already at least as high as the version checked for.\n\nSimilarly, it also looks for resources in -vNN folders, such as values-v14 where the version qualifier is less than or equal to the minSdkVersion, where the contents should be merged into the best folder.",
+                                "markdown": "This check flags version checks that are not necessary, because the `minSdkVersion` (or surrounding known API level) is already at least as high as the version checked for.\n\nSimilarly, it also looks for resources in `-vNN` folders, such as `values-v14` where the version qualifier is less than or equal to the `minSdkVersion`, where the contents should be merged into the best folder."
+                            },
+                            "defaultConfiguration": {
+                                "level": "warning",
+                                "rank": 50
+                            },
+                            "properties": {
+                                "tags": [
+                                    "Performance"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "SdCardPath",
+                            "shortDescription": {
+                                "text": "Hardcoded reference to /sdcard",
+                                "markdown": "Hardcoded reference to `/sdcard`"
+                            },
+                            "fullDescription": {
+                                "text": "Your code should not reference the /sdcard path directly; instead use Environment.getExternalStorageDirectory().getPath().\n\nSimilarly, do not reference the /data/data/ path directly; it can vary in multi-user scenarios. Instead, use Context.getFilesDir().getPath().",
+                                "markdown": "Your code should not reference the `/sdcard` path directly; instead use `Environment.getExternalStorageDirectory().getPath()`.\n\nSimilarly, do not reference the `/data/data/` path directly; it can vary in multi-user scenarios. Instead, use `Context.getFilesDir().getPath()`."
+                            },
+                            "defaultConfiguration": {
+                                "level": "warning",
+                                "rank": 50
+                            },
+                            "properties": {
+                                "tags": [
+                                    "Correctness"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "UseKtx",
+                            "shortDescription": {
+                                "text": "Use KTX extension function"
+                            },
+                            "fullDescription": {
+                                "text": "The Android KTX libraries decorates the Android platform SDK as well as various libraries with more convenient extension functions available from Kotlin, allowing you to use default parameters, named parameters, and more."
+                            },
+                            "defaultConfiguration": {
+                                "level": "warning",
+                                "rank": 50
+                            },
+                            "properties": {
+                                "tags": [
+                                    "Productivity"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "originalUriBaseIds": {
+                "%SRCROOT%": {
+                    "uri": "file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/"
+                }
+            },
+            "results": [
+                {
+                    "ruleId": "LintBaseline",
+                    "ruleIndex": 2,
+                    "message": {
+                        "text": "15 errors were filtered out because they are listed in the baseline file, lint-baseline.xml"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/lint-baseline.xml"
+                                },
+                                "region": {
+                                    "startLine": 1
+                                }                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                    }
+                },
+                {
+                    "ruleId": "LintBaselineFixed",
+                    "ruleIndex": 3,
+                    "message": {
+                        "text": "1 errors/warnings were listed in the baseline file (lint-baseline.xml) but not found in the project; perhaps they have been fixed? Another possible explanation is that lint recently stopped analyzing (and including results from) dependent projects by default. You can turn this back on with android.lintOptions.checkDependencies=true. Unmatched issue types: SdCardPath",
+                        "markdown": "1 errors/warnings were listed in the baseline file (lint-baseline.xml) but not found in the project; perhaps they have been fixed? Another possible explanation is that lint recently stopped analyzing (and including results from) dependent projects by default. You can turn this back on with `android.lintOptions.checkDependencies=true`. Unmatched issue types: SdCardPath"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/lint-baseline.xml"
+                                },
+                                "region": {
+                                    "startLine": 1
+                                }                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/actions/SocialActions.kt"
+                                },
+                                "region": {
+                                    "startLine": 52,
+                                    "startColumn": 58,
+                                    "endLine": 52,
+                                    "endColumn": 110,
+                                    "charOffset": 2409,
+                                    "charLength": 52,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", summary.averageEngagementRate)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 50,
+                                    "endLine": 55,
+                                    "snippet": {
+                                        "text": "                    appendLine(\"• Total Reach: ${summary.totalReach}\")\n                    appendLine(\"• Total Impressions: ${summary.totalImpressions}\")\n                    appendLine(\"• Avg Engagement Rate: ${String.format(\"%.1f\", summary.averageEngagementRate)}%\")\n                    appendLine(\"• Posts Published: ${summary.totalPosts}\")\n                }\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "f9d434f46cdb6b38"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/actions/SocialActions.kt"
+                                },
+                                "region": {
+                                    "startLine": 175,
+                                    "startColumn": 120,
+                                    "endLine": 175,
+                                    "endColumn": 162,
+                                    "charOffset": 8593,
+                                    "charLength": 42,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", post.engagementRate)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 173,
+                                    "endLine": 178,
+                                    "snippet": {
+                                        "text": "                        topPosts.forEachIndexed { index, post ->\n                            appendLine(\"${index + 1}. [${post.platform.displayName}] \\\"${post.content.take(50)}...\\\"\")\n                            appendLine(\"   Likes: ${post.likesCount} | Comments: ${post.commentsCount} | Engagement: ${String.format(\"%.1f\", post.engagementRate)}%\")\n                        }\n                    }\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "4a6134d5ee85973c"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/actions/SocialActions.kt"
+                                },
+                                "region": {
+                                    "startLine": 195,
+                                    "startColumn": 53,
+                                    "endLine": 195,
+                                    "endColumn": 104,
+                                    "charOffset": 9546,
+                                    "charLength": 51,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", report.averageEngagementRate)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 193,
+                                    "endLine": 198,
+                                    "snippet": {
+                                        "text": "                    appendLine(\"• Followers Growth: ${report.totalFollowersDelta}\")\n                    appendLine(\"• Total Reach: ${report.totalReach}\")\n                    appendLine(\"• Avg Engagement: ${String.format(\"%.1f\", report.averageEngagementRate)}%\")\n                    appendLine(\"• Top Platform: ${report.topPlatform.displayName}\")\n                    appendLine(\"\\n**AI Summary:** ${report.aiSummary}\")\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "5dd7f0363ae5c87d"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/social/core/analytics/SocialAnalyticsEngine.kt"
+                                },
+                                "region": {
+                                    "startLine": 84,
+                                    "startColumn": 169,
+                                    "endLine": 84,
+                                    "endColumn": 221,
+                                    "charOffset": 3735,
+                                    "charLength": 52,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", summary.averageEngagementRate)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 82,
+                                    "endLine": 87,
+                                    "snippet": {
+                                        "text": "\n        val aiSummary = if (summary.totalPosts > 0) {\n            \"Your product and developer updates generated the strongest engagement this week with ${summary.totalReach} total reach and an average engagement rate of ${String.format(\"%.1f\", summary.averageEngagementRate)}%.\"\n        } else {\n            \"Your social channels remained steady this week. Publishing regular updates and release announcements will increase reach.\"\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "32c5d6f9ce558676"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialAnalyticsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 98,
+                                    "startColumn": 70,
+                                    "endLine": 98,
+                                    "endColumn": 95,
+                                    "charOffset": 4153,
+                                    "charLength": 25,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", it)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 96,
+                                    "endLine": 101,
+                                    "snippet": {
+                                        "text": "                AnalyticsMetricBox(\n                    title = \"Engagement\",\n                    value = summary?.averageEngagementRate?.let { \"${String.format(\"%.1f\", it)}%\" } ?: \"0.0%\",\n                    delta = \"Active\",\n                    modifier = Modifier.weight(1f)\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "314176db3570bce8"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialAnalyticsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 295,
+                                    "startColumn": 31,
+                                    "endLine": 295,
+                                    "endColumn": 74,
+                                    "charOffset": 13107,
+                                    "charLength": 43,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1fM\", count / 1_000_000.0)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 293,
+                                    "endLine": 298,
+                                    "snippet": {
+                                        "text": "private fun formatCount(count: Long): String {\n    return when {\n        count >= 1_000_000 -> String.format(\"%.1fM\", count / 1_000_000.0)\n        count >= 1_000 -> String.format(\"%.1fK\", count / 1_000.0)\n        else -> count.toString()\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "6e8503b0e1487916"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialAnalyticsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 296,
+                                    "startColumn": 27,
+                                    "endLine": 296,
+                                    "endColumn": 66,
+                                    "charOffset": 13177,
+                                    "charLength": 39,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1fK\", count / 1_000.0)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 294,
+                                    "endLine": 299,
+                                    "snippet": {
+                                        "text": "    return when {\n        count >= 1_000_000 -> String.format(\"%.1fM\", count / 1_000_000.0)\n        count >= 1_000 -> String.format(\"%.1fK\", count / 1_000.0)\n        else -> count.toString()\n    }\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "ccc9bd27de63e276"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/social/core/ai/SocialInsightsEngine.kt"
+                                },
+                                "region": {
+                                    "startLine": 38,
+                                    "startColumn": 71,
+                                    "endLine": 38,
+                                    "endColumn": 115,
+                                    "charOffset": 1876,
+                                    "charLength": 44,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", avgAnnouncementEngage)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 36,
+                                    "endLine": 41,
+                                    "snippet": {
+                                        "text": "                    SocialInsight(\n                        id = UUID.randomUUID().toString(),\n                        observedData = \"Announcement posts averaged ${String.format(\"%.1f\", avgAnnouncementEngage)}% engagement vs ${String.format(\"%.1f\", avgOtherEngage)}% for general posts across ${posts.size} published posts.\",\n                        calculatedInsight = \"Product and feature announcements generated $diffPercent% higher engagement rate than generic updates.\",\n                        aiRecommendation = \"Focus your content schedule on product milestone announcements and developer release notes.\",\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "a63af62d4690f477"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/social/core/ai/SocialInsightsEngine.kt"
+                                },
+                                "region": {
+                                    "startLine": 38,
+                                    "startColumn": 134,
+                                    "endLine": 38,
+                                    "endColumn": 171,
+                                    "charOffset": 1939,
+                                    "charLength": 37,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", avgOtherEngage)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 36,
+                                    "endLine": 41,
+                                    "snippet": {
+                                        "text": "                    SocialInsight(\n                        id = UUID.randomUUID().toString(),\n                        observedData = \"Announcement posts averaged ${String.format(\"%.1f\", avgAnnouncementEngage)}% engagement vs ${String.format(\"%.1f\", avgOtherEngage)}% for general posts across ${posts.size} published posts.\",\n                        calculatedInsight = \"Product and feature announcements generated $diffPercent% higher engagement rate than generic updates.\",\n                        aiRecommendation = \"Focus your content schedule on product milestone announcements and developer release notes.\",\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "a63af62d4690f477"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialOverviewTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 72,
+                                    "startColumn": 70,
+                                    "endLine": 72,
+                                    "endColumn": 95,
+                                    "charOffset": 3008,
+                                    "charLength": 25,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", it)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 70,
+                                    "endLine": 75,
+                                    "snippet": {
+                                        "text": "                MetricCard(\n                    title = \"Engagement\",\n                    value = summary?.averageEngagementRate?.let { \"${String.format(\"%.1f\", it)}%\" } ?: \"0.0%\",\n                    delta = \"Active\",\n                    icon = Icons.Default.TrendingUp,\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "a9db515702068e31"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialOverviewTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 294,
+                                    "startColumn": 37,
+                                    "endLine": 294,
+                                    "endColumn": 79,
+                                    "charOffset": 14070,
+                                    "charLength": 42,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", post.engagementRate)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 292,
+                                    "endLine": 297,
+                                    "snippet": {
+                                        "text": "                        Column(horizontalAlignment = Alignment.End) {\n                            Text(\"${post.reach} reach\", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = theme.textPrimary)\n                            Text(\"${String.format(\"%.1f\", post.engagementRate)}% engage\", fontSize = 10.sp, color = theme.textSecondary)\n                        }\n                    }\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "7d641de437b7abad"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialOverviewTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 362,
+                                    "startColumn": 34,
+                                    "endLine": 362,
+                                    "endColumn": 75,
+                                    "charOffset": 16432,
+                                    "charLength": 41,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", count / 1_000_000f)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 360,
+                                    "endLine": 365,
+                                    "snippet": {
+                                        "text": "private fun formatCount(count: Int): String {\n    return when {\n        count >= 1_000_000 -> \"${String.format(\"%.1f\", count / 1_000_000f)}M\"\n        count >= 1_000 -> \"${String.format(\"%.1f\", count / 1_000f)}K\"\n        else -> count.toString()\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "d81a7f31b428325e"
+                    }
+                },
+                {
+                    "ruleId": "DefaultLocale",
+                    "ruleIndex": 1,
+                    "message": {
+                        "text": "Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead",
+                        "markdown": "Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialOverviewTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 363,
+                                    "startColumn": 30,
+                                    "endLine": 363,
+                                    "endColumn": 67,
+                                    "charOffset": 16506,
+                                    "charLength": 37,
+                                    "snippet": {
+                                        "text": "String.format(\"%.1f\", count / 1_000f)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 361,
+                                    "endLine": 366,
+                                    "snippet": {
+                                        "text": "    return when {\n        count >= 1_000_000 -> \"${String.format(\"%.1f\", count / 1_000_000f)}M\"\n        count >= 1_000 -> \"${String.format(\"%.1f\", count / 1_000f)}K\"\n        else -> count.toString()\n    }\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "b8df97cfbd2dcc50"
+                    }
+                },
+                {
+                    "ruleId": "SdCardPath",
+                    "ruleIndex": 7,
+                    "message": {
+                        "text": "Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead",
+                        "markdown": "Do not hardcode \"/sdcard/\"; use `Environment.getExternalStorageDirectory().getPath()` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt"
+                                },
+                                "region": {
+                                    "startLine": 180,
+                                    "startColumn": 50,
+                                    "endLine": 180,
+                                    "endColumn": 57,
+                                    "charOffset": 7115,
+                                    "charLength": 7,
+                                    "snippet": {
+                                        "text": "/sdcard"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 178,
+                                    "endLine": 183,
+                                    "snippet": {
+                                        "text": "                val relative = if (canonical.startsWith(extRoot)) {\n                    canonical.removePrefix(extRoot).trimStart('/')\n                } else if (canonical.startsWith(\"/sdcard\")) {\n                    canonical.removePrefix(\"/sdcard\").trimStart('/')\n                } else if (canonical.startsWith(\"/storage/emulated/0\")) {\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "bad60f42d8b88ef4"
+                    }
+                },
+                {
+                    "ruleId": "SdCardPath",
+                    "ruleIndex": 7,
+                    "message": {
+                        "text": "Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead",
+                        "markdown": "Do not hardcode \"/sdcard/\"; use `Environment.getExternalStorageDirectory().getPath()` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt"
+                                },
+                                "region": {
+                                    "startLine": 181,
+                                    "startColumn": 45,
+                                    "endLine": 181,
+                                    "endColumn": 52,
+                                    "charOffset": 7172,
+                                    "charLength": 7,
+                                    "snippet": {
+                                        "text": "/sdcard"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 179,
+                                    "endLine": 184,
+                                    "snippet": {
+                                        "text": "                    canonical.removePrefix(extRoot).trimStart('/')\n                } else if (canonical.startsWith(\"/sdcard\")) {\n                    canonical.removePrefix(\"/sdcard\").trimStart('/')\n                } else if (canonical.startsWith(\"/storage/emulated/0\")) {\n                    canonical.removePrefix(\"/storage/emulated/0\").trimStart('/')\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "ff0f20d5cd227073"
+                    }
+                },
+                {
+                    "ruleId": "SdCardPath",
+                    "ruleIndex": 7,
+                    "message": {
+                        "text": "Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead",
+                        "markdown": "Do not hardcode \"/sdcard/\"; use `Environment.getExternalStorageDirectory().getPath()` instead"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt"
+                                },
+                                "region": {
+                                    "startLine": 516,
+                                    "startColumn": 32,
+                                    "endLine": 516,
+                                    "endColumn": 40,
+                                    "charOffset": 22523,
+                                    "charLength": 8,
+                                    "snippet": {
+                                        "text": "/sdcard/"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 514,
+                                    "endLine": 519,
+                                    "snippet": {
+                                        "text": "    private fun cleanRelativePath(pathStr: String?): String {\n        var clean = pathStr?.trim().orEmpty()\n        val prefixes = listOf(\"/sdcard/\", \"/storage/emulated/0/\", \"sdcard/\", \"./\")\n        for (prefix in prefixes) {\n            if (clean.startsWith(prefix)) {\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "a3c74fa3b24f8d83"
+                    }
+                },
+                {
+                    "ruleId": "NonObservableLocale",
+                    "ruleIndex": 5,
+                    "message": {
+                        "text": "Reading locale in a non-observable way in a composable function"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialAccountsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 263,
+                                    "startColumn": 70,
+                                    "endLine": 263,
+                                    "endColumn": 89,
+                                    "charOffset": 11162,
+                                    "charLength": 19,
+                                    "snippet": {
+                                        "text": "Locale.getDefault()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 261,
+                                    "endLine": 266,
+                                    "snippet": {
+                                        "text": "                    val lastSync = account.lastSyncAt\n                    val syncText = if (lastSync != null && lastSync > 0) {\n                        \"Synced \" + SimpleDateFormat(\"MMM d, HH:mm\", Locale.getDefault()).format(Date(lastSync))\n                    } else {\n                        \"Not synced yet\"\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with LocalLocale.current.platformLocale"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialAccountsTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 263,
+                                                "startColumn": 70,
+                                                "charOffset": 11162,
+                                                "endLine": 263,
+                                                "endColumn": 89,
+                                                "charLength": 19
+                                            },
+                                            "insertedContent": {
+                                                "text": "LocalLocale.current.platformLocale\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "1cb1ba51546e9d6d"
+                    }
+                },
+                {
+                    "ruleId": "NonObservableLocale",
+                    "ruleIndex": 5,
+                    "message": {
+                        "text": "Reading locale in a non-observable way in a composable function"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCalendarTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 296,
+                                    "startColumn": 48,
+                                    "endLine": 296,
+                                    "endColumn": 67,
+                                    "charOffset": 11251,
+                                    "charLength": 19,
+                                    "snippet": {
+                                        "text": "Locale.getDefault()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 294,
+                                    "endLine": 299,
+                                    "snippet": {
+                                        "text": ") {\n    val theme = AppTheme.colors\n    val timeFormat = SimpleDateFormat(\"HH:mm\", Locale.getDefault())\n    val timeString = post.scheduledPublishTime?.let { timeFormat.format(Date(it)) } ?: \"--:--\"\n\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with LocalLocale.current.platformLocale"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCalendarTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 296,
+                                                "startColumn": 48,
+                                                "charOffset": 11251,
+                                                "endLine": 296,
+                                                "endColumn": 67,
+                                                "charLength": 19
+                                            },
+                                            "insertedContent": {
+                                                "text": "LocalLocale.current.platformLocale\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "18a7714c58882f53"
+                    }
+                },
+                {
+                    "ruleId": "NonObservableLocale",
+                    "ruleIndex": 5,
+                    "message": {
+                        "text": "Reading locale in a non-observable way in a composable function"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCampaignsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 137,
+                                    "startColumn": 48,
+                                    "endLine": 137,
+                                    "endColumn": 67,
+                                    "charOffset": 6272,
+                                    "charLength": 19,
+                                    "snippet": {
+                                        "text": "Locale.getDefault()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 135,
+                                    "endLine": 140,
+                                    "snippet": {
+                                        "text": "private fun CampaignCard(campaign: SocialCampaign) {\n    val theme = AppTheme.colors\n    val timeFormat = SimpleDateFormat(\"MMM d\", Locale.getDefault())\n    val startStr = timeFormat.format(Date(campaign.startDate))\n    val endStr = timeFormat.format(Date(campaign.endDate))\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with LocalLocale.current.platformLocale"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCampaignsTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 137,
+                                                "startColumn": 48,
+                                                "charOffset": 6272,
+                                                "endLine": 137,
+                                                "endColumn": 67,
+                                                "charLength": 19
+                                            },
+                                            "insertedContent": {
+                                                "text": "LocalLocale.current.platformLocale\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "aeb6becfb381e721"
+                    }
+                },
+                {
+                    "ruleId": "NonObservableLocale",
+                    "ruleIndex": 5,
+                    "message": {
+                        "text": "Reading locale in a non-observable way in a composable function"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCommentsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 169,
+                                    "startColumn": 58,
+                                    "endLine": 169,
+                                    "endColumn": 77,
+                                    "charOffset": 7441,
+                                    "charLength": 19,
+                                    "snippet": {
+                                        "text": "Locale.getDefault()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 167,
+                                    "endLine": 172,
+                                    "snippet": {
+                                        "text": ") {\n    val theme = AppTheme.colors\n    val timeFormatted = SimpleDateFormat(\"MMM d, HH:mm\", Locale.getDefault()).format(Date(comment.timestamp))\n\n    var replyText by remember(comment.id) {\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with LocalLocale.current.platformLocale"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCommentsTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 169,
+                                                "startColumn": 58,
+                                                "charOffset": 7441,
+                                                "endLine": 169,
+                                                "endColumn": 77,
+                                                "charLength": 19
+                                            },
+                                            "insertedContent": {
+                                                "text": "LocalLocale.current.platformLocale\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "b02238133dd9d090"
+                    }
+                },
+                {
+                    "ruleId": "NonObservableLocale",
+                    "ruleIndex": 5,
+                    "message": {
+                        "text": "Reading locale in a non-observable way in a composable function"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialContentTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 458,
+                                    "startColumn": 55,
+                                    "endLine": 458,
+                                    "endColumn": 74,
+                                    "charOffset": 21585,
+                                    "charLength": 19,
+                                    "snippet": {
+                                        "text": "Locale.getDefault()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 456,
+                                    "endLine": 461,
+                                    "snippet": {
+                                        "text": ") {\n    val theme = AppTheme.colors\n    val timeFormat = SimpleDateFormat(\"MMM d, HH:mm\", Locale.getDefault())\n    val dateString = when {\n        post.publishedTime != null -> \"Published \" + timeFormat.format(Date(post.publishedTime))\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with LocalLocale.current.platformLocale"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialContentTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 458,
+                                                "startColumn": 55,
+                                                "charOffset": 21585,
+                                                "endLine": 458,
+                                                "endColumn": 74,
+                                                "charLength": 19
+                                            },
+                                            "insertedContent": {
+                                                "text": "LocalLocale.current.platformLocale\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "d0a793d633c5ffa1"
+                    }
+                },
+                {
+                    "ruleId": "NonObservableLocale",
+                    "ruleIndex": 5,
+                    "message": {
+                        "text": "Reading locale in a non-observable way in a composable function"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialInboxTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 199,
+                                    "startColumn": 58,
+                                    "endLine": 199,
+                                    "endColumn": 77,
+                                    "charOffset": 8036,
+                                    "charLength": 19,
+                                    "snippet": {
+                                        "text": "Locale.getDefault()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 197,
+                                    "endLine": 202,
+                                    "snippet": {
+                                        "text": ") {\n    val theme = AppTheme.colors\n    val timeFormatted = SimpleDateFormat(\"MMM d, HH:mm\", Locale.getDefault()).format(Date(interaction.timestamp))\n\n    Card(\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with LocalLocale.current.platformLocale"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialInboxTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 199,
+                                                "startColumn": 58,
+                                                "charOffset": 8036,
+                                                "endLine": 199,
+                                                "endColumn": 77,
+                                                "charLength": 19
+                                            },
+                                            "insertedContent": {
+                                                "text": "LocalLocale.current.platformLocale\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "0c8e49d8ce7ce4fb"
+                    }
+                },
+                {
+                    "ruleId": "NonObservableLocale",
+                    "ruleIndex": 5,
+                    "message": {
+                        "text": "Reading locale in a non-observable way in a composable function"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialReportsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 40,
+                                    "startColumn": 54,
+                                    "endLine": 40,
+                                    "endColumn": 73,
+                                    "charOffset": 1462,
+                                    "charLength": 19,
+                                    "snippet": {
+                                        "text": "Locale.getDefault()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 38,
+                                    "endLine": 43,
+                                    "snippet": {
+                                        "text": "    val context = LocalContext.current\n    val theme = AppTheme.colors\n    val timeFormat = SimpleDateFormat(\"MMM d, yyyy\", Locale.getDefault())\n\n    val dateRange = if (weeklyReport != null) {\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with LocalLocale.current.platformLocale"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialReportsTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 40,
+                                                "startColumn": 54,
+                                                "charOffset": 1462,
+                                                "endLine": 40,
+                                                "endColumn": 73,
+                                                "charLength": 19
+                                            },
+                                            "insertedContent": {
+                                                "text": "LocalLocale.current.platformLocale\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "ed23f227e4a141ae"
+                    }
+                },
+                {
+                    "ruleId": "NonObservableLocale",
+                    "ruleIndex": 5,
+                    "message": {
+                        "text": "Reading locale in a non-observable way in a composable function"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialSettingsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 291,
+                                    "startColumn": 58,
+                                    "endLine": 291,
+                                    "endColumn": 77,
+                                    "charOffset": 11912,
+                                    "charLength": 19,
+                                    "snippet": {
+                                        "text": "Locale.getDefault()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 289,
+                                    "endLine": 294,
+                                    "snippet": {
+                                        "text": "private fun AuditLogItem(log: SocialAuditEntry) {\n    val theme = AppTheme.colors\n    val timeFormat = SimpleDateFormat(\"MMM d, HH:mm:ss\", Locale.getDefault())\n\n    Card(\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with LocalLocale.current.platformLocale"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialSettingsTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 291,
+                                                "startColumn": 58,
+                                                "charOffset": 11912,
+                                                "endLine": 291,
+                                                "endColumn": 77,
+                                                "charLength": 19
+                                            },
+                                            "insertedContent": {
+                                                "text": "LocalLocale.current.platformLocale\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "eac0eaf5540325a1"
+                    }
+                },
+                {
+                    "ruleId": "ModifierParameter",
+                    "ruleIndex": 4,
+                    "message": {
+                        "text": "Modifier parameter should be the first optional parameter"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/MacrosScreen.kt"
+                                },
+                                "region": {
+                                    "startLine": 39,
+                                    "startColumn": 5,
+                                    "endLine": 39,
+                                    "endColumn": 13,
+                                    "charOffset": 1550,
+                                    "charLength": 8,
+                                    "snippet": {
+                                        "text": "modifier"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 37,
+                                    "endLine": 42,
+                                    "snippet": {
+                                        "text": "    viewModel: MacroViewModel,\n    onNavigateToRoutines: () -> Unit = {},\n    modifier: Modifier = Modifier\n) {\n    val macros by viewModel.macros.collectAsState()\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "9229b2c9beb4eaf3"
+                    }
+                },
+                {
+                    "ruleId": "ModifierParameter",
+                    "ruleIndex": 4,
+                    "message": {
+                        "text": "Modifier parameter should be the first optional parameter"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/components/SocialCharts.kt"
+                                },
+                                "region": {
+                                    "startLine": 23,
+                                    "startColumn": 5,
+                                    "endLine": 23,
+                                    "endColumn": 13,
+                                    "charOffset": 766,
+                                    "charLength": 8,
+                                    "snippet": {
+                                        "text": "modifier"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 21,
+                                    "endLine": 26,
+                                    "snippet": {
+                                        "text": "    dataPoints: List<Float>,\n    labels: List<String> = emptyList(),\n    modifier: Modifier = Modifier.fillMaxWidth().height(160.dp),\n    lineColor: Color = AppTheme.colors.accentCyan,\n    gridColor: Color = AppTheme.colors.borderColor\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "8a4d9637a63d56cd"
+                    }
+                },
+                {
+                    "ruleId": "ModifierParameter",
+                    "ruleIndex": 4,
+                    "message": {
+                        "text": "Optional Modifier parameter should have a default value of Modifier",
+                        "markdown": "Optional Modifier parameter should have a default value of `Modifier`"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/components/SocialCharts.kt"
+                                },
+                                "region": {
+                                    "startLine": 23,
+                                    "startColumn": 5,
+                                    "endLine": 23,
+                                    "endColumn": 13,
+                                    "charOffset": 766,
+                                    "charLength": 8,
+                                    "snippet": {
+                                        "text": "modifier"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 21,
+                                    "endLine": 26,
+                                    "snippet": {
+                                        "text": "    dataPoints: List<Float>,\n    labels: List<String> = emptyList(),\n    modifier: Modifier = Modifier.fillMaxWidth().height(160.dp),\n    lineColor: Color = AppTheme.colors.accentCyan,\n    gridColor: Color = AppTheme.colors.borderColor\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Change default value to Modifier"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/components/SocialCharts.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 23,
+                                                "startColumn": 26,
+                                                "charOffset": 787,
+                                                "endLine": 23,
+                                                "endColumn": 64,
+                                                "charLength": 38
+                                            },
+                                            "insertedContent": {
+                                                "text": "Modifier\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "8a4d9637a63d56cd"
+                    }
+                },
+                {
+                    "ruleId": "ModifierParameter",
+                    "ruleIndex": 4,
+                    "message": {
+                        "text": "Optional Modifier parameter should have a default value of Modifier",
+                        "markdown": "Optional Modifier parameter should have a default value of `Modifier`"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/components/SocialCharts.kt"
+                                },
+                                "region": {
+                                    "startLine": 105,
+                                    "startColumn": 5,
+                                    "endLine": 105,
+                                    "endColumn": 13,
+                                    "charOffset": 3483,
+                                    "charLength": 8,
+                                    "snippet": {
+                                        "text": "modifier"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 103,
+                                    "endLine": 108,
+                                    "snippet": {
+                                        "text": "    values: List<Float>,\n    labels: List<String>,\n    modifier: Modifier = Modifier.fillMaxWidth().height(160.dp),\n    barColor: Color = AppTheme.colors.textPrimary\n) {\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Change default value to Modifier"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/components/SocialCharts.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 105,
+                                                "startColumn": 26,
+                                                "charOffset": 3504,
+                                                "endLine": 105,
+                                                "endColumn": 64,
+                                                "charLength": 38
+                                            },
+                                            "insertedContent": {
+                                                "text": "Modifier\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "303d7b2955efff92"
+                    }
+                },
+                {
+                    "ruleId": "ModifierParameter",
+                    "ruleIndex": 4,
+                    "message": {
+                        "text": "Optional Modifier parameter should have a default value of Modifier",
+                        "markdown": "Optional Modifier parameter should have a default value of `Modifier`"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/components/SocialCharts.kt"
+                                },
+                                "region": {
+                                    "startLine": 149,
+                                    "startColumn": 5,
+                                    "endLine": 149,
+                                    "endColumn": 13,
+                                    "charOffset": 5002,
+                                    "charLength": 8,
+                                    "snippet": {
+                                        "text": "modifier"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 147,
+                                    "endLine": 152,
+                                    "snippet": {
+                                        "text": "    proportions: List<Float>,\n    colors: List<Color>,\n    modifier: Modifier = Modifier.size(100.dp)\n) {\n    val total = proportions.sum().coerceAtLeast(1f)\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Change default value to Modifier"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/components/SocialCharts.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 149,
+                                                "startColumn": 26,
+                                                "charOffset": 5023,
+                                                "endLine": 149,
+                                                "endColumn": 47,
+                                                "charLength": 21
+                                            },
+                                            "insertedContent": {
+                                                "text": "Modifier\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "0ac3fecbb702cfa5"
+                    }
+                },
+                {
+                    "ruleId": "ObsoleteSdkInt",
+                    "ruleIndex": 6,
+                    "message": {
+                        "text": "Unnecessary; SDK_INT is always >= 26",
+                        "markdown": "Unnecessary; `SDK_INT` is always >= 26"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/viewmodel/SettingsViewModel.kt"
+                                },
+                                "region": {
+                                    "startLine": 738,
+                                    "startColumn": 17,
+                                    "endLine": 738,
+                                    "endColumn": 63,
+                                    "charOffset": 32943,
+                                    "charLength": 46,
+                                    "snippet": {
+                                        "text": "Build.VERSION.SDK_INT >= Build.VERSION_CODES.M"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 736,
+                                    "endLine": 741,
+                                    "snippet": {
+                                        "text": "            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager\n                ?: return false\n            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {\n                val network = connectivityManager.activeNetwork ?: return false\n                val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "46b5fba96ea69def"
+                    }
+                },
+                {
+                    "ruleId": "AutoboxingStateCreation",
+                    "ruleIndex": 0,
+                    "message": {
+                        "text": "Prefer mutableIntStateOf instead of mutableStateOf",
+                        "markdown": "Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialAnalyticsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 38,
+                                    "startColumn": 41,
+                                    "endLine": 38,
+                                    "endColumn": 55,
+                                    "charOffset": 1476,
+                                    "charLength": 14,
+                                    "snippet": {
+                                        "text": "mutableStateOf"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 36,
+                                    "endLine": 41,
+                                    "snippet": {
+                                        "text": ") {\n    val theme = AppTheme.colors\n    var selectedRangeDays by remember { mutableStateOf(7) }\n\n    LazyColumn(\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with mutableIntStateOf"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialAnalyticsTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 38,
+                                                "startColumn": 41,
+                                                "charOffset": 1476,
+                                                "endLine": 38,
+                                                "endColumn": 55,
+                                                "charLength": 14
+                                            },
+                                            "insertedContent": {
+                                                "text": "androidx.compose.runtime.mutableIntStateOf\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "7f3dd9cfc3d04605"
+                    }
+                },
+                {
+                    "ruleId": "AutoboxingStateCreation",
+                    "ruleIndex": 0,
+                    "message": {
+                        "text": "Prefer mutableIntStateOf instead of mutableStateOf",
+                        "markdown": "Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCalendarTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 37,
+                                    "startColumn": 40,
+                                    "endLine": 37,
+                                    "endColumn": 54,
+                                    "charOffset": 1360,
+                                    "charLength": 14,
+                                    "snippet": {
+                                        "text": "mutableStateOf"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 35,
+                                    "endLine": 40,
+                                    "snippet": {
+                                        "text": ") {\n    val theme = AppTheme.colors\n    var selectedDayIndex by remember { mutableStateOf(0) }\n    var reschedulingPostId by remember { mutableStateOf<String?>(null) }\n\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with mutableIntStateOf"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCalendarTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 37,
+                                                "startColumn": 40,
+                                                "charOffset": 1360,
+                                                "endLine": 37,
+                                                "endColumn": 54,
+                                                "charLength": 14
+                                            },
+                                            "insertedContent": {
+                                                "text": "androidx.compose.runtime.mutableIntStateOf\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "56b6ffe56bae77c0"
+                    }
+                },
+                {
+                    "ruleId": "AutoboxingStateCreation",
+                    "ruleIndex": 0,
+                    "message": {
+                        "text": "Prefer mutableIntStateOf instead of mutableStateOf",
+                        "markdown": "Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCampaignsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 260,
+                                    "startColumn": 36,
+                                    "endLine": 260,
+                                    "endColumn": 50,
+                                    "charOffset": 11063,
+                                    "charLength": 14,
+                                    "snippet": {
+                                        "text": "mutableStateOf"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 258,
+                                    "endLine": 263,
+                                    "snippet": {
+                                        "text": "    var name by remember { mutableStateOf(\"\") }\n    var objective by remember { mutableStateOf(\"\") }\n    var durationDays by remember { mutableStateOf(7) }\n    val selectedPlatforms = remember {\n        mutableStateListOf(SocialPlatform.X, SocialPlatform.TELEGRAM, SocialPlatform.LINKEDIN)\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with mutableIntStateOf"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCampaignsTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 260,
+                                                "startColumn": 36,
+                                                "charOffset": 11063,
+                                                "endLine": 260,
+                                                "endColumn": 50,
+                                                "charLength": 14
+                                            },
+                                            "insertedContent": {
+                                                "text": "androidx.compose.runtime.mutableIntStateOf\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "e831b387d1f9d0c2"
+                    }
+                },
+                {
+                    "ruleId": "AutoboxingStateCreation",
+                    "ruleIndex": 0,
+                    "message": {
+                        "text": "Prefer mutableIntStateOf instead of mutableStateOf",
+                        "markdown": "Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialContentTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 605,
+                                    "startColumn": 43,
+                                    "endLine": 605,
+                                    "endColumn": 57,
+                                    "charOffset": 28136,
+                                    "charLength": 14,
+                                    "snippet": {
+                                        "text": "mutableStateOf"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 603,
+                                    "endLine": 608,
+                                    "snippet": {
+                                        "text": ") {\n    val theme = AppTheme.colors\n    var selectedOffsetHours by remember { mutableStateOf(1) }\n\n    AlertDialog(\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with mutableIntStateOf"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialContentTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 605,
+                                                "startColumn": 43,
+                                                "charOffset": 28136,
+                                                "endLine": 605,
+                                                "endColumn": 57,
+                                                "charLength": 14
+                                            },
+                                            "insertedContent": {
+                                                "text": "androidx.compose.runtime.mutableIntStateOf\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "6141b3cff700542f"
+                    }
+                },
+                {
+                    "ruleId": "AutoboxingStateCreation",
+                    "ruleIndex": 0,
+                    "message": {
+                        "text": "Prefer mutableIntStateOf instead of mutableStateOf",
+                        "markdown": "Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/SocialScreen.kt"
+                                },
+                                "region": {
+                                    "startLine": 42,
+                                    "startColumn": 40,
+                                    "endLine": 42,
+                                    "endColumn": 54,
+                                    "charOffset": 1452,
+                                    "charLength": 14,
+                                    "snippet": {
+                                        "text": "mutableStateOf"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 40,
+                                    "endLine": 45,
+                                    "snippet": {
+                                        "text": "    val theme = AppTheme.colors\n\n    var selectedTabIndex by remember { mutableStateOf(0) }\n\n    val accounts by viewModel.accounts.collectAsState()\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with mutableIntStateOf"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/SocialScreen.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 42,
+                                                "startColumn": 40,
+                                                "charOffset": 1452,
+                                                "endLine": 42,
+                                                "endColumn": 54,
+                                                "charLength": 14
+                                            },
+                                            "insertedContent": {
+                                                "text": "androidx.compose.runtime.mutableIntStateOf\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "2bb901be212817cb"
+                    }
+                },
+                {
+                    "ruleId": "AutoboxingStateCreation",
+                    "ruleIndex": 0,
+                    "message": {
+                        "text": "Prefer mutableFloatStateOf instead of mutableStateOf",
+                        "markdown": "Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialSettingsTab.kt"
+                                },
+                                "region": {
+                                    "startLine": 334,
+                                    "startColumn": 34,
+                                    "endLine": 334,
+                                    "endColumn": 48,
+                                    "charOffset": 13599,
+                                    "charLength": 14,
+                                    "snippet": {
+                                        "text": "mutableStateOf"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 332,
+                                    "endLine": 337,
+                                    "snippet": {
+                                        "text": "    var selectedTrigger by remember { mutableStateOf(\"SENTIMENT_POSITIVE\") }\n    var selectedAction by remember { mutableStateOf(\"AUTO_REPLY\") }\n    var confidence by remember { mutableStateOf(0.85f) }\n\n    AlertDialog(\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with mutableFloatStateOf"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/ui/screens/social/SocialSettingsTab.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 334,
+                                                "startColumn": 34,
+                                                "charOffset": 13599,
+                                                "endLine": 334,
+                                                "endColumn": 48,
+                                                "charLength": 14
+                                            },
+                                            "insertedContent": {
+                                                "text": "androidx.compose.runtime.mutableFloatStateOf\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "cfb75018c832ab7b"
+                    }
+                },
+                {
+                    "ruleId": "UseKtx",
+                    "ruleIndex": 8,
+                    "message": {
+                        "text": "Use the KTX extension function SharedPreferences.edit instead?",
+                        "markdown": "Use the KTX extension function `SharedPreferences.edit` instead?"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/social/core/SocialManager.kt"
+                                },
+                                "region": {
+                                    "startLine": 68,
+                                    "startColumn": 9,
+                                    "endLine": 68,
+                                    "endColumn": 21,
+                                    "charOffset": 2751,
+                                    "charLength": 12,
+                                    "snippet": {
+                                        "text": "prefs.edit()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 66,
+                                    "endLine": 71,
+                                    "snippet": {
+                                        "text": "    fun setAutomationLevel(level: AutomationLevel) {\n        _automationLevel.value = level\n        prefs.edit().putString(KEY_AUTOMATION_LEVEL, level.name).apply()\n    }\n\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with the edit extension function"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/social/core/SocialManager.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 68,
+                                                "startColumn": 15,
+                                                "charOffset": 2757,
+                                                "endLine": 68,
+                                                "endColumn": 20,
+                                                "charLength": 5
+                                            },
+                                            "insertedContent": {
+                                                "text": "edit\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 68,
+                                                "startColumn": 20,
+                                                "charOffset": 2762,
+                                                "endLine": 68,
+                                                "endColumn": 21,
+                                                "charLength": 1
+                                            },
+                                            "insertedContent": {
+                                                "text": " {\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 68,
+                                                "startColumn": 21,
+                                                "charOffset": 2763,
+                                                "endLine": 68,
+                                                "endColumn": 22,
+                                                "charLength": 1
+                                            },
+                                            "insertedContent": {
+                                                "text": "\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 68,
+                                                "startColumn": 65,
+                                                "charOffset": 2807,
+                                                "endLine": 68,
+                                                "endColumn": 73,
+                                                "charLength": 8
+                                            },
+                                            "insertedContent": {
+                                                "text": "}\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "45f62bf7a86c07fe"
+                    }
+                },
+                {
+                    "ruleId": "UseKtx",
+                    "ruleIndex": 8,
+                    "message": {
+                        "text": "Use the KTX extension function SharedPreferences.edit instead?",
+                        "markdown": "Use the KTX extension function `SharedPreferences.edit` instead?"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt"
+                                },
+                                "region": {
+                                    "startLine": 50,
+                                    "startColumn": 9,
+                                    "endLine": 51,
+                                    "endColumn": 20,
+                                    "charOffset": 1945,
+                                    "charLength": 82,
+                                    "snippet": {
+                                        "text": "context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)\n            .edit()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 48,
+                                    "endLine": 54,
+                                    "snippet": {
+                                        "text": "            // Some providers or testing environments might not support persistable permissions\n        }\n        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)\n            .edit()\n            .putString(KEY_CUSTOM_FOLDER_URI, uri.toString())\n            .apply()\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with the edit extension function"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 51,
+                                                "startColumn": 14,
+                                                "charOffset": 2021,
+                                                "endLine": 51,
+                                                "endColumn": 19,
+                                                "charLength": 5
+                                            },
+                                            "insertedContent": {
+                                                "text": "edit\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 51,
+                                                "startColumn": 19,
+                                                "charOffset": 2026,
+                                                "endLine": 51,
+                                                "endColumn": 20,
+                                                "charLength": 1
+                                            },
+                                            "insertedContent": {
+                                                "text": " {\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 52,
+                                                "startColumn": 13,
+                                                "charOffset": 2040,
+                                                "endLine": 52,
+                                                "endColumn": 14,
+                                                "charLength": 1
+                                            },
+                                            "insertedContent": {
+                                                "text": "\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 53,
+                                                "startColumn": 13,
+                                                "charOffset": 2102,
+                                                "endLine": 53,
+                                                "endColumn": 21,
+                                                "charLength": 8
+                                            },
+                                            "insertedContent": {
+                                                "text": "}\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 52,
+                                                "startColumn": 1,
+                                                "charOffset": 2028
+                                            },
+                                            "insertedContent": {
+                                                "text": "    \n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "9b013af4afa1bc24"
+                    }
+                },
+                {
+                    "ruleId": "UseKtx",
+                    "ruleIndex": 8,
+                    "message": {
+                        "text": "Use the KTX extension function SharedPreferences.edit instead?",
+                        "markdown": "Use the KTX extension function `SharedPreferences.edit` instead?"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt"
+                                },
+                                "region": {
+                                    "startLine": 60,
+                                    "startColumn": 9,
+                                    "endLine": 61,
+                                    "endColumn": 20,
+                                    "charOffset": 2236,
+                                    "charLength": 82,
+                                    "snippet": {
+                                        "text": "context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)\n            .edit()"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 58,
+                                    "endLine": 64,
+                                    "snippet": {
+                                        "text": "     */\n    fun clearCustomFolder(context: Context) {\n        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)\n            .edit()\n            .remove(KEY_CUSTOM_FOLDER_URI)\n            .apply()\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with the edit extension function"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 61,
+                                                "startColumn": 14,
+                                                "charOffset": 2312,
+                                                "endLine": 61,
+                                                "endColumn": 19,
+                                                "charLength": 5
+                                            },
+                                            "insertedContent": {
+                                                "text": "edit\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 61,
+                                                "startColumn": 19,
+                                                "charOffset": 2317,
+                                                "endLine": 61,
+                                                "endColumn": 20,
+                                                "charLength": 1
+                                            },
+                                            "insertedContent": {
+                                                "text": " {\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 62,
+                                                "startColumn": 13,
+                                                "charOffset": 2331,
+                                                "endLine": 62,
+                                                "endColumn": 14,
+                                                "charLength": 1
+                                            },
+                                            "insertedContent": {
+                                                "text": "\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 63,
+                                                "startColumn": 13,
+                                                "charOffset": 2374,
+                                                "endLine": 63,
+                                                "endColumn": 21,
+                                                "charLength": 8
+                                            },
+                                            "insertedContent": {
+                                                "text": "}\n"
+                                            }
+                                        },
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 62,
+                                                "startColumn": 1,
+                                                "charOffset": 2319
+                                            },
+                                            "insertedContent": {
+                                                "text": "    \n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "ee6db92b3c86dacf"
+                    }
+                },
+                {
+                    "ruleId": "UseKtx",
+                    "ruleIndex": 8,
+                    "message": {
+                        "text": "Use the KTX extension function String.toUri instead?",
+                        "markdown": "Use the KTX extension function `String.toUri` instead?"
+                    },
+                    "level": "error",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uriBaseId": "%SRCROOT%",
+                                    "uri": "app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt"
+                                },
+                                "region": {
+                                    "startLine": 73,
+                                    "startColumn": 23,
+                                    "endLine": 73,
+                                    "endColumn": 40,
+                                    "charOffset": 2715,
+                                    "charLength": 17,
+                                    "snippet": {
+                                        "text": "Uri.parse(uriStr)"
+                                    }
+                                },
+                                "contextRegion": {
+                                    "startLine": 71,
+                                    "endLine": 76,
+                                    "snippet": {
+                                        "text": "            .getString(KEY_CUSTOM_FOLDER_URI, null) ?: return null\n        return try {\n            val uri = Uri.parse(uriStr)\n            val persistedList = try {\n                context.contentResolver.persistedUriPermissions\n"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "fixes": [
+                        {
+                            "description": {
+                                "text": "Replace with the toUri extension function"
+                            },
+                            "artifactChanges": [
+                                {
+                                    "artifactLocation": {
+                                        "uriBaseId": "%SRCROOT%",
+                                        "uri": "app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt"
+                                    },
+                                    "replacements": [
+                                        {
+                                            "deletedRegion": {
+                                                "startLine": 73,
+                                                "startColumn": 23,
+                                                "charOffset": 2715,
+                                                "endLine": 73,
+                                                "endColumn": 40,
+                                                "charLength": 17
+                                            },
+                                            "insertedContent": {
+                                                "text": "uriStr.toUri()\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "partialFingerprints": {
+                        "sourceContext/v1": "4fb062c0f8cbd2c7"
+                    }
+                }
+            ]
+        }
+    ]
+}
