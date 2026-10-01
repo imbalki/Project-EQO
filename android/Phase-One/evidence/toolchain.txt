@@ -1,0 +1,37 @@
+# TASK-001 toolchain evidence
+Captured: 2026-10-01 16:06 on <host> (Windows 11)
+SDK licenses: accepted on the owner's explicit instruction in chat (2026-10-01) by piping 'y' to sdkmanager during install; license file android-sdk-license present.
+
+## JAVA_HOME / ANDROID_HOME
+JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot
+ANDROID_HOME=C:\Users\<user>\Android\Sdk
+
+## java -version
+openjdk version "21.0.12.1" 2026-08-18 LTS
+OpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)
+
+## sdkmanager --version
+1.0.16486076 (Android CLI)
+
+## sdkmanager --list_installed
+WARNING: The SDK Manager CLI tool (sdkmanager) is deprecated. Android CLI will be used instead.
+The 'android' binary can also be found in the cmdline-tools directory, and 'android sdk' is the replacement for 'sdkmanager'.
+To learn more about the Android CLI and how to use it, see the documentation (https://d.android.com/tools/agents/android-cli)
+
+Installed packages:
+  build-tools/36.0.0           36.0.0                            Android SDK Build-Tools 36             
+  cmake/3.31.6                 3.31.6                            CMake 3.31.6                           
+  cmdline-tools/latest         unknown         ->        23.0.0  Android SDK Command-line Tools (latest)
+  ndk/29.0.14206865            29.0.14206865                     NDK (Side by side) 29.0.14206865       
+  platform-tools               37.0.1                            Android SDK Platform-Tools             
+  platforms/android-36         2.0.0                             Android SDK Platform 36                
+
+## adb version
+Android Debug Bridge version 1.0.41
+Version 37.0.1-15733141
+Installed as C:\Users\<user>\Android\Sdk\platform-tools\adb.exe
+Running on Windows 10.0.26200
+
+## cmake --version
+cmake version 3.31.6
