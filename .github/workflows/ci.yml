@@ -16,14 +16,18 @@ jobs:
         run: scripts/check.sh
 
   android:
-    if: hashFiles('android/gradlew') != ''
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: android
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Skip if the android module is absent
+        id: android_gate
+        if: hashFiles('android/gradlew') != ''
+        run: echo "present=true" >> "$GITHUB_OUTPUT"
       - name: Set up JDK 21 (Temurin)
+        if: steps.android_gate.outputs.present == 'true'
         uses: actions/setup-java@v6.0.1
         with:
           distribution: temurin
@@ -35,11 +39,13 @@ jobs:
         with:
           cache-read-only: false
       - name: Assemble debug and release, unit tests, lint
+        if: steps.android_gate.outputs.present == 'true'
         run: ./gradlew :app:assembleDebug :app:assembleRelease :app:testDebugUnitTest :app:lintDebug --console=plain
       - name: Static analysis (ktlint + detekt)
+        if: steps.android_gate.outputs.present == 'true'
         run: ./gradlew ktlintCheck detekt test --console=plain
       - name: Upload Android Lint report
-        if: always()
+        if: always() && steps.android_gate.outputs.present == 'true'
         uses: actions/upload-artifact@v7.0.1
         with:
           name: lint-report
@@ -47,7 +53,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Upload test results
-        if: always()
+        if: always() && steps.android_gate.outputs.present == 'true'
         uses: actions/upload-artifact@v7.0.1
         with:
           name: test-results
