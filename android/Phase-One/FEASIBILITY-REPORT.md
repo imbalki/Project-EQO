@@ -20,7 +20,7 @@
 
 ## 2. What each upstream actually gives us
 
-- **OpenDroid (base):** Kotlin + Compose app, agent loop with tool calling, OpenRouter/remote-LLM support, Accessibility automation, MediaProjection + AccessibilityNodeInfo fallback, Room memory, minSdk 26 (so Android 12+ fits), JDK 21 / AGP 9 toolchain, Shizuku client already a dependency (`dev.rikka.shizuku:api/provider:13.1.5`). **On-device models are already implemented** (verified): `GemmaProvider` / `LiteRTLMProvider` / `HybridOnDeviceProvider` (`LLMProviderFactory.kt:43-71`), managed model download + SHA-256 artifact integrity + device-memory compatibility check (`ModelDownloadWorker.kt:76`, `ModelArtifactIntegrity.kt`), local `.task`/`.litertlm` import. Per D-001 this rides along in Phase One where free; EQO-specific model-advisory UX is Phase 2.
+- **OpenDroid (base):** Kotlin + Compose app, agent loop with tool calling, OpenRouter/remote-LLM support, Accessibility automation, MediaProjection + AccessibilityNodeInfo fallback, Room memory, minSdk 26 (so the Android 11+ floor fits), JDK 21 / AGP 9 toolchain, Shizuku client already a dependency (`dev.rikka.shizuku:api/provider:13.1.5`). **On-device models are already implemented** (verified): `GemmaProvider` / `LiteRTLMProvider` / `HybridOnDeviceProvider` (`LLMProviderFactory.kt:43-71`), managed model download + SHA-256 artifact integrity + device-memory compatibility check (`ModelDownloadWorker.kt:76`, `ModelArtifactIntegrity.kt`), local `.task`/`.litertlm` import. Per D-001 this rides along in Phase One where free; EQO-specific model-advisory UX is Phase 2.
 - **ClosePaw (donor):** Chrome CDP control via the `chrome_devtools_remote` abstract socket plus `/data/local/tmp/chrome-command-line` and the `enable-command-line-on-non-rooted-devices` flag (documented cold-restart requirement; **Chrome must create the socket itself — `adb forward` does not**), wireless **ADB pairing protocol implementation** (its own pure-Kotlin SPAKE2-25519 + TLS-PSK, BouncyCastle, bundled Conscrypt — not Shizuku's), virtual display via Shizuku shell-uid processes, hidden-API bypass, minSdk 31, JDK 17.
 - **Shizuku + Shizuku-API:** the privileged manager/server/native starter that EQO must absorb into its own branded setup. Apache-2.0 reuse is allowed, but the upstream explicitly forbids reusing its name, applicationId, manager permissions, and icons — which **aligns with** the EQO-only-branding requirement (§6).
 
@@ -68,14 +68,14 @@ Coordinated changes across server, native code, client, provider authority and p
 |---|---|
 | JDK (17/21 pin needed) | missing |
 | Android SDK / NDK | missing |
-| Attached test device (Android 12 + 13) | none |
+| Attached test device (Android 11 + 12 + 13) | none |
 | Model routing | MiMo 2.6 Pro/Flash via OpenCode Go verified working; saved MiMo primary key returns 401 (credential issue, not a product issue) |
 
 ## 8. Phase One exit gates (all must pass before release claims)
 
 1. Reproducible build of the combined EQO APK on pinned toolchain (lint clean or baseline-shrunk with named findings captured).
 2. Integrated EQO-branded helper: starts over wireless ADB, authorizes EQO, survives binder death — device-proven.
-3. Wireless ADB pairing + authenticated connection + loss/revocation/reboot recovery — device-proven on Android 12 and 13 (plus one OEM skin).
+3. Wireless ADB pairing + authenticated connection + loss/revocation/reboot recovery — device-proven on Android 11 (physical Realme Narzo 20, Realme UI 2.0 = the OEM-skin device) plus Android 12 and 13 (emulator and/or physical; label which).
 4. Accessibility observe/tap/scroll/text on a test app — device-proven.
 5. Chrome + CDP navigate + fill test form after documented debug prep/restart — device-proven.
 6. Virtual display: create, launch compatible app, perceive, act, clean up; foreground fallback with consent — device-proven.
@@ -86,7 +86,7 @@ Coordinated changes across server, native code, client, provider authority and p
 
 1. **S0 Build parity:** pin JDK/AGP/SDK/NDK; reproduce upstream CI locally; capture real lint findings (not a blind baseline regenerate).
 2. **S1 Helper integration spike:** apply the rename/authority change set; NDK-build the starter; prove start + authorization + binder death on device. *Largest risk — run first.*
-3. **S2 ADB pairing spike:** ClosePaw pairing code against Android 12/13 wireless debugging; test wrong code, port confusion (pairing port ≠ connection port), revoke, reboot.
+3. **S2 ADB pairing spike:** ClosePaw pairing code against Android 11/12/13 wireless debugging; test wrong code, port confusion (pairing port ≠ connection port), revoke, reboot.
 4. **S3 CDP spike:** Chrome debug prep, restart, socket bind verification, form fill.
 5. **S4 Virtual-display spike:** create/perceive/input/cleanup + foreground-fallback consent.
 6. **S5 Orchestrator skeleton:** single Kotlin action loop — permissions check → approval → execute → observe → verify → repeat; Pause/Stop/takeover; idempotency for irreversible actions.

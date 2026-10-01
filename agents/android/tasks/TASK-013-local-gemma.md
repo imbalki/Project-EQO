@@ -18,6 +18,9 @@ Enable the existing model manager (download with integrity check, local import, 
 - [ ] At least one tool-calling task runs on the local model; result (pass or fail) recorded in `Phase-One/evidence/`
 - [ ] If it fails, the path is hidden behind a clear "experimental" label rather than removed
 
+## Open items
+- Verify LiteRT-LM/Gemma minSdk (ADR-0003); if it is above 30, local inference is disabled on lower API levels.
+
 ## Evidence required
 Device test record with device model, RAM and model name.
 

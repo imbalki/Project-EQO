@@ -24,6 +24,14 @@ Owner decisions recorded 2026-10-01. These supersede conflicting statements in t
 
 **Status:** DECIDED (owner). Documentation reconciliation in `Project-EQO` (`AGENTS.md`, `docs/ARCHITECTURE.md`) is an implementation-start task.
 
+## D-007 - Android 11 floor (minSdk 30); LiquidAI Leap SDK excluded
+
+**Decision:** EQO's Android floor is **Android 11 = API 30 = minSdk 30** (previously Android 12 / minSdk 31). Android 10 is not acceptable: wireless-debugging pairing exists only from Android 11. The **LiquidAI Leap SDK is excluded from EQO entirely** - no EQO code, dependency or doc may use `ai.liquid.*` / `leap-sdk`, except the exclusion rule in `agents/android/context/CONSTRAINTS.md`. Donor/upstream values stay facts, not EQO requirements: ClosePaw's own `minSdk 31` (forced by its LiquidAI Leap SDK dependency) and OpenDroid's `minSdk 26`.
+
+**Rationale:** owner decision 2026-10-01. Nothing built so far depends on Android 12; OpenDroid upstream ships minSdk 26; ClosePaw ships minSdk 31 only because of the proprietary LiquidAI Leap SDK, which EQO does not use; wireless debugging pairing exists from Android 11. Device gate: Android 11 on the owner's physical Realme Narzo 20 (Realme UI 2.0 - the OEM-skin device) plus Android 12 and 13 from emulator and/or physical devices, each result labelled emulator or physical.
+
+**Status:** DECIDED (owner, 2026-10-01). Recorded as ADR-0003 (`docs/adr/0003-android-11-floor-and-no-leap-sdk.md`). Open items are recorded there, not decided here (LiteRT-LM/Gemma minSdk verification in TASK-013; donor code above API 30 surfaced by compile/lint in TASK-003/004/007).
+
 ---
 
 ## Open items (not yet decided)
