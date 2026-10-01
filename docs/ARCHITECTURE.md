@@ -1,5 +1,8 @@
 # Architecture
 
+> **Superseded in part.** Statements about Python, Composio, offline-default Gemma and Phase 1 scope are replaced by decisions D-001 to D-006 in `Project-EQO-Android/Phase-One/DECISIONS.md`.
+
+
 ## Products
 1. Android app (Kotlin, Jetpack Compose): voice, SMS, Composio tools, on-device Gemma, Room memory.
 2. Desktop app (Electron): full Node.js stack, later phases.

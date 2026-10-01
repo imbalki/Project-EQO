@@ -1,8 +1,11 @@
 # Constraints and non-goals
 
-- No embedded Node.js runtime. No Termux. One APK, single-click install.
-- Phase 1 does NOT include: screen control via AccessibilityService (Phase 3), server-side GBrain (Phase 2), cloud VM tier (Phase 4), desktop sync, wake word.
-- Privacy default: nothing leaves the phone unless the user enables cloud or connects an app.
+Superseded items from the earlier plan are replaced by decisions D-001 to D-006 (`Project-EQO-Android/Phase-One/DECISIONS.md`).
+
+- One sideloaded APK. Android 12+ (minSdk 31). The bundled Python bridge stays inert (D-005); no Termux calls.
+- Phase 1 DOES include screen control via AccessibilityService, wireless-ADB helper, Chrome CDP and virtual display spikes. It does NOT include connectors (Composio etc.), server-side memory, cloud VM tier, desktop sync or wake word.
+- Privacy default: nothing leaves the phone unless the user supplies an OpenRouter key and starts a task. Local Gemma is opportunistic (D-006).
 - Never log message content, tokens or API keys.
-- Store API keys in Android Keystore-backed encrypted storage, not plain SharedPreferences.
-- Subsidized OpenRouter key for freemium is a build-time value injected in CI, never committed.
+- Store API keys in Android Keystore-backed encrypted storage.
+- No subsidized key in the build; bring-your-own-key only.
+- Sensitive or irreversible actions need user approval; user can pause, stop or take over at any time.

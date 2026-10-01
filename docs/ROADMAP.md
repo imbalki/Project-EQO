@@ -1,8 +1,9 @@
 # Roadmap
 
-| Phase | Scope | Est. |
-|-------|-------|------|
-| 1 | Pure Kotlin app: Gemma E4B, OpenRouter, Composio, SMS, Room memory, voice loop | 4-5 weeks |
-| 2 | Server-side memory (GBrain) | 2-3 weeks |
-| 3 | Screen control via accessibility service | 4-6 weeks |
-| 4 | Cloud VM tier | 2-3 weeks |
+Phase One is defined in `Project-EQO-Android/Phase-One/` (exit gates 1-8). Later phases are planned only after the Phase One exit review (TASK-016).
+
+| Phase | Scope |
+|-------|-------|
+| 1 | Android fork of OpenDroid with helper, wireless ADB, accessibility, Chrome CDP, virtual display, OpenRouter BYOK, opportunistic local Gemma, sideloaded study APK |
+| 2 | Connectors (Composio or open-source alternatives), memory, polish; scoped after exit review |
+| 3+ | Desktop, cloud tier: not scheduled |

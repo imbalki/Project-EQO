@@ -1,5 +1,8 @@
 # Android architecture (Phase 1)
 
+> **Superseded in part.** Statements about Python, Composio, offline-default Gemma and Phase 1 scope are replaced by decisions D-001 to D-006 in `Project-EQO-Android/Phase-One/DECISIONS.md`.
+
+
 ```
 UI (Compose)  ->  AssistantViewModel  ->  AgentLoop
                                             |-- LlmClient (interface)

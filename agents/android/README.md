@@ -11,3 +11,5 @@ agents/android/
   decisions/          local decision notes; promote big ones to docs/adr/
   handoff/            one file per handoff (TEMPLATE.md)
 ```
+
+Code location (assumption A-1): code lives in the `Project-EQO-Android` repo; this repo holds tasks, routing and orchestration. Model routing: `docs/agents/MODEL-ROUTING.md`.
