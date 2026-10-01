@@ -1,44 +1,67 @@
 # Accessibility review of the EQO prototype (Warm)
 
-Date: 2026-10-02. Subject: `design/prototype.html` (34 screens). Method: scripted checks run in a browser against the live prototype (rendering every screen, then measuring), plus a read of the generated copy deck. These are measurements of a **web mockup**, not of a built Android app: they inform the design and set targets for the Compose build, and do not replace testing on devices.
+Date: 2026-10-02 (revised after two independent reviews). Subject: `design/prototype.html` (36 screens, 69 documented states). Method: scripted checks run in a browser against the live prototype (render every screen, then measure), the generated copy deck, and two independent reviews by other model families. These are measurements of a **web mockup**, not of a built Android app: they set targets for the Compose build and do not replace testing on devices.
 
-## Results (final build)
+## Results (current build)
 
 | Check | Target | Result |
 |---|---|---|
-| Touch targets | 48 dp minimum (Android guidance; WCAG 2.2 target size AA is 24 px) | **127 of 127 controls are at least 48 dp** across 34 screens |
-| Accessible names | every control has one | **0 unnamed controls** (inputs use labels or placeholders; icon-only buttons carry `aria-label`) |
-| Decorative icons | hidden from screen readers | **0 icons exposed** (all `aria-hidden`) |
-| Minimum text size | 12 px or more (body 14) | **0 text nodes below 12 px** |
-| Text contrast | 4.5:1 for normal text | **13 of 13 pairs pass**; lowest is 5.00:1 (terracotta text button on warm white) |
-| Layout at large text | no clipped or sideways-scrolling content | **0 overflow cases** at 100%, 130% and 160% text, left-to-right, and at 100% and 160% right-to-left |
-| Headings | each screen has a heading | 34 of 34 after the fix below |
-| Status announcements | changes announced to screen readers | partial, see gaps |
+| Touch target size | 48 dp minimum, **height and width** (Android guidance; WCAG 2.2 target size AA is 24 px) | **148 of 148 controls** are at least 48 dp both ways (narrowest is 49.7 dp) |
+| Accessible names | every control has one | 0 unnamed controls |
+| Decorative icons | hidden from screen readers | 0 icons exposed (all `aria-hidden`) |
+| Minimum text size | 12 px or more | 0 text nodes below 12 px, including the take-over and foreground states |
+| Text contrast | 4.5:1 for normal text | **13 of 13 pairs pass** (table below) |
+| Non-text contrast | 3:1 for the borders of inputs and chips | input and chip borders 3.62:1 on white, 3.42:1 on the page background: pass |
+| Large text and layout | no clipped or sideways-scrolling content | 0 overflow cases at 100%, 130% and 160% text left to right, and at 100% and 160% right to left |
+| Fits without scrolling | the long, mismatched scrollbar was a complaint | **36 of 36 screens fit with no scrolling at 100% text** (scrollbars are also restyled slim and warm for larger text) |
+| Headings | each screen has one | 36 of 36 (Home has an invisible heading) |
+| Status announcements | changes announced | 10 live regions across the screens, including the approval card |
+| Focus on navigation | focus moves to the new screen's heading | yes (checked) |
+| Behaviour | 31 scripted interaction checks | 31 of 31 pass (pause never auto-resumes, Back on approval denies, recovery buttons return to the failed step, take-over observation is off by default) |
 
-Contrast pairs measured (ratio): ink on background 13.49; muted on background 5.44; muted on tonal card 5.04; muted on white card 5.76; white on terracotta 5.29; dark on soft button 9.83; ready green 5.14; needs-OK amber 6.93; stop red 5.50; terracotta text button 5.00; ink on amber card 12.51; muted on amber card 5.05; ink on red card 11.99.
+### Text contrast pairs (ratio)
 
-## Problems found and fixed during the review
+| Pair | Ratio |
+|---|---|
+| Body text (ink) on page background | 13.49 |
+| Secondary text on page background | 5.44 |
+| Secondary text on soft card | 5.04 |
+| Secondary text on white card | 5.76 |
+| White button label on terracotta | 5.29 |
+| Soft-button label on peach | 9.83 |
+| "Ready" chip: green on pale green | 5.14 |
+| Needs-OK / attention: amber on pale amber | 6.93 |
+| Stop button and error title: red on pale red | 5.50 |
+| Text button: terracotta on page background | 5.00 |
+| Body text on pale amber card | 12.51 |
+| Secondary text on pale amber card | 5.05 |
+| Body text on pale red card | 11.99 |
 
-1. Back buttons, suggestion chips and the send button were 44 dp: raised to 48.
-2. Variant tabs were 40 dp: raised to 48.
-3. The Android switch mock was 32 dp high: its tap area is now 48 dp.
-4. Pause, Stop and Take over were 46 dp: raised to 48.
-5. "Android system screen" tags were 11 px: raised to 12.
-6. The Home screen had no heading: an invisible "Home" heading was added so screen readers can orient.
-7. Copy: mixed British and US spelling was unified to US English; a lowercase status line ("open messages") was rewritten; "greyed out" became "dimmed".
+## Corrections after independent review
+
+The first version of this document overstated two results. Reviewer B (a different model family) found:
+
+1. "127 of 127 controls at least 48 dp" was wrong: only heights were measured, and two variant tabs were 46 and 47 dp wide. Fixed (minimum width 48 dp) and the check now measures width as well as height.
+2. "0 text nodes below 12 px" was wrong in one reachable state: the "Not observing" badge was 11 px after pressing Take over. Fixed (12 px) and the sweep now covers that state.
+3. Four contrast rows were labelled with the wrong surfaces (values were correct). Relabelled above.
+4. The status-region count was understated and the approval card had none. The approval card is now an alert region.
+5. Focus dropped to the page body after navigation. Screens now move focus to their heading.
+6. Input and chip borders measured about 1.3:1. Strengthened to 3.4 to 3.6:1.
+
+Reviewer A (flow traceability) found that Pause, Stop and Take over lacked the spec's literal wording; they now show "Pause after the current step finishes", "You drive; EQO holds" and "Stop this task completely".
 
 ## Gaps and things not tested (be honest about these)
 
-- **No screen reader run.** TalkBack was not used; reading order, focus order after each navigation, and the spoken text of the approval timer are untested. Needs a device pass in the Compose build.
-- **Live announcements are thin.** Only two status regions exist. Hub row changes (Ready, Needs helper), check results and the approval countdown must announce themselves in the real app.
-- **Non-text contrast (3:1)** for card borders, focus rings, chip outlines and icons was not measured.
-- **Color-blindness simulation** was not run. Status already uses a word plus a symbol, not color alone, which is the main mitigation.
-- **Real font scaling:** the prototype scales text with a CSS multiplier. Android's own font scale (and display-size changes) can behave differently; test at the largest system settings on Android 11, 12 and 13.
-- **Right to left:** layout mirroring was previewed with a direction switch and uses logical spacing, but it was not reviewed by a native reader, and some icons (arrows) mirror while others should not.
+- **No screen reader run.** TalkBack was not used. Reading order and the spoken approval timer are untested. Needs a device pass in the Compose build.
+- **Real font scaling.** The prototype scales text with a CSS multiplier. Android's font scale and display-size settings can behave differently; test at the largest settings on Android 11, 12 and 13. At 130% and 160% some screens will scroll; that is expected.
+- **Right to left** was previewed with a direction switch and logical spacing, with no hard-coded left or right CSS, but not reviewed by a native reader. Some icons mirror (arrows) and some must not; this needs a native check.
 - **Translation length:** only a fixed 160% stress test was done. Languages such as German or Finnish need a real pseudo-localization pass.
-- **Motion and timing:** the 60-second approval timeout needs a way to extend or hear the time left; this is a recommendation for the build, not yet designed.
-- **Cognitive load on long flows** (the five helper checks) needs usability testing with real first-time users; this prototype only shows the intended structure.
+- **Color-blindness simulation** was not run. Status always uses a word plus a symbol, not color alone.
+- **Card hairlines** are 1.2:1 on purpose: cards are identified by their content, not their outline. If a stricter reading of the non-text contrast rule is wanted, they can be darkened.
+- **The 60-second approval timeout** needs a way to hear the time left and to ask for more time. A recommendation for the build, not yet designed.
+- **Motion** is out of scope for Phase One. Animations are planned for Phase 2.
+- **Cognitive load** on the five helper checks needs usability testing with first-time users; the prototype shows the intended structure only.
 
 ## Recommendations carried into the build (TASK-015)
 
-Use Material components with the tokens in `prototype.html`; keep every control at 48 dp or more; expose every status change through live regions; keep the approval timer both visible and spoken, with a way to ask for more time; run TalkBack, largest font and display size, and an RTL pseudo-locale as part of the exit review.
+Use Material components with the tokens in `prototype.html`; keep every control at 48 dp or more in both dimensions; expose every status change through live regions; move focus to the new screen's heading on navigation; keep the approval timer visible and spoken, with a way to ask for more time; run TalkBack, the largest font and display size, and a right-to-left pseudo-locale as part of the exit review.

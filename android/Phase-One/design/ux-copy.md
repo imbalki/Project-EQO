@@ -2,7 +2,7 @@
 
 Generated from `design/prototype.html` by `design/tools/build-copy-deck.mjs`. Do not edit by hand: change the prototype and run the script.
 
-Conventions: US English (Android's default); neutral example names; Android and Chrome setting names verbatim; every readiness claim is per check; no blame. These follow the binding microcopy principles in `docs/USER-FLOWS.md` section 18.
+Conventions: US English (Android's default); neutral example names; Android and Chrome setting names verbatim; every readiness claim is per check; no blame. These follow the binding microcopy principles in `docs/USER-FLOWS.md` section 18. Review-only controls (variant tabs, "Demo" and "Simulate" buttons) are not included.
 
 Placeholders are marked PENDING in the screens (exact Chrome flag, privacy "what is sent" list, legal wording, OEM menu paths) and are not final copy.
 
@@ -15,22 +15,22 @@ Requirements: REQ-INS-01/03. Source: USER-FLOWS UF-01 step 1.
 
 - EQO
 - Your Only Personal AI Assistant
-- EQO works by guiding you through a few Android settings, then runs tasks on your phone with your approval at every sensitive step. Nothing is set up yet.
+- EQO helps with everyday tasks on your phone. You set it up step by step, and you approve anything sensitive.
 - Get started
-- Read legal and licenses
+- Legal and licenses
 
 ### Privacy primer (S-02)
 
 Requirements: REQ-PRIV-03/04. Source: USER-FLOWS UF-01 step 2.
 
 - Before we begin
-- Three things to know about how EQO treats your information.
 - Only what a task needs
-- EQO sends your chosen AI model just what it needs. Screen or browser content is shared only after you approve it. Redaction is best-effort, so some sensitive content may still be visible to the model.
-- Your key stays on your phone
-- Your API key is stored encrypted in the Android Keystore and is never written to logs.
+- EQO sends your AI model only what a task needs, and only after you approve screen content. Redaction is best-effort, so some private details may still show.
+- Your key stays here
+- Your API key is encrypted on this phone and never written to logs.
 - You stay in control
-- EQO asks before anything sensitive. You can pause or stop at any time.
+- EQO asks before anything sensitive. Pause or stop any time.
+- What exactly is sent?
 - Continue
 
 Screen reader names (not visible text): Back
@@ -40,31 +40,93 @@ Screen reader names (not visible text): Back
 Requirements: REQ-INS-01, REQ-ADB-12. Source: USER-FLOWS UF-01 step 3, section 16.2.
 
 - EQO
-- Let's get you set up
-- EQO can't run tasks until these are ready.
+- Let's set up EQO
+- Three steps are needed before EQO can run tasks.
 - 0 of 3 required
-- About 10 to 15 min
+- About 10 to 15 min (estimate)
 - Model
 - Required
-- Set up
+- Not set up
 - Screen control
 - Required
-- Set up
+- Not set up
 - Helper connection
 - Required
-- Set up
+- Not set up
 - Browser control
-- Optional
-- Needs helper
+- Needs the helper first
+- Needs attention
 - Background mode
-- Optional
-- Needs helper
+- Needs the helper first
+- Needs attention
 - Messages (SMS)
 - Optional
-- Off
-- Continue setup
+- Not set up
+- Continue
 
-Screen reader names (not visible text): Back; Details: readiness dashboard; Required steps done
+Screen reader names (not visible text): Back; Readiness details; Required steps done
+
+### Setup hub (S-03) [state: all required steps ready]
+
+Requirements: REQ-INS-01, REQ-ADB-12. Source: USER-FLOWS UF-01 step 3, section 16.2.
+
+- EQO
+- You're all set
+- The required steps are ready. Optional ones can wait.
+- 3 of 3 required
+- About 10 to 15 min (estimate)
+- Model
+- Required
+- Ready
+- Screen control
+- Required
+- Ready
+- Helper connection
+- Required
+- Ready
+- Browser control
+- Optional
+- Not set up
+- Background mode
+- Optional
+- Not set up
+- Messages (SMS)
+- Optional
+- Not set up
+- Start using EQO
+
+Screen reader names (not visible text): Back; Readiness details; Required steps done
+
+### Setup hub (S-03) [state: optional steps ready]
+
+Requirements: REQ-INS-01, REQ-ADB-12. Source: USER-FLOWS UF-01 step 3, section 16.2.
+
+- EQO
+- You're all set
+- The required steps are ready. Optional ones can wait.
+- 3 of 3 required
+- About 10 to 15 min (estimate)
+- Model
+- Required
+- Ready
+- Screen control
+- Required
+- Ready
+- Helper connection
+- Required
+- Ready
+- Browser control
+- Optional
+- Ready
+- Background mode
+- Optional
+- Ready
+- Messages (SMS)
+- Optional
+- Ready
+- Start using EQO
+
+Screen reader names (not visible text): Back; Readiness details; Required steps done
 
 
 ## UF-02 Model setup
@@ -73,11 +135,38 @@ Screen reader names (not visible text): Back; Details: readiness dashboard; Requ
 
 Requirements: REQ-BYOK-01/02/03, REQ-PRIV-02. Source: USER-FLOWS UF-02.
 
-- Choose your AI model provider
-- Paste your OpenRouter API key. It is stored on this phone using the Android Keystore and never written to logs. Using OpenRouter may cost you money on your OpenRouter account. EQO does not charge you.
+- Connect your AI model
+- Paste your OpenRouter API key. It stays encrypted on this phone. OpenRouter may charge your account; EQO doesn't.
 - OpenRouter API key
 - Test connection
-- See what failure looks like
+
+Screen reader names (not visible text): Back; Paste your key
+
+### Model setup (S-04) [state: test running]
+
+Requirements: REQ-BYOK-01/02/03, REQ-PRIV-02. Source: USER-FLOWS UF-02.
+
+- Connect your AI model
+- Paste your OpenRouter API key. It stays encrypted on this phone. OpenRouter may charge your account; EQO doesn't.
+- OpenRouter API key
+- Checking that EQO can plan and use tools…
+- Testing…
+
+Screen reader names (not visible text): Back; Paste your key
+
+### Model setup (S-04) [state: test passed]
+
+Requirements: REQ-BYOK-01/02/03, REQ-PRIV-02. Source: USER-FLOWS UF-02.
+
+- Connect your AI model
+- Paste your OpenRouter API key. It stays encrypted on this phone. OpenRouter may charge your account; EQO doesn't.
+- OpenRouter API key
+- Connected to OpenRouter
+- You can change models any time.
+- Plan
+- Tool call
+- Verified answer
+- Continue
 
 Screen reader names (not visible text): Back; Paste your key
 
@@ -85,81 +174,56 @@ Screen reader names (not visible text): Back; Paste your key
 
 Requirements: REQ-BYOK-04. Source: USER-FLOWS UF-02 step 2.
 
-- Model check failed
-- 401
-- 429
-- Credit
-- Model
-- Network
-- Unauthorized (401)
-- OpenRouter rejected this key. Check you copied the whole key.
+- Couldn't connect
+- Key not accepted
+- OpenRouter rejected this key. Check that you copied all of it.
 - Re-enter key
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 ### Model failure states (S-05) [variant: 429]
 
 Requirements: REQ-BYOK-04. Source: USER-FLOWS UF-02 step 2.
 
-- Model check failed
-- 401
-- 429
-- Credit
-- Model
-- Network
-- Rate limited (429)
-- Too many requests right now. Try again in 40 seconds. EQO won't retry on its own.
-- Try again when ready
+- Couldn't connect
+- Too many requests
+- Try again in 40 seconds. EQO won't retry on its own.
+- Try again
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 ### Model failure states (S-05) [variant: credit]
 
 Requirements: REQ-BYOK-04. Source: USER-FLOWS UF-02 step 2.
 
-- Model check failed
-- 401
-- 429
-- Credit
-- Model
-- Network
-- Insufficient credit
-- Your OpenRouter account has no credit. Add credit at openrouter.ai/credits, then test again.
-- Open provider page
+- Couldn't connect
+- No credit left
+- Add credit at openrouter.ai/credits, then test again.
+- Open OpenRouter
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 ### Model failure states (S-05) [variant: model]
 
 Requirements: REQ-BYOK-04. Source: USER-FLOWS UF-02 step 2.
 
-- Model check failed
-- 401
-- 429
-- Credit
-- Model
-- Network
-- Incompatible model
-- This model doesn't support EQO's tool calls. Pick a model with tool support.
-- Choose another model
+- Couldn't connect
+- Model not supported
+- This model can't use EQO's tools. Choose another model.
+- Choose model
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 ### Model failure states (S-05) [variant: net]
 
 Requirements: REQ-BYOK-04. Source: USER-FLOWS UF-02 step 2.
 
-- Model check failed
-- 401
-- 429
-- Credit
-- Model
-- Network
-- No network
-- No internet connection. EQO can't reach OpenRouter.
+- Couldn't connect
+- No connection
+- EQO can't reach OpenRouter. Check your internet.
 - Try again
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 
 ## UF-03 Screen control
@@ -169,19 +233,37 @@ Screen reader names (not visible text): Back; Variants
 Requirements: REQ-A11Y-01/03. Source: USER-FLOWS UF-03.
 
 - Step 2 of 3
-- Let EQO use Screen control
-- EQO needs the Accessibility service to read and tap the screen on your behalf.
+- Allow Screen control
+- This lets EQO read and tap the screen for you.
 - EQO can
-- Read what is on screen while it works on a task you started
-- Tap and type for you during that task
+- Read the screen during a task you start
+- Tap and type for you in that task
 - EQO can't
-- Turn itself on. Only you can, in Android settings
-- Do sensitive things without asking you first
-- You can turn this off at any time in Android settings.
-- In Android settings: Accessibility › Downloaded apps › EQO › turn on
+- Turn itself on. Only you can
+- Act on sensitive steps without asking
+- In Android settings: Accessibility › Downloaded apps › EQO › On
+- You can turn it off any time.
 - Open Accessibility settings
-- Is the switch dimmed or missing? Tell EQO
+- Switch dimmed or missing?
 - Not now
+
+Screen reader names (not visible text): Back
+
+### Screen control: why and how (S-06) [state: after turning it on]
+
+Requirements: REQ-A11Y-01/03. Source: USER-FLOWS UF-03.
+
+- Step 2 of 3
+- Allow Screen control
+- This lets EQO read and tap the screen for you.
+- EQO can
+- Read the screen during a task you start
+- Tap and type for you in that task
+- EQO can't
+- Turn itself on. Only you can
+- Act on sensitive steps without asking
+- Screen control is on. You can turn it off any time in Android settings.
+- Continue
 
 Screen reader names (not visible text): Back
 
@@ -194,7 +276,7 @@ Requirements: REQ-A11Y-03. Source: Android-owned; shown to make the hand-off vis
 - Downloaded apps
 - ›
 - EQO
-- Turning this on lets EQO read and tap the screen. You can turn it off here at any time.
+- EQO can read and tap the screen while this is on.
 - Back to EQO
 
 Screen reader names (not visible text): Use EQO
@@ -203,15 +285,28 @@ Screen reader names (not visible text): Use EQO
 
 Requirements: REQ-A11Y-02 (Android 13+). Source: USER-FLOWS UF-03 step 3.
 
-- Android may be blocking this toggle
+- Android may be blocking it
 - This is Android's protection, not an EQO error
-- Android sometimes blocks the switch for apps installed outside the Play Store. It is called a "restricted setting".
-- The usual path: Settings › Apps › EQO › tap the ⋮ (three dots) in the app info screen › Allow restricted settings
-- Wording and placement can differ on your phone. If you can't find it, EQO can't change it for you.
+- Android restricts some apps installed outside the Play Store.
+- Usual path: Settings › Apps › EQO › ⋮ › Allow restricted settings
+- Names can differ on your phone.
 - Open EQO's app info
 - I've done it
 
 Screen reader names (not visible text): Back
+
+### Android App info (system)
+
+Requirements: REQ-A11Y-02. Source: Android-owned; illustrates the hand-off.
+
+- Android system screen, not EQO
+- App info
+- EQO
+- ⋮
+- Allow restricted settings
+- Back to EQO
+
+Screen reader names (not visible text): Allow restricted settings
 
 
 ## UF-04 Wireless ADB
@@ -221,26 +316,95 @@ Screen reader names (not visible text): Back
 Requirements: REQ-ADB-01..06, 12. Source: USER-FLOWS UF-04.
 
 - Connect the helper
-- Five checks, one at a time. EQO watches and verifies; it never grants anything for you.
+- Five quick checks. EQO verifies each one.
 - 1
-- Unlock Developer options
+- Developer options
 - Now
-- Open Settings › About phone › Build number and tap Build number 7 times to unlock Developer options.
-- On some phones this is Settings › About device › Version › Build number.
-- Check now
-- Simulate a failure
+- Settings › About phone › tap Build number 7 times.
+- On some phones: About device › Version.
+- Check
 - 2
-- Wi-Fi is on
+- Wi-Fi
 - Waiting
 - 3
-- Wireless debugging is on
+- Wireless debugging
 - Waiting
 - 4
-- Pair with a pairing code
+- Pair with a code
 - Waiting
 - 5
-- Connect and verify
+- Connect
 - Waiting
+
+Screen reader names (not visible text): Back
+
+### Helper connection: guided checks (S-08) [state: first three checks done]
+
+Requirements: REQ-ADB-01..06, 12. Source: USER-FLOWS UF-04.
+
+- Connect the helper
+- Five quick checks. EQO verifies each one.
+- Developer options
+- Ready
+- Wi-Fi
+- Ready
+- Wireless debugging
+- Ready
+- 4
+- Pair with a code
+- Now
+- Tap Pair device with pairing code. Enter the 6-digit code and the pairing port shown in the popup.
+- Pairing port
+- From the popup. Used once.
+- Pairing port and connection port are different numbers. Android changes them each session.
+- Check
+- 5
+- Connect
+- Waiting
+
+Screen reader names (not visible text): Back; Pairing code; 6-digit pairing code; Pairing port
+
+### Helper connection: guided checks (S-08) [state: connect step]
+
+Requirements: REQ-ADB-01..06, 12. Source: USER-FLOWS UF-04.
+
+- Connect the helper
+- Five quick checks. EQO verifies each one.
+- Developer options
+- Ready
+- Wi-Fi
+- Ready
+- Wireless debugging
+- Ready
+- Pair with a code
+- Ready
+- 5
+- Connect
+- Now
+- On the main Wireless debugging screen, find IP address & port. That connection port is not the pairing port.
+- Connection port
+- Beside the IP address. Not the pairing port.
+- Connect
+
+Screen reader names (not visible text): Back; Connection port
+
+### Helper connection: guided checks (S-08) [state: all five checks done]
+
+Requirements: REQ-ADB-01..06, 12. Source: USER-FLOWS UF-04.
+
+- Connect the helper
+- Connected and verified.
+- Developer options
+- Ready
+- Wi-Fi
+- Ready
+- Wireless debugging
+- Ready
+- Pair with a code
+- Ready
+- Connect
+- Ready
+- Continue
 
 Screen reader names (not visible text): Back
 
@@ -248,61 +412,45 @@ Screen reader names (not visible text): Back
 
 Requirements: REQ-ADB-05/11, REQ-REC-06. Source: USER-FLOWS UF-04, UF-R2.
 
-- Helper connection needs attention
-- Pairing
-- Connect
-- Reboot
-- Revoked
+- Helper needs attention
 - Pairing failed
-- Check the pairing code and the pairing port. The pairing port is the small number in the pairing popup, not the one next to your IP address.
+- Check the code and the pairing port. That's the small number in the pairing popup, not the one beside your IP address.
 - Try pairing again
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 ### ADB failure and repair (S-09) [variant: conn]
 
 Requirements: REQ-ADB-05/11, REQ-REC-06. Source: USER-FLOWS UF-04, UF-R2.
 
-- Helper connection needs attention
-- Pairing
-- Connect
-- Reboot
-- Revoked
+- Helper needs attention
 - Couldn't connect
-- The connection port is the one next to your IP address on the main Wireless debugging screen. It is a different number from the pairing port.
+- Use the connection port beside your IP address on the main Wireless debugging screen. It differs from the pairing port.
 - Try connecting again
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 ### ADB failure and repair (S-09) [variant: reboot]
 
 Requirements: REQ-ADB-05/11, REQ-REC-06. Source: USER-FLOWS UF-04, UF-R2.
 
-- Helper connection needs attention
-- Pairing
-- Connect
-- Reboot
-- Revoked
-- Your phone restarted
-- Your phone's wireless debugging connection dropped after a restart. Pair again. Android may show a new pairing code.
-- Start pairing again
+- Helper needs attention
+- Connection dropped
+- Your phone restarted. Pair again; Android may show a new code.
+- Pair again
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 ### ADB failure and repair (S-09) [variant: revoked]
 
 Requirements: REQ-ADB-05/11, REQ-REC-06. Source: USER-FLOWS UF-04, UF-R2.
 
-- Helper connection needs attention
-- Pairing
-- Connect
-- Reboot
-- Revoked
-- Authorization was revoked
-- You revoked debugging authorizations in Android settings. EQO paused. Pair again when you want to continue.
-- Start pairing again
+- Helper needs attention
+- Access was revoked
+- You revoked debugging access in Android settings, so EQO paused. Pair again to continue.
+- Pair again
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 
 ## UF-05 Helper
@@ -313,7 +461,7 @@ Requirements: REQ-ADB-07. Source: USER-FLOWS UF-05 step 2.
 
 - Android system dialog, not EQO
 - Allow EQO to use the helper?
-- This lets EQO run the commands you approve.
+- This lets EQO run commands you approve.
 - Don't allow
 - Allow
 
@@ -323,29 +471,47 @@ Screen reader names (not visible text): Allow EQO to use the helper
 
 Requirements: REQ-ADB-07. Source: USER-FLOWS UF-05 step 2.
 
-- Authorization declined
+- Not allowed
 - EQO can't run helper tasks yet
-- EQO can't run helper tasks until you allow it. Your connection checks are still saved.
+- It needs your permission first. Your checks are saved.
 - Ask again
 - Not now
 
 Screen reader names (not visible text): Back
 
-### Helper health and checks (S-11)
+### Helper check (S-11) [variant: ok]
 
-Requirements: REQ-ADB-08/09/10. Source: USER-FLOWS UF-05 steps 3-4.
+Requirements: REQ-ADB-08/09/10. Source: USER-FLOWS UF-05 steps 1, 3, 4.
 
-- Checking the helper
-- Each check is separate.
-- Helper started
+- Helper check
+- Connection
+- Started
 - Ready
-- Helper authorized
+- Authorized
 - Ready
-- Helper connection: healthy
+- Healthy, checked just now
 - Ready
-- 3 of 3 checks passed
-- Run a harmless command (echo)
+- 1 of 1 tests passed
+- Echo test
+- Passed
+- –
+- Display control
+- Off
+- –
+- Browser channel
+- Off
 - Done
+
+Screen reader names (not visible text): Back
+
+### Helper check (S-11) [variant: fail]
+
+Requirements: REQ-ADB-08/09/10. Source: USER-FLOWS UF-05 steps 1, 3, 4.
+
+- Helper didn't start
+- The helper didn't start
+- This can happen after an update or restart. Try again; your connection checks are saved.
+- Try again
 
 Screen reader names (not visible text): Back
 
@@ -357,38 +523,62 @@ Screen reader names (not visible text): Back
 Requirements: REQ-CDP-01, REQ-PRIV-03/04. Source: USER-FLOWS UF-06 step 1.
 
 - Browser control
-- Browser control lets EQO read and use pages in Chrome through Chrome's own debugging tools.
-- What this means
-- Page content and EQO's script actions are sent to your model provider for processing.
-- Redaction is best-effort. Sensitive content may still be visible to the model.
-- EQO starts this only after you agree, and only for tasks you run.
-- I understand, continue
+- EQO can read and use pages in Chrome through Chrome's debugging tools.
+- Please know
+- Page content and EQO's actions go to your AI model.
+- Redaction is best-effort. Private details may still be seen.
+- EQO uses this only for tasks you start, and only after you agree.
+- I understand
 - Not now
 - What exactly is sent?
 
 Screen reader names (not visible text): Back
 
-### What exactly is sent?
+### What is sent (S-12 detail)
 
-Requirements: REQ-PRIV-04. Source: USER-FLOWS UF-06 (button).
+Requirements: REQ-PRIV-04. Source: USER-FLOWS UF-01 and UF-06 (button).
 
-- What exactly is sent?
-- A summary of the page you asked EQO to work on.
-- The actions EQO plans to take on that page.
-- Not your API key, and not pages you did not ask it to open.
-- Placeholder text. The final list comes from the privacy review before any release.
+- What is sent
+- A summary of the page you asked EQO to use.
+- The steps EQO plans to take.
+- Never your API key, or pages you didn't ask for.
+- Draft list. The final text comes from the privacy review.
 - Back
 
 Screen reader names (not visible text): Back
 
-### Chrome debugging preparation (S-13)
+### Prepare Chrome (S-13) [variant: ok]
 
 Requirements: REQ-CDP-02. Source: USER-FLOWS UF-06 step 2.
 
 - Prepare Chrome
-- Chrome needs to allow debugging before EQO can connect. EQO can't change this for you.
-- Steps for your Chrome version: follow the setting shown here, then restart Chrome. (The exact flag or setting is PENDING and will be filled in from device testing.)
-- I've restarted Chrome, check now
+- Chrome must allow debugging first. EQO can't change this for you.
+- Steps for your Chrome version: follow the setting shown here, then restart Chrome. (Exact steps pending device testing.)
+- I restarted Chrome
+
+Screen reader names (not visible text): Back
+
+### Prepare Chrome (S-13) [variant: fail]
+
+Requirements: REQ-CDP-02. Source: USER-FLOWS UF-06 step 2.
+
+- Prepare Chrome
+- Chrome's debugging isn't available yet
+- Check the setting and restart Chrome.
+- Check again
+
+Screen reader names (not visible text): Back
+
+### Prepare Chrome (S-13) [state: Chrome verified]
+
+Requirements: REQ-CDP-02. Source: USER-FLOWS UF-06 step 2.
+
+- Prepare Chrome
+- Chrome must allow debugging first. EQO can't change this for you.
+- Steps for your Chrome version: follow the setting shown here, then restart Chrome. (Exact steps pending device testing.)
+- Chrome is ready for EQO
+- Ready
+- Continue
 
 Screen reader names (not visible text): Back
 
@@ -397,10 +587,10 @@ Screen reader names (not visible text): Back
 Requirements: REQ-CDP-03/04. Source: USER-FLOWS UF-06 step 3.
 
 - Browser control is ready
-- 3 of 3 functions available
+- 3 of 3 functions work
 - Read a page
 - Passed
-- Click on a page
+- Click
 - Passed
 - Run a script
 - Passed
@@ -416,25 +606,24 @@ Screen reader names (not visible text): Back
 Requirements: REQ-VD-03. Source: USER-FLOWS UF-07.
 
 - Background mode
-- Background mode lets EQO work on a separate virtual screen so you can keep using your phone. It works only for compatible apps while the helper is healthy. It is not a guarantee for every app.
+- EQO works on a separate virtual screen while you keep using your phone. It works only with compatible apps, and not with every app.
 - Messages
 - Compatible
 - Chrome
 - Compatible
 - Banking apps
 - Not supported here
-- Turn on Background mode
-- See what a failure looks like
+- Turn on
 
 Screen reader names (not visible text): Back
 
-### Foreground fallback proposal (S-16)
+### Foreground fallback (S-16)
 
 Requirements: REQ-VD-01/02/04. Source: USER-FLOWS UF-07 step 3.
 
-- Run this task in the foreground?
+- Run in the foreground?
 - EQO couldn't start a virtual screen
-- Reason: the helper did not respond. Run this task in the foreground instead? You'll see EQO working on your screen, and you can pause anytime.
+- The helper didn't respond. Run in the foreground instead? You'll see EQO work and can pause any time.
 - Run in foreground
 - Cancel task
 
@@ -447,38 +636,79 @@ Screen reader names (not visible text): Back
 
 Requirements: REQ-ADB-10, REQ-CDP-04. Source: USER-FLOWS UF-08.
 
-- Readiness details
-- Each check is separate. Green here means exactly what it says, nothing else.
+- Readiness
+- Each check stands alone. Green means exactly that.
+- Setup
 - Model
-- Checked just now
 - Not set up
-- Screen control
-- Checked just now
+- Screen control service
 - Not set up
+- Helper
 - Developer options
-- Checked just now
 - Not set up
 - Wi-Fi
-- Checked just now
 - Not set up
 - Wireless debugging
-- Checked just now
 - Not set up
 - Paired (pairing port)
-- Checked just now
 - Not set up
 - Connected (connection port)
-- Checked just now
+- Not set up
+- Helper started
 - Not set up
 - Helper authorized
-- Checked just now
 - Not set up
-- Browser control: read, click, script
-- Checked just now
+- Helper healthy
 - Not set up
-- Background mode
-- Checked just now
+- Echo test
 - Not set up
+- Optional
+- Browser: read, click, script
+- Not set up
+- Display control test
+- Not set up
+- Messages (SMS)
+- Not set up
+
+Screen reader names (not visible text): Back
+
+### Readiness dashboard (S-19) [state: everything ready]
+
+Requirements: REQ-ADB-10, REQ-CDP-04. Source: USER-FLOWS UF-08.
+
+- Readiness
+- Each check stands alone. Green means exactly that.
+- Setup
+- Model
+- Ready
+- Screen control service
+- Ready
+- Helper
+- Developer options
+- Ready
+- Wi-Fi
+- Ready
+- Wireless debugging
+- Ready
+- Paired (pairing port)
+- Ready
+- Connected (connection port)
+- Ready
+- Helper started
+- Ready
+- Helper authorized
+- Ready
+- Helper healthy
+- Ready
+- Echo test
+- Ready
+- Optional
+- Browser: read, click, script
+- Ready
+- Display control test
+- Ready
+- Messages (SMS)
+- Ready
 
 Screen reader names (not visible text): Back
 
@@ -491,10 +721,24 @@ Requirements: REQ-TASK-01. Source: USER-FLOWS UF-09.
 
 - EQO
 - Home
-- Hi! Tell me what you'd like done on your phone. I'll ask before anything sensitive.
+- What would you like done? I'll ask before anything sensitive.
 - Text Sam I'm on my way
-- Find a pharmacy that is open now
-- Ask EQO to do something
+- Find an open pharmacy
+- Ask EQO
+
+Screen reader names (not visible text): Settings; Send
+
+### Home and chat (S-20) [state: after the result is confirmed]
+
+Requirements: REQ-TASK-01. Source: USER-FLOWS UF-09.
+
+- EQO
+- Home
+- What would you like done? I'll ask before anything sensitive.
+- Text Sam I'm on my way
+- Find an open pharmacy
+- Thanks. Marked as done.
+- Ask EQO
 
 Screen reader names (not visible text): Settings; Send
 
@@ -507,17 +751,186 @@ Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
 - Text Sam I'm on my way
 - 1
 - Open Messages
+- Running · 0:12
 - 2
 - Write the message
+- Waiting
 - 3
 - Send it (needs your OK)
+- Waiting
 - 4
 - Check it was sent
+- Waiting
 - Working on it. Step 1 of 4: opening Messages.
-- Demo: next step
+- What the model sees
+- A summary of the current screen, with private details hidden where possible.
 - Pause
-- Stop
+- Pause after the current step finishes
 - Take over
+- You drive; EQO holds
+- Stop
+- Stop this task completely
+
+Screen reader names (not visible text): Task controls
+
+### Task run with controls (S-21, S-23) [state: step 3 of 4]
+
+Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
+
+- EQO
+- Running
+- Text Sam I'm on my way
+- Open Messages
+- Done
+- Write the message
+- Done
+- 3
+- Send it (needs your OK)
+- Running · 0:12
+- 4
+- Check it was sent
+- Waiting
+- Working on it. Step 3 of 4: sending it, after your OK.
+- What the model sees
+- A summary of the current screen, with private details hidden where possible.
+- Pause
+- Pause after the current step finishes
+- Take over
+- You drive; EQO holds
+- Stop
+- Stop this task completely
+
+Screen reader names (not visible text): Task controls
+
+### Task run with controls (S-21, S-23) [state: paused]
+
+Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
+
+- EQO
+- Paused, steps kept
+- Text Sam I'm on my way
+- 1
+- Open Messages
+- Running · 0:12
+- 2
+- Write the message
+- Waiting
+- 3
+- Send it (needs your OK)
+- Waiting
+- 4
+- Check it was sent
+- Waiting
+- Paused. EQO isn't reading your screen or calling the model. Resume when ready.
+- What the model sees
+- A summary of the current screen, with private details hidden where possible.
+- Resume
+- Pause
+- Pause after the current step finishes
+- Take over
+- You drive; EQO holds
+- Stop
+- Stop this task completely
+
+Screen reader names (not visible text): Task controls
+
+### Task run with controls (S-21, S-23) [state: taken over, not watching]
+
+Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
+
+- EQO
+- Not observing
+- Text Sam I'm on my way
+- 1
+- Open Messages
+- Running · 0:12
+- 2
+- Write the message
+- Waiting
+- 3
+- Send it (needs your OK)
+- Waiting
+- 4
+- Check it was sent
+- Waiting
+- You're driving. EQO is holding.
+- What the model sees
+- A summary of the current screen, with private details hidden where possible.
+- Let EQO watch while you drive?
+- Off by default. EQO won't read the screen unless you allow it.
+- Resume
+- Pause
+- Pause after the current step finishes
+- Take over
+- You drive; EQO holds
+- Stop
+- Stop this task completely
+
+Screen reader names (not visible text): Let EQO watch while you drive; Task controls
+
+### Task run with controls (S-21, S-23) [state: taken over, watching allowed]
+
+Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
+
+- EQO
+- Observing (you allowed it)
+- Text Sam I'm on my way
+- 1
+- Open Messages
+- Running · 0:12
+- 2
+- Write the message
+- Waiting
+- 3
+- Send it (needs your OK)
+- Waiting
+- 4
+- Check it was sent
+- Waiting
+- You're driving. EQO is holding.
+- What the model sees
+- A summary of the current screen, with private details hidden where possible.
+- Let EQO watch while you drive?
+- Off by default. EQO won't read the screen unless you allow it.
+- Resume
+- Pause
+- Pause after the current step finishes
+- Take over
+- You drive; EQO holds
+- Stop
+- Stop this task completely
+
+Screen reader names (not visible text): Let EQO watch while you drive; Task controls
+
+### Task run with controls (S-21, S-23) [state: foreground fallback]
+
+Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
+
+- EQO
+- Running
+- Text Sam I'm on my way
+- Foreground (background mode unavailable)
+- 1
+- Open Messages
+- Running · 0:12
+- 2
+- Write the message
+- Waiting
+- 3
+- Send it (needs your OK)
+- Waiting
+- 4
+- Check it was sent
+- Waiting
+- Working on it. Step 1 of 4: opening Messages.
+- What the model sees
+- A summary of the current screen, with private details hidden where possible.
+- Pause
+- Pause after the current step finishes
+- Take over
+- You drive; EQO holds
+- Stop
+- Stop this task completely
 
 Screen reader names (not visible text): Task controls
 
@@ -528,31 +941,42 @@ Screen reader names (not visible text): Task controls
 
 Requirements: REQ-TASK-02. Source: USER-FLOWS UF-10 section 11.1.
 
-- EQO
 - Needs your OK
 - Text Sam I'm on my way
-- Messages wants to send a message to Sam
+- Messages wants to send this to Sam
 - "On my way, back in 20 minutes" To: Sam
 - Approve
 - Deny
-- Auto-denies in 60s
-- Pressing back also denies, and nothing is sent.
+- Auto-denies in 60 s
+- Back also denies. Nothing is sent.
 - Pause
-- Stop
+- Pause after the current step finishes
 - Take over
+- You drive; EQO holds
+- Stop
+- Stop this task completely
 
-Screen reader names (not visible text): Task controls
+Screen reader names (not visible text): Back, which denies; Task controls
 
-### Approval denied or timed out
+### Denied or cancelled [variant: denied]
 
 Requirements: REQ-TASK-02, REQ-TASK-07. Source: USER-FLOWS UF-10.
 
 - Denied
-- EQO didn't send anything
-- The task will ask you how to continue.
-- Try a different message
-- End the task
-- If the screen changes while you decide, EQO cancels that step: "The screen changed while waiting for your answer, so EQO cancelled that step."
+- Nothing was sent. What next?
+- Edit the message
+- End task
+
+Screen reader names (not visible text): Back
+
+### Denied or cancelled [variant: changed]
+
+Requirements: REQ-TASK-02, REQ-TASK-07. Source: USER-FLOWS UF-10.
+
+- Cancelled
+- The screen changed while waiting, so EQO cancelled that step. Nothing was sent.
+- Edit the message
+- End task
 
 Screen reader names (not visible text): Back
 
@@ -561,8 +985,8 @@ Screen reader names (not visible text): Back
 Requirements: REQ-TASK-03. Source: USER-FLOWS UF-10 section 11.2.
 
 - Stopped
-- Task ended
-- You stopped this task. Steps before this point are listed below.
+- The task ended
+- Here's what ran before you stopped it.
 - Opened Messages
 - Wrote the message
 - 3
@@ -578,10 +1002,11 @@ Screen reader names (not visible text): Back
 
 Requirements: REQ-TASK-06. Source: USER-FLOWS UF-11.
 
-- Done. Here's what happened
+- Done
+- Here's what happened.
 - Opened Messages
-- Wrote the message to Sam
-- Sent it, after your approval
+- Wrote the message
+- Sent it, with your approval
 - Did it do what you asked?
 - Looks right
 - Looks wrong
@@ -593,109 +1018,123 @@ Screen reader names (not visible text): Back
 
 ### Recovery hub (S-25) [variant: rate]
 
-Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12.
+Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12 (R1 to R8).
 
 - Needs attention
-- Rate limit
-- Helper
-- Screen
-- Binder
-- Unsure
-- Rate limited
-- Too many requests. EQO won't retry on its own. Try again in 40 seconds or stop.
-- Resuming asks again before anything sensitive. EQO never reuses an earlier approval.
-- Try again when ready
+- Too many requests
+- EQO won't retry on its own. Try again in 40 seconds, or stop.
+- Resuming asks again before anything sensitive. An earlier approval is never reused.
+- Try again
 - Stop the task
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 ### Recovery hub (S-25) [variant: adb]
 
-Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12.
+Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12 (R1 to R8).
 
 - Needs attention
-- Rate limit
-- Helper
-- Screen
-- Binder
-- Unsure
-- Helper connection dropped
-- Your phone's wireless debugging connection dropped. Reconnect with the pairing steps. Android may show a new pairing code.
-- Resuming asks again before anything sensitive. EQO never reuses an earlier approval.
+- Helper disconnected
+- Reconnect with the pairing steps. Android may show a new code.
+- Resuming asks again before anything sensitive. An earlier approval is never reused.
 - Reconnect
 - Stop the task
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
 ### Recovery hub (S-25) [variant: a11y]
 
-Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12.
+Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12 (R1 to R8).
 
 - Needs attention
-- Rate limit
-- Helper
-- Screen
-- Binder
-- Unsure
-- Screen control was turned off
-- The task stopped at step 3. Turn it back on, then choose Resume.
-- Resuming asks again before anything sensitive. EQO never reuses an earlier approval.
+- Screen control is off
+- The task paused at step 3. Turn it on again, then resume.
+- Resuming asks again before anything sensitive. An earlier approval is never reused.
 - Open Screen control
 - Stop the task
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
-### Recovery hub (S-25) [variant: binder]
+### Recovery hub (S-25) [variant: helper]
 
-Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12.
+Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12 (R1 to R8).
 
 - Needs attention
-- Rate limit
-- Helper
-- Screen
-- Binder
-- Unsure
-- The helper stopped responding
-- EQO will restart its checks.
-- Resuming asks again before anything sensitive. EQO never reuses an earlier approval.
+- Helper stopped responding
+- EQO will re-run its checks.
+- Resuming asks again before anything sensitive. An earlier approval is never reused.
 - Check the helper
 - Stop the task
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
 
-### Recovery hub (S-25) [variant: unknown]
+### Recovery hub (S-25) [variant: unsure]
 
-Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12.
+Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12 (R1 to R8).
 
 - Needs attention
-- Rate limit
-- Helper
-- Screen
-- Binder
-- Unsure
-- EQO isn't sure it finished
-- This step may have partially run. Check Messages before resuming.
-- Resuming asks again before anything sensitive. EQO never reuses an earlier approval.
-- I checked, continue
+- Not sure it finished
+- This step may have partly run. Check Messages before resuming.
+- Resuming asks again before anything sensitive. An earlier approval is never reused.
+- I checked
 - Stop the task
 
-Screen reader names (not visible text): Back; Variants
+Screen reader names (not visible text): Back
+
+### Recovery hub (S-25) [variant: chrome]
+
+Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12 (R1 to R8).
+
+- Needs attention
+- Chrome debugging is off
+- Chrome may have restarted. EQO will re-check.
+- Resuming asks again before anything sensitive. An earlier approval is never reused.
+- Re-check Chrome
+- Stop the task
+
+Screen reader names (not visible text): Back
+
+### Recovery hub (S-25) [variant: revoked]
+
+Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12 (R1 to R8).
+
+- Needs attention
+- Helper access turned off
+- You changed a setting, so EQO paused. Turn it on when you want to continue.
+- Resuming asks again before anything sensitive. An earlier approval is never reused.
+- Review setting
+- Stop the task
+
+Screen reader names (not visible text): Back
+
+### Recovery hub (S-25) [variant: update]
+
+Requirements: REQ-REC-01..10, REQ-TASK-07. Source: USER-FLOWS UF-11, UF-12 (R1 to R8).
+
+- Needs attention
+- Helper needs a restart
+- EQO was updated. The helper needs a quick restart.
+- Resuming asks again before anything sensitive. An earlier approval is never reused.
+- Restart helper
+- Stop the task
+
+Screen reader names (not visible text): Back
 
 ### Set up again (S-29)
 
 Requirements: REQ-ADB-12. Source: USER-FLOWS S-29.
 
 - Set up again
-- Choose the step to redo. Everything else stays as it is.
+- Pick a step to redo. Everything else stays as is.
 - Model
 - Required
-- Set up
+- Not set up
 - Screen control
 - Required
 - Needs attention
 - Helper connection
 - Required
-- Set up
+- Not set up
 
 Screen reader names (not visible text): Back
 
@@ -714,18 +1153,29 @@ Requirements: REQ-SMS-01/03/04. Source: USER-FLOWS UF-13.
 - On my way, back in 20 minutes
 - Send…
 - Edit
-- Hand off to my messaging app
+- Use my messaging app
 
 Screen reader names (not visible text): Back
 
-### SMS confirmation (S-22 variant)
+### Draft saved (back from S-26)
+
+Requirements: REQ-SMS-02. Source: USER-FLOWS UF-13 step 2.
+
+- Draft saved
+- Nothing was sent. You can come back to it.
+- Open the draft
+- Done
+
+Screen reader names (not visible text): Back
+
+### SMS confirmation
 
 Requirements: REQ-SMS-02. Source: USER-FLOWS UF-13 step 2.
 
 - Send this SMS?
 - To: Sam
 - "On my way, back in 20 minutes"
-- This will use your carrier plan.
+- Uses your carrier plan.
 - Send now
 - Cancel
 
@@ -746,8 +1196,8 @@ Screen reader names (not visible text): Back
 Requirements: REQ-SMS-04. Source: USER-FLOWS UF-13 step 3.
 
 - Send it yourself
-- EQO can't send SMS directly on this phone. Here's the draft. Open it in your messaging app and send it yourself.
-- Open my messaging app
+- EQO can't send SMS directly on this phone. Open the draft in your messaging app.
+- Open messaging app
 
 Screen reader names (not visible text): Back
 
@@ -761,14 +1211,14 @@ Requirements: REQ-INS-03. Source: USER-FLOWS S-27.
 - Settings
 - Model
 - OpenRouter
-- Set up
-- Privacy and data
+- Not set up
+- Privacy
 - What EQO sends
-- Capabilities
-- Readiness details
+- Readiness
+- Every check
 - Set up again
-- Re-run one step
-- Legal and open-source notices
+- Redo one step
+- Legal and licenses
 - Works offline
 
 Screen reader names (not visible text): Back
@@ -777,8 +1227,8 @@ Screen reader names (not visible text): Back
 
 Requirements: REQ-INS-03. Source: USER-FLOWS UF-14.
 
-- Open-source licenses and notices
-- Always available here, even offline.
+- Licenses and notices
+- Always available, even offline.
 - OpenDroid
 - Apache-2.0
 - ClosePaw
@@ -787,10 +1237,10 @@ Requirements: REQ-INS-03. Source: USER-FLOWS UF-14.
 - Apache-2.0
 - Shizuku-API
 - MIT
-- Attribution wording and license texts are placeholders until the legal review.
+- Attribution wording is a placeholder until legal review.
 
 Screen reader names (not visible text): Back
 
 
 ---
-45 screen states.
+69 screen states.
