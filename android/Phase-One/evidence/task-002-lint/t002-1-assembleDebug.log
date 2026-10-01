@@ -1,0 +1,182 @@
+Calculating task graph as no cached configuration is available for tasks: :app:assembleDebug
+
+> Configure project :app
+WARNING: Release signing not configured. Set credentials in ~/.gradle/gradle.properties (see gradle.properties.example).
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:writeDebugAppMetadata
+> Task :app:generateDebugBuildConfig
+> Task :app:desugarDebugFileDependencies
+> Task :app:extractDeepLinksDebug
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:mergeDebugJniLibFolders
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:javaPreCompileDebug
+> Task :app:generateDebugResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:compileDebugNavigationResources
+> Task :app:parseDebugLocalResources
+> Task :app:generateDebugRFile
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets
+> Task :app:checkDebugAarMetadata
+> Task :app:validateSigningDebug
+> Task :app:mergeDebugNativeLibs
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libdatastore_shared_counter.so, liblitertlm_jni.so. Run with --info option to learn more.
+
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:checkDebugDuplicateClasses
+> Task :app:mergeLibDexDebug
+> Task :app:generateDebugGlobalSynthetics
+> Task :app:mergeDebugResources
+> Task :app:kspDebugKotlin
+> Task :app:mergeExtDexDebug
+> Task :app:processDebugResources
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/AccessibilityNodeTraversal.kt:44:19 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/AccessibilityNodeTraversal.kt:59:22 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/AccessibilityNodeTraversal.kt:66:28 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/AccessibilityNodeTraversal.kt:67:26 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/AccessibilityNodeTraversal.kt:72:18 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/AccessibilityNodeTraversal.kt:97:23 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/AccessibilityNodeTraversal.kt:100:19 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:487:22 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:494:28 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:495:26 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:500:18 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:514:22 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:517:18 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:531:22 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:534:18 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:557:29 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:568:18 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:576:18 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:587:23 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:590:19 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt:614:18 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/WhatsAppAutomator.kt:23:36 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/WhatsAppAutomator.kt:36:40 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/accessibility/WhatsAppAutomator.kt:99:22 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/actions/AdvancedControlActions.kt:119:50 'val isConnectedOrConnecting: Boolean' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/actions/AdvancedControlActions.kt:317:32 'fun createCaptureSession(p0: (Mutable)List<Surface!>, p1: CameraCaptureSession.StateCallback, p2: Handler?): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/actions/SystemActions.kt:683:38 'class WifiConfiguration : Any, Parcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/core/agent/AgentLoop.kt:1314:13 Redundant creation of Json format. Creating instances for each usage can be slow.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/core/agent/DeviceStateProvider.kt:78:42 'val isConnected: Boolean' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/core/agent/DeviceStateProvider.kt:145:36 'val isConnected: Boolean' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/core/agent/DeviceStateProvider.kt:146:35 'val type: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/core/agent/DeviceStateProvider.kt:146:63 'static field TYPE_WIFI: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/core/agent/DeviceStateProvider.kt:147:35 'val type: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/core/agent/DeviceStateProvider.kt:147:63 'static field TYPE_MOBILE: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/core/voice/TextToSpeechEngine.kt:42:26 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/data/db/OpenDroidDatabase.kt:103:34 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/data/db/OpenDroidDatabase.kt:109:34 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/data/db/OpenDroidDatabase.kt:129:34 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/data/db/OpenDroidDatabase.kt:135:34 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/data/db/OpenDroidDatabase.kt:157:34 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/data/db/OpenDroidDatabase.kt:196:34 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/data/db/OpenDroidDatabase.kt:225:34 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/data/db/OpenDroidDatabase.kt:268:34 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/social/core/adapter/BaseSocialAdapter.kt:22:37 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/social/core/adapter/DiscordAdapter.kt:70:54 Java type mismatch: inferred type is 'Nothing?', but 'String' was expected.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/social/core/adapter/DiscordAdapter.kt:70:59 Unnecessary safe call on a non-null receiver of type 'String'.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/social/core/adapter/InstagramAdapter.kt:53:67 Java type mismatch: inferred type is 'Nothing?', but 'String' was expected.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/social/core/adapter/LinkedInAdapter.kt:54:55 Java type mismatch: inferred type is 'Nothing?', but 'String' was expected.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/social/core/adapter/XAdapter.kt:56:65 Java type mismatch: inferred type is 'Nothing?', but 'String' was expected.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/Navigation.kt:282:56 'val Icons.Filled.Chat: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Chat.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/Navigation.kt:283:56 'val Icons.Filled.List: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.List.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/Navigation.kt:312:26 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/components/PlanStepCard.kt:152:71 'val Icons.Filled.ArrowForward: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowForward.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/components/PlanStepCard.kt:165:21 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/components/PlanStepCard.kt:279:21 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/AboutScreen.kt:50:57 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/AboutScreen.kt:193:51 'val Icons.Filled.Chat: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Chat.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/AboutScreen.kt:194:51 'val Icons.Filled.List: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.List.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/AutoReplySettingsScreen.kt:49:26 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/AutoReplySettingsScreen.kt:93:44 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/AutoReplySettingsScreen.kt:250:29 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/AutoReplySettingsScreen.kt:254:29 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/BenchmarkScreen.kt:57:44 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/ChatScreen.kt:601:69 'val Icons.Filled.Send: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Send.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/ChatScreen.kt:746:13 Redundant creation of Json format. Creating instances for each usage can be slow.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/CrashLogScreen.kt:101:44 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/HelpCenterScreen.kt:42:57 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/HelpCenterScreen.kt:76:57 'val Icons.Filled.HelpOutline: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.HelpOutline.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/LicenseScreen.kt:42:57 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/LogsScreen.kt:102:13 'fun TabRow(selectedTabIndex: Int, modifier: Modifier = ..., containerColor: Color = ..., contentColor: Color = ..., indicator: ComposableFunction1<List<TabPosition>, Unit> = ..., divider: ComposableFunction0<Unit> = ..., tabs: ComposableFunction0<Unit>): Unit' is deprecated. Replaced with PrimaryTabRow and SecondaryTabRow.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/LogsScreen.kt:107:36 'fun Indicator(modifier: Modifier = ..., height: Dp = ..., color: Color = ...): Unit' is deprecated. Use SecondaryIndicator instead.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/LogsScreen.kt:108:45 'fun Modifier.tabIndicatorOffset(currentTabPosition: TabPosition): Modifier' is deprecated. Solely for use alongside deprecated TabRowDefaults.Indicator method. For recommended PrimaryIndicator and SecondaryIndicator methods, please use TabIndicatorScope.tabIndicatorOffset method.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/LogsScreen.kt:113:21 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/LogsScreen.kt:377:21 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/LogsScreen.kt:498:21 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/MacrosScreen.kt:185:29 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/MacrosScreen.kt:424:13 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/MemoryScreen.kt:103:13 'fun ScrollableTabRow(selectedTabIndex: Int, modifier: Modifier = ..., containerColor: Color = ..., contentColor: Color = ..., edgePadding: Dp = ..., indicator: ComposableFunction1<List<TabPosition>, Unit> = ..., divider: ComposableFunction0<Unit> = ..., tabs: ComposableFunction0<Unit>): Unit' is deprecated. Replaced with PrimaryScrollableTabRow and SecondaryScrollableTabRow tab variants.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/MemoryScreen.kt:108:29 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/MemoryScreen.kt:317:25 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/MemoryScreen.kt:1258:44 'val Icons.Filled.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.TrendingUp.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/NotificationHistoryScreen.kt:59:44 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/PermissionsScreen.kt:144:26 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/PlanScreen.kt:79:54 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Plan'.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/PlanScreen.kt:83:43 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Plan'.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/PlanScreen.kt:101:34 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Plan'.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/PlanScreen.kt:103:36 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Plan'.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/PlanScreen.kt:224:13 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/PlanScreen.kt:242:17 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/PrivacyPolicyScreen.kt:42:57 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/RoutinesScreen.kt:61:57 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:304:33 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:811:29 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:955:29 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:1198:49 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:1251:140 'val Icons.Filled.ArrowForward: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowForward.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:1289:29 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:1370:49 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:1417:29 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:1987:57 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:2028:57 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:2074:57 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:2115:57 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:2156:57 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:2202:57 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:2248:57 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:2294:57 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:2340:57 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/SettingsScreen.kt:2386:57 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/TermsOfUseScreen.kt:42:57 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/social/SocialAccountsTab.kt:201:40 Condition is always 'true'.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/social/SocialAccountsTab.kt:228:32 Condition is always 'true'.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCalendarTab.kt:175:43 'val Icons.Filled.EventNote: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.EventNote.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/social/SocialCampaignsTab.kt:190:13 'fun LinearProgressIndicator(progress: Float, modifier: Modifier = ..., color: Color = ..., trackColor: Color = ..., strokeCap: StrokeCap = ...): Unit' is deprecated. Use the overload that takes `progress` as a lambda.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/social/SocialContentTab.kt:155:70 'fun String.capitalize(locale: Locale): String' is deprecated. Use replaceFirstChar instead.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/social/SocialContentTab.kt:370:67 'fun String.capitalize(locale: Locale): String' is deprecated. Use replaceFirstChar instead.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/social/SocialOverviewTab.kt:74:42 'val Icons.Filled.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.TrendingUp.
+w: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/app/src/main/java/com/opendroid/ai/ui/screens/social/SocialSettingsTab.kt:313:33 Unnecessary safe call on a non-null receiver of type 'SocialPlatform'.
+
+> Task :app:processDebugJavaRes
+> Task :app:mergeDebugJavaResource
+> Task :app:compileDebugJavaWithJavac
+> Task :app:hiltCollectClassesDebug
+> Task :app:copyRoomSchemas NO-SOURCE
+> Task :app:hiltAggregateDepsDebug
+> Task :app:hiltJavaCompileDebug
+> Task :app:transformDebugClassesWithAsm
+> Task :app:dexBuilderDebug
+> Task :app:mergeProjectDexDebug
+> Task :app:packageDebug
+> Task :app:assembleDebug
+> Task :app:createDebugApkListingFileRedirect
+
+[Incubating] Problems report is available at: file:///C:/Users/<user>/Claude/worktrees/_upstream/opendroid-t002/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 6m 29s
+42 actionable tasks: 42 executed
+Configuration cache entry stored.
