@@ -21,7 +21,7 @@ Builds the EQO phone app: native Kotlin + Jetpack Compose, as a fork of OpenDroi
 - OpenRouter bring-your-own-key is the primary LLM path (D-001). On-device Gemma/LiteRT ships if it works (D-006), labelled experimental if not.
 - Connectors (Composio and similar) are Phase 2 (D-002). Memory beyond what upstream provides is Phase 2.
 - Open-source dependencies only. Nothing that needs a paid subscription.
-- Sideloaded APK via GitHub Releases, Android 12+ (minSdk 31). Do not design around Play Store accessibility policy.
+- Sideloaded APK via GitHub Releases, Android 11+ (minSdk 30; D-007, ADR-0003). Do not design around Play Store accessibility policy.
 - Shizuku-derived helper: rename app ID and `moe.shizuku.manager.permission.*` strings together (see D-004 as corrected).
 
 ## Definition of done

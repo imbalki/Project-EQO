@@ -1,7 +1,7 @@
 # TASK-008: Wireless ADB pairing on the phone (S2)
 
 - Status: todo
-- Depends on: 007; needs devices on Android 12 and 13
+- Depends on: 007; needs devices on Android 11 (physical Realme Narzo 20, Realme UI 2.0), 12 and 13
 - Area: android
 - Gate: 3 (DEV-08)
 - Models: author `mimo-v2.6-pro`, reviewer `glm-5.3-flash`
@@ -15,7 +15,7 @@ Extract ClosePaw's wireless-ADB pairing code into `:adb-pairing`. Guide the user
 
 ## Acceptance criteria
 - [ ] Fresh install shows "activation required"; privileged entry points refuse with guidance until done
-- [ ] Pairing succeeds on Android 12 and 13 (plus one OEM skin)
+- [ ] Pairing succeeds on Android 11 (physical Realme Narzo 20, Realme UI 2.0 = the OEM-skin device) plus Android 12 and 13 (emulator and/or physical; label which)
 - [ ] Wrong code, port confusion, revoke, reboot and Wi-Fi change are each tested and recover with guidance, not silently
 - [ ] Android-owned settings names shown verbatim
 

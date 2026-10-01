@@ -15,7 +15,7 @@ Prove the helper starts, authorizes EQO and survives binder death, bundled in th
 
 ## Acceptance criteria
 - [ ] Starter builds with the pinned NDK
-- [ ] Server starts via activation on Android 12+ with no Shizuku manager installed
+- [ ] Server starts via activation on Android 11+ (minSdk 30; D-007) with no Shizuku manager installed
 - [ ] EQO receives the binder; a privileged test call returns the shell uid
 - [ ] Negative test: mismatched permission string fails loudly
 - [ ] Binder death leads to a clean state and a re-activation prompt

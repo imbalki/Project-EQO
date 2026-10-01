@@ -83,7 +83,7 @@ All items in the parent-provided context were verified against ci-detail.json (r
   - Lifecycle/security: test/kotlin/ai/closepaw/app/MainActivityIntentApplierSecurityTest.kt; network_security_config.xml in main and debug res/xml.
   - Onboarding: main/kotlin/ai/closepaw/onboarding/ (OnboardingViewModel.kt, OnboardingState.kt, HttpLlmCredentialValidator.kt, …) — implementation exists; dedicated onboarding test files NOT found (gap).
   - Legal notices baseline: closepaw/NOTICE, closepaw/app/src/main/assets/open_source_licenses.json, ui/settings/OpenSourceLicensesPage.kt.
-- SDK: app/build.gradle.kts L16 compileSdk 36, L22 minSdk 31 (= Android 12+), L23 targetSdk 36.
+- SDK: closepaw app/build.gradle.kts L16 compileSdk 36, L22 minSdk 31 (= Android 12+ - ClosePaw's own donor value, NOT an EQO requirement; the EQO floor is minSdk 30 / Android 11+ per D-007, ADR-0003), L23 targetSdk 36.
 
 ### opendroid secret/approval/error-relevant tests (T2)
 core/security/ProviderCredentialStoreTest.kt, LegacySecurePreferencesRetirementTest.kt; core/crash/CrashLogRedactorTest.kt, CrashReportExporterTest.kt; core/agent/ActionRiskPolicyTest.kt, AutoApprovalPolicyTest.kt, NeverAutoApproveTest.kt; core/llm/error/LLMErrorMapperTest.kt + ProviderErrorDetailTest.kt (429/quota/rate-limit mapping appears in these and ChatErrorUiStateTest.kt per content grep); core/llm/providers/CustomOpenAIProviderNetworkTest.kt.
@@ -120,7 +120,7 @@ Every row: Status = PROPOSED (no execution). Baseline column = reuse candidates 
 
 | ID | Pri | Preconditions | Steps | Expected | Layer | Baseline | Blockers |
 |---|---|---|---|---|---|---|---|
-| EQO-WADB-001 | P0 | Device API 31+; wireless debugging on; EQO installed | Open pairing screen; enter pairing code+IP:port; complete SPAKE2+ pairing | Pairing succeeds; adb keys record persisted; status shows paired | Instrumented | AdbPairingClientInstrumentedTest (crypto reachability) | Needs real device/emulator with wireless debugging (none attached) |
+| EQO-WADB-001 | P0 | Device API 30+ (wireless debugging exists from Android 11); wireless debugging on; EQO installed | Open pairing screen; enter pairing code+IP:port; complete SPAKE2+ pairing | Pairing succeeds; adb keys record persisted; status shows paired | Instrumented | AdbPairingClientInstrumentedTest (crypto reachability) | Needs real device/emulator with wireless debugging (none attached) |
 | EQO-WADB-002 | P0 | Pairing screen open | Enter wrong pairing code | Failure surfaced distinctly ("invalid code"), no partial trust stored | Instrumented | AdbWirelessManagerTest error paths | same |
 | EQO-WADB-003 | P0 | Pairing screen open | Enter empty PSK / malformed port | Rejected pre-network; error copy actionable for novice | Unit | AdbWirelessManagerTest L108 openPairPort_rejects_empty_psk | none (unit runnable in CI) |
 | EQO-WADB-004 | P0 | Paired session active | Drop network mid-session (toggle Wi-Fi / switch AP) | Connection-loss state distinct from revocation; UI shows "connection lost" + retry; no data corruption | Instrumented | none | Emulator Wi-Fi control |
@@ -214,11 +214,11 @@ Every row: Status = PROPOSED (no execution). Baseline column = reuse candidates 
 | EQO-BRD-002 | P0 | Settings → legal | Open legal-notices screen | Legal-notices screen MAY show upstream project names/licenses (explicit exception); matches license obligations of sources | Manual | open_source_licenses.json, OpenSourceLicensesPage.kt, NOTICE, LicenseScreen.kt | none |
 | EQO-BRD-003 | P1 | About screen | Verify version/build info | Correct versionName; release notes link; privacy policy link per PRODUCT.md | Manual | none | none |
 
-### 7.10 OS/OEM matrix (all P0/P1 cases above re-run on: Android 12 (API 31/32), 13 (33), 14 (34), 15 (35), 16 (36))
+### 7.10 OS/OEM matrix (all P0/P1 cases above re-run on: Android 11 (API 30), 12 (31/32), 13 (33), 14 (34), 15 (35), 16 (36))
 
 | ID | Pri | Scope | Notes | Blockers |
 |---|---|---|---|---|
-| EQO-COMPAT-12..16 | P0 | Full P0 suite per OS level | CI today exercises only API 26/36 (android-ci.yml L104) — 31/33/34/35 lanes absent; EQO minSdk 31 per closepaw precedent | Emulator lanes must be added (in EQO repo, not here) |
+| EQO-COMPAT-11..16 | P0 | Full P0 suite per OS level | CI today exercises only API 26/36 (android-ci.yml L104) — 30/31/33/34/35 lanes absent; EQO minSdk 30 per D-007 (ADR-0003) | Emulator lanes must be added (in EQO repo, not here) |
 | EQO-OEM-001 | P0 | Samsung (One UI 6/7) | Wireless debugging placement differs; battery optimization kills background agent; accessibility timeout policies | Physical device access |
 | EQO-OEM-002 | P0 | Xiaomi/MIUI, Oppo/ColorOS, Vivo/OriginOS | Autostart restrictions; background popup permission; ADB pairing UX differences | Physical devices |
 | EQO-OEM-003 | P1 | Pixel (AOSP baseline) | Reference behavior | Emulator substitute acceptable |
@@ -243,13 +243,13 @@ Feasibility (can EQO QA be executed at all?): CONDITIONALLY FEASIBLE in CI, NOT 
 
 Release readiness (should EQO ship?): NOT READY — 0 of the proposed EQO tests exist or have run; no EQO code exists yet (sources/main is docs/agents only; android/README.md only).
 Measurable gates for a future release (each pass/fail computable, no metric invented now):
-- G1: 100% of §7 P0 cases executed with recorded evidence on API 31 + 36 at minimum.
+- G1: 100% of §7 P0 cases executed with recorded evidence on API 30 + 36 at minimum.
 - G2: lintDebug exits 0 with zero new issues beyond a committed, reviewed baseline.
-- G3: unit + instrumented suites green in CI for API 31/33/34/35/36 lanes.
+- G3: unit + instrumented suites green in CI for API 30/31/33/34/35/36 lanes.
 - G4: EQO-SEC-001..003 pass (zero secret leakage — greppable assertion count = 0).
 - G5: EQO-WADB-004/006/007 all pass with visibly distinct UI states (screenshot evidence).
 - G6: EQO-PS-004 behavior defined in spec AND test passing.
-- G7: OEM matrix: P0 suite on at least Samsung + Pixel + one Chinese OEM skin.
+- G7: OEM matrix: P0 suite on at least Samsung + Pixel + one Chinese OEM skin (the owner's Realme Narzo 20, Realme UI 2.0, Android 11, is the OEM-skin device per D-007).
 - G8: EQO-ONB-001 completed by >=1 novice without assistance.
 - G9: branding scan EQO-BRD-001 clean; EQO-BRD-002 legal-notices exception verified.
 
@@ -268,7 +268,7 @@ Measurable gates for a future release (each pass/fail computable, no metric inve
 | Layer | Scope | Owner (proposed) | Runs where |
 |---|---|---|---|
 | Unit (JVM) | EQO-PS-001..003,005; EQO-APR-001,003,005; EQO-SEC-001,002; EQO-BYOK-002,004..008; EQO-CDP-005; EQO-WADB-003 | QA lead + dev | CI (JDK 21) |
-| Instrumented (emulator) | EQO-WADB-001,002,004,005; EQO-VD-001..004; EQO-CDP-001,002,004; EQO-SEC-006..008; EQO-ONB-002; EQO-BYOK-001,003 | QA lead + dev | CI emulator lanes API 31/33/34/35/36 |
+| Instrumented (emulator) | EQO-WADB-001,002,004,005; EQO-VD-001..004; EQO-CDP-001,002,004; EQO-SEC-006..008; EQO-ONB-002; EQO-BYOK-001,003 | QA lead + dev | CI emulator lanes API 30/31/33/34/35/36 |
 | Manual / on-device | EQO-WADB-006..009; EQO-MGR-001..003; EQO-CDP-003,006; EQO-VD-005; EQO-PS-004,006; EQO-APR-002,004; EQO-SEC-003..005; EQO-BRD-001..003; EQO-OEM-001..004; EQO-ONB-001,003,004 | QA lead + human testers | Lab devices |
 | Static analysis | Lint policy, manifest export audit, secret scan of APK | QA lead (CI-gated) | CI |
 
@@ -310,6 +310,6 @@ Supplementary concrete cases (PROPOSED; no execution):
 | EQO-CDP-007 | P0 / QA+browser dev / device | Fresh Chrome without debugging prep; unsaved form fixture | Start CDP; follow preparation; approve required Chrome restart; reconnect and navigate | No silent kill or claim of live debugging before readiness; warn of unsaved state; form submission requires separate approval. Existing CDP round-trip is partial; device/Chrome fixture missing. |
 | EQO-APR-006 | P0 / QA+session dev / unit+device | Risky action pending approval | Stop/takeover; deliver late approval callback; restart session | Stale approval cannot authorize dispatch; new target/action requires new approval. Source approval tests are reuse candidates, not proof of this race; EQO harness missing. |
 | EQO-VD-006 | P0 / QA+display dev / device | Virtual display active; resource counters recorded | Deny capture/input grant; kill process; disconnect privileged bridge in separate trials | No wrong-display input; protected screens handled as unavailable; display/threads/sockets released or reconciled on restart. Settings baseline is insufficient; hardware and instrumentation missing. |
-| EQO-COMPAT-ALL | P0 / QA / emulator+OEM device | Fresh single EQO APK on API 31,32,33,34,35,36, plus selected OEMs | On each: complete A11Y/BYOK/pairing/CDP/display; inject disconnect, grant revoke, pairing revoke, reboot and Stop race | Each P0 case passes with OS/build/Chrome/APK SHA recorded. API26 success cannot establish Android12 onboarding; API36 alone cannot establish intermediate versions. Devices and EQO implementation absent. |
+| EQO-COMPAT-ALL | P0 / QA / emulator+OEM device | Fresh single EQO APK on API 30,31,32,33,34,35,36, plus selected OEMs | On each: complete A11Y/BYOK/pairing/CDP/display; inject disconnect, grant revoke, pairing revoke, reboot and Stop race | Each P0 case passes with OS/build/Chrome/APK SHA recorded. API26 success cannot establish Android 11 onboarding; API36 alone cannot establish intermediate versions. Devices and EQO implementation absent. |
 
 For §7.10 OEM cases, use the EQO-COMPAT-ALL preconditions/steps/expected protocol and retain per-device evidence. Future release sign-off requires zero open safety/security P0 defects, exact APK hash/signature and source SHA, reproducible build logs and machine-readable test reports; metadata-only green jobs are insufficient.

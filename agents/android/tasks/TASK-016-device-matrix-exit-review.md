@@ -11,7 +11,7 @@
 Decide, from evidence, which exit gates pass.
 
 ## Scope
-Run every gate scenario on Android 12 and 13 (plus one OEM skin) and the emulator versions in the test plan (`Phase-One/docs/TEST-PLAN.md`). Record pass, fail or defect id per item.
+Run every gate scenario on Android 11 (physical Realme Narzo 20, Realme UI 2.0 = the OEM-skin device) plus Android 12 and 13 (emulator and/or physical; label which), and the emulator versions in the test plan (`Phase-One/docs/TEST-PLAN.md`). Record pass, fail or defect id per item.
 
 ## Acceptance criteria
 - [ ] Every claim has command output or a recording attached
