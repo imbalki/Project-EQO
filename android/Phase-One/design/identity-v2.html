@@ -100,7 +100,7 @@ h1{font:600 28px/1.15 "Newsreader",Georgia,serif;margin:0 0 6px}
 <div class="wrap">
   <h1>EQO identity v2: soft and light</h1>
   <p class="lede">Reworked from your feedback: lighter colours, smaller and calmer type, and a gentler way of asking for permissions. Phones are drawn at true size (1 CSS pixel = 1 dp, 390 dp wide), so the type you see is the type users get. Pick Warm or Cool; the layout is identical.</p>
-  <div class="toolbar"><span class="seg" role="group" aria-label="Colour mood"><button id="b-clay" aria-pressed="true">Warm (clay)</button><button id="b-mist" aria-pressed="false">Cool (mist)</button></span><span style="font-size:13px;color:var(--page-muted)">Mockup only. No app code.</span></div>
+  <div class="toolbar"><span class="seg" role="group" aria-label="Colour mood"><button id="b-clay" aria-pressed="true">Warm (clay)</button><button id="b-mist" aria-pressed="false">Cool (mist)</button><button id="b-both" aria-pressed="false">Both, side by side</button></span><span style="font-size:13px;color:var(--page-muted)">Mockup only. No app code.</span></div>
   <div class="principles">
     <div class="principle"><b>Light and soft</b>Warm white surfaces, gentle tints, no dark panels and no harsh borders. Rounded shapes, as in current Material 3 Expressive.</div>
     <div class="principle"><b>Explain before asking</b>Every permission has a plain "why", what EQO can and can't do, and how to turn it off, before any Android settings screen.</div>
@@ -135,20 +135,20 @@ const screens=[
  ['Approval and control capsule (S-22, S-23)','A calm pause point. Back means Deny, and it says so.',`<div class="screen">${status}<div class="top"><span class="brand">EQO</span><span class="chip c-attn" style="margin-left:auto">Needs your OK</span></div><h2 class="headline">Text Mum I'm on my way</h2><div class="run" style="margin:8px 0 16px"><div class="s"><span class="dot done">${I.check}</span>Open Messages</div><div class="s"><span class="dot done">${I.check}</span>Write the message</div><div class="s"><span class="dot now">3</span><b style="font-weight:600">Send it</b></div></div><div class="attn"><p class="title">EQO wants to send this message</p><div class="quote">"On my way, back in 20 minutes"<div class="label" style="color:var(--muted);margin-top:6px;font-weight:500">To: Mum</div></div><div class="pair"><button class="btn btn-primary">Approve</button><button class="btn btn-soft">Deny</button></div></div><p class="body" style="margin:10px 4px 0">Pressing back also denies, and nothing is sent.</p><div class="spacer"></div><div class="capsule"><button class="btn btn-soft">Pause</button><button class="btn btn-stop">Stop</button><button class="btn btn-soft">Take over</button></div></div>`]
 ];
 const stage=document.getElementById('stage');
-screens.forEach(([t,c,h])=>{stage.insertAdjacentHTML('beforeend',`<div class="item"><div class="phone">${h}</div><p class="cap"><b>${t}</b><br>${c}</p></div>`)});
+function phoneSet(theme){return screens.map(([t,c,h])=>`<div class="item"><div class="phone ${theme}">${h}</div><p class="cap"><b>${t}</b><br>${c}</p></div>`).join('')}
 function lum(h){const c=h.replace('#','').match(/../g).map(x=>parseInt(x,16)/255).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));return .2126*c[0]+.7152*c[1]+.0722*c[2]}
 function ratio(a,b){const x=lum(a),y=lum(b),hi=Math.max(x,y),lo=Math.min(x,y);return (hi+.05)/(lo+.05)}
 const pairs=[['Text on background','--ink','--bg'],['Secondary text on background','--muted','--bg'],['Secondary text on tonal card','--muted','--tonal'],['Button label on primary','--on-primary','--primary'],['Label on soft button','--on-pc','--pc'],['Ready chip','--ready','--ready-bg'],['Needs-OK chip and card title','--attn','--attn-bg'],['Stop button label','--stop','--stop-bg'],['Primary text-button on background','--primary','--bg']];
-function applyTheme(t){
- const s=document.getElementById('stage');s.className='stage '+t;
- document.querySelectorAll('.phone').forEach(p=>{p.classList.remove('clay','mist');p.classList.add(t)});
- const cs=getComputedStyle(document.querySelector('.phone')),g=v=>cs.getPropertyValue(v).trim();
- const con=document.getElementById('con');con.innerHTML='';
- pairs.forEach(([n,a,b])=>{const r=ratio(g(a),g(b));con.insertAdjacentHTML('beforeend',`<div>${n}: ${r.toFixed(2)}:1 <span class="${r>=4.5?'ok':'bad'}">${r>=4.5?'passes AA':'fails AA'}</span></div>`)});
- document.getElementById('b-clay').setAttribute('aria-pressed',t==='clay');document.getElementById('b-mist').setAttribute('aria-pressed',t==='mist');
-}
-document.getElementById('b-clay').onclick=()=>applyTheme('clay');document.getElementById('b-mist').onclick=()=>applyTheme('mist');
-applyTheme('clay');
+function contrastFor(theme,label){const probe=document.querySelector('.phone.'+theme);const cs=getComputedStyle(probe),g=v=>cs.getPropertyValue(v).trim();return `<div style="grid-column:1/-1;font-weight:700;margin-top:6px">${label}</div>`+pairs.map(([n,a,b])=>{const r=ratio(g(a),g(b));return `<div>${n}: ${r.toFixed(2)}:1 <span class="${r>=4.5?'ok':'bad'}">${r>=4.5?'passes AA':'fails AA'}</span></div>`}).join('')}
+function applyMode(m){
+ stage.className='stage';stage.style.display='block';
+ if(m==='both'){stage.innerHTML=`<h2 style="font:600 18px Figtree,sans-serif;margin:0 0 10px">Warm (clay)</h2><div class="stage" style="margin-bottom:36px">${phoneSet('clay')}</div><h2 style="font:600 18px Figtree,sans-serif;margin:0 0 10px">Cool (mist)</h2><div class="stage">${phoneSet('mist')}</div>`}
+ else{stage.innerHTML=`<div class="stage">${phoneSet(m)}</div>`}
+ const con=document.getElementById('con');
+ con.innerHTML=(m==='both'?contrastFor('clay','Warm (clay)')+contrastFor('mist','Cool (mist)'):contrastFor(m,m==='clay'?'Warm (clay)':'Cool (mist)'));
+ ['clay','mist','both'].forEach(k=>document.getElementById('b-'+k).setAttribute('aria-pressed',k===m));
+}document.getElementById('b-clay').onclick=()=>applyMode('clay');document.getElementById('b-mist').onclick=()=>applyMode('mist');document.getElementById('b-both').onclick=()=>applyMode('both');
+applyMode('both');
 </script>
 </body>
 </html>
