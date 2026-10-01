@@ -1,6 +1,6 @@
 # Android task index (Phase 1)
 
-Rewritten for the Phase One plan in `Project-EQO-Android/Phase-One/` (decisions D-001 to D-006). The earlier 15-task list assumed a from-scratch Kotlin app and is superseded.
+Rewritten for the Phase One plan in `android/Phase-One/` (decisions D-001 to D-006). The earlier 15-task list assumed a from-scratch Kotlin app and is superseded.
 
 Status values: `todo`, `in-progress`, `blocked`, `in-review`, `done`.
 Pick the first `todo` task whose dependencies are all `done`. Set it to `in-progress` in the same commit that starts work.
@@ -26,4 +26,4 @@ Model routing: see `docs/agents/MODEL-ROUTING.md`. Each task names its author an
 | TASK-015 | Study APK and guided onboarding | 007-014 | 1-8 | yes | todo |
 | TASK-016 | Device matrix and exit review | 015 | all | yes | todo |
 
-Code location assumption A-1: code lives in the `Project-EQO-Android` repo; tasks and orchestration live here. Confirm before TASK-003.
+Code location (ADR-0002, supersedes assumption A-1): Android code lives in `android/` in this repo; tasks and orchestration live here. The A-1 question is confirmed by ADR-0002; no separate confirmation is needed before TASK-003.
