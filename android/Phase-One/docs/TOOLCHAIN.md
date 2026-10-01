@@ -75,9 +75,14 @@ sdkmanager --sdk_root=%ANDROID_HOME% platform-tools platforms/android-36 build-t
 # OpenDroid checkout at 6ff5a061755b597b0558fed1f565587837ed4d51 — the project wrapper then supplies Gradle 9.7.0
 ```
 
-## Not yet done (TASK-001 acceptance criteria still open)
+## Gradle compile-step (previously open as a TASK-001 acceptance criterion)
 
-- A throwaway Gradle build of the pinned OpenDroid commit (6ff5a061) reaching the compile step. No build has
-  been run and no build result is claimed; this criterion stays OPEN until the owner approves running the build.
+- A throwaway Gradle build of the pinned OpenDroid commit (6ff5a061) reaching the compile step.
+  **DONE — exit code 0.** `:app:compileDebugKotlin` was run as a throwaway build of upstream
+  6ff5a061755b597b0558fed1f565587837ed4d51 on 2026-10-01 (owner-approved): started
+  2026-10-01T15:39:44Z, ended 2026-10-01T15:49:37Z, `BUILD SUCCESSFUL in 9m 51s`,
+  8 actionable tasks executed, no SDK license prompt and no extra SDK packages needed.
+  Evidence: `android/Phase-One/evidence/toolchain-gradle-build.txt`; full log:
+  `C:\Users\<user>\Claude\worktrees\_upstream\gradle-build.log`.
 
 The provisional-versus-upstream pin reconciliation is done — see the two verification tables above.
