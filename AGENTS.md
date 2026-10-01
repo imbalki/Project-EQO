@@ -18,11 +18,12 @@ EQO is a privacy-first personal AI assistant. Android-first (Kotlin), desktop se
 10. Prefer open-source tools and dependencies. Do not add anything that requires a paid subscription.
 
 ## Architecture constraints
-- Phase 1 is pure Kotlin. No embedded Node.js, no Python on the phone.
-- Agent loop is written directly in Kotlin (OpenAI-compatible HTTP to OpenRouter, local Gemma via LiteRT). No agent framework.
-- App integrations go through Composio's hosted HTTP API.
-- Memory in Phase 1 is Room (SQLite) with LLM fact extraction.
-- Cloud is opt-in. Default path must work with no network.
+Source of truth: decisions D-001 to D-006 in `Project-EQO-Android/Phase-One/DECISIONS.md`.
+- Android app is a fork of OpenDroid with ClosePaw and Shizuku donor code. Agent loop in Kotlin, no agent framework.
+- OpenRouter bring-your-own-key is the primary LLM path; local Gemma is opportunistic.
+- The bundled Python bridge stays inert (D-005). Do not add new Node.js or Python runtime dependencies.
+- App connectors (Composio and similar) are Phase 2.
+- Code lives in `Project-EQO-Android` (A-1); tasks live in `agents/android/tasks/`.
 
 ## Checks
 - `android/`: `./gradlew ktlintCheck detekt test`
