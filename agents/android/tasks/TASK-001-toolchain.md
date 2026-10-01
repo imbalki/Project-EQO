@@ -4,7 +4,7 @@
 - Depends on: -
 - Area: android (environment)
 - Gate: prerequisite for gate 1
-- Models: author `glm-5.3-flash`, reviewer `mimo-v2.6-flash`
+- Models: author `glm-5.3-flash`, reviewer `mimo-v2.6-pro`
 - Branch: agent/android/<issue>-toolchain
 
 ## Goal

@@ -30,7 +30,7 @@ legacy requirements conflict in sources/main is recorded verbatim in §7.1 rathe
 
 ## 1. Feasibility verdict (evidence-backed)
 
-VERDICT: FEASIBLE WITH MAJOR ADAPTATION, CONDITIONALLY — a single Android 12+ EQO APK that
+VERDICT: FEASIBLE WITH MAJOR ADAPTATION, CONDITIONALLY — a single Android 11+ EQO APK that
 orchestrates Accessibility + shell-privilege (Shizuku user-service) + Chrome CDP + virtual
 display is technically demonstrated in source by the combination of OpenDroid (agent loop,
 approval policy, OpenRouter BYOK provider, AndroidKeyStore credential storage) and ClosePaw
@@ -52,15 +52,17 @@ approval policy, OpenRouter BYOK provider, AndroidKeyStore credential storage) a
     and Accessibility depends on app UI trees. The brief's "no universal automation guarantee"
     is consistent with what the source can actually deliver.
 
-The verdict is therefore: buildable as a sideloaded (not Play-store-safe) APK for Android 12+
-(minSdk 31 is already what ClosePaw targets — closepaw/app/build.gradle.kts:18-20), with the
+The verdict is therefore: buildable as a sideloaded (not Play-store-safe) APK for Android 11+
+(minSdk 30 per D-007 / ADR-0003; ClosePaw, the donor, itself targets minSdk 31 — closepaw/
+app/build.gradle.kts:18-20, a donor fact and not an EQO requirement, so donor code may use APIs
+above 30 and compile/lint in TASK-003/004/007 must surface them), with the
 helper/setup boundary described in §4 and trust boundary in §7.2 — but acceptance must be
 gated on the real-device gates in §8 before any capability claim is made to users.
 
 ## 2. Architecture / module / process / IPC diagram (text)
 
 ```
-[ User device, Android 12+ (API 31+) ]
+[ User device, Android 11+ (API 30+) ]
 
   EQO MAIN APK  (one APK, com.eqo.* — single Kotlin orchestrator)
   ├─ UI (Compose) + OrchestratorService (foreground service; OpenDroid pattern:
@@ -150,7 +152,7 @@ gated on the real-device gates in §8 before any capability claim is made to use
 
 | Module | Source (file:line) | Reusable as-is? | Required work |
 |---|---|---|---|
-| Wireless ADB pairing (SPAKE2/TLS/adb protocol/mTLS client) | closepaw `browser/cdp/wireless/` AdbPairingClient.kt:32-66, AdbPairingTls.kt:29-48, AdbTlsClient.kt:21-35, AdbProtocol.kt:21-22, Spake25519.kt, AndroidPubkey.kt, AdbCryptoKeyStore.kt:31-57 | HIGH reuse — self-contained Kotlin, no Android UI | Rebrand, wire key storage policy, unit-test vectors vs AOSP; QA on Android 12–16 |
+| Wireless ADB pairing (SPAKE2/TLS/adb protocol/mTLS client) | closepaw `browser/cdp/wireless/` AdbPairingClient.kt:32-66, AdbPairingTls.kt:29-48, AdbTlsClient.kt:21-35, AdbProtocol.kt:21-22, Spake25519.kt, AndroidPubkey.kt, AdbCryptoKeyStore.kt:31-57 | HIGH reuse — self-contained Kotlin, no Android UI | Rebrand, wire key storage policy, unit-test vectors vs AOSP; QA on Android 11–16 |
 | Wireless-ADB self-pair transport + token-gated WS relay | closepaw WirelessAdbSelfPairTransport.kt:24-28,80+; ChromeDevtoolsUserService.kt:261-326 | HIGH reuse | Rename token header (X-ClosePaw-Token), audit relay thread lifecycle on service destroy |
 | CDP HTTP/WS bridge + cascade transport | closepaw ShizukuChromeDevtoolsBridge.kt:8-11,88-116,139-144; DevtoolsHttpProtocol.kt; ChromeCdpClient.kt | HIGH reuse (Chrome-only scope) | Model/tool mapping for EQO actions; verification hooks |
 | Chrome debug-socket setup | closepaw CommandLineWriter.kt:43-55, ChromeFlagDeepLink.kt, ChromeCdpProbe.kt:18-40 | HIGH reuse | EQO UX flow; the chrome://flags user step cannot be removed (source never force-stops Chrome, CommandLineWriter.kt:8-11) |
@@ -164,7 +166,7 @@ gated on the real-device gates in §8 before any capability claim is made to use
 | Agent loop | opendroid core/agent/AgentLoop.kt (currentJob cancel, CancellationException handling :311,352,479) | LOW-MEDIUM | Substantial rewrite to a single action-envelope orchestrator; OpenDroid loop is plan/fallback oriented (AutoApprovalPolicy.kt:24-31) |
 | Accessibility actions | opendroid accessibility/ (OpenDroidAccessibilityService.kt, AccessibilityNodeTraversal.kt), actions/ | MEDIUM reuse | EQO action set narrowing; per-app reliability is the evergreen problem (no code fixes that) |
 | Termux Python bridge | closepaw build.gradle.kts:107-117 (copyClosePawBridge → closepaw_bridge_py), Manifest `com.termux.permission.RUN_COMMAND` (closepaw Manifest:5) | EXCLUDE | Conflicts with brief "no Node/Python runtime on phone" (it delegates to a Termux install); drop |
-| Leap SDK local inference | closepaw app/build.gradle.kts:13-20 (minSdk 31 "Required by LiquidAI Leap SDK") | EXCLUDE | Brief mandates OpenRouter BYOK; dropping Leap removes a proprietary-ish dependency and may relax minSdk (keep 31 per brief anyway) |
+| Leap SDK local inference | closepaw app/build.gradle.kts:13-20 (minSdk 31 "Required by LiquidAI Leap SDK" — donor fact: it forces ClosePaw's own minSdk 31) | EXCLUDED by owner decision D-007 | EQO does not use the LiquidAI Leap SDK; the brief mandates OpenRouter BYOK, so the donor's Leap dependency is not carried over and the EQO floor is minSdk 30 (ADR-0003) |
 
 Substantial adaptation summary: everything "agent semantics" (action envelope, approvals,
 cancellation semantics, verification) is BUILD; everything "device access plumbing" (pairing,
@@ -304,7 +306,7 @@ Per-repo toolchain (source-cited):
 Integration conflicts to resolve when merging into one EQO APK: AGP 9.3.1/Kotlin 2.4.0
 (opendroid) vs AGP 8.9.1/Kotlin 2.3.0 (closepaw) — pick one (AGP 9.x line is the forward path;
 closepaw's license plugin 0.9.8 has known config-cache breakage, closepaw/app/build.gradle.kts:
-140-148); JVM target 17 vs 21; ClosePaw's minSdk-31 Leap dependency can be dropped (§3).
+140-148); JVM target 17 vs 21; ClosePaw's minSdk-31 Leap dependency (donor fact — it forces ClosePaw's own minSdk 31) is not carried over: the LiquidAI Leap SDK is EXCLUDED by owner decision D-007 and EQO does not use it (§3).
 
 CI evidence (ci-detail.json, evidence.json) — CI results are CI-only, not runtime proof:
 - opendroid "Android CI" run 33920897530 at inspected HEAD 6ff5a06: overall FAILURE.
@@ -362,7 +364,7 @@ exists anywhere. Nothing in CI is runtime proof on a phone.
     (ShizukuDisplayTransport.kt:45-55,185-249) and HiddenApiBypass (ShizukuRuntimeGateway.kt:10).
     OEM SELinux already breaks shell→abstract-socket on nubia P0110
     (ShizukuChromeDevtoolsBridge.kt:92-93; ChromeDevtoolsUserService.kt:22-28) and breaks
-    app-uid /proc reads (ChromeCdpProbe.kt:28-40). Android 12→16 drift must be assumed.
+    app-uid /proc reads (ChromeCdpProbe.kt:28-40). Android 11→16 drift must be assumed (EQO's floor is Android 11).
 
 7.5 (Rank 5 — scope ceilings) CDP covers Chrome only; requires a manual chrome://flags flip;
     socket lifetime is tied to the Chrome process and to the debug flag surviving restarts.
@@ -389,8 +391,10 @@ exists anywhere. Nothing in CI is runtime proof on a phone.
 
 ## 8. Real-device acceptance gates (all must pass before any capability claim)
 
-1. Android 12+ matrix: API 31, 33, 34, 35/16 emulator + ≥2 OEM physical devices (one
-   Samsung/Xiaomi, one "other" e.g. Nothing/OnePlus). Gate: setup completes on all.
+1. Android 11+ matrix: API 30, 31, 33, 34, 35/16 emulator + ≥2 OEM physical devices (one
+   Samsung/Xiaomi, one "other" e.g. Nothing/OnePlus), including the owner's physical Realme
+   Narzo 20 (Realme UI 2.0, Android 11) as the OEM-skin device; label each result emulator or
+   physical. Gate: setup completes on all.
 2. Chrome gate: stock Chrome stable + ≥1 Chrome variant (e.g. Chrome Beta, Bromite-class is
    NOT covered by the devtools-socket path — record as unsupported). Gate: CDP
    /json/version fetch + one verified navigation + one verified screenshot.

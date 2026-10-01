@@ -11,13 +11,14 @@
 A compilable EQO Gradle project with a CI pipeline that fails on new problems.
 
 ## Scope
-Code lives in the Project-EQO-Android repo (assumption A-1 in `agents/android/README.md`). Gradle Kotlin DSL, version catalog, `:app` with `applicationId` under `ai.eqo`, `minSdk 31` (Android 12), JDK 21, AGP 9.x. CI: assemble debug and release, unit tests, Android Lint with a baseline seeded only from TASK-002 output, ktlint and detekt, upload reports with missing-report = error and at least 30-day retention.
+Android code lives in android/ in this repo (ADR-0002). Gradle Kotlin DSL, version catalog, `:app` with `applicationId` under `ai.eqo`, `minSdk 30` (Android 11; D-007, ADR-0003), JDK 21, AGP 9.x. CI: assemble debug and release, unit tests, Android Lint with a baseline seeded only from TASK-002 output, ktlint and detekt, upload reports with missing-report = error and at least 30-day retention.
 
 ## Acceptance criteria
 - [ ] Clean checkout builds twice in a row with `./gradlew :app:assembleDebug :app:assembleRelease :app:testDebugUnitTest :app:lintDebug`
 - [ ] CI runs the same commands and is green
 - [ ] No `abortOnError false` and no blanket lint ignores
 - [ ] Wrapper checksum pinned
+- [ ] grep -rniE "liquid|leap-sdk|ai\.liquid" android/ --include=*.gradle --include=*.kts --include=*.kt --include=*.toml returns nothing
 
 ## Evidence required
 CI run link and local command output.

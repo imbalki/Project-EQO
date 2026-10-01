@@ -12,4 +12,4 @@ agents/android/
   handoff/            one file per handoff (TEMPLATE.md)
 ```
 
-Code location (assumption A-1): code lives in the `Project-EQO-Android` repo; this repo holds tasks, routing and orchestration. Model routing: `docs/agents/MODEL-ROUTING.md`.
+Code location (ADR-0002, supersedes A-1): Android code lives in `android/` in this repo; tasks, routing and orchestration live in `agents/android/`. Model routing: `docs/agents/MODEL-ROUTING.md`.

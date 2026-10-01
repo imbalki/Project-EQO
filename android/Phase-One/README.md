@@ -1,6 +1,6 @@
 # EQO Android — Phase One
 
-Phase One scope: prove the EQO daily-life assistant on Android 12+ — OpenDroid base, OpenRouter bring-your-own-key, Accessibility automation, **mandatory authenticated wireless ADB**, an **integrated EQO-branded privileged helper** (no separate third-party helper app), Chrome + CDP browser automation, virtual display, guided onboarding, approvals, Pause/Stop/takeover and verified outcomes — starting with feasibility and a first **study APK**.
+Phase One scope: prove the EQO daily-life assistant on Android 11+ (minSdk 30, D-007 / ADR-0003) — OpenDroid base, OpenRouter bring-your-own-key, Accessibility automation, **mandatory authenticated wireless ADB**, an **integrated EQO-branded privileged helper** (no separate third-party helper app), Chrome + CDP browser automation, virtual display, guided onboarding, approvals, Pause/Stop/takeover and verified outcomes — starting with feasibility and a first **study APK**.
 
 Later phases are planned only after the study APK is reviewed on real devices.
 

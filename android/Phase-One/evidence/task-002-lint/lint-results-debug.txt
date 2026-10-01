@@ -1,0 +1,271 @@
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\lint-baseline.xml: Hint: 15 errors were filtered out because they are listed in the baseline file, lint-baseline.xml [LintBaseline]
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\lint-baseline.xml: Hint: 1 errors/warnings were listed in the baseline file (lint-baseline.xml) but not found in the project; perhaps they have been fixed? Another possible explanation is that lint recently stopped analyzing (and including results from) dependent projects by default. You can turn this back on with android.lintOptions.checkDependencies=true. Unmatched issue types: SdCardPath [LintBaselineFixed]
+
+   Explanation for issues of type "LintBaselineFixed":
+   If a lint baseline describes a problem which is no longer reported, then
+   the problem has either been fixed, or perhaps the issue type has been
+   disabled. In any case, the entry can be removed from the baseline (such
+   that if the issue is reintroduced at some point, lint will complain rather
+   than just silently starting to match the old baseline entry again.)
+
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\actions\SocialActions.kt:52: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    appendLine("• Avg Engagement Rate: ${String.format("%.1f", summary.averageEngagementRate)}%")
+                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\actions\SocialActions.kt:175: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                            appendLine("   Likes: ${post.likesCount} | Comments: ${post.commentsCount} | Engagement: ${String.format("%.1f", post.engagementRate)}%")
+                                                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\actions\SocialActions.kt:195: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    appendLine("• Avg Engagement: ${String.format("%.1f", report.averageEngagementRate)}%")
+                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\social\core\analytics\SocialAnalyticsEngine.kt:84: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+            "Your product and developer updates generated the strongest engagement this week with ${summary.totalReach} total reach and an average engagement rate of ${String.format("%.1f", summary.averageEngagementRate)}%."
+                                                                                                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialAnalyticsTab.kt:98: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    value = summary?.averageEngagementRate?.let { "${String.format("%.1f", it)}%" } ?: "0.0%",
+                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialAnalyticsTab.kt:295: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+        count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialAnalyticsTab.kt:296: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+        count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\social\core\ai\SocialInsightsEngine.kt:38: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                        observedData = "Announcement posts averaged ${String.format("%.1f", avgAnnouncementEngage)}% engagement vs ${String.format("%.1f", avgOtherEngage)}% for general posts across ${posts.size} published posts.",
+                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\social\core\ai\SocialInsightsEngine.kt:38: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                        observedData = "Announcement posts averaged ${String.format("%.1f", avgAnnouncementEngage)}% engagement vs ${String.format("%.1f", avgOtherEngage)}% for general posts across ${posts.size} published posts.",
+                                                                                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialOverviewTab.kt:72: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    value = summary?.averageEngagementRate?.let { "${String.format("%.1f", it)}%" } ?: "0.0%",
+                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialOverviewTab.kt:294: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                            Text("${String.format("%.1f", post.engagementRate)}% engage", fontSize = 10.sp, color = theme.textSecondary)
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialOverviewTab.kt:362: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+        count >= 1_000_000 -> "${String.format("%.1f", count / 1_000_000f)}M"
+                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialOverviewTab.kt:363: Error: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+        count >= 1_000 -> "${String.format("%.1f", count / 1_000f)}K"
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "DefaultLocale":
+   Calling String#toLowerCase() or #toUpperCase() without specifying an
+   explicit locale is a common source of bugs. The reason for that is that
+   those methods will use the current locale on the user's device, and even
+   though the code appears to work correctly when you are developing the app,
+   it will fail in some locales. For example, in the Turkish locale, the
+   uppercase replacement for i is not I.
+
+   If you want the methods to just perform ASCII replacement, for example to
+   convert an enum name, call String#toUpperCase(Locale.ROOT) instead. If you
+   really want to use the current locale, call
+   String#toUpperCase(Locale.getDefault()) instead.
+
+   https://developer.android.com/reference/java/util/Locale.html#default_locale
+
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\core\storage\StorageWorkspaceProvider.kt:180: Error: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
+                } else if (canonical.startsWith("/sdcard")) {
+                                                 ~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\core\storage\StorageWorkspaceProvider.kt:181: Error: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
+                    canonical.removePrefix("/sdcard").trimStart('/')
+                                            ~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\core\storage\StorageWorkspaceProvider.kt:516: Error: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
+        val prefixes = listOf("/sdcard/", "/storage/emulated/0/", "sdcard/", "./")
+                               ~~~~~~~~
+
+   Explanation for issues of type "SdCardPath":
+   Your code should not reference the /sdcard path directly; instead use
+   Environment.getExternalStorageDirectory().getPath().
+
+   Similarly, do not reference the /data/data/ path directly; it can vary in
+   multi-user scenarios. Instead, use Context.getFilesDir().getPath().
+
+   https://developer.android.com/training/data-storage#filesExternal
+
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialAccountsTab.kt:263: Error: Reading locale in a non-observable way in a composable function [NonObservableLocale from androidx.compose.ui]
+                        "Synced " + SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date(lastSync))
+                                                                     ~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialCalendarTab.kt:296: Error: Reading locale in a non-observable way in a composable function [NonObservableLocale from androidx.compose.ui]
+    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                                               ~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialCampaignsTab.kt:137: Error: Reading locale in a non-observable way in a composable function [NonObservableLocale from androidx.compose.ui]
+    val timeFormat = SimpleDateFormat("MMM d", Locale.getDefault())
+                                               ~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialCommentsTab.kt:169: Error: Reading locale in a non-observable way in a composable function [NonObservableLocale from androidx.compose.ui]
+    val timeFormatted = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date(comment.timestamp))
+                                                         ~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialContentTab.kt:458: Error: Reading locale in a non-observable way in a composable function [NonObservableLocale from androidx.compose.ui]
+    val timeFormat = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+                                                      ~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialInboxTab.kt:199: Error: Reading locale in a non-observable way in a composable function [NonObservableLocale from androidx.compose.ui]
+    val timeFormatted = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date(interaction.timestamp))
+                                                         ~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialReportsTab.kt:40: Error: Reading locale in a non-observable way in a composable function [NonObservableLocale from androidx.compose.ui]
+    val timeFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+                                                     ~~~~~~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialSettingsTab.kt:291: Error: Reading locale in a non-observable way in a composable function [NonObservableLocale from androidx.compose.ui]
+    val timeFormat = SimpleDateFormat("MMM d, HH:mm:ss", Locale.getDefault())
+                                                         ~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "NonObservableLocale":
+   Calling java.util.Locale.getDefault(),
+   android.os.LocaleList.getAdjustedDefault() or
+   androidx.core.os.LocaleListCompat.getAdjustedDefault() within a composable
+   function is not recommended. Calling these functions does not read
+   observable state and will not be updated if the user changes the locale.
+   This can lead to subtle bugs in your UI where the wrong locale is used for
+   formatting dates, times, numbers, and other locale-sensitive information.
+   To fix this, you should use
+   androidx.compose.ui.platform.LocalLocale.current.platformLocale instead.
+   This will ensure that your UI is always up-to-date with the current
+   locale.
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.ui
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\MacrosScreen.kt:39: Error: Modifier parameter should be the first optional parameter [ModifierParameter from androidx.compose.ui]
+    modifier: Modifier = Modifier
+    ~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\components\SocialCharts.kt:23: Error: Modifier parameter should be the first optional parameter [ModifierParameter from androidx.compose.ui]
+    modifier: Modifier = Modifier.fillMaxWidth().height(160.dp),
+    ~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\components\SocialCharts.kt:23: Error: Optional Modifier parameter should have a default value of Modifier [ModifierParameter from androidx.compose.ui]
+    modifier: Modifier = Modifier.fillMaxWidth().height(160.dp),
+    ~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\components\SocialCharts.kt:105: Error: Optional Modifier parameter should have a default value of Modifier [ModifierParameter from androidx.compose.ui]
+    modifier: Modifier = Modifier.fillMaxWidth().height(160.dp),
+    ~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\components\SocialCharts.kt:149: Error: Optional Modifier parameter should have a default value of Modifier [ModifierParameter from androidx.compose.ui]
+    modifier: Modifier = Modifier.size(100.dp)
+    ~~~~~~~~
+
+   Explanation for issues of type "ModifierParameter":
+   The first (or only) Modifier parameter in a Composable function should
+   follow the following rules:
+   - Be named modifier
+   - Have a type of Modifier
+   - Either have no default value, or have a default value of Modifier
+   - If optional, be the first optional parameter in the parameter list
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.ui
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\viewmodel\SettingsViewModel.kt:738: Error: Unnecessary; SDK_INT is always >= 26 [ObsoleteSdkInt]
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "ObsoleteSdkInt":
+   This check flags version checks that are not necessary, because the
+   minSdkVersion (or surrounding known API level) is already at least as high
+   as the version checked for.
+
+   Similarly, it also looks for resources in -vNN folders, such as values-v14
+   where the version qualifier is less than or equal to the minSdkVersion,
+   where the contents should be merged into the best folder.
+
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialAnalyticsTab.kt:38: Error: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var selectedRangeDays by remember { mutableStateOf(7) }
+                                        ~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialCalendarTab.kt:37: Error: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var selectedDayIndex by remember { mutableStateOf(0) }
+                                       ~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialCampaignsTab.kt:260: Error: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var durationDays by remember { mutableStateOf(7) }
+                                   ~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialContentTab.kt:605: Error: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var selectedOffsetHours by remember { mutableStateOf(1) }
+                                          ~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\SocialScreen.kt:42: Error: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var selectedTabIndex by remember { mutableStateOf(0) }
+                                       ~~~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\ui\screens\social\SocialSettingsTab.kt:334: Error: Prefer mutableFloatStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var confidence by remember { mutableStateOf(0.85f) }
+                                 ~~~~~~~~~~~~~~
+
+   Explanation for issues of type "AutoboxingStateCreation":
+   Calling mutableStateOf<T>() when T is either backed by a primitive type on
+   the JVM or is a value class results in a state implementation that requires
+   all state values to be boxed. This usually causes an additional allocation
+   for each state write, and adds some additional work to auto-unbox values
+   when reading the value of the state. Instead, prefer to use a specialized
+   primitive state implementation for Int, Long, Float, and Double when the
+   state does not need to track null values and does not override the default
+   SnapshotMutationPolicy. See mutableIntStateOf(), mutableLongStateOf(),
+   mutableFloatStateOf(), and mutableDoubleStateOf() for more information.
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.runtime
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\social\core\SocialManager.kt:68: Error: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        prefs.edit().putString(KEY_AUTOMATION_LEVEL, level.name).apply()
+        ~~~~~~~~~~~~
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\core\storage\StorageWorkspaceProvider.kt:50: Error: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        ^
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\core\storage\StorageWorkspaceProvider.kt:60: Error: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        ^
+C:\Users\<user>\Claude\worktrees\_upstream\opendroid-t002\app\src\main\java\com\opendroid\ai\core\storage\StorageWorkspaceProvider.kt:73: Error: Use the KTX extension function String.toUri instead? [UseKtx]
+            val uri = Uri.parse(uriStr)
+                      ~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UseKtx":
+   The Android KTX libraries decorates the Android platform SDK as well as
+   various libraries with more convenient extension functions available from
+   Kotlin, allowing you to use default parameters, named parameters, and
+   more.
+
+   Available options:
+
+   **remove-defaults** (default is true):
+   Whether to skip arguments that match the defaults provided by the extension.
+
+   Extensions often provide default values for some of the parameters. For example:
+   ```kotlin
+   fun Path.readLines(charset: Charset = Charsets.UTF_8): List<String> { return Files.readAllLines(this, charset) }
+   ```
+   This lint check will by default automatically omit parameters that match the default, so if your code was calling
+
+   ```kotlin
+   Files.readAllLines(file, Charset.UTF_8)
+   ```
+   lint would replace this with
+   ```kotlin
+   file.readLines()
+   ```
+   rather than
+
+   ```kotlin
+   file.readLines(Charset.UTF_8
+   ```
+   You can turn this behavior off using this option.
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="remove-defaults" value="true" />
+       </issue>
+   </lint>
+   ```
+
+   **require-present** (default is true):
+   Whether to only offer extensions already available.
+
+   This option lets you only have lint suggest extension replacements if those extensions are already available on the class path (in other words, you're already depending on the library containing the extension method.)
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="require-present" value="true" />
+       </issue>
+   </lint>
+   ```
+
+40 errors (and 15 errors filtered by baseline lint-baseline.xml)

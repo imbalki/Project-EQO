@@ -49,7 +49,7 @@
 
 ## 2. UF-01 — First install & welcome
 
-**Entry:** app icon tap after sideload install. **Preconditions:** device Android 12+ (REQ-INS-01).
+**Entry:** app icon tap after sideload install. **Preconditions:** device Android 11+ (REQ-INS-01).
 
 1. **S-01 Welcome.**
    - Microcopy: *"EQO — Your Only Personal AI Assistant. EQO works by guiding you through a few Android settings, then runs tasks on your phone with your approval at every sensitive step. Nothing is set up yet — you'll do each step with us."*

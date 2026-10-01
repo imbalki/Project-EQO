@@ -1,6 +1,6 @@
 # Roadmap
 
-Phase One is defined in `Project-EQO-Android/Phase-One/` (exit gates 1-8). Later phases are planned only after the Phase One exit review (TASK-016).
+Phase One is defined in `android/Phase-One/` (exit gates 1-8). Later phases are planned only after the Phase One exit review (TASK-016).
 
 | Phase | Scope |
 |-------|-------|
