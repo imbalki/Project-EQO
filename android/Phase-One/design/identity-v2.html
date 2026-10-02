@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EQO identity v2: soft and light</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{--page:#F7F5F2;--page-ink:#26231F;--page-muted:#6A645C;--page-line:#E4DED5}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--page-ink);font:15px/1.5 "Figtree",system-ui,-apple-system,"Segoe UI","Noto Sans",sans-serif}
+.wrap{max-width:1500px;margin:0 auto;padding:24px 16px 72px}
+h1{font:600 28px/1.15 "Newsreader",Georgia,serif;margin:0 0 6px}
+.lede{color:var(--page-muted);max-width:75ch;margin:0 0 18px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 20px}
+.seg{display:inline-flex;border:1px solid var(--page-line);border-radius:999px;padding:3px;gap:2px}
+.seg button{font:600 13px "Figtree",sans-serif;border:0;background:transparent;color:var(--page-muted);padding:7px 16px;border-radius:999px;cursor:pointer;min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--page-ink);color:var(--page)}
+.principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:0 0 26px}
+.principle{border:1px solid var(--page-line);border-radius:14px;padding:12px 14px;font-size:13px;color:var(--page-muted)}
+.principle b{display:block;color:var(--page-ink);font-size:14px;margin-bottom:2px}
+.stage{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.item{width:390px;max-width:100%}
+.cap{font-size:12px;color:var(--page-muted);margin:8px 4px 0}
+.cap b{color:var(--page-ink)}
+.contrast{margin-top:28px;border:1px solid var(--page-line);border-radius:14px;padding:14px 16px;font-size:13px}
+.contrast h2{font-size:14px;margin:0 0 8px}
+.contrast .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:6px 18px}
+.ok{color:#2E7D55;font-weight:700}.bad{color:#B3382C;font-weight:700}
+
+/* theme tokens */
+.clay{--bg:#FBF8F4;--surface:#FFFFFF;--tonal:#F5EFE7;--line:#EBE3D8;--ink:#2D2A26;--muted:#6B655D;--primary:#B04E2B;--on-primary:#FFFFFF;--pc:#F9E4D8;--on-pc:#5C2612;--ready:#2F6F4F;--ready-bg:#E4F1E8;--attn:#6F4A00;--attn-bg:#FCEFD0;--stop:#A8352B;--stop-bg:#FBE7E3;--glow:#FDEBDD;--edge:#D9D1C5}
+.mist{--bg:#F6F9FA;--surface:#FFFFFF;--tonal:#EDF3F4;--line:#DDE7E9;--ink:#1F2B2E;--muted:#566468;--primary:#1F6F73;--on-primary:#FFFFFF;--pc:#D9EEEE;--on-pc:#0F4A4D;--ready:#2D6B4E;--ready-bg:#E1F0E8;--attn:#6F4A00;--attn-bg:#FCEFD0;--stop:#A8352B;--stop-bg:#FBE7E3;--glow:#DDF0F0;--edge:#CBD8DB}
+/* phone: 1 CSS px = 1 dp (390dp wide) */
+.phone{width:390px;max-width:100%;border-radius:34px;border:7px solid var(--edge);background:var(--bg);overflow:hidden;color:var(--ink);font-family:"Figtree","Noto Sans",system-ui,sans-serif;position:relative}
+.screen{min-height:760px;display:flex;flex-direction:column;padding:0 20px 20px;background:linear-gradient(180deg,var(--glow) 0,var(--bg) 220px)}
+.status{display:flex;justify-content:space-between;font:600 12px "Figtree",sans-serif;color:var(--muted);padding:12px 4px 6px}
+.top{display:flex;align-items:center;gap:8px;min-height:48px}
+.back{width:40px;height:40px;border-radius:99px;display:grid;place-items:center;margin-left:-8px;color:var(--ink)}
+.brand{font:600 18px/1 "Newsreader",Georgia,serif;letter-spacing:.01em}
+.display{font:500 26px/32px "Newsreader",Georgia,serif;margin:6px 0 8px;letter-spacing:-.005em}
+.headline{font:500 22px/28px "Newsreader",Georgia,serif;margin:4px 0 6px}
+.title{font:600 16px/22px "Figtree",sans-serif;margin:0}
+.body{font:400 14px/20px "Figtree",sans-serif;color:var(--muted);margin:0}
+.label{font:600 12px/16px "Figtree",sans-serif}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:6px 16px}
+.tonal{background:var(--tonal);border-radius:22px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
+.ico{width:40px;height:40px;border-radius:14px;background:var(--pc);color:var(--on-pc);display:grid;place-items:center;flex:none}
+.ico svg,.mark svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.row{display:flex;align-items:center;gap:14px;min-height:64px;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .t{flex:1;min-width:0}
+.row .t small{display:block;font:400 12px/16px "Figtree",sans-serif;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;font:600 12px/16px "Figtree",sans-serif;border-radius:99px;padding:5px 11px;white-space:nowrap}
+.chip svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.c-ready{background:var(--ready-bg);color:var(--ready)}
+.c-todo{background:var(--tonal);color:var(--ink)}
+.c-off{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.c-attn{background:var(--attn-bg);color:var(--attn)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:99px;font:600 15px "Figtree",sans-serif;border:0;padding:0 24px;width:100%;cursor:pointer}
+.btn-primary{background:var(--primary);color:var(--on-primary)}
+.btn-tonal{background:var(--pc);color:var(--on-pc)}
+.btn-text{background:transparent;color:var(--primary);min-height:48px}
+.btn-stop{background:var(--stop-bg);color:var(--stop)}
+.btn-soft{background:var(--tonal);color:var(--ink)}
+.progress{height:8px;border-radius:99px;background:var(--tonal);overflow:hidden}
+.progress i{display:block;height:100%;width:33%;background:var(--primary);border-radius:99px}
+.mark{width:84px;height:84px;border-radius:30px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 10px 30px color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary)}
+.mark svg{width:46px;height:46px;stroke-width:1.6}
+.spacer{flex:1}
+.stack{display:grid;gap:12px}
+.dots{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.dots i{width:7px;height:7px;border-radius:99px;background:var(--line)}.dots i.on{background:var(--primary);width:20px}
+.list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.list li{display:flex;gap:10px;align-items:flex-start;font:400 14px/20px "Figtree",sans-serif;color:var(--ink)}
+.list li svg{width:18px;height:18px;flex:none;margin-top:1px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.yes svg{color:var(--ready)}.no svg{color:var(--stop)}
+.steps{display:grid;gap:10px;counter-reset:s}
+.step{display:flex;gap:12px;align-items:center;font:500 14px/20px "Figtree",sans-serif}
+.step b{width:26px;height:26px;border-radius:99px;background:var(--tonal);display:grid;place-items:center;font:700 12px "Figtree",sans-serif;flex:none}
+.path{background:var(--tonal);border-radius:14px;padding:10px 12px;font:500 13px/18px "Figtree",sans-serif;color:var(--ink)}
+.attn{background:var(--attn-bg);border-radius:22px;padding:16px;color:var(--ink)}
+.attn .title{color:var(--attn)}
+.quote{background:var(--surface);border-radius:16px;padding:12px 14px;margin:10px 0 14px;font:400 14px/20px "Figtree",sans-serif}
+.pair{display:grid;grid-template-columns:1.2fr 1fr;gap:10px}
+.capsule{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px}
+.capsule .btn{min-height:46px;font-size:13px;padding:0 6px}
+.run{display:grid;gap:12px}
+.run .s{display:flex;gap:12px;align-items:center;font:500 14px/20px "Figtree",sans-serif}
+.dot{width:24px;height:24px;border-radius:99px;display:grid;place-items:center;flex:none}
+.dot svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.dot.done{background:var(--ready-bg);color:var(--ready)}.dot.now{background:var(--attn-bg);color:var(--attn);font:700 12px "Figtree",sans-serif}
+.nav{display:flex;justify-content:space-around;border-top:1px solid var(--line);margin:0 -20px -20px;padding:10px 0 14px;background:var(--surface)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>EQO identity v2: soft and light</h1>
+  <p class="lede">Reworked from your feedback: lighter colours, smaller and calmer type, and a gentler way of asking for permissions. Phones are drawn at true size (1 CSS pixel = 1 dp, 390 dp wide), so the type you see is the type users get. Pick Warm or Cool; the layout is identical.</p>
+  <div class="toolbar"><span class="seg" role="group" aria-label="Colour mood"><button id="b-clay" aria-pressed="true">Warm (clay)</button><button id="b-mist" aria-pressed="false">Cool (mist)</button><button id="b-both" aria-pressed="false">Both, side by side</button></span><span style="font-size:13px;color:var(--page-muted)">Mockup only. No app code.</span></div>
+  <div class="principles">
+    <div class="principle"><b>Light and soft</b>Warm white surfaces, gentle tints, no dark panels and no harsh borders. Rounded shapes, as in current Material 3 Expressive.</div>
+    <div class="principle"><b>Explain before asking</b>Every permission has a plain "why", what EQO can and can't do, and how to turn it off, before any Android settings screen.</div>
+    <div class="principle"><b>Calm, honest type</b>Body 14 sp, titles 16 sp, headlines 22 to 26 sp (the Material scale). Scales with the phone's font-size setting.</div>
+    <div class="principle"><b>Built for the world</b>Short sentences, no idioms, room for text to grow 40% in other languages, and layouts that mirror for right-to-left. Free Noto fonts cover every script.</div>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div class="contrast"><h2>Contrast check, live from the colours above (AA needs 4.5:1)</h2><div class="g" id="con"></div></div>
+</div>
+<script>
+const I={
+ logo:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3c3 0 5.5 2 6 5M21 12c0 3-2 5.5-5 6M12 21c-3 0-5.5-2-6-5M3 12c0-3 2-5.5 5-6"/></svg>',
+ lock:'<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+ eye:'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>',
+ hand:'<svg viewBox="0 0 24 24"><path d="M8 12V6a1.5 1.5 0 0 1 3 0v5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v7a6 6 0 0 1-6 6h-1a5 5 0 0 1-4-2l-2-3a1.6 1.6 0 0 1 2.5-2L8 14"/></svg>',
+ key:'<svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/></svg>',
+ screen:'<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10 18h4"/></svg>',
+ plug:'<svg viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8zM12 17v4"/></svg>',
+ globe:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>',
+ chat:'<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></svg>',
+ check:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+ x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ back:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+ home:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>'
+};
+const status='<div class="status"><span>9:41</span><span>LTE &nbsp;100%</span></div>';
+const screens=[
+ ['Welcome (S-01)','First launch. One idea, one button.',`<div class="screen">${status}<div class="spacer"></div><div style="display:grid;place-items:center;gap:20px;text-align:center"><div class="mark">${I.logo}</div><div><div class="brand" style="font-size:22px">EQO</div><h2 class="display" style="margin-top:14px">Your Only Personal AI Assistant</h2><p class="body" style="max-width:300px;margin:0 auto">EQO helps with everyday tasks on your phone. You choose what it can do, and you approve anything sensitive.</p></div></div><div class="spacer"></div><div class="dots"><i class="on"></i><i></i><i></i></div><button class="btn btn-primary">Get started</button><button class="btn btn-text">Legal and open-source notices</button></div>`],
+ ['Privacy primer (S-02)','Reassurance first, in three short cards.',`<div class="screen">${status}<div class="top"><span class="back">${I.back}</span></div><h2 class="display">Before we begin</h2><p class="body" style="margin-bottom:18px">Three things to know about how EQO treats your information.</p><div class="stack"><div class="tonal"><span class="ico">${I.eye}</span><div><p class="title">Only what a task needs</p><p class="body" style="margin-top:2px">EQO sends your chosen AI model just what it needs for each task. Screen or browser content is shared only after you approve it.</p></div></div><div class="tonal"><span class="ico">${I.key}</span><div><p class="title">Your key stays on your phone</p><p class="body" style="margin-top:2px">Your API key is stored encrypted on this phone and is never written to logs.</p></div></div><div class="tonal"><span class="ico">${I.hand}</span><div><p class="title">You stay in control</p><p class="body" style="margin-top:2px">EQO asks before anything sensitive. You can pause or stop at any time.</p></div></div></div><div class="spacer"></div><div class="dots"><i></i><i class="on"></i><i></i></div><button class="btn btn-primary">Continue</button></div>`],
+ ['Setup hub (S-03)','Progress you can see. Status is a word plus a symbol.',`<div class="screen">${status}<div class="top"><span class="brand">EQO</span></div><h2 class="display">Let's get you set up</h2><p class="body">EQO can't run tasks until the three required steps are ready.</p><div style="margin:16px 0 6px;display:flex;justify-content:space-between" class="label"><span>1 of 3 required</span><span style="color:var(--muted);font-weight:500">About 10 to 15 min</span></div><div class="progress"><i></i></div><div class="card" style="margin-top:16px"><div class="row"><span class="ico">${I.key}</span><span class="t"><p class="title">Model</p><small>Required</small></span><span class="chip c-ready">${I.check}Ready</span></div><div class="row"><span class="ico">${I.screen}</span><span class="t"><p class="title">Screen control</p><small>Required</small></span><span class="chip c-todo">Set up</span></div><div class="row"><span class="ico">${I.plug}</span><span class="t"><p class="title">Helper connection</p><small>Required</small></span><span class="chip c-todo">Set up</span></div><div class="row"><span class="ico">${I.globe}</span><span class="t"><p class="title">Browser control</p><small>Optional</small></span><span class="chip c-off">Off</span></div><div class="row"><span class="ico">${I.chat}</span><span class="t"><p class="title">Messages</p><small>Optional</small></span><span class="chip c-off">Off</span></div></div><div class="spacer"></div><button class="btn btn-primary" style="margin-top:16px">Continue setup</button></div>`],
+ ['Permission explainer: Screen control (S-06)','Why, what it can and cannot do, how to undo it. Then Android settings.',`<div class="screen">${status}<div class="top"><span class="back">${I.back}</span><span class="label" style="color:var(--muted)">Step 2 of 3</span></div><div class="ico" style="width:52px;height:52px;border-radius:18px;margin:6px 0 10px">${I.screen}</div><h2 class="headline">Let EQO use Screen control</h2><p class="body" style="margin-bottom:16px">This lets EQO read and tap the screen for you, so it can finish tasks on your phone.</p><div class="card" style="padding:14px 16px"><p class="title" style="margin-bottom:8px">EQO can</p><ul class="list yes"><li>${I.check}<span>Read what is on screen while it works on a task you started</span></li><li>${I.check}<span>Tap and type for you during that task</span></li></ul><p class="title" style="margin:14px 0 8px">EQO can't</p><ul class="list no"><li>${I.x}<span>Turn itself on. Only you can, in Android settings</span></li><li>${I.x}<span>Do sensitive things without asking you first</span></li></ul></div><p class="body" style="margin:14px 4px 10px">You can turn this off at any time in Android settings.</p><div class="path"><b>In Android settings:</b> Accessibility &rsaquo; Downloaded apps &rsaquo; EQO &rsaquo; turn on</div><div class="spacer"></div><button class="btn btn-primary" style="margin-top:16px">Open Accessibility settings</button><button class="btn btn-text">Not now</button></div>`],
+ ['Approval and control capsule (S-22, S-23)','A calm pause point. Back means Deny, and it says so.',`<div class="screen">${status}<div class="top"><span class="brand">EQO</span><span class="chip c-attn" style="margin-left:auto">Needs your OK</span></div><h2 class="headline">Text Mum I'm on my way</h2><div class="run" style="margin:8px 0 16px"><div class="s"><span class="dot done">${I.check}</span>Open Messages</div><div class="s"><span class="dot done">${I.check}</span>Write the message</div><div class="s"><span class="dot now">3</span><b style="font-weight:600">Send it</b></div></div><div class="attn"><p class="title">EQO wants to send this message</p><div class="quote">"On my way, back in 20 minutes"<div class="label" style="color:var(--muted);margin-top:6px;font-weight:500">To: Mum</div></div><div class="pair"><button class="btn btn-primary">Approve</button><button class="btn btn-soft">Deny</button></div></div><p class="body" style="margin:10px 4px 0">Pressing back also denies, and nothing is sent.</p><div class="spacer"></div><div class="capsule"><button class="btn btn-soft">Pause</button><button class="btn btn-stop">Stop</button><button class="btn btn-soft">Take over</button></div></div>`]
+];
+const stage=document.getElementById('stage');
+function phoneSet(theme){return screens.map(([t,c,h])=>`<div class="item"><div class="phone ${theme}">${h}</div><p class="cap"><b>${t}</b><br>${c}</p></div>`).join('')}
+function lum(h){const c=h.replace('#','').match(/../g).map(x=>parseInt(x,16)/255).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+function ratio(a,b){const x=lum(a),y=lum(b),hi=Math.max(x,y),lo=Math.min(x,y);return (hi+.05)/(lo+.05)}
+const pairs=[['Text on background','--ink','--bg'],['Secondary text on background','--muted','--bg'],['Secondary text on tonal card','--muted','--tonal'],['Button label on primary','--on-primary','--primary'],['Label on soft button','--on-pc','--pc'],['Ready chip','--ready','--ready-bg'],['Needs-OK chip and card title','--attn','--attn-bg'],['Stop button label','--stop','--stop-bg'],['Primary text-button on background','--primary','--bg']];
+function contrastFor(theme,label){const probe=document.querySelector('.phone.'+theme);const cs=getComputedStyle(probe),g=v=>cs.getPropertyValue(v).trim();return `<div style="grid-column:1/-1;font-weight:700;margin-top:6px">${label}</div>`+pairs.map(([n,a,b])=>{const r=ratio(g(a),g(b));return `<div>${n}: ${r.toFixed(2)}:1 <span class="${r>=4.5?'ok':'bad'}">${r>=4.5?'passes AA':'fails AA'}</span></div>`}).join('')}
+function applyMode(m){
+ stage.className='stage';stage.style.display='block';
+ if(m==='both'){stage.innerHTML=`<h2 style="font:600 18px Figtree,sans-serif;margin:0 0 10px">Warm (clay)</h2><div class="stage" style="margin-bottom:36px">${phoneSet('clay')}</div><h2 style="font:600 18px Figtree,sans-serif;margin:0 0 10px">Cool (mist)</h2><div class="stage">${phoneSet('mist')}</div>`}
+ else{stage.innerHTML=`<div class="stage">${phoneSet(m)}</div>`}
+ const con=document.getElementById('con');
+ con.innerHTML=(m==='both'?contrastFor('clay','Warm (clay)')+contrastFor('mist','Cool (mist)'):contrastFor(m,m==='clay'?'Warm (clay)':'Cool (mist)'));
+ ['clay','mist','both'].forEach(k=>document.getElementById('b-'+k).setAttribute('aria-pressed',k===m));
+}document.getElementById('b-clay').onclick=()=>applyMode('clay');document.getElementById('b-mist').onclick=()=>applyMode('mist');document.getElementById('b-both').onclick=()=>applyMode('both');
+applyMode('both');
+</script>
+</body>
+</html>
