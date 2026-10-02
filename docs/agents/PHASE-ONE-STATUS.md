@@ -1,6 +1,6 @@
 # Phase One status and handoff
 
-Last updated: 2026-10-02 (after TASK-003 and the UX prototype merged). Update this page in the PR that finishes each task. It is written so a person or a new AI chat can restart from the repo alone.
+Last updated: 2026-10-02 (TASK-004 running; phone online). Update this page in the PR that finishes each task. It is written so a person or a new AI chat can restart from the repo alone.
 
 ## How to resume in a new chat
 
@@ -40,7 +40,7 @@ Owner preferences (the owner is non-technical): plain language; real command out
 | TASK-001 toolchain | #33 (closed) | **Done**, reviewed, merged (PR #22) | `android/Phase-One/evidence/toolchain.txt`, `toolchain-gradle-build.txt`, `docs/TOOLCHAIN.md` |
 | TASK-002 upstream build and lint | #34 (closed) | **Done**, reviewed, merged (PR #30). Real results: assembleDebug exit 0; unit tests exit 1 (537 run, 2 fail); lint exit 1 (40 errors) | `evidence/task-002-upstream-build-and-lint.md`, `evidence/task-002-lint/` |
 | TASK-003 skeleton and CI | #35 (closed) | **Done**, reviewed, merged (PR #32). CI green | `evidence/task-003-skeleton-ci.md` |
-| TASK-004 adapter extraction | #36 | **Next. Not started** | |
+| TASK-004 adapter extraction | #36 | **In progress** (started 2026-10-02). Worker `eqo-core-dev` on branch `agent/android/36-extraction`, worktree `C:\Users\<user>\Claude\worktrees\task-004`. First deliverable is `android/Phase-One/evidence/task-004-extraction-map.md`. Each run is capped at 2 hours; it commits and pushes per module and restarts from the branch. The lead opens a draft PR after the first push so CI runs | |
 | TASK-005, 006, 009, 014 | #10, #11, #14, #19 | Waiting on TASK-004 (can then run in parallel) | |
 | TASK-007, 008, 010, 011, 012, 013, 015, 016 | #12, #13, #15, #16, #17, #18, #20, #21 | Waiting; also need the phone | |
 
@@ -69,11 +69,12 @@ Gotchas learned the hard way:
 - Repo CI runs only on pull requests and pushes to `main`: open a draft PR to trigger it for a branch.
 - Files made on Windows lack the executable bit: `git update-index --chmod=+x android/gradlew`.
 - `AGENTS.md` is protected: workers cannot edit it; the owner must approve any change.
+- A second `adb.exe` on `PATH` (for example the one bundled with scrcpy) makes the phone show `offline`. Keep only the SDK one.
 - Nine "OWNER: connect phone" cards (tasks 007 to 013, 015, 016) stay blocked. Complete each one only when its task's real predecessors are done, or the task would start early.
 
 ## Devices
 
-- Physical: Realme Narzo 20 (RMX2193), Android 11 (API 30), USB debugging on. On 2026-10-02 `adb devices` showed it as `offline` even after restarting the ADB server; Windows sees the "ADB Interface". It needs the phone to re-approve the computer. A second `adb.exe` (scrcpy's) is earlier on `PATH`; use the SDK one: `C:\Users\<user>\Android\Sdk\platform-tools\adb.exe`.
+- Physical: Realme Narzo 20 (RMX2193), Android 11 (API 30). **Online** (`adb devices` shows `device`, verified 2026-10-02). USB debugging and Wireless debugging are both on. It showed `offline` for a day because a second `adb.exe` (bundled with scrcpy, first on `PATH`) fought the SDK one; scrcpy was uninstalled with winget on 2026-10-02 at the owner's request. No `adb` is on `PATH` now: call the SDK one by full path, `C:\Users\<user>\Android\Sdk\platform-tools\adb.exe`. scrcpy leaves nothing on the phone. If both a USB and a wireless entry ever appear, use `adb -s <serial>`. TASK-008 (wireless pairing) will turn Wireless debugging on and off as needed.
 - Emulators: `eqo-api31` (Android 12) and `eqo-api33` (Android 13), AVD home `C:\Users\<user>\Android\avd`. API 31 booted in about 7 minutes; API 33 not boot-tested. Emulator evidence must be labelled "emulator" next to physical-device evidence.
 - Toolchain: Temurin JDK 21, `ANDROID_HOME=C:\Users\<user>\Android\Sdk`, Gradle 9.7.0, AGP 9.3.1, Kotlin 2.4.0.
 
@@ -88,6 +89,6 @@ Gotchas learned the hard way:
 
 ## Next
 
-1. **TASK-004** (issue #36): extract the OpenDroid base into EQO modules (`:core-agent`, `:core-llm`, `:core-security`, `:platform-a11y`). Author `eqo-core-dev` (`mimo-v2.6-pro`), review by `eqo-reviewer-glm`. Must not import anything that needs the LiquidAI Leap SDK; the grep gate in the spec enforces it.
+1. **TASK-004** (issue #36, running): extract the OpenDroid base into EQO modules (`:core-agent`, `:core-llm`, `:core-security`, `:platform-a11y`). Author `eqo-core-dev` (`mimo-v2.6-pro`), review by `eqo-reviewer-glm`. Must not import anything that needs the LiquidAI Leap SDK; the grep gate in the spec enforces it. When it requests review: the lead first checks the extraction map, that move commits are verbatim (compare file bodies with the upstream originals), the test counts and the OkHttp proof, and runs the gates, then `eqo-reviewer-glm` reviews. Before running `dispatch`, make sure no author card is sitting in `review` status.
 2. After TASK-004 passes review, run TASK-005, 006, 009 and 014 in parallel in separate worktrees (and 013 after 006). They share the module layout, so check each branch against the others before merging.
 3. Phone tasks (007 onward) need the physical phone online (state `device`) and Android 12 and 13 emulator evidence labelled as such.
