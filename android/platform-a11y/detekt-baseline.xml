@@ -1,0 +1,118 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:AgentLoop.kt$AgentLoop$fun processQuery( query: String, context: Context, explicitSessionId: String? = null, )</ID>
+    <ID>CyclomaticComplexMethod:AgentLoop.kt$AgentLoop$private fun humanizeGoalDone(goal: String): String</ID>
+    <ID>CyclomaticComplexMethod:AgentLoop.kt$AgentLoop$private fun humanizePreSpeech(action: String): String</ID>
+    <ID>CyclomaticComplexMethod:AgentLoop.kt$AgentLoop$private suspend fun executePlanLoop( plan: Plan, context: Context, sessionId: String, autoApproved: Boolean = false, )</ID>
+    <ID>CyclomaticComplexMethod:AgentLoop.kt$AgentLoop$private suspend fun executeSimpleQuery( userMsg: ChatMessage, sessionId: String, )</ID>
+    <ID>CyclomaticComplexMethod:AgentLoop.kt$AgentLoop$private suspend fun handleContactPicker( pickerResult: ActionResult.NeedsInput, actionName: String, originalParams: Map&lt;String, String&gt;, context: Context, sessionId: String, ): NeedsInputRetry</ID>
+    <ID>CyclomaticComplexMethod:AgentLoop.kt$AgentLoop$private suspend fun speakAndSaveSummary( plan: Plan, isSuccess: Boolean, sessionId: String, )</ID>
+    <ID>CyclomaticComplexMethod:TelegramAutomator.kt$TelegramAutomator$suspend fun automateSend(message: String): Boolean</ID>
+    <ID>CyclomaticComplexMethod:WhatsAppAutomator.kt$WhatsAppAutomator$suspend fun automateSend(message: String): Boolean</ID>
+    <ID>LargeClass:AgentLoop.kt$AgentLoop</ID>
+    <ID>LongMethod:AgentLoop.kt$AgentLoop$fun processQuery( query: String, context: Context, explicitSessionId: String? = null, )</ID>
+    <ID>LongMethod:AgentLoop.kt$AgentLoop$private suspend fun executePlanLoop( plan: Plan, context: Context, sessionId: String, autoApproved: Boolean = false, )</ID>
+    <ID>LongMethod:AgentLoop.kt$AgentLoop$private suspend fun executeSimpleQuery( userMsg: ChatMessage, sessionId: String, )</ID>
+    <ID>LongMethod:AgentLoop.kt$AgentLoop$private suspend fun generatePlan( userMsg: ChatMessage, context: Context, sessionId: String, )</ID>
+    <ID>LongMethod:AgentLoop.kt$AgentLoop$private suspend fun handleContactPicker( pickerResult: ActionResult.NeedsInput, actionName: String, originalParams: Map&lt;String, String&gt;, context: Context, sessionId: String, ): NeedsInputRetry</ID>
+    <ID>LongMethod:AgentLoop.kt$AgentLoop$private suspend fun processQueryLocked( userMsg: ChatMessage, query: String, context: Context, sessionId: String, )</ID>
+    <ID>LongMethod:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$private fun addFloatingButton()</ID>
+    <ID>LongMethod:TelegramAutomator.kt$TelegramAutomator$suspend fun automateSend(message: String): Boolean</ID>
+    <ID>LongMethod:WhatsAppAutomator.kt$WhatsAppAutomator$suspend fun automateSend(message: String): Boolean</ID>
+    <ID>LongParameterList:AgentLoop.kt$AgentLoop$( private val intentClassifier: IntentClassifier, private val llmProviderFactory: LLMProviderFactory, private val planManager: PlanManager, private val actionDispatcher: ActionDispatcher, private val actionSequenceExecutor: ActionSequenceExecutor, private val memoryManager: MemoryStore, private val conversationRepository: ChatHistoryStore, private val settingsRepository: com.opendroid.ai.data.repository.SettingsRepository, private val reEvalEngine: dagger.Lazy&lt;ReEvaluationEngine&gt;, )</ID>
+    <ID>LoopWithTooManyJumpStatements:AgentLoop.kt$AgentLoop$while</ID>
+    <ID>LoopWithTooManyJumpStatements:TelegramAutomator.kt$TelegramAutomator$for</ID>
+    <ID>LoopWithTooManyJumpStatements:WhatsAppAutomator.kt$WhatsAppAutomator$for</ID>
+    <ID>MagicNumber:AgentLoop.kt$AgentLoop$10</ID>
+    <ID>MagicNumber:AgentLoop.kt$AgentLoop$200</ID>
+    <ID>MagicNumber:AgentLoop.kt$AgentLoop$3</ID>
+    <ID>MagicNumber:AgentLoop.kt$AgentLoop$4</ID>
+    <ID>MagicNumber:AgentLoop.kt$AgentLoop$5</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$100</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$300</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$64</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$8</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.&lt;no name provided&gt;$10f</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.&lt;no name provided&gt;$70</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$1.5f</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$1000</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$12</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$150</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$1500</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$2000</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$255</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$3f</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$600</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$800</ID>
+    <ID>MagicNumber:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.FloatingWidgetView$8f</ID>
+    <ID>MagicNumber:SmsAutomator.kt$SmsAutomator$1500</ID>
+    <ID>MagicNumber:TelegramAutomator.kt$TelegramAutomator$1500</ID>
+    <ID>MagicNumber:TelegramAutomator.kt$TelegramAutomator$2500</ID>
+    <ID>MagicNumber:TelegramAutomator.kt$TelegramAutomator$500</ID>
+    <ID>MagicNumber:TelegramAutomator.kt$TelegramAutomator$600</ID>
+    <ID>MagicNumber:WhatsAppAutomator.kt$WhatsAppAutomator$2000</ID>
+    <ID>MagicNumber:WhatsAppAutomator.kt$WhatsAppAutomator$3000</ID>
+    <ID>MagicNumber:WhatsAppAutomator.kt$WhatsAppAutomator$500</ID>
+    <ID>MagicNumber:WhatsAppAutomator.kt$WhatsAppAutomator$800</ID>
+    <ID>MaxLineLength:AccessibilityNodeTraversal.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/accessibility/AccessibilityNodeTraversal.kt</ID>
+    <ID>MaxLineLength:AgentLoop.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/AgentLoop.kt</ID>
+    <ID>MaxLineLength:AgentLoop.kt$AgentLoop$android.util.Log.e("AgentLoop", "Exception executing action ${stepToExecute.action}: ${e.localizedMessage}", e)</ID>
+    <ID>MaxLineLength:AgentLoop.kt$AgentLoop$error = "Primary failed: ${actionResult.error}. Fallback failed: ${fallbackResult.error}"</ID>
+    <ID>MaxLineLength:AgentLoop.kt$AgentLoop$grantedActions = current.effectiveGrantedActions() + toGrant.associateWith { grantedAt }</ID>
+    <ID>MaxLineLength:AgentLoop.kt$AgentLoop$lower.contains("message") || lower.contains("whatsapp") -&gt; "The message didn't go through. Want me to retry?"</ID>
+    <ID>MaxLineLength:AgentLoop.kt$AgentLoop$lower.contains("wifi") || lower.contains("bluetooth") -&gt; "Couldn't change that setting. You might need to do it manually."</ID>
+    <ID>MaxLineLength:AgentLoop.kt$AgentLoop$planManager.currentPlan.value ?: mergedPlan.copy(status = PlanStatus.PROPOSED)</ID>
+    <ID>MaxLineLength:AgentLoop.kt$AgentLoop$result = "Primary failed: ${actionResult.error}. Fallback execution succeeded: ${fallbackResult.data}"</ID>
+    <ID>MaxLineLength:AgentLoop.kt$AgentLoop$val pending = mergedPlan?.steps?.filter { it.status == StepStatus.PENDING }.orEmpty()</ID>
+    <ID>MaxLineLength:AgentLoop.kt$AgentLoop$val sysPrompt = "${PlanningPrompts.PLANNING_SYSTEM_PROMPT}\n\nContext about user and device:\n$relevantContext"</ID>
+    <ID>MaxLineLength:CallFlowVerifier.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/accessibility/CallFlowVerifier.kt</ID>
+    <ID>MaxLineLength:GenericAppAutomator.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/accessibility/GenericAppAutomator.kt</ID>
+    <ID>MaxLineLength:NeedsInputParamKeyTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/agent/NeedsInputParamKeyTest.kt</ID>
+    <ID>MaxLineLength:OpenDroidAccessibilityService.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt</ID>
+    <ID>MaxLineLength:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$val action = if (forward) AccessibilityNodeInfo.ACTION_SCROLL_FORWARD else AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD</ID>
+    <ID>MaxLineLength:SmsAutomator.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/accessibility/SmsAutomator.kt</ID>
+    <ID>MaxLineLength:TelegramAutomator.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/accessibility/TelegramAutomator.kt</ID>
+    <ID>MaxLineLength:VisionEngine.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/VisionEngine.kt</ID>
+    <ID>MaxLineLength:VisionEngine.kt$VisionEngine$systemPrompt = "You are a vision AI that analyzes Android screenshots. Be concise and accurate."</ID>
+    <ID>MaxLineLength:WhatsAppAutomator.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/accessibility/WhatsAppAutomator.kt</ID>
+    <ID>MaxLineLength:WhatsAppAutomator.kt$WhatsAppAutomator$Log.w("WhatsAppAutomator", "Post-send check: input field still has text '$text', message may not have been sent")</ID>
+    <ID>NestedBlockDepth:AgentLoop.kt$AgentLoop$private fun parsePlanFromLlmResponse( raw: String, userGoal: String, ): Plan</ID>
+    <ID>NestedBlockDepth:AgentLoop.kt$AgentLoop$private suspend fun executePlanLoop( plan: Plan, context: Context, sessionId: String, autoApproved: Boolean = false, )</ID>
+    <ID>NestedBlockDepth:WhatsAppAutomator.kt$WhatsAppAutomator$suspend fun automateSend(message: String): Boolean</ID>
+    <ID>PrintStackTrace:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$e</ID>
+    <ID>ReturnCount:AccessibilityNodeTraversal.kt$AccessibilityNodeTraversal$fun findAndClick( root: AccessibilityNodeInfo?, text: String, ): Boolean</ID>
+    <ID>ReturnCount:AccessibilityNodeTraversal.kt$AccessibilityNodeTraversal$private fun findSubmitNode( node: AccessibilityNodeInfo, labels: List&lt;String&gt;, ): Boolean</ID>
+    <ID>ReturnCount:AgentLoop.kt$AgentLoop$private fun parsePlanFromLlmResponse( raw: String, userGoal: String, ): Plan</ID>
+    <ID>ReturnCount:AgentLoop.kt$AgentLoop$private suspend fun executePlanLoop( plan: Plan, context: Context, sessionId: String, autoApproved: Boolean = false, )</ID>
+    <ID>ReturnCount:AgentLoop.kt$AgentLoop$private suspend fun handleContactPicker( pickerResult: ActionResult.NeedsInput, actionName: String, originalParams: Map&lt;String, String&gt;, context: Context, sessionId: String, ): NeedsInputRetry</ID>
+    <ID>ReturnCount:AgentLoop.kt$AgentLoop$private suspend fun processQueryLocked( userMsg: ChatMessage, query: String, context: Context, sessionId: String, )</ID>
+    <ID>ReturnCount:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$fun findAndClickById(viewId: String): Boolean</ID>
+    <ID>ReturnCount:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$fun findAndType( searchText: String, content: String, ): Boolean</ID>
+    <ID>ReturnCount:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$fun findAndTypeById( viewId: String, content: String, ): Boolean</ID>
+    <ID>ReturnCount:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$private fun performScrollOnNode( node: AccessibilityNodeInfo, action: Int, ): Boolean</ID>
+    <ID>ReturnCount:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.&lt;no name provided&gt;$override fun onTouch( v: View, event: MotionEvent, ): Boolean</ID>
+    <ID>ReturnCount:SmsAutomator.kt$SmsAutomator$suspend fun automateSend(): Boolean</ID>
+    <ID>ReturnCount:TelegramAutomator.kt$TelegramAutomator$suspend fun automateSend(message: String): Boolean</ID>
+    <ID>ReturnCount:VisionEngine.kt$VisionEngine$suspend fun analyzeCurrentScreen(userQuestion: String = "What do you see on this screen?"): String</ID>
+    <ID>ReturnCount:VisionEngine.kt$VisionEngine$suspend fun extractAndStructureScreenInfo(topic: String = "important information"): String</ID>
+    <ID>ReturnCount:WhatsAppAutomator.kt$WhatsAppAutomator$suspend fun automateSend(message: String): Boolean</ID>
+    <ID>SwallowedException:AgentLoop.kt$AgentLoop$e: Exception</ID>
+    <ID>SwallowedException:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$e: Exception</ID>
+    <ID>SwallowedException:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$removeError: Exception</ID>
+    <ID>SwallowedException:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>ThrowsCount:AgentLoop.kt$AgentLoop$private suspend fun executePlanLoop( plan: Plan, context: Context, sessionId: String, autoApproved: Boolean = false, )</ID>
+    <ID>TooGenericExceptionCaught:AgentLoop.kt$AgentLoop$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService$removeError: Exception</ID>
+    <ID>TooGenericExceptionCaught:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:VisionEngine.kt$VisionEngine$e: Exception</ID>
+    <ID>TooManyFunctions:AgentLoop.kt$AgentLoop</ID>
+    <ID>TooManyFunctions:GenericAppAutomator.kt$GenericAppAutomator</ID>
+    <ID>TooManyFunctions:OpenDroidAccessibilityService.kt$OpenDroidAccessibilityService : AccessibilityService</ID>
+    <ID>UnusedParameter:AgentLoop.kt$AgentLoop$plan: Plan</ID>
+    <ID>UnusedPrivateMember:AgentLoop.kt$AgentLoop$private fun formatErrorForUser( action: String, rawError: String, ): String</ID>
+    <ID>UnusedPrivateMember:AgentLoop.kt$AgentLoop$private fun formatStreamedReply(text: String): String</ID>
+  </CurrentIssues>
+</SmellBaseline>

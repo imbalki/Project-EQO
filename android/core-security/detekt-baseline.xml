@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:KeystoreSecretStorage.kt$SecretEnvelope.Companion$parts.size != 3 || parts[0] != VERSION || parts[1].isEmpty() || parts[2].isEmpty()</ID>
+    <ID>CyclomaticComplexMethod:ProviderCredentialStore.kt$ProviderCredentialStoreImpl$private fun migrateLegacyCredentialsLocked(): CredentialStoreResult&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:UserProfileStore.kt$UserProfileStoreImpl$override fun migrateLegacyProfile(): ProfileStoreResult&lt;Unit&gt;</ID>
+    <ID>LoopWithTooManyJumpStatements:ProviderCredentialStore.kt$ProviderCredentialStoreImpl$for</ID>
+    <ID>MagicNumber:KeystoreSecretStorage.kt$AndroidKeyStoreAeadCipher$256</ID>
+    <ID>MagicNumber:KeystoreSecretStorage.kt$SecretEnvelope.Companion$3</ID>
+    <ID>MagicNumber:UserProfileStore.kt$UserProfileStoreImpl.Companion$0xFF</ID>
+    <ID>MagicNumber:UserProfileStore.kt$UserProfileStoreImpl.Companion$3</ID>
+    <ID>MagicNumber:UserProfileStore.kt$UserProfileStoreImpl.Companion$8</ID>
+    <ID>MaxLineLength:AppSettingsStore.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/settings/AppSettingsStore.kt</ID>
+    <ID>MaxLineLength:AppSettingsStore.kt$AppSettingsStoreImpl$override fun setOnboardingCompleted(completed: Boolean): Boolean</ID>
+    <ID>MaxLineLength:KeystoreSecretStorage.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/security/KeystoreSecretStorage.kt</ID>
+    <ID>MaxLineLength:KeystoreSecretStorage.kt$internal</ID>
+    <ID>MaxLineLength:LegacyPreferenceMigration.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/security/LegacyPreferenceMigration.kt</ID>
+    <ID>MaxLineLength:LegacySecurePreferenceInventory.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/security/LegacySecurePreferenceInventory.kt</ID>
+    <ID>MaxLineLength:LegacySecurePreferencesRetirementTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/security/LegacySecurePreferencesRetirementTest.kt</ID>
+    <ID>MaxLineLength:ProviderCredentialStore.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/security/ProviderCredentialStore.kt</ID>
+    <ID>MaxLineLength:ProviderCredentialStore.kt$ProviderCredentialStoreImpl$CredentialStoreResult.CredentialsMustBeReentered -&gt; return CredentialStoreResult.CredentialsMustBeReentered</ID>
+    <ID>MaxLineLength:ProviderCredentialStore.kt$ProviderCredentialStoreImpl$SecretRecordResult.StorageUnavailable -&gt; return@synchronized CredentialStoreResult.StorageUnavailable</ID>
+    <ID>MaxLineLength:ProviderCredentialStoreTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/security/ProviderCredentialStoreTest.kt</ID>
+    <ID>MaxLineLength:SensitiveMemoryStore.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/security/SensitiveMemoryStore.kt</ID>
+    <ID>MaxLineLength:SocialCredentialStore.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/security/SocialCredentialStore.kt</ID>
+    <ID>MaxLineLength:SocialModels.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/social/domain/model/SocialModels.kt</ID>
+    <ID>MaxLineLength:SocialModels.kt$SocialCredentials$override fun toString(): String</ID>
+    <ID>MaxLineLength:SocialPlatform.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/social/domain/model/SocialPlatform.kt</ID>
+    <ID>MaxLineLength:UserProfileStore.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/security/UserProfileStore.kt</ID>
+    <ID>MaxLineLength:UserProfileStore.kt$UserProfileStoreImpl$ProfileStoreResult.ProfileMustBeReentered -&gt; return@synchronized ProfileStoreResult.ProfileMustBeReentered</ID>
+    <ID>ReturnCount:AppSettingsStore.kt$AppSettingsStoreImpl$private fun migrateHuggingFaceLastVerified(): Boolean</ID>
+    <ID>ReturnCount:AppSettingsStore.kt$AppSettingsStoreImpl$private fun migrateOnboardingCompleted(): Boolean</ID>
+    <ID>ReturnCount:KeystoreSecretStorage.kt$KeystoreSecretRecords$fun read( storageKey: String, aad: String, ): SecretRecordResult&lt;ByteArray?&gt;</ID>
+    <ID>ReturnCount:KeystoreSecretStorage.kt$SecretEnvelope.Companion$fun decode(serialized: String): SecretEnvelope?</ID>
+    <ID>ReturnCount:LegacyPreferenceMigration.kt$LegacyPreferenceMigration$private fun clearObsoleteKeys(): Boolean</ID>
+    <ID>ReturnCount:ProviderCredentialStore.kt$ProviderCredentialId.Companion$fun fromStorageKey(storageKey: String): ProviderCredentialId?</ID>
+    <ID>ReturnCount:ProviderCredentialStore.kt$ProviderCredentialStoreImpl$private fun migrateLegacyCredentialsLocked(): CredentialStoreResult&lt;Unit&gt;</ID>
+    <ID>ReturnCount:UserProfileStore.kt$UserProfileStoreImpl.Companion$fun decodeProfile(plaintext: ByteArray): UserProfile?</ID>
+    <ID>TooGenericExceptionCaught:KeystoreSecretStorage.kt$KeystoreSecretRecords$exception: RuntimeException</ID>
+    <ID>TooGenericExceptionCaught:SocialCredentialStore.kt$AndroidSocialCredentialStore$e: Exception</ID>
+  </CurrentIssues>
+</SmellBaseline>

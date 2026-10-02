@@ -40,7 +40,9 @@ jobs:
           cache-read-only: false
       - name: Assemble debug and release, unit tests, lint
         if: steps.android_gate.outputs.present == 'true'
-        run: ./gradlew :app:assembleDebug :app:assembleRelease :app:testDebugUnitTest :app:lintDebug --console=plain
+        # Project-wide commands so every included module (currently :app plus the
+        # TASK-004 core modules) is covered - not only :app.
+        run: ./gradlew assembleDebug assembleRelease testDebugUnitTest lintDebug --console=plain
       - name: Static analysis (ktlint + detekt)
         if: steps.android_gate.outputs.present == 'true'
         run: ./gradlew ktlintCheck detekt test --console=plain
@@ -49,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: lint-report
-          path: android/app/build/reports/lint-results-debug.*
+          path: android/**/build/reports/lint-results-debug.*
           if-no-files-found: error
           retention-days: 30
       - name: Upload test results
@@ -57,6 +59,6 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: test-results
-          path: android/app/build/test-results/testDebugUnitTest/*.xml
+          path: android/**/build/test-results/testDebugUnitTest/*.xml
           if-no-files-found: error
           retention-days: 30

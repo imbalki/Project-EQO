@@ -1,0 +1,25 @@
+/*
+ * ADAPTER (TASK-004 Phase 2) - minimal interface replacing the quarantined
+ * upstream class com.opendroid.ai.actions.ActionAutoMapper (the upstream actions package, not
+ * in Phase One scope). Declares exactly the members the moved code calls. The
+ * upstream name and package are kept so the moved ActionDispatcher.kt stays
+ * byte-identical.
+ */
+package com.opendroid.ai.actions
+
+interface ActionAutoMapper {
+    data class MappingResult(
+        val originalAction: String,
+        val mappedAction: String?,
+        val wasMapped: Boolean,
+        val mappedParams: Map<String, String>,
+    )
+
+    fun normalizeActionName(raw: String): String
+
+    fun mapAction(
+        action: String,
+        params: Map<String, String>,
+        registeredActions: Set<String>,
+    ): MappingResult
+}

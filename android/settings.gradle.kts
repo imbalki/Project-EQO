@@ -16,3 +16,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "eqo-android"
 include(":app")
+include(":core-agent")
+include(":core-llm")
+include(":core-security")
+include(":platform-a11y")

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TASK-004: permissions required by the OpenDroid code moved into :core-llm
+  (DeviceStateProvider.kt: ConnectivityManager, LocationManager; the model
+  download code uses okhttp which needs INTERNET at the app level, and runs
+  a dataSync foreground service). Mirrors the upstream uses-permission entries of
+  yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51
+  app/src/main/AndroidManifest.xml (READ access to network state and
+  location). Declared here so Android Lint can verify the moved code's
+  call sites; the consuming app still decides its final manifest.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!-- WorkManager owns this service; dataSync is required for the long-running
+         on-device model downloads (ModelDownloadForegroundInfoFactory). Mirrors the
+         upstream override of yashab-cyber/opendroid @ 6ff5a061
+         app/src/main/AndroidManifest.xml. -->
+    <application>
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+    </application>
+
+</manifest>

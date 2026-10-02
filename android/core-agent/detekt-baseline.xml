@@ -1,0 +1,94 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ContactResolver.kt$ContactResolver$contact.name.startsWith(query, ignoreCase = true) &amp;&amp; ( contact.name.length == query.length || contact.name.getOrNull(query.length)?.let { it == ' ' || it == '(' } == true )</ID>
+    <ID>CyclomaticComplexMethod:AutoReplyEngine.kt$AutoReplyEngine$private fun dispatchReply( notification: NotificationEntity, sbn: StatusBarNotification?, replyText: String, context: Context, ): Boolean</ID>
+    <ID>CyclomaticComplexMethod:ContactResolver.kt$ContactResolver$private fun findAllMatches(query: String): List&lt;Contact&gt;</ID>
+    <ID>CyclomaticComplexMethod:PlanValidator.kt$PlanValidator$suspend fun validateAndFix( plan: Plan, context: Context, ): Plan</ID>
+    <ID>EmptyCatchBlock:PlanValidator.kt$PlanValidator${ }</ID>
+    <ID>EmptyCatchBlock:ReEvaluationEngine.kt$ReEvaluationEngine${ }</ID>
+    <ID>LongMethod:AutoReplyEngine.kt$AutoReplyEngine$private fun dispatchReply( notification: NotificationEntity, sbn: StatusBarNotification?, replyText: String, context: Context, ): Boolean</ID>
+    <ID>LongMethod:AutoReplyEngine.kt$AutoReplyEngine$private suspend fun generateReply( notification: NotificationEntity, config: AutoReplyConfig, ): String?</ID>
+    <ID>LongMethod:ContactResolver.kt$ContactResolver$open suspend fun resolveWithDisambiguation(input: String): ContactResolution</ID>
+    <ID>LongMethod:ContactResolver.kt$ContactResolver$private fun findAllMatches(query: String): List&lt;Contact&gt;</ID>
+    <ID>LongMethod:ContactResolver.kt$ContactResolver$private fun getRelationshipAliases(query: String): List&lt;String&gt;</ID>
+    <ID>LongMethod:PlanValidator.kt$PlanValidator$suspend fun validateAndFix( plan: Plan, context: Context, ): Plan</ID>
+    <ID>LongMethod:ReEvaluationEngine.kt$ReEvaluationEngine$suspend fun replanAfterUnknownAction( originalGoal: String, failedStep: PlanStep, completedSteps: List&lt;PlanStep&gt;, remainingSteps: List&lt;PlanStep&gt;, planId: String, ): ReEvalResult</ID>
+    <ID>LongParameterList:MemoryStore.kt$MemoryStore$( stepId: String, planId: String, description: String, actionType: String, params: Map&lt;String, String&gt;, success: Boolean, resultData: String?, errorMessage: String?, )</ID>
+    <ID>LoopWithTooManyJumpStatements:ContactResolver.kt$ContactResolver$while</ID>
+    <ID>LoopWithTooManyJumpStatements:ReEvaluationEngine.kt$ReEvaluationEngine$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ReplyDispatcher.kt$ReplyDispatcher$for</ID>
+    <ID>MagicNumber:AutoReplyEngine.kt$AutoReplyEngine$10</ID>
+    <ID>MagicNumber:AutoReplyEngine.kt$AutoReplyEngine$1000L</ID>
+    <ID>MagicNumber:AutoReplyEngine.kt$AutoReplyEngine$3_600_000</ID>
+    <ID>MagicNumber:AutoReplyEngine.kt$AutoReplyEngine$50</ID>
+    <ID>MagicNumber:AutoReplyEngine.kt$AutoReplyEngine$60</ID>
+    <ID>MagicNumber:ContactResolver.kt$5</ID>
+    <ID>MagicNumber:ContactResolver.kt$ContactResolver$5</ID>
+    <ID>MagicNumber:ContactResolver.kt$ContactResolver$60</ID>
+    <ID>MagicNumber:ContactResolver.kt$ContactResolver$7</ID>
+    <ID>MagicNumber:ContactResolver.kt$ContactResolver$80</ID>
+    <ID>MagicNumber:ContactResolver.kt$ContactResolver$90</ID>
+    <ID>MagicNumber:ContactResolver.kt$ContactResolver.Companion$7</ID>
+    <ID>MagicNumber:ReplyDispatcher.kt$ReplyDispatcher$30</ID>
+    <ID>MagicNumber:WorkingMemory.kt$WorkingMemory$20</ID>
+    <ID>MaxLineLength:ActionSequenceExecutor.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/ActionSequenceExecutor.kt</ID>
+    <ID>MaxLineLength:ActionSequenceExecutorTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/agent/ActionSequenceExecutorTest.kt</ID>
+    <ID>MaxLineLength:AutoApprovalPolicy.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/AutoApprovalPolicy.kt</ID>
+    <ID>MaxLineLength:AutoApprovalPolicyTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/agent/AutoApprovalPolicyTest.kt</ID>
+    <ID>MaxLineLength:AutoApprovalPolicyTest.kt$AutoApprovalPolicyTest$AutoApprovalPolicy.shouldAutoApprove(AutoMode.AUTO, granted + "PAY_UPI", Plan("p1", "test", "1m", 1, steps))</ID>
+    <ID>MaxLineLength:AutoReplyEngine.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/AutoReplyEngine.kt</ID>
+    <ID>MaxLineLength:AutoReplyEngine.kt$AutoReplyEngine$"Not a bounceback for $contactKey: text doesn't match (expected '${sentReply.replyText}', got '$messageText')"</ID>
+    <ID>MaxLineLength:AutoReplyEngine.kt$AutoReplyEngine$"SMS direct reply skipped: Contact name is not a valid phone number ($contact) and no notification reply action was available"</ID>
+    <ID>MaxLineLength:AutoReplyEngine.kt$AutoReplyEngine$Log.d(TAG, "Scheduling auto-reply in ${config.replyDelayMinutes} min for ${notification.contactName}")</ID>
+    <ID>MaxLineLength:ContactResolver.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/ContactResolver.kt</ID>
+    <ID>MaxLineLength:CrashLogRedactor.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/crash/CrashLogRedactor.kt</ID>
+    <ID>MaxLineLength:CrashLogRedactor.kt$CrashLogRedactor$"""((?:authorization|x-api-key|x-goog-api-key|api-key)\s*[:=]\s*)(?!Bearer\b|\Q$REDACTED\E)["']?[A-Za-z0-9._\-*+/=]+["']?"""</ID>
+    <ID>MaxLineLength:ExecutionHistoryPrivacy.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/memory/ExecutionHistoryPrivacy.kt</ID>
+    <ID>MaxLineLength:ExecutionHistoryPrivacy.kt$ExecutionHistoryPrivacy$"(?:api[_-]?key|access[_-]?token|auth[_-]?token|token|secret|password|credential|authorization|bearer|private[_-]?key|client[_-]?secret)"</ID>
+    <ID>MaxLineLength:PlanManager.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/PlanManager.kt</ID>
+    <ID>MaxLineLength:PlanValidator.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/PlanValidator.kt</ID>
+    <ID>MaxLineLength:PlanValidator.kt$PlanValidator$"question" to "I couldn't find a contact named '$contactName'. What is their phone number?"</ID>
+    <ID>MaxLineLength:PlanValidator.kt$PlanValidator$contentResolver.query(uri, projection, selectionLike, arrayOf("%${contact.trim()}%"), null)</ID>
+    <ID>MaxLineLength:PlanValidator.kt$PlanValidator$updatedStep = updatedStep.copy(order = currentOrder++, params = updatedParams, dependsOn = updatedDependsOn)</ID>
+    <ID>MaxLineLength:PlanValidator.kt$PlanValidator$val updatedDependsOn = updatedStep.dependsOn.toMutableList().apply { if (!contains(askStepId)) add(askStepId) }</ID>
+    <ID>MaxLineLength:PlanValidator.kt$PlanValidator$val updatedParams = updatedStep.params.toMutableMap().apply { put("contact", "$$askStepId") }</ID>
+    <ID>MaxLineLength:PlanValidator.kt$PlanValidator$val updatedParams = updatedStep.params.toMutableMap().apply { put("contact", resolvedPhone) }</ID>
+    <ID>MaxLineLength:ReEvaluationEngine.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/ReEvaluationEngine.kt</ID>
+    <ID>MaxLineLength:ReplyDispatcher.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/ReplyDispatcher.kt</ID>
+    <ID>MaxLineLength:WorkingMemory.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/memory/WorkingMemory.kt</ID>
+    <ID>NestedBlockDepth:ContactResolver.kt$ContactResolver$private fun findAllMatches(query: String): List&lt;Contact&gt;</ID>
+    <ID>NestedBlockDepth:ContactResolver.kt$ContactResolver.Companion$@Suppress("Recycle") private fun searchContactsLegacy( context: Context, name: String, exact: Boolean, ): ContactResult.Found?</ID>
+    <ID>NestedBlockDepth:PlanValidator.kt$PlanValidator$@Suppress("Recycle") private fun resolveContactToPhoneNumber( context: Context, contact: String, ): String?</ID>
+    <ID>NestedBlockDepth:PlanValidator.kt$PlanValidator$suspend fun validateAndFix( plan: Plan, context: Context, ): Plan</ID>
+    <ID>ReturnCount:ActionSequenceExecutor.kt$ActionSequenceExecutor$suspend fun execute( steps: List&lt;PlanStep&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AutoReplyEngine.kt$AutoReplyEngine$fun isOwnReplyBounceback( packageName: String, contactName: String?, messageText: String, ): Boolean</ID>
+    <ID>ReturnCount:AutoReplyEngine.kt$AutoReplyEngine$private fun shouldAutoReply( notification: NotificationEntity, config: AutoReplyConfig, ): Boolean</ID>
+    <ID>ReturnCount:ContactResolver.kt$ContactResolver$open suspend fun resolveWithDisambiguation(input: String): ContactResolution</ID>
+    <ID>ReturnCount:ContactResolver.kt$ContactResolver.Companion$@Suppress("Recycle") private fun searchContactsLegacy( context: Context, name: String, exact: Boolean, ): ContactResult.Found?</ID>
+    <ID>ReturnCount:ContactResolver.kt$ContactResolver.Companion$fun resolve( context: Context, input: String, ): ContactResult</ID>
+    <ID>ReturnCount:ContactResolver.kt$ContactResolver.Companion$private fun fuzzyRelationshipSearchLegacy( context: Context, name: String, ): ContactResult.Found?</ID>
+    <ID>ReturnCount:PlanManager.kt$PlanManager$fun getActiveStep(): PlanStep?</ID>
+    <ID>ReturnCount:PlanValidator.kt$PlanValidator$@Suppress("Recycle") private fun resolveContactToPhoneNumber( context: Context, contact: String, ): String?</ID>
+    <ID>ReturnCount:ReplyDispatcher.kt$ReplyDispatcher$fun replyViaNotificationAction( sbn: StatusBarNotification, replyText: String, ): Boolean</ID>
+    <ID>SwallowedException:AutoReplyEngine.kt$AutoReplyEngine$e: CancellationException</ID>
+    <ID>SwallowedException:CrashLogRedactor.kt$CrashLogRedactor$t: Throwable</ID>
+    <ID>SwallowedException:PlanValidator.kt$PlanValidator$e: Exception</ID>
+    <ID>SwallowedException:ReEvaluationEngine.kt$ReEvaluationEngine$e: Exception</ID>
+    <ID>ThrowsCount:ReEvaluationEngine.kt$ReEvaluationEngine$private suspend fun &lt;T&gt; completeAndDecode( request: LLMRequest, actionNames: Collection&lt;String&gt;, decode: (String) -&gt; T, ): T</ID>
+    <ID>TooGenericExceptionCaught:ActionSequenceExecutor.kt$ActionSequenceExecutor$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AutoReplyEngine.kt$AutoReplyEngine$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ContactResolver.kt$ContactResolver$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ContactResolver.kt$ContactResolver.Companion$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CrashLogRedactor.kt$CrashLogRedactor$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:PlanValidator.kt$PlanValidator$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ReEvaluationEngine.kt$ReEvaluationEngine$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ReplyDispatcher.kt$ReplyDispatcher$e: Exception</ID>
+    <ID>TooManyFunctions:PlanManager.kt$PlanManager</ID>
+    <ID>UnusedParameter:ReEvaluationEngine.kt$ReEvaluationEngine$planId: String</ID>
+    <ID>UnusedPrivateProperty:AutoReplyEngine.kt$AutoReplyEngine$private val notificationIntelligence: NotificationStore</ID>
+    <ID>UnusedPrivateProperty:ReEvaluationEngine.kt$ReEvaluationEngine$private val actionDispatcher: dagger.Lazy&lt;ActionDispatcher&gt;</ID>
+    <ID>UnusedPrivateProperty:WorkingMemory.kt$WorkingMemory$@ApplicationContext private val context: Context</ID>
+  </CurrentIssues>
+</SmellBaseline>

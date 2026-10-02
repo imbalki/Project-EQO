@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TASK-004: permission required by the OpenDroid code moved into
+  :platform-a11y (CallFlowVerifier.kt: TelecomManager.isInCall).
+  Mirrors the upstream uses-permission entry of
+  yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51
+  app/src/main/AndroidManifest.xml. Declared here so Android Lint can
+  verify the moved code's call sites; the consuming app still decides its
+  final manifest.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+</manifest>

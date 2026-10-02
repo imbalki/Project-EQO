@@ -1,0 +1,425 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AliasResolver.kt$AliasResolver$!matchedTopic.isNullOrBlank() &amp;&amp; matchedTopic.length &gt; 2 &amp;&amp; matchedTopic != "this" &amp;&amp; matchedTopic != "it"</ID>
+    <ID>ComplexCondition:ConnectionTest.kt$ConnectionTestPlanner$ProviderCatalog.requiresApiKey(provider) &amp;&amp; !(provider == "Google Gemini" &amp;&amp; model == "gemini-nano") &amp;&amp; config.apiKeys[provider].isNullOrBlank()</ID>
+    <ID>ComplexCondition:LLMProviderFactory.kt$WrappedLLMProvider$ProviderCatalog.requiresApiKey(provider) &amp;&amp; !(provider == "Google Gemini" &amp;&amp; model == "gemini-nano") &amp;&amp; apiKey.isBlank()</ID>
+    <ID>CyclomaticComplexMethod:ActionDispatcher.kt$ActionDispatcher$suspend fun execute( actionName: String, params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>CyclomaticComplexMethod:AliasResolver.kt$AliasResolver$fun resolve(input: String): ActionHint?</ID>
+    <ID>CyclomaticComplexMethod:ClaudeProvider.kt$ClaudeProvider$override suspend fun complete(request: LLMRequest): LLMResponse</ID>
+    <ID>CyclomaticComplexMethod:CopilotProvider.kt$CopilotProvider$override suspend fun complete(request: LLMRequest): LLMResponse</ID>
+    <ID>CyclomaticComplexMethod:DeviceStateProvider.kt$DeviceStateProvider$fun getConnectivityState(): String</ID>
+    <ID>CyclomaticComplexMethod:DeviceStateProvider.kt$DeviceStateProvider$fun getLocationContext(): String</ID>
+    <ID>CyclomaticComplexMethod:IntentClassifier.kt$IntentClassifier$fun classifyComplexity(query: String): QueryComplexity</ID>
+    <ID>CyclomaticComplexMethod:LLMError.kt$LLMErrorMapper$fun fromThrowable( provider: String, model: String, throwable: Throwable, ): LLMException</ID>
+    <ID>CyclomaticComplexMethod:LLMError.kt$LLMErrorMapper$private fun classify( provider: ProviderErrorDetail.Provider, status: Int, evidence: String, ): LLMError</ID>
+    <ID>CyclomaticComplexMethod:LLMProviderFactory.kt$LLMProviderFactory$fun getProviderByName(name: String): LLMProvider</ID>
+    <ID>CyclomaticComplexMethod:ModelArtifactIntegrity.kt$ModelArtifactInstaller$private fun stageAndCommit( source: File, target: File, manifestFile: File, manifest: ModelArtifactManifest, verifyFormat: (File) -&gt; Unit, verifyStagedPayload: (File) -&gt; ArtifactVerificationResult, ): ArtifactVerificationResult</ID>
+    <ID>CyclomaticComplexMethod:ModelDownloadStopReason.kt$ModelDownloadStopReason$fun label(reason: Int): String</ID>
+    <ID>CyclomaticComplexMethod:ModelDownloadWorker.kt$ModelDownloadWorker$private suspend fun performDownload( modelId: String, spec: OnDeviceModelSpec, ): Result</ID>
+    <ID>CyclomaticComplexMethod:ModelFetcher.kt$ModelFetcher$suspend fun fetchModels(provider: String): ModelFetchOutcome</ID>
+    <ID>CyclomaticComplexMethod:SettingsRepository.kt$SettingsRepository$private fun storeSecretsAndStrip(config: LLMConfig): CredentialStripResult</ID>
+    <ID>FunctionOnlyReturningConstant:GemmaProvider.kt$GemmaProvider$private fun getActiveModelName(): String</ID>
+    <ID>ImplicitDefaultLocale:OnDeviceModelRegistry.kt$OnDeviceModelRegistry$String.format( "%.1f", requiredRamGb, )</ID>
+    <ID>ImplicitDefaultLocale:OnDeviceModelRegistry.kt$OnDeviceModelRegistry$String.format("%.1f", totalRamGb)</ID>
+    <ID>InstanceOfCheckForException:GemmaProvider.kt$GemmaProvider$e is com.google.mlkit.genai.common.GenAiException</ID>
+    <ID>LargeClass:ActionSchema.kt$ActionSchema</ID>
+    <ID>LongMethod:ActionDispatcher.kt$ActionDispatcher$suspend fun execute( actionName: String, params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>LongMethod:ClaudeProvider.kt$ClaudeProvider$override suspend fun complete(request: LLMRequest): LLMResponse</ID>
+    <ID>LongMethod:CopilotProvider.kt$CopilotProvider$override suspend fun complete(request: LLMRequest): LLMResponse</ID>
+    <ID>LongMethod:DeviceStateProvider.kt$DeviceStateProvider$fun getLocationContext(): String</ID>
+    <ID>LongMethod:GeminiProvider.kt$GeminiProvider$override suspend fun complete(request: LLMRequest): LLMResponse</ID>
+    <ID>LongMethod:IntentClassifier.kt$IntentClassifier$fun classifyComplexity(query: String): QueryComplexity</ID>
+    <ID>LongMethod:IntentClassifier.kt$IntentClassifier$suspend fun requiresAction(query: String): Boolean</ID>
+    <ID>LongMethod:LiteRTLMProvider.kt$LiteRTLMProvider$@Synchronized private fun invokeLiteRTInference( modelPath: String, spec: OnDeviceModelSpec, prompt: String, maxTokens: Int, temperature: Float, ): String</ID>
+    <ID>LongMethod:ModelDownloadWorker.kt$ModelDownloadWorker$private suspend fun performDownload( modelId: String, spec: OnDeviceModelSpec, ): Result</ID>
+    <ID>LongMethod:ModelFetcher.kt$ModelFetcher$suspend fun fetchModels(provider: String): ModelFetchOutcome</ID>
+    <ID>LongMethod:OllamaProvider.kt$OllamaProvider$override suspend fun complete(request: LLMRequest): LLMResponse</ID>
+    <ID>LongMethod:PlanningPrompts.kt$PlanningPrompts$fun buildPlanningPrompt(): String</ID>
+    <ID>LongMethod:SystemPrompts.kt$SystemPrompts$fun buildMainPrompt( registeredActions: List&lt;String&gt;, memoryContext: String, currentDateTime: String, deviceState: String, maxSteps: Int = 10, ): String</ID>
+    <ID>LongParameterList:ActionDispatcher.kt$ActionDispatcher$( private val systemActions: SystemActions, private val communicationActions: CommunicationActions, private val calendarActions: CalendarActions, private val transportActions: TransportActions, private val informationActions: InformationActions, private val mediaActions: MediaActions, private val foodShoppingActions: FoodShoppingActions, private val smartHomeActions: SmartHomeActions, private val financeActions: FinanceActions, private val macroActions: MacroActions, private val advancedControlActions: AdvancedControlActions, private val notificationActions: NotificationActions, private val routineActions: RoutineActions, private val socialActions: SocialActions, private val autoMapper: ActionAutoMapper, private val unknownActionDao: UnknownActionDao, private val deviceStateProvider: DeviceStateProvider, )</ID>
+    <ID>LongParameterList:AutoReplyPrompts.kt$AutoReplyPrompts$( userName: String, senderName: String, messageText: String, conversationHistory: String, userContext: String, customTone: String?, )</ID>
+    <ID>LongParameterList:AutoReplyPrompts.kt$AutoReplyPrompts$( userName: String, senderName: String, subject: String, messageText: String, userContext: String, customTone: String?, )</ID>
+    <ID>LongParameterList:ChatErrorUiState.kt$ChatErrorUiState.Companion$( sessionId: String, requestId: String, runId: String, failure: LLMException, partialMessageId: String? = null, nowMillis: Long = System.currentTimeMillis(), )</ID>
+    <ID>LongParameterList:LLMError.kt$LLMErrorMapper$( provider: ProviderErrorDetail.Provider, model: String, httpStatus: Int, headers: Map&lt;String, String&gt; = emptyMap(), rawBody: String?, knownSecrets: Iterable&lt;String&gt; = emptyList(), forbiddenText: Iterable&lt;String&gt; = emptyList(), )</ID>
+    <ID>LongParameterList:LLMError.kt$LLMException$( val error: LLMError, provider: String, model: String, val status: Int? = null, val retryable: Boolean = false, val retryAfterMillis: Long? = null, val detail: RedactedDetail? = null, internal val transientMalformedResponse: Boolean = false, )</ID>
+    <ID>LongParameterList:LLMProviderFactory.kt$LLMProviderFactory$( private val claudeProvider: Provider&lt;ClaudeProvider&gt;, private val openAIProvider: Provider&lt;OpenAIProvider&gt;, private val geminiProvider: Provider&lt;GeminiProvider&gt;, private val mistralProvider: Provider&lt;MistralProvider&gt;, private val groqProvider: Provider&lt;GroqProvider&gt;, private val ollamaProvider: Provider&lt;OllamaProvider&gt;, private val openRouterProvider: Provider&lt;OpenRouterProvider&gt;, private val togetherAIProvider: Provider&lt;TogetherAIProvider&gt;, private val cohereProvider: Provider&lt;CohereProvider&gt;, private val deepSeekProvider: Provider&lt;DeepSeekProvider&gt;, private val copilotProvider: Provider&lt;CopilotProvider&gt;, private val customOpenAIProvider: Provider&lt;CustomOpenAIProvider&gt;, private val gemmaProvider: Provider&lt;GemmaProvider&gt;, private val liteRTLMProvider: Provider&lt;LiteRTLMProvider&gt;, private val hybridOnDeviceProvider: Provider&lt;HybridOnDeviceProvider&gt;, private val settingsRepository: SettingsRepository, private val onDeviceLatencyTracker: OnDeviceLatencyTracker, private val actionDispatcher: dagger.Lazy&lt;ActionDispatcher&gt;, private val intentClassifier: dagger.Lazy&lt;IntentClassifier&gt;, private val deviceStateProvider: DeviceStateProvider, )</ID>
+    <ID>LongParameterList:ModelArtifactIntegrity.kt$ModelArtifactInstaller$( source: File, target: File, manifestFile: File, manifest: ModelArtifactManifest, verifyFormat: (File) -&gt; Unit, verifyStagedPayload: (File) -&gt; ArtifactVerificationResult, )</ID>
+    <ID>LongParameterList:ModelDao.kt$ModelDao$( id: String, progress: Int, downloadedSize: Long, downloadSpeed: String, eta: String, status: ModelStatus, )</ID>
+    <ID>LongParameterList:OnDeviceModelRegistry.kt$OnDeviceModelRegistry$( id: String, displayName: String, modelFilename: String, expectedSize: Long = 0L, contextWindow: Int = CUSTOM_DEFAULT_CONTEXT_WINDOW, minSdk: Int = 26, )</ID>
+    <ID>LoopWithTooManyJumpStatements:ModelFetcher.kt$ModelListParsers$for</ID>
+    <ID>MagicNumber:ActionRisk.kt$ActionRisk.ADVANCED_CONTROL$4</ID>
+    <ID>MagicNumber:ActionRisk.kt$ActionRisk.IRREVERSIBLE$5</ID>
+    <ID>MagicNumber:ActionRisk.kt$ActionRisk.SENSITIVE$3</ID>
+    <ID>MagicNumber:ActionSchema.kt$ActionSchema$3</ID>
+    <ID>MagicNumber:AliasResolver.kt$AliasResolver$100</ID>
+    <ID>MagicNumber:AliasResolver.kt$AliasResolver$50</ID>
+    <ID>MagicNumber:ClaudeProvider.kt$ClaudeProvider$50</ID>
+    <ID>MagicNumber:CohereProvider.kt$CohereProvider$50</ID>
+    <ID>MagicNumber:CopilotProvider.kt$CopilotProvider$50</ID>
+    <ID>MagicNumber:CustomOpenAIProvider.kt$CustomOpenAIProvider$50</ID>
+    <ID>MagicNumber:DeepSeekProvider.kt$DeepSeekProvider$50</ID>
+    <ID>MagicNumber:DurationParser.kt$DurationParser$3600</ID>
+    <ID>MagicNumber:DurationParser.kt$DurationParser$60</ID>
+    <ID>MagicNumber:GeminiProvider.kt$GeminiProvider$50</ID>
+    <ID>MagicNumber:GemmaProvider.kt$GemmaProvider$2000</ID>
+    <ID>MagicNumber:GemmaProvider.kt$GemmaProvider$3</ID>
+    <ID>MagicNumber:GroqProvider.kt$GroqProvider$50</ID>
+    <ID>MagicNumber:IntentClassifier.kt$IntentClassifier$0.5</ID>
+    <ID>MagicNumber:IntentClassifier.kt$IntentClassifier$4.0</ID>
+    <ID>MagicNumber:IntentClassifier.kt$IntentClassifier$5</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$1_000.0</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$3_600_000.0</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$400</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$401</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$402</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$403</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$404</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$408</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$413</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$422</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$429</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$500</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$504</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$512</ID>
+    <ID>MagicNumber:LLMError.kt$LLMErrorMapper$60_000.0</ID>
+    <ID>MagicNumber:LLMError.kt$LLMException$0x20</ID>
+    <ID>MagicNumber:LLMError.kt$LLMException$0x7e</ID>
+    <ID>MagicNumber:LLMError.kt$LLMException$128</ID>
+    <ID>MagicNumber:LLMError.kt$SecretRegistry$4</ID>
+    <ID>MagicNumber:LLMProviderFactory.kt$LLMProviderFactory$10</ID>
+    <ID>MagicNumber:LLMProviderFactory.kt$LLMProviderFactory$3</ID>
+    <ID>MagicNumber:LLMProviderFactory.kt$RetryRuntime$1_000_000L</ID>
+    <ID>MagicNumber:LLMProviderFactory.kt$WrappedLLMProvider$250L</ID>
+    <ID>MagicNumber:LLMProviderFactory.kt$WrappedLLMProvider$4_000L</ID>
+    <ID>MagicNumber:LLMProviderFactory.kt$WrappedLLMProvider$500L</ID>
+    <ID>MagicNumber:LiteRTLMProvider.kt$LiteRTLMProvider$0.7f</ID>
+    <ID>MagicNumber:LiteRTLMProvider.kt$LiteRTLMProvider$2000</ID>
+    <ID>MagicNumber:MistralProvider.kt$MistralProvider$50</ID>
+    <ID>MagicNumber:ModelArtifactIntegrity.kt$StreamingSha256FileHashVerifier$0xff</ID>
+    <ID>MagicNumber:ModelDao.kt$100</ID>
+    <ID>MagicNumber:ModelDownloadRetryPolicy.kt$ModelDownloadRetryPolicy$100</ID>
+    <ID>MagicNumber:ModelDownloadRetryPolicy.kt$ModelDownloadRetryPolicy$408</ID>
+    <ID>MagicNumber:ModelDownloadRetryPolicy.kt$ModelDownloadRetryPolicy$425</ID>
+    <ID>MagicNumber:ModelDownloadRetryPolicy.kt$ModelDownloadRetryPolicy$429</ID>
+    <ID>MagicNumber:ModelDownloadRetryPolicy.kt$ModelDownloadRetryPolicy$500</ID>
+    <ID>MagicNumber:ModelDownloadRetryPolicy.kt$ModelDownloadRetryPolicy$599</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$100L</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$1024</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$1024L</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$1_000L</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$206</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$3_600L</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$401</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$403</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$404</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$60L</ID>
+    <ID>MagicNumber:ModelDownloadWorker.kt$ModelDownloadWorker$64</ID>
+    <ID>MagicNumber:ModelStoragePaths.kt$ModelStoragePaths$64</ID>
+    <ID>MagicNumber:OllamaProvider.kt$OllamaProvider$50</ID>
+    <ID>MagicNumber:OnDeviceLatencyProfile.kt$OnDeviceLatencyProfile$0.95</ID>
+    <ID>MagicNumber:OnDeviceModelRegistry.kt$OnDeviceModelRegistry$1024</ID>
+    <ID>MagicNumber:OnDeviceModelRegistry.kt$OnDeviceModelRegistry$1024L</ID>
+    <ID>MagicNumber:OnDeviceModelRegistry.kt$OnDeviceModelRegistry$3.0</ID>
+    <ID>MagicNumber:OnDeviceModelRegistry.kt$OnDeviceModelRegistry$4.0</ID>
+    <ID>MagicNumber:OnDeviceModelRegistry.kt$OnDeviceModelRegistry$6.0</ID>
+    <ID>MagicNumber:OnDeviceModelRegistry.kt$OnDeviceModelRegistry$8.0</ID>
+    <ID>MagicNumber:OpenAIProvider.kt$OpenAIProvider$50</ID>
+    <ID>MagicNumber:OpenRouterProvider.kt$OpenRouterProvider$50</ID>
+    <ID>MagicNumber:ProviderErrorDetail.kt$4_096</ID>
+    <ID>MagicNumber:ProviderErrorDetail.kt$ProviderErrorDetail.Companion$100</ID>
+    <ID>MagicNumber:ProviderErrorDetail.kt$ProviderErrorDetail.Companion$4</ID>
+    <ID>MagicNumber:ProviderErrorDetail.kt$ProviderErrorDetail.Companion$599</ID>
+    <ID>MagicNumber:ProviderErrorDetail.kt$ProviderErrorDetail.Companion$8</ID>
+    <ID>MagicNumber:TogetherAIProvider.kt$TogetherAIProvider$50</ID>
+    <ID>MaxLineLength:Action.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/base/Action.kt</ID>
+    <ID>MaxLineLength:ActionDispatcher.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/ActionDispatcher.kt</ID>
+    <ID>MaxLineLength:ActionResult.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/base/ActionResult.kt</ID>
+    <ID>MaxLineLength:ActionResultTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/actions/base/ActionResultTest.kt</ID>
+    <ID>MaxLineLength:ActionRisk.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/ActionRisk.kt</ID>
+    <ID>MaxLineLength:ActionRisk.kt$ActionRiskPolicy$fun</ID>
+    <ID>MaxLineLength:ActionRiskPolicyTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/agent/ActionRiskPolicyTest.kt</ID>
+    <ID>MaxLineLength:ActionSchema.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/ActionSchema.kt</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$"Filter by category: CONTACT, APP_PREFERENCE, TASK_ROUTINE, SCHEDULE, PROJECT, RESOURCE, NOTE_FACT, USER_PREFERENCE, ALL"</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$"Preference key or label (e.g. 'preferred_music_app', 'dietary_preference', 'work_location')"</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("app", ParamType.ENUM, false, "Food delivery app", listOf("zomato", "swiggy"), "zomato")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("app", ParamType.ENUM, false, "Grocery app", listOf("blinkit", "zepto", "bigbasket"), "blinkit")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("app", ParamType.ENUM, false, "Music app", listOf("spotify", "youtube", "local"), "spotify")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("app", ParamType.ENUM, false, "Payment app", listOf("gpay", "phonepe", "paytm"), "gpay")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("app", ParamType.ENUM, false, "Video call app", listOf("whatsapp", "meet", "zoom"), "whatsapp")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("app", ParamType.STRING, false, "App name or package to filter", defaultValue = "")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("app", ParamType.STRING, false, "Specific app (whatsapp, sms, email) or all", defaultValue = "")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("camera", ParamType.ENUM, false, "Camera to use", listOf("back", "front"), "back")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("contact", ParamType.STRING, false, "Telegram username, channel, or contact name to open")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("contact", ParamType.STRING, true, "Telegram username (@handle), phone number, or contact name")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("count", ParamType.STRING, false, "Number of notifications to show", defaultValue = "10")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("days", ParamType.INT, false, "Time range in days (default: 7)", defaultValue = 7)</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("durationMs", ParamType.INT, false, "Milliseconds to wait, max 10000", defaultValue = 2000)</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("hours", ParamType.INT, false, "Hours from now to schedule (default: 24)", defaultValue = 24)</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("label", ParamType.STRING, false, "Human-readable label for reference", defaultValue = "")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("location", ParamType.STRING, false, "City name", defaultValue = "current location")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("lookbackDays", ParamType.INT, false, "Days of history to analyze", defaultValue = 14)</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("mode", ParamType.ENUM, false, "Travel mode", listOf("drive", "walk", "transit", "bike"), "drive")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("name", ParamType.STRING, false, "Campaign name", defaultValue = "OpenDroid Launch")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("options", ParamType.STRING, false, "Comma-separated options", defaultValue = "")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("pickup", ParamType.STRING, false, "Pickup location", defaultValue = "current location")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("query", ParamType.STRING, false, "Search query or topic filter", defaultValue = "")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("routineName", ParamType.STRING, false, "Name of the routine (e.g. Morning Routine)")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("secret", ParamType.STRING, true, "Sensitive value/secret to encrypt and protect")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("speak", ParamType.BOOLEAN, false, "Whether to read briefing aloud", defaultValue = true)</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$ParamDefinition("state", ParamType.ENUM, false, "Turn on or off", listOf("on", "off"), defaultValue = "on")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$description = "Generates an end-to-end multi-platform marketing campaign strategy with scheduled post drafts"</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$description = "Opens a pre-filled email draft; the user must review and send it. Sending is not verified."</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$description = "Saves or updates an explicit user preference or long-term memory in the Personal Knowledge Graph."</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$description = "Shows overall social media performance, reach, and follower metrics across connected accounts"</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$examples = listOf("create a weekly social report", "generate social report", "export social performance")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$examples = listOf("detect my routines", "check my habits", "find recurring patterns", "any new routines")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$examples = listOf("dismiss the WhatsApp notification", "clear all notifications", "dismiss notification 42")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$examples = listOf("open google.com", "go to youtube.com", "visit github.com", "navigate to example.com", "browse website")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$examples = listOf("read my notifications", "show whatsapp messages", "any new messages?", "check notifications")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$examples = listOf("run morning routine", "start morning briefing", "execute daily routine", "run evening wrap up")</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$fun</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$fun highestRisk(actionNames: Iterable&lt;String&gt;): ActionRisk</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$fun riskForAction(actionName: String): ActionRisk</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$params = listOf(ParamDefinition("camera", ParamType.ENUM, false, "Camera to use", listOf("back", "front"), "back"))</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$params = listOf(ParamDefinition("direction", ParamType.ENUM, true, "Scroll direction", listOf("forward", "backward")))</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$params = listOf(ParamDefinition("duration", ParamType.STRING, false, "Duration in seconds", defaultValue = "30"))</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$params = listOf(ParamDefinition("location", ParamType.STRING, false, "Door location", defaultValue = "front door"))</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$params = listOf(ParamDefinition("mode", ParamType.ENUM, true, "Ringer mode", listOf("normal", "vibrate", "silent")))</ID>
+    <ID>MaxLineLength:ActionSchema.kt$ActionSchema$params = listOf(ParamDefinition("url", ParamType.STRING, true, "URL to open (e.g. google.com, https://example.com)"))</ID>
+    <ID>MaxLineLength:ActionSchemaTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/agent/ActionSchemaTest.kt</ID>
+    <ID>MaxLineLength:AliasResolver.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/AliasResolver.kt</ID>
+    <ID>MaxLineLength:AliasResolver.kt$AliasResolver$"""(?:save|extract|remember)\s+(?:the\s+)?(meeting details|important information|meeting info|notes|details|info|events?|tasks?|[a-zA-Z0-9\s]+?)(?:\s+to\s+my\s+notes|\s+to\s+notes|\s+in\s+my\s+notes|\s+in\s+notes|$)"""</ID>
+    <ID>MaxLineLength:AliasResolver.kt$AliasResolver$"""\b(the|a|an|please|could\s+you|please\s+turn|turn\s+the|open\s+the|close\s+the|enable\s+the|disable\s+the|switch\s+on\s+the|switch\s+off\s+the)\b"""</ID>
+    <ID>MaxLineLength:AliasResolver.kt$AliasResolver$"read and remember screen" to ActionHint("READ_AND_REMEMBER_SCREEN", mapOf("topic" to "important information"))</ID>
+    <ID>MaxLineLength:AliasResolver.kt$AliasResolver$"read screen and remember" to ActionHint("READ_AND_REMEMBER_SCREEN", mapOf("topic" to "important information"))</ID>
+    <ID>MaxLineLength:AliasResolver.kt$AliasResolver$"read this screen and remember" to ActionHint("READ_AND_REMEMBER_SCREEN", mapOf("topic" to "important information"))</ID>
+    <ID>MaxLineLength:AliasResolver.kt$AliasResolver$"save this information" to ActionHint("READ_AND_REMEMBER_SCREEN", mapOf("topic" to "important information"))</ID>
+    <ID>MaxLineLength:AliasResolver.kt$AliasResolver$(lower.contains("screen") &amp;&amp; (lower.contains("save") || lower.contains("remember") || lower.contains("notes")))</ID>
+    <ID>MaxLineLength:AliasResolver.kt$AliasResolver$(lower.contains("screen") || lower.contains("message") || lower.contains("notes") || lower.contains("details"))</ID>
+    <ID>MaxLineLength:AliasResolver.kt$AliasResolver$return</ID>
+    <ID>MaxLineLength:AliasResolverTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/agent/AliasResolverTest.kt</ID>
+    <ID>MaxLineLength:AliasResolverTest.kt$AliasResolverTest$AliasResolver.extractTopicForReadAndRemember("read this screen and save the important information to my notes")</ID>
+    <ID>MaxLineLength:AliasResolverTest.kt$AliasResolverTest$assertEquals("doctor appointment", AliasResolver.extractRecallQuery("what do you remember about doctor appointment?"))</ID>
+    <ID>MaxLineLength:AliasResolverTest.kt$AliasResolverTest$assertTrue(AliasResolver.isReadAndRememberRequest("read this screen and save the important information to my notes"))</ID>
+    <ID>MaxLineLength:AutoMode.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/AutoMode.kt</ID>
+    <ID>MaxLineLength:AutoModeConfigTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/data/models/AutoModeConfigTest.kt</ID>
+    <ID>MaxLineLength:AutoReplyConfig.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/AutoReplyConfig.kt</ID>
+    <ID>MaxLineLength:AutoReplyPrompts.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/prompts/AutoReplyPrompts.kt</ID>
+    <ID>MaxLineLength:ChatErrorUiState.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/ChatErrorUiState.kt</ID>
+    <ID>MaxLineLength:ChatErrorUiStateTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/agent/ChatErrorUiStateTest.kt</ID>
+    <ID>MaxLineLength:ChatMessage.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/ChatMessage.kt</ID>
+    <ID>MaxLineLength:ClaudeModelCatalog.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ClaudeModelCatalog.kt</ID>
+    <ID>MaxLineLength:ClaudeModelCatalogTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/ClaudeModelCatalogTest.kt</ID>
+    <ID>MaxLineLength:ClaudeProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/ClaudeProvider.kt</ID>
+    <ID>MaxLineLength:ClaudeProvider.kt$ClaudeProvider$val role = if (msg.sender == com.opendroid.ai.data.models.ChatMessage.Sender.USER) "user" else "assistant"</ID>
+    <ID>MaxLineLength:CohereProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/CohereProvider.kt</ID>
+    <ID>MaxLineLength:ConnectionTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ConnectionTest.kt</ID>
+    <ID>MaxLineLength:ConnectionTestPlannerTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/ConnectionTestPlannerTest.kt</ID>
+    <ID>MaxLineLength:CopilotProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/CopilotProvider.kt</ID>
+    <ID>MaxLineLength:CustomOpenAIProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/CustomOpenAIProvider.kt</ID>
+    <ID>MaxLineLength:CustomOpenAIProviderNetworkTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/providers/CustomOpenAIProviderNetworkTest.kt</ID>
+    <ID>MaxLineLength:CustomOpenAIProviderNetworkTest.kt$CustomOpenAIProviderNetworkTest.EmptyProviderCredentialStore$override fun read(credential: ProviderCredentialId): CredentialStoreResult&lt;String?&gt;</ID>
+    <ID>MaxLineLength:CustomOpenAIProviderNetworkTest.kt$CustomOpenAIProviderNetworkTest.EmptyProviderCredentialStore$override fun readProviderApiKeys(): CredentialStoreResult&lt;Map&lt;String, String&gt;&gt;</ID>
+    <ID>MaxLineLength:CustomOpenAIProviderNetworkTest.kt$CustomOpenAIProviderNetworkTest.EmptyProviderCredentialStore$override fun remove(credential: ProviderCredentialId): CredentialStoreResult&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:DeepSeekProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/DeepSeekProvider.kt</ID>
+    <ID>MaxLineLength:DeviceCapabilities.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/util/DeviceCapabilities.kt</ID>
+    <ID>MaxLineLength:DeviceCapabilities.kt$DeviceCapabilities$fun</ID>
+    <ID>MaxLineLength:DeviceCapabilitiesTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/util/DeviceCapabilitiesTest.kt</ID>
+    <ID>MaxLineLength:DeviceStateProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/DeviceStateProvider.kt</ID>
+    <ID>MaxLineLength:DurationParser.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/util/DurationParser.kt</ID>
+    <ID>MaxLineLength:DurationParserTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/util/DurationParserTest.kt</ID>
+    <ID>MaxLineLength:GeminiProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/GeminiProvider.kt</ID>
+    <ID>MaxLineLength:GeminiProvider.kt$GeminiProvider$override val availableModels: List&lt;String&gt; = listOf("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-nano")</ID>
+    <ID>MaxLineLength:GemmaProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/GemmaProvider.kt</ID>
+    <ID>MaxLineLength:GemmaProvider.kt$GemmaProvider$"Do not add markdown formatting or backticks around the JSON. Output only the raw JSON. If no tool is needed, respond with standard text.\n\n"</ID>
+    <ID>MaxLineLength:GemmaProvider.kt$GemmaProvider$0 -&gt; throw IllegalStateException("This device does not support Google AI Core. Try selecting a different model.")</ID>
+    <ID>MaxLineLength:GemmaProvider.kt$GemmaProvider$1, 2 -&gt; throw IllegalStateException("On-device model is downloading or not installed. Please try again later.")</ID>
+    <ID>MaxLineLength:GemmaProvider.kt$GemmaProvider$StreamChunk.Content("Error: This device does not support Google AI Core. Try selecting a different model.")</ID>
+    <ID>MaxLineLength:GemmaProvider.kt$GemmaProvider$emit(StreamChunk.Content("Error: On-device model is downloading or not installed. Please try again later."))</ID>
+    <ID>MaxLineLength:GemmaProvider.kt$GemmaProvider$request.tools?.map { ToolDefinition(it.name, it.description, it.parameters) } ?: emptyList()</ID>
+    <ID>MaxLineLength:GemmaProvider.kt$GemmaProvider$sb.append("If you need to call a tool, respond ONLY with a JSON object conforming exactly to this format:\n")</ID>
+    <ID>MaxLineLength:GroqProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/GroqProvider.kt</ID>
+    <ID>MaxLineLength:HabitEvent.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/HabitEvent.kt</ID>
+    <ID>MaxLineLength:HabitRoutine.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/HabitRoutine.kt</ID>
+    <ID>MaxLineLength:HybridOnDeviceProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/HybridOnDeviceProvider.kt</ID>
+    <ID>MaxLineLength:HybridOnDeviceProvider.kt$HybridOnDeviceProvider$val selectedModel = request.model?.takeIf { it.isNotBlank() } ?: ProviderCatalog.defaultModel(PROVIDER_NAME)</ID>
+    <ID>MaxLineLength:IntentClassifier.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/IntentClassifier.kt</ID>
+    <ID>MaxLineLength:IntentClassifier.kt$IntentClassifier$if</ID>
+    <ID>MaxLineLength:LLMConfig.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/LLMConfig.kt</ID>
+    <ID>MaxLineLength:LLMConfig.kt$fun LLMConfig.effectiveGrantedActions(): Map&lt;String, Long&gt;</ID>
+    <ID>MaxLineLength:LLMError.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/error/LLMError.kt</ID>
+    <ID>MaxLineLength:LLMErrorMapperTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/error/LLMErrorMapperTest.kt</ID>
+    <ID>MaxLineLength:LLMProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/LLMProvider.kt</ID>
+    <ID>MaxLineLength:LLMProviderFactory.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/LLMProviderFactory.kt</ID>
+    <ID>MaxLineLength:LLMProviderFactory.kt$LLMProviderFactory$if</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/LiteRTLMProvider.kt</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$"Do not add markdown formatting or backticks around the JSON. Output only the raw JSON. If no tool is needed, respond with standard text.\n\n"</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$"LiteRT JNI native library failed to load (liblitertlm_jni.so). Error: ${cause.localizedMessage}"</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$"LiteRT JNI native library failed to load (liblitertlm_jni.so). Error: ${e.localizedMessage}"</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$IOException("GPU acceleration unavailable for ${spec.displayName}. Check device compatibility.", e)</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$Log.e(TAG, "[INIT FLOW] [CRITICAL FAILURE] Failed to initialize LiteRT Engine on every backend.", lastFailure)</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$Log.i(TAG, "[INIT FLOW] Active model path changed from '$cachedModelPath' to '$modelPath'. Resetting cached engine.")</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$Log.i(TAG, "[INIT FLOW] Configuring EngineConfig with path: $modelPath, maxNumTokens: ${spec.contextWindow}")</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$Log.i(TAG, "[INIT FLOW] LiteRT Engine initialized successfully on ${config.backend} and cached.")</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$sb.append("If you need to call a tool, respond ONLY with a JSON object conforming exactly to this format:\n")</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$throw IOException("LiteRT Inference execution failed: ${cause?.localizedMessage ?: e.localizedMessage}", cause ?: e)</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$throw IOException("Model file at '$modelPath' exists but is not readable. Check storage permissions.")</ID>
+    <ID>MaxLineLength:LiteRTLMProvider.kt$LiteRTLMProvider$val outputText = invokeLiteRTInference(modelPath, spec, prompt, request.maxTokens, request.temperature)</ID>
+    <ID>MaxLineLength:LiteRtCompatibility.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/LiteRtCompatibility.kt</ID>
+    <ID>MaxLineLength:LiteRtCompatibilityTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/LiteRtCompatibilityTest.kt</ID>
+    <ID>MaxLineLength:Macro.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/Macro.kt</ID>
+    <ID>MaxLineLength:Memory.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/Memory.kt</ID>
+    <ID>MaxLineLength:MistralProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/MistralProvider.kt</ID>
+    <ID>MaxLineLength:MistralProvider.kt$MistralProvider$override val availableModels: List&lt;String&gt; = listOf("mistral-large-latest", "mistral-medium", "mistral-small", "open-mixtral-8x7b")</ID>
+    <ID>MaxLineLength:ModelArtifactIntegrity.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ModelArtifactIntegrity.kt</ID>
+    <ID>MaxLineLength:ModelArtifactIntegrityTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/ModelArtifactIntegrityTest.kt</ID>
+    <ID>MaxLineLength:ModelDao.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/db/dao/ModelDao.kt</ID>
+    <ID>MaxLineLength:ModelDao.kt$ModelDao$"UPDATE models SET downloadProgress = :progress, downloadedSize = :downloadedSize, downloadSpeed = :downloadSpeed, etaString = :eta, status = :status WHERE id = :id"</ID>
+    <ID>MaxLineLength:ModelDao.kt$suspend fun ModelDao.clearDownloadState(id: String)</ID>
+    <ID>MaxLineLength:ModelDownloadForegroundInfoFactory.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ModelDownloadForegroundInfoFactory.kt</ID>
+    <ID>MaxLineLength:ModelDownloadRetryPolicy.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ModelDownloadRetryPolicy.kt</ID>
+    <ID>MaxLineLength:ModelDownloadSchedulingTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/ModelDownloadSchedulingTest.kt</ID>
+    <ID>MaxLineLength:ModelDownloadStopReason.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ModelDownloadStopReason.kt</ID>
+    <ID>MaxLineLength:ModelDownloadWorkRequest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ModelDownloadWorkRequest.kt</ID>
+    <ID>MaxLineLength:ModelDownloadWorker.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ModelDownloadWorker.kt</ID>
+    <ID>MaxLineLength:ModelEntity.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/db/entities/ModelEntity.kt</ID>
+    <ID>MaxLineLength:ModelFetcher.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ModelFetcher.kt</ID>
+    <ID>MaxLineLength:ModelFetcher.kt$ModelFetcher$private fun modelsUrl(baseUrl: String): String</ID>
+    <ID>MaxLineLength:ModelListParsersTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/ModelListParsersTest.kt</ID>
+    <ID>MaxLineLength:ModelManager.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ModelManager.kt</ID>
+    <ID>MaxLineLength:ModelStoragePaths.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ModelStoragePaths.kt</ID>
+    <ID>MaxLineLength:ModelStoragePathsTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/ModelStoragePathsTest.kt</ID>
+    <ID>MaxLineLength:NetworkErrorFormatter.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/util/NetworkErrorFormatter.kt</ID>
+    <ID>MaxLineLength:NeverAutoApproveTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/agent/NeverAutoApproveTest.kt</ID>
+    <ID>MaxLineLength:NotificationDao.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/db/dao/NotificationDao.kt</ID>
+    <ID>MaxLineLength:NotificationDao.kt$NotificationDao$@Query("SELECT COUNT(*) FROM notifications WHERE contactName = :contactName AND isAutoReplied = 1 AND timestamp &gt; :since")</ID>
+    <ID>MaxLineLength:NotificationEntity.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/db/entities/NotificationEntity.kt</ID>
+    <ID>MaxLineLength:OllamaProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/OllamaProvider.kt</ID>
+    <ID>MaxLineLength:OnDeviceLatencyProfile.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/OnDeviceLatencyProfile.kt</ID>
+    <ID>MaxLineLength:OnDeviceLatencyProfileTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/OnDeviceLatencyProfileTest.kt</ID>
+    <ID>MaxLineLength:OnDeviceModelRegistry.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/OnDeviceModelRegistry.kt</ID>
+    <ID>MaxLineLength:OnDeviceModelRegistry.kt$OnDeviceModelRegistry$"6c237a59eedeb06a821b21f0a59b03d346ac8bc3/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task"</ID>
+    <ID>MaxLineLength:OnDeviceModelRegistryCustomTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/OnDeviceModelRegistryCustomTest.kt</ID>
+    <ID>MaxLineLength:OpenAIProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/OpenAIProvider.kt</ID>
+    <ID>MaxLineLength:OpenAIProvider.kt$OpenAIProvider$override val availableModels: List&lt;String&gt; = listOf("gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo", "o1-preview", "o3-mini")</ID>
+    <ID>MaxLineLength:OpenRouterProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/OpenRouterProvider.kt</ID>
+    <ID>MaxLineLength:OpenRouterProvider.kt$OpenRouterProvider$listOf("google/gemini-2.0-flash-exp:free", "meta-llama/llama-3-8b-instruct:free", "gryphe/mythomax-l2-13b:free")</ID>
+    <ID>MaxLineLength:Plan.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/Plan.kt</ID>
+    <ID>MaxLineLength:PlanStep.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/PlanStep.kt</ID>
+    <ID>MaxLineLength:PlanningPrompts.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/prompts/PlanningPrompts.kt</ID>
+    <ID>MaxLineLength:PromptBudget.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/PromptBudget.kt</ID>
+    <ID>MaxLineLength:PromptBudgetTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/PromptBudgetTest.kt</ID>
+    <ID>MaxLineLength:ProviderCatalog.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ProviderCatalog.kt</ID>
+    <ID>MaxLineLength:ProviderCatalog.kt$ProviderCatalog$fun canonicalName(providerName: String): String</ID>
+    <ID>MaxLineLength:ProviderCatalogTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/ProviderCatalogTest.kt</ID>
+    <ID>MaxLineLength:ProviderErrorDetail.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/error/ProviderErrorDetail.kt</ID>
+    <ID>MaxLineLength:ProviderErrorDetailTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/error/ProviderErrorDetailTest.kt</ID>
+    <ID>MaxLineLength:ProviderSelectionPolicy.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ProviderSelectionPolicy.kt</ID>
+    <ID>MaxLineLength:ProviderSelectionPolicyTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/ProviderSelectionPolicyTest.kt</ID>
+    <ID>MaxLineLength:ReEvalPrompts.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/prompts/ReEvalPrompts.kt</ID>
+    <ID>MaxLineLength:SettingsRepository.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/repository/SettingsRepository.kt</ID>
+    <ID>MaxLineLength:SettingsRepositoryProviderCredentialsTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/data/repository/SettingsRepositoryProviderCredentialsTest.kt</ID>
+    <ID>MaxLineLength:StepResult.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/StepResult.kt</ID>
+    <ID>MaxLineLength:SystemPrompts.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/prompts/SystemPrompts.kt</ID>
+    <ID>MaxLineLength:TogetherAIProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/TogetherAIProvider.kt</ID>
+    <ID>MaxLineLength:UnknownActionDao.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/db/dao/UnknownActionDao.kt</ID>
+    <ID>MaxLineLength:UnknownActionEntity.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/db/entities/UnknownActionEntity.kt</ID>
+    <ID>MaxLineLength:UrlUtils.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/util/UrlUtils.kt</ID>
+    <ID>MaxLineLength:UserProfile.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/UserProfile.kt</ID>
+    <ID>MaxLineLength:WrappedLLMProviderTest.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/llm/WrappedLLMProviderTest.kt</ID>
+    <ID>NestedBlockDepth:ActionSchema.kt$ActionSchema$fun buildLLMSchema(): String</ID>
+    <ID>NestedBlockDepth:ActionSchema.kt$ActionSchema$fun validateParams( actionName: String, params: Map&lt;String, Any&gt;, ): Pair&lt;ValidationResult, Map&lt;String, Any&gt;&gt;</ID>
+    <ID>NestedBlockDepth:DeviceStateProvider.kt$DeviceStateProvider$fun getConnectivityState(): String</ID>
+    <ID>NestedBlockDepth:DeviceStateProvider.kt$DeviceStateProvider$fun getLocationContext(): String</ID>
+    <ID>NestedBlockDepth:DeviceStateProvider.kt$DeviceStateProvider$fun getWifiState(): String</ID>
+    <ID>NestedBlockDepth:HybridOnDeviceProvider.kt$HybridOnDeviceProvider$override suspend fun complete(request: LLMRequest): LLMResponse</ID>
+    <ID>NestedBlockDepth:ModelDownloadWorker.kt$ModelDownloadWorker$private suspend fun performDownload( modelId: String, spec: OnDeviceModelSpec, ): Result</ID>
+    <ID>ReturnCount:ActionDispatcher.kt$ActionDispatcher$private suspend fun trySchemaExecution( actionName: String, params: Map&lt;String, String&gt;, context: Context, ): ActionResult?</ID>
+    <ID>ReturnCount:ActionDispatcher.kt$ActionDispatcher$suspend fun execute( actionName: String, params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AliasResolver.kt$AliasResolver$fun resolve(input: String): ActionHint?</ID>
+    <ID>ReturnCount:AliasResolver.kt$AliasResolver$fun resolveContextual( input: String, lastAction: String?, lastParams: Map&lt;String, String&gt;?, ): ActionHint?</ID>
+    <ID>ReturnCount:ClaudeModelCatalog.kt$ClaudeModelCatalog$fun resolve(id: String): String?</ID>
+    <ID>ReturnCount:ConnectionTest.kt$ConnectionTestPlanner$fun configurationGap( config: LLMConfig, providerName: String, ): ConnectionTestState.ConfigMissing?</ID>
+    <ID>ReturnCount:DeviceStateProvider.kt$DeviceStateProvider$fun getConnectivityState(): String</ID>
+    <ID>ReturnCount:DeviceStateProvider.kt$DeviceStateProvider$fun getLocationContext(): String</ID>
+    <ID>ReturnCount:DurationParser.kt$DurationParser$fun parseToSeconds(input: String): Int?</ID>
+    <ID>ReturnCount:HybridOnDeviceProvider.kt$HybridOnDeviceProvider$private fun resolveBackend(modelId: String): OnDeviceBackend</ID>
+    <ID>ReturnCount:IntentClassifier.kt$IntentClassifier$fun classifyComplexity(query: String): QueryComplexity</ID>
+    <ID>ReturnCount:LLMConfig.kt$fun LLMConfig.resolveClaudeModelOrNull(selected: String): String?</ID>
+    <ID>ReturnCount:LLMError.kt$LLMErrorMapper$private fun parseRetryAfter(value: String?): Long?</ID>
+    <ID>ReturnCount:LLMProviderFactory.kt$WrappedLLMProvider$private fun shouldRetry( request: LLMRequest, failure: com.opendroid.ai.core.llm.error.LLMException, attempt: Int, startedAt: Long, proposedDelay: Long, ): Boolean</ID>
+    <ID>ReturnCount:LiteRTLMProvider.kt$LiteRTLMProvider$fun isModelDownloaded(modelId: String): Boolean</ID>
+    <ID>ReturnCount:LiteRtCompatibility.kt$LiteRtCompatibility$internal fun isBackendIncompatibility(error: Throwable): Boolean</ID>
+    <ID>ReturnCount:ModelArtifactIntegrity.kt$ModelArtifactInstaller$fun installManagedDownload( source: File, target: File, manifestFile: File, spec: OnDeviceModelSpec, verifyFormat: (File) -&gt; Unit, ): ArtifactVerificationResult</ID>
+    <ID>ReturnCount:ModelArtifactIntegrity.kt$ModelArtifactInstaller$private fun stageAndCommit( source: File, target: File, manifestFile: File, manifest: ModelArtifactManifest, verifyFormat: (File) -&gt; Unit, verifyStagedPayload: (File) -&gt; ArtifactVerificationResult, ): ArtifactVerificationResult</ID>
+    <ID>ReturnCount:ModelArtifactIntegrity.kt$ModelArtifactManifest.Companion$fun forManagedDownload(spec: OnDeviceModelSpec): ModelArtifactManifest?</ID>
+    <ID>ReturnCount:ModelArtifactIntegrity.kt$ModelArtifactVerifier$fun verifyManagedPayload( file: File, spec: OnDeviceModelSpec, ): ArtifactVerificationResult</ID>
+    <ID>ReturnCount:ModelArtifactIntegrity.kt$ModelArtifactVerifier$private fun verify( file: File, manifestFile: File, spec: OnDeviceModelSpec, verifyHash: Boolean, ): ArtifactVerificationResult</ID>
+    <ID>ReturnCount:ModelArtifactIntegrity.kt$ModelArtifactVerifier$private fun verifyManagedManifest( file: File, spec: OnDeviceModelSpec, manifest: ModelArtifactManifest, verifyHash: Boolean, ): ArtifactVerificationResult</ID>
+    <ID>ReturnCount:ModelDownloadWorker.kt$ModelDownloadWorker$override suspend fun doWork(): Result</ID>
+    <ID>ReturnCount:ModelDownloadWorker.kt$ModelDownloadWorker$private suspend fun performDownload( modelId: String, spec: OnDeviceModelSpec, ): Result</ID>
+    <ID>ReturnCount:ModelStoragePaths.kt$ModelStoragePaths$fun resolveExistingFile( modelDir: File, spec: OnDeviceModelSpec, ): File?</ID>
+    <ID>ReturnCount:ModelStoragePaths.kt$ModelStoragePaths$fun sanitizeImportFilename(rawName: String): String?</ID>
+    <ID>ReturnCount:NetworkErrorFormatter.kt$NetworkErrorFormatter$fun toUserMessage(error: Throwable?): String</ID>
+    <ID>ReturnCount:SettingsRepository.kt$SettingsRepository$private fun readCredentialSnapshot(): CredentialSnapshotResult</ID>
+    <ID>ReturnCount:SettingsRepository.kt$SettingsRepository$private fun storeSecretsAndStrip(config: LLMConfig): CredentialStripResult</ID>
+    <ID>ReturnCount:SettingsRepositoryProviderCredentialsTest.kt$SettingsRepositoryProviderCredentialsTest.InMemoryProviderCredentialStore$private fun mutationFailureResult(): CredentialStoreResult&lt;Unit&gt;?</ID>
+    <ID>ReturnCount:UrlUtils.kt$UrlUtils$private fun normalize(url: String?): String</ID>
+    <ID>SwallowedException:DeviceStateProvider.kt$DeviceStateProvider$e: Exception</ID>
+    <ID>SwallowedException:GemmaProvider.kt$GemmaProvider$e: Exception</ID>
+    <ID>SwallowedException:GemmaProvider.kt$GemmaProvider$jsonEx: Exception</ID>
+    <ID>SwallowedException:IntentClassifier.kt$IntentClassifier$e: Exception</ID>
+    <ID>SwallowedException:LiteRTLMProvider.kt$LiteRTLMProvider$e: Exception</ID>
+    <ID>SwallowedException:LiteRTLMProvider.kt$LiteRTLMProvider$e: LinkageError</ID>
+    <ID>SwallowedException:ModelFetcher.kt$ModelFetcher$e: JSONException</ID>
+    <ID>ThrowsCount:LiteRTLMProvider.kt$LiteRTLMProvider$@Synchronized private fun invokeLiteRTInference( modelPath: String, spec: OnDeviceModelSpec, prompt: String, maxTokens: Int, temperature: Float, ): String</ID>
+    <ID>ThrowsCount:ModelDownloadWorker.kt$ModelDownloadWorker$private suspend fun copyResponse( input: java.io.InputStream, output: FileOutputStream, initialBytes: Long, expectedSize: Long, modelId: String, )</ID>
+    <ID>ThrowsCount:ModelFetcher.kt$ModelFetcher$private fun getJson( url: String, headers: Map&lt;String, String&gt;, ): JSONObject</ID>
+    <ID>TooGenericExceptionCaught:ActionDispatcher.kt$ActionDispatcher$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ClaudeProvider.kt$ClaudeProvider$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DeviceStateProvider.kt$DeviceStateProvider$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:GemmaProvider.kt$GemmaProvider$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:GemmaProvider.kt$GemmaProvider$jsonEx: Exception</ID>
+    <ID>TooGenericExceptionCaught:HybridOnDeviceProvider.kt$HybridOnDeviceProvider$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:HybridOnDeviceProvider.kt$HybridOnDeviceProvider$fallbackEx: Exception</ID>
+    <ID>TooGenericExceptionCaught:IntentClassifier.kt$IntentClassifier$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:LLMProviderFactory.kt$WrappedLLMProvider$throwable: Throwable</ID>
+    <ID>TooGenericExceptionCaught:LiteRTLMProvider.kt$LiteRTLMProvider$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:LiteRTLMProvider.kt$LiteRTLMProvider$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:LiteRtCompatibility.kt$LiteRtCompatibility$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ModelDownloadWorker.kt$ModelDownloadWorker$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:ModelFetcher.kt$ModelFetcher$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:OllamaProvider.kt$OllamaProvider$e: Exception</ID>
+    <ID>TooManyFunctions:ActionSchema.kt$ActionSchema</ID>
+    <ID>TooManyFunctions:AliasResolver.kt$AliasResolver</ID>
+    <ID>TooManyFunctions:DeviceStateProvider.kt$DeviceStateProvider</ID>
+    <ID>TooManyFunctions:GemmaProvider.kt$GemmaProvider : LLMProvider</ID>
+    <ID>TooManyFunctions:LLMError.kt$LLMErrorMapper</ID>
+    <ID>TooManyFunctions:LiteRTLMProvider.kt$LiteRTLMProvider : LLMProvider</ID>
+    <ID>TooManyFunctions:ModelArtifactIntegrity.kt$ModelArtifactVerifier</ID>
+    <ID>TooManyFunctions:ModelDownloadWorker.kt$ModelDownloadWorker : CoroutineWorker</ID>
+    <ID>TooManyFunctions:NotificationDao.kt$NotificationDao</ID>
+    <ID>TooManyFunctions:SettingsRepository.kt$SettingsRepository</ID>
+    <ID>UnusedParameter:SystemPrompts.kt$SystemPrompts$registeredActions: List&lt;String&gt;</ID>
+    <ID>UnusedPrivateMember:GemmaProvider.kt$GemmaProvider$private fun getActiveModelName(): String</ID>
+    <ID>UnusedPrivateProperty:GemmaProvider.kt$GemmaProvider$private val context: Context</ID>
+    <ID>UnusedPrivateProperty:LLMProviderFactory.kt$LLMProviderFactory$private val gemmaProvider: Provider&lt;GemmaProvider&gt;</ID>
+    <ID>UseCheckOrError:ClaudeProvider.kt$ClaudeProvider$throw IllegalStateException("API Key for $name is not set.")</ID>
+    <ID>UseCheckOrError:CohereProvider.kt$CohereProvider$throw IllegalStateException("API Key for $name is not set.")</ID>
+    <ID>UseCheckOrError:CopilotProvider.kt$CopilotProvider$throw IllegalStateException("Copilot server URL is not configured. Set it in Settings.")</ID>
+    <ID>UseCheckOrError:DeepSeekProvider.kt$DeepSeekProvider$throw IllegalStateException("API Key for $name is not set.")</ID>
+    <ID>UseCheckOrError:GeminiProvider.kt$GeminiProvider$throw IllegalStateException("API Key for $name is not set.")</ID>
+    <ID>UseCheckOrError:GemmaProvider.kt$GemmaProvider$throw IllegalStateException("On-device model is downloading or not installed. Please try again later.")</ID>
+    <ID>UseCheckOrError:GemmaProvider.kt$GemmaProvider$throw IllegalStateException("This device does not support Google AI Core. Try selecting a different model.")</ID>
+    <ID>UseCheckOrError:GroqProvider.kt$GroqProvider$throw IllegalStateException("API Key for $name is not set.")</ID>
+    <ID>UseCheckOrError:LiteRTLMProvider.kt$LiteRTLMProvider$throw IllegalStateException("No LiteRT-LM models registered in OnDeviceModelRegistry")</ID>
+    <ID>UseCheckOrError:MistralProvider.kt$MistralProvider$throw IllegalStateException("API Key for $name is not set.")</ID>
+    <ID>UseCheckOrError:ModelDownloadWorker.kt$ModelDownloadWorker$throw IllegalStateException("Downloaded payload exceeded its published size")</ID>
+    <ID>UseCheckOrError:OllamaProvider.kt$OllamaProvider$throw IllegalStateException("Ollama server URL is not configured. Set it in Settings.")</ID>
+    <ID>UseCheckOrError:OpenAIProvider.kt$OpenAIProvider$throw IllegalStateException("API Key for $name is not set.")</ID>
+    <ID>UseCheckOrError:OpenRouterProvider.kt$OpenRouterProvider$throw IllegalStateException("API Key for $name is not set.")</ID>
+    <ID>UseCheckOrError:TogetherAIProvider.kt$TogetherAIProvider$throw IllegalStateException("API Key for $name is not set.")</ID>
+  </CurrentIssues>
+</SmellBaseline>
