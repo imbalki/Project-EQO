@@ -1,0 +1,39 @@
+// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/core/agent/NeedsInputParamKeyTest.kt
+package ai.eqo.core.agent
+
+import ai.eqo.actions.base.ActionResult
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class NeedsInputParamKeyTest {
+    @Test
+    fun `metadata param is preferred`() {
+        val needsInput =
+            ActionResult.NeedsInput(
+                question = "I need the message to complete this.",
+                metadata = mapOf("param" to "message"),
+            )
+
+        assertEquals("message", paramKeyForNeedsInput(needsInput, "SEND_SMS"))
+    }
+
+    @Test
+    fun `communication number prompt without metadata updates contact`() {
+        val needsInput =
+            ActionResult.NeedsInput(
+                question = "I couldn't find 'dad'. What's their phone number?",
+            )
+
+        assertEquals("contact", paramKeyForNeedsInput(needsInput, "SEND_SMS"))
+    }
+
+    @Test
+    fun `non communication prompt without metadata falls back to value`() {
+        val needsInput =
+            ActionResult.NeedsInput(
+                question = "What value should I use?",
+            )
+
+        assertEquals("value", paramKeyForNeedsInput(needsInput, "SET_VOLUME"))
+    }
+}

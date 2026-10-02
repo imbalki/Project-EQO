@@ -349,7 +349,7 @@
     <ID>ReturnCount:IntentClassifier.kt$IntentClassifier$fun classifyComplexity(query: String): QueryComplexity</ID>
     <ID>ReturnCount:LLMConfig.kt$fun LLMConfig.resolveClaudeModelOrNull(selected: String): String?</ID>
     <ID>ReturnCount:LLMError.kt$LLMErrorMapper$private fun parseRetryAfter(value: String?): Long?</ID>
-    <ID>ReturnCount:LLMProviderFactory.kt$WrappedLLMProvider$private fun shouldRetry( request: LLMRequest, failure: com.opendroid.ai.core.llm.error.LLMException, attempt: Int, startedAt: Long, proposedDelay: Long, ): Boolean</ID>
+    <ID>ReturnCount:LLMProviderFactory.kt$WrappedLLMProvider$private fun shouldRetry( request: LLMRequest, failure: ai.eqo.core.llm.error.LLMException, attempt: Int, startedAt: Long, proposedDelay: Long, ): Boolean</ID>
     <ID>ReturnCount:LiteRTLMProvider.kt$LiteRTLMProvider$fun isModelDownloaded(modelId: String): Boolean</ID>
     <ID>ReturnCount:LiteRtCompatibility.kt$LiteRtCompatibility$internal fun isBackendIncompatibility(error: Throwable): Boolean</ID>
     <ID>ReturnCount:ModelArtifactIntegrity.kt$ModelArtifactInstaller$fun installManagedDownload( source: File, target: File, manifestFile: File, spec: OnDeviceModelSpec, verifyFormat: (File) -&gt; Unit, ): ArtifactVerificationResult</ID>

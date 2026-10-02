@@ -8,4 +8,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/eqo_label" />
+
+    <Button
+        android:id="@+id/notices_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/notices_button" />
 </LinearLayout>

@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.opendroid.ai.core.security"
+    namespace = "ai.eqo.core.security"
     compileSdk = 36
 
     defaultConfig {

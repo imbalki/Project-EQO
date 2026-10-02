@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="eqo_label">EQO</string>
+    <string name="notices_button">Open-source notices</string>
+    <string name="notices_title">Legal / open-source notices</string>
+    <string name="notices_body">EQO is built on open-source software.
+Upstream names and their notices appear here and in the app NOTICE file: OpenDroid (Apache-2.0, OpenDroid Contributors), ClosePaw (Apache-2.0, ClosePaw Authors + NOTICE content), Shizuku (Apache-2.0, RikkaApps, with upstream naming terms) and Shizuku-API (MIT, RikkaW).</string>
 </resources>

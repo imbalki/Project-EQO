@@ -1,0 +1,48 @@
+// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/models/AutoMode.kt
+package ai.eqo.data.models
+
+import kotlinx.serialization.Serializable
+
+/**
+ * Plan auto-approval mode. AUTO approves a plan only when every step's action
+ * is in the granted allowlist and none is flagged neverAutoApprove; YOLO
+ * still requires confirmation for actions flagged neverAutoApprove.
+ */
+@Serializable
+enum class AutoMode {
+    OFF,
+    AUTO,
+    YOLO,
+    ;
+
+    companion object {
+        /**
+         * Allowlist seeded on first run: read-only or reversible on-device
+         * actions with no external side effects. Connectivity toggles are
+         * deliberately excluded — reversible, but can strand the device
+         * offline mid-plan.
+         */
+        val DEFAULT_GRANTS: Set<String> =
+            setOf(
+                // INFORMATION
+                "WEB_SEARCH",
+                "GET_WEATHER",
+                "GET_NEWS",
+                "CALCULATE",
+                "TRANSLATE",
+                "DEFINE_WORD",
+                "CONVERT_UNITS",
+                "CURRENCY_CONVERT",
+                "CHECK_STOCK",
+                "SUMMARIZE_URL",
+                "FACT_CHECK",
+                // Reversible SYSTEM
+                "TOGGLE_FLASHLIGHT",
+                "TOGGLE_DND",
+                "SET_BRIGHTNESS",
+                "SET_VOLUME",
+                "SET_RINGER_MODE",
+                "GET_SYSTEM_INFO",
+            )
+    }
+}

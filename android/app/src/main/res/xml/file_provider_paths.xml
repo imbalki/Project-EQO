@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TASK-005: FileProvider path config; authority ai.eqo.app.fileprovider (UF-10).
+     EQO shares EQO-owned files only (diagnostics, exports). Share code must call
+     FileProvider.getUriForFile(context, "ai.eqo.app.fileprovider", file). -->
+<paths>
+    <files-path name="files" path="." />
+</paths>

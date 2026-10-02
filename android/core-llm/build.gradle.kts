@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.opendroid.ai.core.llm"
+    namespace = "ai.eqo.core.llm"
     compileSdk = 36
 
     defaultConfig {

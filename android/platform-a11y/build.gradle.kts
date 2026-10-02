@@ -8,9 +8,9 @@ plugins {
 }
 
 android {
-    // Namespace matches the moved code's `import com.opendroid.ai.R` (R handling,
+    // Namespace matches the moved code's `import ai.eqo.R` (R handling,
     // TASK-004 extraction map decision 8), so no moved file changes for resources.
-    namespace = "com.opendroid.ai"
+    namespace = "ai.eqo"
     compileSdk = 36
 
     defaultConfig {

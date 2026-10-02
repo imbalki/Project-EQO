@@ -37,5 +37,19 @@ kotlin {
 }
 
 dependencies {
+    // androidx.core for androidx.core.content.FileProvider in AndroidManifest.xml
+    // (authority ai.eqo.app.fileprovider); lint's MissingClass check flagged it (#10).
+    implementation(libs.androidx.core.ktx)
     testImplementation(libs.junit)
+}
+
+// TASK-005: MainActivity's deep-link unit test touches android.net Uri/Intent through
+// the AlertDialog/Intent companion helpers; unmocked framework calls must return
+// defaults like the upstream app/build.gradle testOptions (#104).
+android {
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
 }

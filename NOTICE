@@ -1,0 +1,136 @@
+# EQO — NOTICE and third-party attribution
+
+EQO incorporates code and design from the third-party projects listed below. The
+upstream names appear only here and in the in-app Legal / open-source notices
+screen; every other user-visible surface is branded EQO.
+
+| Project | Role in EQO | License | Upstream commit inspected |
+|---|---|---|---|
+| OpenDroid (yashab-cyber/opendroid) | base app: agent loop, LLM providers, model download | Apache-2.0 ("OpenDroid Contributors") | 6ff5a061755b597b0558fed1f565587837ed4d51 |
+| ClosePaw (imoonkey/closepaw) | donor: CDP / ADB pairing / virtual display designs | Apache-2.0 ("ClosePaw Authors"); see ClosePaw NOTICE below | 75dae265 |
+| Shizuku (RikkaApps/Shizuku) | privileged-helper core (TASK-007 fork) | Apache-2.0; subject to upstream naming restrictions (see note) | b844bc49 |
+| Shizuku-API (RikkaApps/Shizuku-API) | helper client/API | MIT (RikkaW) | a27f6e41 |
+
+## Upstream copyright holders
+
+Apache-2.0 requires the copyright notices of the included works to be carried,
+so the upstream copyright holders are named here as the upstream projects name
+themselves:
+
+- OpenDroid (yashab-cyber/opendroid), Apache-2.0: "OpenDroid Contributors".
+- ClosePaw (imoonkey/closepaw), Apache-2.0: "ClosePaw Authors" ("Copyright 2026
+  ClosePaw Authors", per the ClosePaw NOTICE quoted verbatim below).
+- Shizuku (RikkaApps/Shizuku), Apache-2.0: RikkaApps.
+- Shizuku-API (RikkaApps/Shizuku-API), MIT: RikkaW.
+
+## License texts
+
+Full license texts are shipped alongside this file: `LICENSES/Apache-2.0.txt`
+(the Apache License, Version 2.0) and `LICENSES/MIT.txt` (the MIT License), the
+canonical SPDX license-list texts. EQO's own code is distributed under the
+license declared in the repository root.
+
+## Note on Shizuku naming restrictions
+
+Shizuku's README forbids derivative use of its name, application id, permission
+strings and icons. EQO therefore renames the application id and the
+`moe.shizuku.manager.permission.*` strings in lockstep (TASK-007, D-004 as
+corrected) and keeps Shizuku attribution in this file and the in-app notices
+screen. Trademark interpretation of those naming terms requires the owner's
+sign-off before any public distribution; a private study build is not blocked
+by it (FEASIBILITY-REPORT.md §6).
+
+## ClosePaw NOTICE file (preserved verbatim)
+
+TASK-004/005 extracted no ClosePaw source into EQO yet (the ClosePaw donor code
+lands in later Phase One tasks - CDP, ADB pairing, virtual display). Per the lead
+decision on review round 1, ClosePaw's own NOTICE content is included verbatim
+now (not deferred), and stays as attribution when those tasks import ClosePaw
+files.
+
+Origin of the quoted text: `imoonkey/closepaw` repository-root `NOTICE`, read
+read-only through the GitHub API on 2026-10-03 at commit
+`75dae2653f5a6b25d5df51ee7008b0f830de1536` (git blob
+`0b3ad2e23bda50f2fe2717fbe9d7cb20e88344fa`, 3042 bytes, sha256
+`793112e399f673e9fe244b5ddb78fc8d51c5f737e9ecabe04622b41ada47384d`). The block
+between the markers below is byte-identical to that file.
+
+--- begin verbatim ClosePaw NOTICE ---
+ClosePaw
+Copyright 2026 ClosePaw Authors
+
+This product includes software developed by The ClosePaw Authors,
+licensed under the Apache License, Version 2.0 (see LICENSE).
+
+================================================================================
+Third-party software
+================================================================================
+
+A complete, machine-generated inventory of every runtime dependency and its
+license is shipped with the app and surfaced in-app under
+Settings -> Open Source Licenses. The same data is produced at build time by:
+
+    ./gradlew :app:licenseReleaseReport
+
+The report is written to:
+    app/build/reports/licenses/licenseReleaseReport.{json,html}
+
+and is also copied into `app/src/main/assets/open_source_licenses.json` for
+runtime display.
+
+The list below is a non-authoritative summary of major third-party components.
+For the authoritative list, consult the generated report.
+
+  * AndroidX, Jetpack Compose, kotlinx-coroutines, kotlinx-serialization
+      Apache License 2.0 -- https://www.apache.org/licenses/LICENSE-2.0
+  * OpenAI Java SDK (com.openai:openai-java)
+      Apache License 2.0
+  * OkHttp (com.squareup.okhttp3:okhttp)
+      Apache License 2.0
+  * Shizuku API/Provider (dev.rikka.shizuku)
+      Apache License 2.0
+  * HiddenApiBypass (org.lsposed.hiddenapibypass)
+      Apache License 2.0
+  * BouncyCastle (org.bouncycastle:bcpkix-jdk18on, bcprov-jdk18on)
+      Bouncy Castle Licence (MIT-style) -- https://www.bouncycastle.org/licence.html
+  * Conscrypt (org.conscrypt:conscrypt-android)
+      Apache License 2.0
+  * SnakeYAML (org.yaml:snakeyaml)
+      Apache License 2.0
+  * EdDSA-Java (net.i2p.crypto:eddsa)
+      CC0 1.0 Universal (Public Domain Dedication)
+  * Lucide Icons for Compose Multiplatform (com.composables:icons-lucide-cmp)
+      ISC License
+
+================================================================================
+LiquidAI LEAP SDK -- proprietary
+================================================================================
+
+ClosePaw embeds `ai.liquid.leap:leap-sdk` (version 0.9.2) for on-device LLM
+inference. The LEAP SDK is **not open source**. It is distributed under the
+LiquidAI "Leap Terms of Use", a proprietary developer license:
+
+    https://leap.liquid.ai/terms
+    POM-declared license: "Leap Terms of Use"
+
+Implications for downstream users of this repository:
+
+  1. The LEAP SDK binary is fetched from Maven Central but cannot be
+     redistributed under Apache 2.0; it remains governed by the LEAP terms.
+  2. Anyone building or shipping ClosePaw inherits LiquidAI's terms with
+     respect to the LEAP component. Review the linked terms before
+     redistributing builds that include this dependency.
+  3. To produce a fully Apache-2.0 distribution, remove the
+     `ai.liquid.leap:leap-sdk` dependency in `app/build.gradle.kts` and the
+     local-LLM backend code paths that depend on it.
+
+This NOTICE file is part of the Apache 2.0 attribution required by Section 4(d)
+of the License. Keep it intact in any redistribution.
+--- end verbatim ClosePaw NOTICE ---
+
+EQO note (not part of the upstream text): the "LiquidAI LEAP SDK" section above
+describes a proprietary dependency of ClosePaw. EQO does not use that SDK - the
+Leap SDK is excluded from EQO by ADR-0003/D-007 and scripts/check-branding.sh
+fails the build on any Leap SDK reference in the android sources. The passage is
+kept solely as upstream attribution, per the ClosePaw NOTICE's own instruction to
+keep it intact.

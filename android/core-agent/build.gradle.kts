@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.opendroid.ai.core.agent"
+    namespace = "ai.eqo.core.agent"
     compileSdk = 36
 
     defaultConfig {

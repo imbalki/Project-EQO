@@ -1,0 +1,135 @@
+// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/ConnectionTest.kt
+package ai.eqo.core.llm
+
+import ai.eqo.core.llm.error.LLMError
+import ai.eqo.core.llm.error.LLMErrorMapper
+import ai.eqo.core.llm.error.LLMException
+import ai.eqo.data.models.LLMConfig
+import ai.eqo.data.models.selectedModelFor
+
+/**
+ * Typed connection-test outcomes shared by Settings and Benchmark.
+ * Latency is recorded only for successful responses — never as a failure sentinel.
+ */
+sealed class ConnectionTestState {
+    data object Idle : ConnectionTestState()
+
+    data class Testing(
+        val provider: String,
+        val index: Int = 1,
+        val total: Int = 1,
+    ) : ConnectionTestState()
+
+    data class Connected(
+        val provider: String,
+        val model: String,
+        val latencyMs: Long,
+        val testedAtMillis: Long,
+    ) : ConnectionTestState()
+
+    data class Failed(
+        val provider: String,
+        val model: String,
+        val error: LLMError,
+        val status: Int? = null,
+        val retryAfterMillis: Long? = null,
+        val testedAtMillis: Long,
+    ) : ConnectionTestState()
+
+    data class ConfigMissing(
+        val provider: String,
+        val reason: LLMError,
+        val testedAtMillis: Long,
+    ) : ConnectionTestState()
+}
+
+object ConnectionTestPlanner {
+    private val onDeviceCanonicalNames =
+        setOf(
+            ProviderCatalog.ON_DEVICE,
+            "LiteRT-LM (On-device)",
+        )
+
+    fun cloudProviders(): List<String> =
+        ProviderCatalog.providers
+            .filter { spec -> spec.canonicalName !in onDeviceCanonicalNames }
+            .map { spec -> spec.displayName }
+
+    fun configuredProviders(config: LLMConfig): List<String> =
+        cloudProviders().filter { provider -> configurationGap(config, provider) == null }
+
+    /**
+     * Returns a local configuration failure without contacting the network, or
+     * null when the provider snapshot is complete enough to probe.
+     */
+    fun configurationGap(
+        config: LLMConfig,
+        providerName: String,
+    ): ConnectionTestState.ConfigMissing? {
+        val provider = ProviderCatalog.canonicalName(providerName)
+        val model = config.selectedModelFor(provider)
+        when (provider) {
+            "Ollama" ->
+                if (config.ollamaUrl.isBlank()) {
+                    return ConnectionTestState.ConfigMissing(provider, LLMError.RequestInvalid, 0L)
+                }
+            "Copilot API" ->
+                if (config.copilotUrl.isBlank()) {
+                    return ConnectionTestState.ConfigMissing(provider, LLMError.RequestInvalid, 0L)
+                }
+            "Custom OpenAI Compatible" -> {
+                if (config.customEndpoints[provider].isNullOrBlank()) {
+                    return ConnectionTestState.ConfigMissing(provider, LLMError.RequestInvalid, 0L)
+                }
+                if (config.apiKeys[provider].isNullOrBlank()) {
+                    return ConnectionTestState.ConfigMissing(provider, LLMError.AuthMissing, 0L)
+                }
+            }
+            else ->
+                if (ProviderCatalog.requiresApiKey(provider) &&
+                    !(provider == "Google Gemini" && model == "gemini-nano") &&
+                    config.apiKeys[provider].isNullOrBlank()
+                ) {
+                    return ConnectionTestState.ConfigMissing(provider, LLMError.AuthMissing, 0L)
+                }
+        }
+        return null
+    }
+
+    fun fromException(
+        provider: String,
+        model: String,
+        throwable: Throwable,
+        testedAtMillis: Long,
+    ): ConnectionTestState {
+        val failure =
+            throwable as? LLMException
+                ?: LLMErrorMapper.fromThrowable(provider, model, throwable)
+        return ConnectionTestState.Failed(
+            provider = failure.provider,
+            model = failure.model,
+            error = failure.error,
+            status = failure.status,
+            retryAfterMillis = failure.retryAfterMillis,
+            testedAtMillis = testedAtMillis,
+        )
+    }
+
+    fun success(
+        provider: String,
+        model: String,
+        latencyMs: Long,
+        testedAtMillis: Long,
+    ): ConnectionTestState.Connected =
+        ConnectionTestState.Connected(
+            provider = ProviderCatalog.canonicalName(provider),
+            model = model,
+            latencyMs = latencyMs,
+            testedAtMillis = testedAtMillis,
+        )
+
+    fun stamp(
+        state: ConnectionTestState.ConfigMissing,
+        testedAtMillis: Long,
+    ): ConnectionTestState.ConfigMissing = state.copy(testedAtMillis = testedAtMillis)
+}

@@ -15,6 +15,16 @@ jobs:
       - name: Repo checks
         run: scripts/check.sh
 
+  android-branding:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      # TASK-005: the branding gate runs as its own CI job (Gate 8, DEV-04/DEV-16)
+      # in addition to the repo-checks run below, so a failure is visible even
+      # when repo-checks is skipped.
+      - name: Branding gate
+        run: scripts/check-branding.sh
+
   android:
     runs-on: ubuntu-latest
     defaults:

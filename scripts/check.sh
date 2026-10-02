@@ -10,4 +10,8 @@ fi
 
 echo "== Shell scripts =="
 for f in scripts/*.sh; do bash -n "$f"; done
+
+# TASK-005: branding gate is a repo check (DEV-04/DEV-16).
+scripts/check-branding.sh
+
 echo "OK"
