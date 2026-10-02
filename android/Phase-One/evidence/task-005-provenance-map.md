@@ -1,12 +1,21 @@
 # TASK-005 per-file provenance map
 
-Covers every Kotlin file in `android/` (`git ls-files android/` .kt = 160 files after the TASK-005 rename and the review round 1 test addition), not only the 102 TASK-004 move files.
+Covers every Kotlin file in `android/` (`git ls-files android/` .kt = 166 files after the TASK-005 rename, the review round 1 test addition, and the TASK-014 rebase additions), not only the 102 TASK-004 move files.
 Upstream facts come from the Origin headers and `task-004-tools/move-manifest.json`
 (origin commit `6ff5a061755b597b0558fed1f565587837ed4d51`); verify before editing.
 
 Kinds: **MOVE** (133) = moved verbatim, carries `// Origin:` header (verify-move.py 102/102
 byte-identical besides the header + 3 run-2 relocations); **ADAPTER** (24) = EQO-authored
-minimal interface standing in for quarantined upstream code; **EQO-NEW** (3) = EQO-authored app skeleton.
+minimal interface standing in for quarantined upstream code; **EQO-NEW** (9) = EQO-authored
+app skeleton and guard tests (3 at TASK-005, 6 added by TASK-014, issue #19).
+
+## TASK-014 additions (issue #19, rebase onto TASK-005)
+
+The six TASK-014 SMS guard files (SmsComposePolicy + five guard tests) are EQO-authored,
+have no upstream counterpart, and are recorded as **EQO-NEW** rows below with provenance
+`imbalki/project-eqo (EQO-authored, TASK-014 issue #19)`. They were authored under the
+pre-rename `com.opendroid.ai` packages and re-homed to `ai.eqo` by the TASK-014 rebase;
+no content changed beyond the package rename.
 
 ## Review round 1 (lead R1/R2 corrections)
 
@@ -44,6 +53,7 @@ line-by-line semantic equivalence of the adapters (that is TASK-004's verify-mov
 |---|---|---|---|---|
 | :app | `android/app/src/main/kotlin/ai/eqo/MainActivity.kt` | EQO-NEW | `ai.eqo` | imbalki/project-eqo (EQO-authored) |
 | :app | `android/app/src/test/kotlin/ai/eqo/MainActivityTest.kt` | EQO-NEW | `ai.eqo` | imbalki/project-eqo (EQO-authored) |
+| :app | `android/app/src/test/kotlin/ai/eqo/SmsPermissionsManifestTest.kt` | EQO-NEW | `ai.eqo` | imbalki/project-eqo (EQO-authored, TASK-014 issue #19) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/ActionSequenceExecutor.kt` | MOVE | `ai.eqo.core.agent` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/main/java/com/opendroid/ai/core/agent/ActionSequenceExecutor.kt`) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AutoApprovalPolicy.kt` | MOVE | `ai.eqo.core.agent` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/main/java/com/opendroid/ai/core/agent/AutoApprovalPolicy.kt`) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AutoReplyEngine.kt` | MOVE | `ai.eqo.core.agent` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/main/java/com/opendroid/ai/core/agent/AutoReplyEngine.kt`) |
@@ -52,6 +62,7 @@ line-by-line semantic equivalence of the adapters (that is TASK-004's verify-mov
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/PlanValidator.kt` | MOVE | `ai.eqo.core.agent` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/main/java/com/opendroid/ai/core/agent/PlanValidator.kt`) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/ReEvaluationEngine.kt` | MOVE | `ai.eqo.core.agent` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/main/java/com/opendroid/ai/core/agent/ReEvaluationEngine.kt`) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/ReplyDispatcher.kt` | MOVE | `ai.eqo.core.agent` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/main/java/com/opendroid/ai/core/agent/ReplyDispatcher.kt`) |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/SmsComposePolicy.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-014 issue #19) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/service/NotificationListenerBridge.kt` | ADAPTER | `ai.eqo.core.service` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (adapter interface, upstream name kept) (upstream symbol: `com.opendroid.ai.core.service.OpenDroidNotificationListener`) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/crash/CrashLogRedactor.kt` | MOVE | `ai.eqo.core.crash` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/main/java/com/opendroid/ai/core/crash/CrashLogRedactor.kt`) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/memory/ExecutionHistoryPrivacy.kt` | MOVE | `ai.eqo.core.memory` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/main/java/com/opendroid/ai/core/memory/ExecutionHistoryPrivacy.kt`) |
@@ -62,6 +73,9 @@ line-by-line semantic equivalence of the adapters (that is TASK-004's verify-mov
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/data/repository/PlanStore.kt` | ADAPTER | `ai.eqo.data.repository` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (adapter interface, upstream name kept) (upstream symbol: `com.opendroid.ai.data.repository.PlanRepository`) |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionSequenceExecutorTest.kt` | MOVE | `ai.eqo.core.agent` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/test/java/com/opendroid/ai/core/agent/ActionSequenceExecutorTest.kt`) |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/AutoApprovalPolicyTest.kt` | MOVE | `ai.eqo.core.agent` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/test/java/com/opendroid/ai/core/agent/AutoApprovalPolicyTest.kt`) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ReplyDispatcherSmsComposeTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-014 issue #19) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/SmsComposePolicyTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-014 issue #19) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/SmsTermuxToolHiddenTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-014 issue #19) |
 | :core-llm | `android/core-llm/src/main/java/ai/eqo/NotificationTapTarget.kt` | ADAPTER | `ai.eqo` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (adapter interface, upstream name kept) (upstream symbol: `com.opendroid.ai.MainActivity`) |
 | :core-llm | `android/core-llm/src/main/java/ai/eqo/actions/ActionAutoMapper.kt` | ADAPTER | `ai.eqo.actions` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (adapter interface, upstream name kept) (upstream symbol: `com.opendroid.ai.actions.ActionAutoMapper`) |
 | :core-llm | `android/core-llm/src/main/java/ai/eqo/actions/ActionDispatcher.kt` | MOVE | `ai.eqo.actions` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/main/java/com/opendroid/ai/actions/ActionDispatcher.kt`) |
@@ -172,6 +186,7 @@ line-by-line semantic equivalence of the adapters (that is TASK-004's verify-mov
 | :core-llm | `android/core-llm/src/test/java/ai/eqo/core/llm/WrappedLLMProviderTest.kt` | MOVE | `ai.eqo.core.llm` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/test/java/com/opendroid/ai/core/llm/WrappedLLMProviderTest.kt`) |
 | :core-llm | `android/core-llm/src/test/java/ai/eqo/core/llm/error/LLMErrorMapperTest.kt` | MOVE | `ai.eqo.core.llm.error` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/test/java/com/opendroid/ai/core/llm/error/LLMErrorMapperTest.kt`) |
 | :core-llm | `android/core-llm/src/test/java/ai/eqo/core/llm/error/ProviderErrorDetailTest.kt` | MOVE | `ai.eqo.core.llm.error` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/test/java/com/opendroid/ai/core/llm/error/ProviderErrorDetailTest.kt`) |
+| :core-llm | `android/core-llm/src/test/java/ai/eqo/core/llm/prompts/SmsComposePromptContractTest.kt` | EQO-NEW | `ai.eqo.core.llm.prompts` | imbalki/project-eqo (EQO-authored, TASK-014 issue #19) |
 | :core-llm | `android/core-llm/src/test/java/ai/eqo/core/llm/providers/CustomOpenAIProviderNetworkTest.kt` | MOVE | `ai.eqo.core.llm.providers` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/test/java/com/opendroid/ai/core/llm/providers/CustomOpenAIProviderNetworkTest.kt`) |
 | :core-llm | `android/core-llm/src/test/java/ai/eqo/core/util/DeviceCapabilitiesTest.kt` | MOVE | `ai.eqo.core.util` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/test/java/com/opendroid/ai/core/util/DeviceCapabilitiesTest.kt`) |
 | :core-llm | `android/core-llm/src/test/java/ai/eqo/core/util/DurationParserTest.kt` | MOVE | `ai.eqo.core.util` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/test/java/com/opendroid/ai/core/util/DurationParserTest.kt`) |

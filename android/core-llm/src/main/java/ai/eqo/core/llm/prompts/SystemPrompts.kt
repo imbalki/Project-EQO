@@ -122,7 +122,7 @@ $schema
             - SEND_WHATSAPP: Opens WhatsApp, navigates to contact, and sends the message — all in one step.
             - SEND_TELEGRAM: Opens Telegram, navigates to contact/handle, and sends the message — all in one step.
             - MAKE_CALL: Opens dialer/places call directly.
-            - SEND_SMS: Sends SMS or opens SMS compose directly.
+            - SEND_SMS: Opens the SMS compose screen with a pre-filled draft; the user reviews and taps Send.
             - SEND_EMAIL: Opens a pre-filled email draft directly; the user must review and tap Send, and the app must not claim it was sent.
             - BOOK_UBER, BOOK_OLA: Opens the respective app directly.
             - PLAY_MUSIC, PLAY_YOUTUBE: Opens the media app directly.
@@ -248,7 +248,7 @@ $schema
             - SET_BRIGHTNESS: Implemented via Settings.System API
             - SET_VOLUME: Implemented via AudioManager API
             - SEND_WHATSAPP: Implemented via deep link + accessibility
-            - SEND_SMS: Implemented via SmsManager + messaging app fallback
+            - SEND_SMS: Implemented via the SMS compose intent (smsto:); the messaging app opens with a pre-filled draft and only the user taps Send.
             - OPEN_APP: Implemented via PackageManager
             - ANALYZE_SCREENSHOT: Implemented via Accessibility + Vision LLM
             - READ_AND_REMEMBER_SCREEN: Implemented via Vision Engine + Semantic Memory / Notes

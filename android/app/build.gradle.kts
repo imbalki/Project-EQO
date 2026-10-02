@@ -41,6 +41,10 @@ dependencies {
     // (authority ai.eqo.app.fileprovider); lint's MissingClass check flagged it (#10).
     implementation(libs.androidx.core.ktx)
     testImplementation(libs.junit)
+    // TASK-014: manifest-narrowing guard tests (REQ-SMS-03, G-05) need a merged
+    // manifest, which plain JUnit cannot see — Robolectric resolves it.
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }
 
 // TASK-005: MainActivity's deep-link unit test touches android.net Uri/Intent through

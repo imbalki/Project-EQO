@@ -432,7 +432,9 @@ object ActionSchema {
             ),
             ActionDefinition(
                 name = "SEND_SMS",
-                description = "Sends an SMS text message",
+                description =
+                    "Opens the messaging app with an SMS draft pre-filled for the user to review and send. " +
+                        "The user must confirm recipient and content by tapping Send; EQO never sends directly.",
                 params =
                     listOf(
                         ParamDefinition("contact", ParamType.STRING, true, "Contact name or number"),

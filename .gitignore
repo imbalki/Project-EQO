@@ -25,5 +25,8 @@ Thumbs.db
 .vscode/
 *.iml
 
+# Kotlin
+.kotlin/
+
 # Agent scratch
 .claude/settings.local.json

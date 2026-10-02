@@ -1,14 +1,12 @@
 // Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/ReplyDispatcher.kt
 package ai.eqo.core.agent
 
-import ai.eqo.core.util.DeviceCapabilities
 import android.app.PendingIntent
 import android.app.RemoteInput
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.service.notification.StatusBarNotification
-import android.telephony.SmsManager
 import android.util.Log
 import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -70,29 +68,38 @@ class ReplyDispatcher
         }
 
         /**
-         * Send an SMS reply directly using SmsManager.
+         * Compose an SMS draft for the user (TASK-014, issue #19).
+         *
+         * EQO never sends directly: [android.telephony.SmsManager] is not used
+         * anywhere ([SmsComposePolicy.DIRECT_SEND_ALLOWED] is false), the
+         * recipient and content are required before a draft opens, and the
+         * actual send happens only when the user taps Send in their messaging
+         * app. `ACTION_SENDTO` with the `smsto:` scheme opens the default SMS
+         * app in compose mode without any SMS permission.
          */
         fun replyViaSms(
             phoneNumber: String,
             replyText: String,
             context: Context,
         ): Boolean {
-            if (!DeviceCapabilities.canSendSms(context)) {
-                Log.w(TAG, "SMS reply skipped: device has no SMS-capable telephony hardware")
+            if (!SmsComposePolicy.canCompose(phoneNumber, replyText)) {
+                Log.w(TAG, "SMS compose skipped: recipient and content are both required before opening the draft")
                 return false
             }
             return try {
-                val smsManager = context.getSystemService(SmsManager::class.java)
-                if (smsManager != null) {
-                    smsManager.sendTextMessage(phoneNumber, null, replyText, null, null)
-                    Log.d(TAG, "SMS reply sent to $phoneNumber")
-                    true
-                } else {
-                    Log.e(TAG, "SmsManager not available")
-                    false
-                }
+                val smsUri = "smsto:$phoneNumber".toUri()
+                val intent =
+                    Intent(Intent.ACTION_SENDTO, smsUri).apply {
+                        // The user confirms both recipient and content by tapping
+                        // Send in their messaging app; we only pre-fill the draft.
+                        putExtra("sms_body", replyText)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                context.startActivity(intent)
+                Log.d(TAG, "SMS compose opened for $phoneNumber (send left to the user)")
+                true
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to send SMS reply: ${e.message}")
+                Log.e(TAG, "Failed to open SMS compose: ${e.message}")
                 false
             }
         }
