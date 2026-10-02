@@ -1,23 +1,23 @@
 # Accessibility review of the EQO prototype (Warm)
 
-Date: 2026-10-02 (revised after two independent reviews). Subject: `design/prototype.html` (36 screens, 69 documented states). Method: scripted checks run in a browser against the live prototype (render every screen, then measure), the generated copy deck, and two independent reviews by other model families. These are measurements of a **web mockup**, not of a built Android app: they set targets for the Compose build and do not replace testing on devices.
+Date: 2026-10-02 (revised after two independent reviews). Subject: `design/prototype.html` (36 screens, 73 documented states). Method: scripted checks run in a browser against the live prototype (render every screen, then measure), the generated copy deck, and two independent reviews by other model families. These are measurements of a **web mockup**, not of a built Android app: they set targets for the Compose build and do not replace testing on devices.
 
 ## Results (current build)
 
 | Check | Target | Result |
 |---|---|---|
-| Touch target size | 48 dp minimum, **height and width** (Android guidance; WCAG 2.2 target size AA is 24 px) | **148 of 148 controls** are at least 48 dp both ways (narrowest is 49.7 dp) |
-| Accessible names | every control has one | 0 unnamed controls |
+| Touch target size | 48 dp minimum, **height and width** (Android guidance; WCAG 2.2 target size AA is 24 px) | **338 of 338 control measurements** (36 screens plus 25 variant states) are at least 48 dp both ways |
+| Accessible names | every control has one | 0 unnamed controls in any screen or variant |
 | Decorative icons | hidden from screen readers | 0 icons exposed (all `aria-hidden`) |
 | Minimum text size | 12 px or more | 0 text nodes below 12 px, including the take-over and foreground states |
 | Text contrast | 4.5:1 for normal text | **13 of 13 pairs pass** (table below) |
 | Non-text contrast | 3:1 for the borders of inputs and chips | input and chip borders 3.62:1 on white, 3.42:1 on the page background: pass |
 | Large text and layout | no clipped or sideways-scrolling content | 0 overflow cases at 100%, 130% and 160% text left to right, and at 100% and 160% right to left |
-| Fits without scrolling | the long, mismatched scrollbar was a complaint | **36 of 36 screens fit with no scrolling at 100% text** (scrollbars are also restyled slim and warm for larger text) |
+| Fits without scrolling | the long, mismatched scrollbar was a complaint | **36 of 36 screens, and all 25 variant states, fit with no scrolling at 100% text** (scrollbars are also restyled slim and warm for larger text) |
 | Headings | each screen has one | 36 of 36 (Home has an invisible heading) |
-| Status announcements | changes announced | 10 live regions across the screens, including the approval card |
+| Status announcements | changes announced | live regions on every state-changing screen, including the approval card; 0 empty regions |
 | Focus on navigation | focus moves to the new screen's heading | yes (checked) |
-| Behaviour | 31 scripted interaction checks | 31 of 31 pass (pause never auto-resumes, Back on approval denies, recovery buttons return to the failed step, take-over observation is off by default) |
+| Behaviour | 29 scripted interaction checks | 29 of 29 pass (pause never auto-resumes, Back on approval denies, recovery buttons return to the failed step, take-over observation is off by default) |
 
 ### Text contrast pairs (ratio)
 
@@ -48,7 +48,7 @@ The first version of this document overstated two results. Reviewer B (a differe
 5. Focus dropped to the page body after navigation. Screens now move focus to their heading.
 6. Input and chip borders measured about 1.3:1. Strengthened to 3.4 to 3.6:1.
 
-Reviewer A (flow traceability) found that Pause, Stop and Take over lacked the spec's literal wording; they now show "Pause after the current step finishes", "You drive; EQO holds" and "Stop this task completely".
+Reviewer A (flow traceability) found that Pause, Stop and Take over lacked the spec's literal wording; they now show "Pause after the current step finishes", "You drive; EQO holds" and "Stop this task completely". In a second pass Reviewer A found that shortening the copy had weakened binding honesty statements (the model may still see sensitive content, the Android Keystore, "never written to logs", Background mode "not a guarantee", and readiness "and nothing else"); all were restored and are now checked by the interaction script.
 
 ## Gaps and things not tested (be honest about these)
 

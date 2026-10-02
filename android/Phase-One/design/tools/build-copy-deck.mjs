@@ -29,7 +29,7 @@ const EQO = vm.runInContext('EQO', sandbox);
 const VARIANTS = {
   s05: ['401', '429', 'credit', 'model', 'net'],
   s09: ['port', 'conn', 'reboot', 'revoked'],
-  s11: ['ok', 'fail'],
+  s11: ['ok', 'start', 'mixed', 'fail'],
   s13: ['ok', 'fail'],
   s22d: ['denied', 'changed'],
   s25: ['rate', 'adb', 'a11y', 'helper', 'unsure', 'chrome', 'revoked', 'update'],
@@ -44,7 +44,9 @@ const STATES = [
   ['s08', 'first three checks done', (s) => { s.adb = [true, true, true, false, false]; }],
   ['s08', 'connect step', (s) => { s.adb = [true, true, true, true, false]; }],
   ['s08', 'all five checks done', (s) => { s.adb = [true, true, true, true, true]; }],
+  ['s13', 'checking the endpoint', (s) => { s.v.chk = 1; }],
   ['s13', 'Chrome verified', (s) => { s.chromeDebug = true; }],
+  ['s19', 'after a re-check', (s) => { s.v.rechecked = 'Wi-Fi'; }],
   ['s19', 'everything ready', (s) => { s.model = s.a11y = s.helper = true; s.adb.fill(true); s.browser = 'ready'; s.vd = 'ready'; s.sms = 'ready'; }],
   ['s20', 'after the result is confirmed', (s) => { s.v.toast = 'Thanks. Marked as done.'; }],
   ['s21', 'step 3 of 4', (s) => { s.runStep = 2; }],

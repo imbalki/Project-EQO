@@ -7,7 +7,7 @@ Design-only. No app code. Issue #25. The owner chose the **Warm (clay)** identit
 | File | What it is |
 |---|---|
 | `prototype.html` | Clickable prototype: 36 screens across the 14 user flows (UF-01 to UF-14), Warm style, true size (390 dp). Open the file in a browser (Google Fonts load online; it falls back to system fonts offline). |
-| `ux-copy.md` | The UX copy deck, **generated** from the prototype: 69 screen states, including failure variants, action-dependent states and the spoken names for screen readers. Review-only controls are excluded. |
+| `ux-copy.md` | The UX copy deck, **generated** from the prototype: 73 screen states, including failure variants, action-dependent states and the spoken names for screen readers. Review-only controls are excluded. |
 | `accessibility-review.md` | Measured accessibility results, corrections made after independent review, and a plain list of what is not yet tested. |
 | `tools/build-copy-deck.mjs` | Regenerates `ux-copy.md`: `node android/Phase-One/design/tools/build-copy-deck.mjs`. |
 | `identity-options.html`, `identity-v2.html` | The earlier identity explorations (three directions, then the soft Warm/Cool pair), kept for the decision record. |
@@ -24,7 +24,7 @@ Design-only. No app code. Issue #25. The owner chose the **Warm (clay)** identit
 
 - Light, soft surfaces; one warm accent; rounded shapes (Material 3 Expressive direction). No dark panels, no monospace "tech" look.
 - Material type scale at true size: body 14, titles 15 to 16, headlines 22 to 26. Everything scales with the text-size setting.
-- **Short copy.** Copy was edited down by about 16% overall against the first version (setup screens by 30 to 45%); the only increases are where the spec requires more words.
+- **Short copy.** Copy was edited down by about 16% overall against the first version (setup screens by 30 to 45%); the only increases are where the spec requires more words. Shortening must never remove a binding honesty statement (see item 5 below).
 - Explain before asking: every permission screen says why, what EQO can and cannot do, and how to turn it off, before any Android settings screen.
 - Status is always a word plus a symbol. Readiness is per check, never one generic "ready".
 - Every screen fits in the phone without scrolling at 100% text; scrollbars (where text is enlarged) are slim and warm.
@@ -38,7 +38,7 @@ This folder deliberately does not edit `USER-FLOWS.md`. Notes for that follow-up
 2. **S-17 and S-18 do not exist** in `USER-FLOWS.md` (the inventory jumps from S-16 to S-19), and S-27 is used but not listed in the traceability table. The prototype adds S-26 variants and a "draft saved" screen.
 3. **Android 11 floor (ADR-0003):** wireless debugging exists from Android 11, and the S-07 "restricted settings" card applies only to Android 13 and newer. The prototype shows S-07 only when the person says the switch is blocked, and marks the wording as pending device validation.
 4. **Phone-brand menu paths vary.** Step 1 of the helper checks adds a hint ("on some phones: About device > Version"), seen on the owner's Realme device. It still needs a device matrix.
-5. **Wording differences** from the spec's proposed microcopy, made for brevity and an international audience: "toggle" became "switch", "greyed out" became "dimmed", "&" became "and" in places, and an example recipient "Sam" replaces a placeholder. Meanings are unchanged. The spec's literal text is kept where principle 6 binds it (Pause, Stop and Take over).
+5. **Wording differences** from the spec's proposed microcopy, made for brevity and an international audience: shorter sentences throughout; "toggle" became "switch" and "greyed out" became "dimmed"; the example task is "Text Sam I'm on my way"; S-11 uses "tests" with its own count and shortened names (Echo test, Display control, Browser channel); S-13 and S-01 are reworded. The binding statements were checked after shortening and kept: redaction limits that say the model may still see sensitive content, the Android Keystore and "never written to logs", Background mode "not a guarantee", per-check readiness "and nothing else", and the literal Pause, Stop and Take over text (principle 6). Reviewer A found the first shortened version had weakened some of these; they were restored.
 6. **Vocabulary:** the prototype uses the spec's row states (Not set up, Ready, Needs attention). The brief "Checking..." state is not drawn.
 7. **Voice** is not shown on Home because the brief is silent (CF-09).
 

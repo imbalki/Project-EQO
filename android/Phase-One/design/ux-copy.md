@@ -25,9 +25,9 @@ Requirements: REQ-PRIV-03/04. Source: USER-FLOWS UF-01 step 2.
 
 - Before we begin
 - Only what a task needs
-- EQO sends your AI model only what a task needs, and only after you approve screen content. Redaction is best-effort, so some private details may still show.
+- EQO sends your AI model only what a task needs. Screen or browser content is shared only after you approve it. Redaction is best-effort, so the model may still see some sensitive content.
 - Your key stays here
-- Your API key is encrypted on this phone and never written to logs.
+- Your API key is stored encrypted in the Android Keystore and never written to logs.
 - You stay in control
 - EQO asks before anything sensitive. Pause or stop any time.
 - What exactly is sent?
@@ -43,7 +43,7 @@ Requirements: REQ-INS-01, REQ-ADB-12. Source: USER-FLOWS UF-01 step 3, section 1
 - Let's set up EQO
 - Three steps are needed before EQO can run tasks.
 - 0 of 3 required
-- About 10 to 15 min (estimate)
+- About 10 to 15 minutes. This is a rough estimate we will measure and correct.
 - Model
 - Required
 - Not set up
@@ -74,7 +74,7 @@ Requirements: REQ-INS-01, REQ-ADB-12. Source: USER-FLOWS UF-01 step 3, section 1
 - You're all set
 - The required steps are ready. Optional ones can wait.
 - 3 of 3 required
-- About 10 to 15 min (estimate)
+- About 10 to 15 minutes. This is a rough estimate we will measure and correct.
 - Model
 - Required
 - Ready
@@ -105,7 +105,7 @@ Requirements: REQ-INS-01, REQ-ADB-12. Source: USER-FLOWS UF-01 step 3, section 1
 - You're all set
 - The required steps are ready. Optional ones can wait.
 - 3 of 3 required
-- About 10 to 15 min (estimate)
+- About 10 to 15 minutes. This is a rough estimate we will measure and correct.
 - Model
 - Required
 - Ready
@@ -136,7 +136,7 @@ Screen reader names (not visible text): Back; Readiness details; Required steps 
 Requirements: REQ-BYOK-01/02/03, REQ-PRIV-02. Source: USER-FLOWS UF-02.
 
 - Connect your AI model
-- Paste your OpenRouter API key. It stays encrypted on this phone. OpenRouter may charge your account; EQO doesn't.
+- Paste your OpenRouter API key. It's stored encrypted in the Android Keystore and never written to logs. OpenRouter may charge your account; EQO doesn't.
 - OpenRouter API key
 - Test connection
 
@@ -147,7 +147,7 @@ Screen reader names (not visible text): Back; Paste your key
 Requirements: REQ-BYOK-01/02/03, REQ-PRIV-02. Source: USER-FLOWS UF-02.
 
 - Connect your AI model
-- Paste your OpenRouter API key. It stays encrypted on this phone. OpenRouter may charge your account; EQO doesn't.
+- Paste your OpenRouter API key. It's stored encrypted in the Android Keystore and never written to logs. OpenRouter may charge your account; EQO doesn't.
 - OpenRouter API key
 - Checking that EQO can plan and use tools…
 - Testing…
@@ -159,7 +159,7 @@ Screen reader names (not visible text): Back; Paste your key
 Requirements: REQ-BYOK-01/02/03, REQ-PRIV-02. Source: USER-FLOWS UF-02.
 
 - Connect your AI model
-- Paste your OpenRouter API key. It stays encrypted on this phone. OpenRouter may charge your account; EQO doesn't.
+- Paste your OpenRouter API key. It's stored encrypted in the Android Keystore and never written to logs. OpenRouter may charge your account; EQO doesn't.
 - OpenRouter API key
 - Connected to OpenRouter
 - You can change models any time.
@@ -504,6 +504,31 @@ Requirements: REQ-ADB-08/09/10. Source: USER-FLOWS UF-05 steps 1, 3, 4.
 
 Screen reader names (not visible text): Back
 
+### Helper check (S-11) [variant: start]
+
+Requirements: REQ-ADB-08/09/10. Source: USER-FLOWS UF-05 steps 1, 3, 4.
+
+- Helper check
+- Starting the EQO helper…
+
+Screen reader names (not visible text): Back
+
+### Helper check (S-11) [variant: mixed]
+
+Requirements: REQ-ADB-08/09/10. Source: USER-FLOWS UF-05 steps 1, 3, 4.
+
+- Helper check
+- 2 of 3 tests passed. Display control failed.
+- Echo test
+- Passed
+- Display control
+- Failed
+- Browser channel
+- Passed
+- Try again
+
+Screen reader names (not visible text): Back
+
 ### Helper check (S-11) [variant: fail]
 
 Requirements: REQ-ADB-08/09/10. Source: USER-FLOWS UF-05 steps 1, 3, 4.
@@ -526,7 +551,7 @@ Requirements: REQ-CDP-01, REQ-PRIV-03/04. Source: USER-FLOWS UF-06 step 1.
 - EQO can read and use pages in Chrome through Chrome's debugging tools.
 - Please know
 - Page content and EQO's actions go to your AI model.
-- Redaction is best-effort. Private details may still be seen.
+- Redaction is best-effort. The model may still see some sensitive content.
 - EQO uses this only for tasks you start, and only after you agree.
 - I understand
 - Not now
@@ -569,6 +594,18 @@ Requirements: REQ-CDP-02. Source: USER-FLOWS UF-06 step 2.
 
 Screen reader names (not visible text): Back
 
+### Prepare Chrome (S-13) [state: checking the endpoint]
+
+Requirements: REQ-CDP-02. Source: USER-FLOWS UF-06 step 2.
+
+- Prepare Chrome
+- Chrome must allow debugging first. EQO can't change this for you.
+- Steps for your Chrome version: follow the setting shown here, then restart Chrome. (Exact steps pending device testing.)
+- Checking Chrome's debugging endpoint…
+- I restarted Chrome
+
+Screen reader names (not visible text): Back
+
 ### Prepare Chrome (S-13) [state: Chrome verified]
 
 Requirements: REQ-CDP-02. Source: USER-FLOWS UF-06 step 2.
@@ -576,7 +613,7 @@ Requirements: REQ-CDP-02. Source: USER-FLOWS UF-06 step 2.
 - Prepare Chrome
 - Chrome must allow debugging first. EQO can't change this for you.
 - Steps for your Chrome version: follow the setting shown here, then restart Chrome. (Exact steps pending device testing.)
-- Chrome is ready for EQO
+- Endpoint verified
 - Ready
 - Continue
 
@@ -606,7 +643,7 @@ Screen reader names (not visible text): Back
 Requirements: REQ-VD-03. Source: USER-FLOWS UF-07.
 
 - Background mode
-- EQO works on a separate virtual screen while you keep using your phone. It works only with compatible apps, and not with every app.
+- EQO works on a separate virtual screen while you keep using your phone. It works only with compatible apps, while the helper is healthy. It's not a guarantee for every app.
 - Messages
 - Compatible
 - Chrome
@@ -637,7 +674,7 @@ Screen reader names (not visible text): Back
 Requirements: REQ-ADB-10, REQ-CDP-04. Source: USER-FLOWS UF-08.
 
 - Readiness
-- Each check stands alone. Green means exactly that.
+- Each check stands alone. Green means exactly that, and nothing else.
 - Setup
 - Model
 - Not set up
@@ -672,12 +709,53 @@ Requirements: REQ-ADB-10, REQ-CDP-04. Source: USER-FLOWS UF-08.
 
 Screen reader names (not visible text): Back
 
+### Readiness dashboard (S-19) [state: after a re-check]
+
+Requirements: REQ-ADB-10, REQ-CDP-04. Source: USER-FLOWS UF-08.
+
+- Readiness
+- Each check stands alone. Green means exactly that, and nothing else.
+- Setup
+- Model
+- Not set up
+- Screen control service
+- Not set up
+- Helper
+- Developer options
+- Not set up
+- Wi-Fi
+- Not set up
+- Wireless debugging
+- Not set up
+- Paired (pairing port)
+- Not set up
+- Connected (connection port)
+- Not set up
+- Helper started
+- Not set up
+- Helper authorized
+- Not set up
+- Helper healthy
+- Not set up
+- Echo test
+- Not set up
+- Optional
+- Browser: read, click, script
+- Not set up
+- Display control test
+- Not set up
+- Messages (SMS)
+- Not set up
+- Wi-Fi: checked just now.
+
+Screen reader names (not visible text): Back
+
 ### Readiness dashboard (S-19) [state: everything ready]
 
 Requirements: REQ-ADB-10, REQ-CDP-04. Source: USER-FLOWS UF-08.
 
 - Readiness
-- Each check stands alone. Green means exactly that.
+- Each check stands alone. Green means exactly that, and nothing else.
 - Setup
 - Model
 - Ready
@@ -754,13 +832,13 @@ Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
 - Running · 0:12
 - 2
 - Write the message
-- Waiting
+- Pending
 - 3
 - Send it (needs your OK)
-- Waiting
+- Pending
 - 4
 - Check it was sent
-- Waiting
+- Pending
 - Working on it. Step 1 of 4: opening Messages.
 - What the model sees
 - A summary of the current screen, with private details hidden where possible.
@@ -789,7 +867,7 @@ Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
 - Running · 0:12
 - 4
 - Check it was sent
-- Waiting
+- Pending
 - Working on it. Step 3 of 4: sending it, after your OK.
 - What the model sees
 - A summary of the current screen, with private details hidden where possible.
@@ -814,13 +892,13 @@ Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
 - Running · 0:12
 - 2
 - Write the message
-- Waiting
+- Pending
 - 3
 - Send it (needs your OK)
-- Waiting
+- Pending
 - 4
 - Check it was sent
-- Waiting
+- Pending
 - Paused. EQO isn't reading your screen or calling the model. Resume when ready.
 - What the model sees
 - A summary of the current screen, with private details hidden where possible.
@@ -846,13 +924,13 @@ Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
 - Running · 0:12
 - 2
 - Write the message
-- Waiting
+- Pending
 - 3
 - Send it (needs your OK)
-- Waiting
+- Pending
 - 4
 - Check it was sent
-- Waiting
+- Pending
 - You're driving. EQO is holding.
 - What the model sees
 - A summary of the current screen, with private details hidden where possible.
@@ -880,13 +958,13 @@ Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
 - Running · 0:12
 - 2
 - Write the message
-- Waiting
+- Pending
 - 3
 - Send it (needs your OK)
-- Waiting
+- Pending
 - 4
 - Check it was sent
-- Waiting
+- Pending
 - You're driving. EQO is holding.
 - What the model sees
 - A summary of the current screen, with private details hidden where possible.
@@ -915,13 +993,13 @@ Requirements: REQ-TASK-01/03/05. Source: USER-FLOWS UF-09, UF-10 section 11.2.
 - Running · 0:12
 - 2
 - Write the message
-- Waiting
+- Pending
 - 3
 - Send it (needs your OK)
-- Waiting
+- Pending
 - 4
 - Check it was sent
-- Waiting
+- Pending
 - Working on it. Step 1 of 4: opening Messages.
 - What the model sees
 - A summary of the current screen, with private details hidden where possible.
@@ -1243,4 +1321,4 @@ Screen reader names (not visible text): Back
 
 
 ---
-69 screen states.
+73 screen states.
