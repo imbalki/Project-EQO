@@ -11,4 +11,6 @@
     <item name="eqo_test_submit" type="id" />
     <item name="eqo_test_status" type="id" />
     <item name="eqo_test_prompt" type="id" />
+    <item name="eqo_test_resume" type="id" />
+    <item name="eqo_test_stop" type="id" />
 </resources>

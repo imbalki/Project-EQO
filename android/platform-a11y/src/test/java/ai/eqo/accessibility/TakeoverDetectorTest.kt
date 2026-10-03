@@ -60,7 +60,10 @@ class TakeoverDetectorTest {
         detector.onAgentActionFinished()
         assertTrue(detector.isPaused)
 
-        detector.resume()
+        detector.resume(
+            ai.eqo.core.agent.UserResumeConfirmation
+                .forExplicitUserConfirmation(1L),
+        )
         assertFalse(detector.isPaused)
 
         // A new in-action user touch takes over again.

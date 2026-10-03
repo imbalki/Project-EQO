@@ -54,4 +54,6 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
+    // TASK-012: virtual-time tests for pause/stop/takeover transition bounds.
+    testImplementation(libs.kotlinx.coroutines.test)
 }

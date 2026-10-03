@@ -288,3 +288,35 @@ way (this map covers Kotlin only, as before).
 | :app | `android/app/src/androidTest/java/ai/eqo/helper/HelperSpikeDeviceTest.kt` | EQO-NEW | `ai.eqo.helper` | imbalki/project-eqo (EQO-authored, TASK-007 issue #12) |
 
 (Count after TASK-007: 208 Kotlin files — 100% coverage of `git ls-files android/` *.kt., per `bash scripts/check-branding.sh` output `kt files: 208; provenance rows: 208`, exit 0.)
+
+## TASK-012 additions (issue #17, action loop + security follow-ups)
+
+The TASK-012 loop, gate, privacy and resume-confirmation files below are EQO-authored,
+have no upstream counterpart, and are recorded as **EQO-NEW** rows.
+
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/ActionLoop.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/ExecutedAction.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/LoopModel.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/SensitivityApprovalPolicy.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/StepVerifier.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/UserResumeConfirmation.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopRaceTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopResumeTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopSettleTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopTransitionsTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/LoopTestFixtures.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/SensitivityApprovalPolicyTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/StepVerifierTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/GatedServiceActions.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/ServiceActionOps.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/UntrustedScreenText.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/AutomatorsUseGatedRouteTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/GatedActionsGateTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/ScreenTextPrivacyTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/SmsAutomatorTakeoverGateTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/TakeoverSelfGestureTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/UntrustedScreenTextTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/core/agent/TakeoverResumeUserOnlyTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/androidTest/java/ai/eqo/test/EqoActionLoopScenarioDriver.kt` | EQO-NEW | `ai.eqo.test` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/SecurityReproRetryGateTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO security reviewer repro, TASK-012 issue #17, t_d306e5bb; syntax repaired, regression retained) |

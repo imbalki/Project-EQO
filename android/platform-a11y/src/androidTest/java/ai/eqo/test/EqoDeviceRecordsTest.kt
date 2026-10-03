@@ -161,7 +161,10 @@ class EqoDeviceRecordsTest {
         val takeover = TakeoverDetector.shared
         assertTrue("window not ready", awaitWindowMarker(automation, "EQO TEST TARGET"))
 
-        takeover.resume()
+        takeover.resume(
+            ai.eqo.core.agent.UserResumeConfirmation
+                .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+        )
         assertEquals("takeover detector not reset", 0, takeover.takeoverCount)
 
         // Keep a real agent action in flight continuously for the touch window.
@@ -220,7 +223,10 @@ class EqoDeviceRecordsTest {
         )
         record("PAUSE ok: plan-loop gate refused actions with typed TakeoverDetected")
 
-        takeover.resume()
+        takeover.resume(
+            ai.eqo.core.agent.UserResumeConfirmation
+                .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+        )
         activity.setPrompt("none")
         record("takeover resumed by test for the remaining records")
     }
@@ -249,7 +255,10 @@ class EqoDeviceRecordsTest {
             if (result is A11yResult.Failure && result.error is A11yError.TakeoverDetected) {
                 // The owner's own touches while navigating Settings are expected
                 // here; they are not a takeover record. Clear and keep polling.
-                takeover.resume()
+                takeover.resume(
+                    ai.eqo.core.agent.UserResumeConfirmation
+                        .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+                )
                 false
             } else {
                 result is A11yResult.Failure && result.error is A11yError.AccessibilityDisabled
@@ -291,7 +300,10 @@ class EqoDeviceRecordsTest {
                 EQOAccessibilityService.getInstance() != null
             }
         assertTrue("owner did not re-enable EQO within ${REENABLE_WINDOW_MS}ms", back)
-        takeover.resume()
+        takeover.resume(
+            ai.eqo.core.agent.UserResumeConfirmation
+                .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+        )
     }
 
     /**

@@ -5,7 +5,6 @@
 // service surfaces as a typed error, never a silent retry.
 package ai.eqo.accessibility
 
-import android.accessibilityservice.AccessibilityService
 import android.os.SystemClock
 import kotlinx.coroutines.delay
 
@@ -37,6 +36,20 @@ object GenericAppAutomator {
     }
 
     private fun automationOrNull(): EqoAutomation? = EQOAccessibilityService.getInstance()?.automation
+
+    /**
+     * TASK-012 (SF-1): test seam. Production resolves the service's
+     * takeover-gated facade over the raw [ServiceActionOps]; every action below
+     * runs through [EqoAutomation.runAction] inside it.
+     */
+    internal var actionsProvider: () -> GatedServiceActions? = {
+        EQOAccessibilityService.getInstance()?.gatedActions
+    }
+
+    private fun gated(block: (GatedServiceActions) -> A11yResult): A11yResult {
+        val actions = actionsProvider() ?: return A11yResult.failure(A11yError.AccessibilityDisabled)
+        return block(actions)
+    }
 
     suspend fun clickText(text: String): A11yResult =
         retryUntilSettled {
@@ -72,16 +85,7 @@ object GenericAppAutomator {
      * here: it's meant to run immediately after a successful type, once the field is
      * already known to exist.
      */
-    fun pressEnter(): A11yResult {
-        val service =
-            EQOAccessibilityService.getInstance()
-                ?: return A11yResult.failure(A11yError.AccessibilityDisabled)
-        return if (service.performImeEnter()) {
-            A11yResult.success("ime enter")
-        } else {
-            A11yResult.failure(A11yError.ActionRejected("enter"))
-        }
-    }
+    fun pressEnter(): A11yResult = gated { it.pressEnter() }
 
     fun scrapeScreen(): A11yResult {
         val automation = automationOrNull()
@@ -89,52 +93,14 @@ object GenericAppAutomator {
             ?: A11yResult.failure(A11yError.AccessibilityDisabled)
     }
 
-    fun pressBack(): A11yResult =
-        globalAction("back") {
-            it.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
-        }
+    fun pressBack(): A11yResult = gated { it.pressBack() }
 
-    fun pressHome(): A11yResult =
-        globalAction("home") {
-            it.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME)
-        }
+    fun pressHome(): A11yResult = gated { it.pressHome() }
 
-    private fun globalAction(
-        name: String,
-        action: (EQOAccessibilityService) -> Boolean,
-    ): A11yResult {
-        val service =
-            EQOAccessibilityService.getInstance()
-                ?: return A11yResult.failure(A11yError.AccessibilityDisabled)
-        return if (action(service)) {
-            A11yResult.success(name)
-        } else {
-            A11yResult.failure(A11yError.ActionRejected(name))
-        }
-    }
-
-    fun scroll(forward: Boolean): A11yResult {
-        val service =
-            EQOAccessibilityService.getInstance()
-                ?: return A11yResult.failure(A11yError.AccessibilityDisabled)
-        return if (service.performScroll(forward)) {
-            A11yResult.success("scrolled ${if (forward) "forward" else "backward"}")
-        } else {
-            A11yResult.failure(A11yError.NodeNotFound("scrollable node"))
-        }
-    }
+    fun scroll(forward: Boolean): A11yResult = gated { it.scroll(forward) }
 
     fun clickCoordinates(
         x: Float,
         y: Float,
-    ): A11yResult {
-        val service =
-            EQOAccessibilityService.getInstance()
-                ?: return A11yResult.failure(A11yError.AccessibilityDisabled)
-        return if (service.clickCoordinates(x, y)) {
-            A11yResult.success("gesture tap ($x,$y)")
-        } else {
-            A11yResult.failure(A11yError.ActionRejected("gesture tap"))
-        }
-    }
+    ): A11yResult = gated { it.clickCoordinates(x, y) }
 }

@@ -6,7 +6,9 @@ import kotlinx.coroutines.delay
 
 object WhatsAppAutomator {
     suspend fun automateSend(message: String): Boolean {
+        // TASK-012 (SF-1): every action goes through the takeover-gated facade.
         val service = EQOAccessibilityService.getInstance() ?: return false
+        val actions = service.gatedActions
 
         // Wait for WhatsApp chat screen to fully load
         // WhatsApp can be slow to render especially on first launch or when opening via deep link
@@ -46,13 +48,13 @@ object WhatsAppAutomator {
         // Try to type the message (in case it wasn't pre-filled by the URI)
         var typed = false
         for (id in inputIds) {
-            if (service.findAndTypeById(id, message)) {
+            if (actions.findAndTypeById(id, message).isSuccess) {
                 typed = true
                 break
             }
         }
         if (!typed) {
-            service.findAndType("Type a message", message)
+            actions.findAndType("Type a message", message).isSuccess
         }
 
         delay(800)
@@ -67,7 +69,7 @@ object WhatsAppAutomator {
 
         var sendClicked = false
         for (id in sendButtonIds) {
-            if (service.findAndClickById(id)) {
+            if (actions.findAndClickById(id).isSuccess) {
                 Log.d("WhatsAppAutomator", "Successfully clicked send button by ID: $id")
                 sendClicked = true
                 break
@@ -76,9 +78,9 @@ object WhatsAppAutomator {
 
         if (!sendClicked) {
             // Fallback to clicking Send by text / content description
-            sendClicked = service.findAndClick("Send") ||
-                service.findAndClick("send") ||
-                service.findAndClick("SEND")
+            sendClicked = actions.findAndClick("Send").isSuccess ||
+                actions.findAndClick("send").isSuccess ||
+                actions.findAndClick("SEND").isSuccess
             if (sendClicked) {
                 Log.d("WhatsAppAutomator", "Successfully clicked send button by text label")
             }

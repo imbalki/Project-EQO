@@ -30,6 +30,22 @@ class EqoTestTargetActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var prompt: TextView
 
+    /**
+     * TASK-012: user-facing loop controls for the action-loop device scenario
+     * (resume / stop). Invoked from the controls' click listeners - i.e. for
+     * the explicit user gesture; the resume handler mints the
+     * UserResumeConfirmation token for exactly that gesture (SF-4).
+     */
+    @Volatile
+    var onResumeTap: (() -> Unit)? = null
+
+    @Volatile
+    var onStopTap: (() -> Unit)? = null
+
+    /** Tapping the red prompt banner counts as tapping the current control. */
+    @Volatile
+    var onBannerTap: (() -> Unit)? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lastInstance = this
@@ -56,6 +72,7 @@ class EqoTestTargetActivity : Activity() {
                 gravity = Gravity.CENTER
                 setPadding(16, 24, 16, 24)
                 visibility = View.GONE
+                setOnClickListener { onBannerTap?.invoke() }
             }
         root.addView(
             prompt,
@@ -80,14 +97,36 @@ class EqoTestTargetActivity : Activity() {
             }
         root.addView(status)
 
-        prompt =
-            TextView(this).apply {
-                id = R.id.eqo_test_prompt
-                text = "PROMPT: none"
-                textSize = 14f
-                gravity = Gravity.CENTER
-            }
-        root.addView(prompt)
+        // TASK-012: the action-loop scenario's user controls (resume / stop).
+        // Large buttons right under the red banner so the owner cannot miss
+        // them; the banner itself forwards to the current control.
+        val controls =
+            LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        controls.addView(
+            Button(this).apply {
+                id = R.id.eqo_test_resume
+                text = "RESUME LOOP"
+                textSize = 20f
+                setOnClickListener { onResumeTap?.invoke() }
+            },
+            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f),
+        )
+        controls.addView(
+            Button(this).apply {
+                id = R.id.eqo_test_stop
+                text = "STOP LOOP"
+                textSize = 20f
+                setOnClickListener { onStopTap?.invoke() }
+            },
+            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f),
+        )
+        root.addView(
+            controls,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
 
         val button =
             Button(this).apply {
@@ -194,7 +233,7 @@ class EqoTestTargetActivity : Activity() {
         /** Intent extra: run the TASK-009 device records at activity start. */
         const val EXTRA_RUN_RECORDS = "runRecords"
 
-        /** Intent extra: comma list of record ids to run (1,2,3,4; default all). */
+        /** Intent extra: comma list of record ids to run (1,2,3,4,5; default all). */
         const val EXTRA_RECORDS = "records"
 
         @Volatile

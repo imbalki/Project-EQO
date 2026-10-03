@@ -5,8 +5,16 @@ import android.util.Log
 import kotlinx.coroutines.delay
 
 object SmsAutomator {
+    /**
+     * TASK-012 (SF-1): test seam. Production resolves the service's
+     * takeover-gated facade; every action runs through it.
+     */
+    internal var actionsProvider: () -> GatedServiceActions? = {
+        EQOAccessibilityService.getInstance()?.gatedActions
+    }
+
     suspend fun automateSend(): Boolean {
-        val service = EQOAccessibilityService.getInstance() ?: return false
+        val actions = actionsProvider() ?: return false
 
         // Wait for screen transition
         delay(1500)
@@ -23,7 +31,7 @@ object SmsAutomator {
             )
 
         for (id in sendButtonIds) {
-            if (service.findAndClickById(id)) {
+            if (actions.findAndClickById(id).isSuccess) {
                 Log.d("SmsAutomator", "Successfully clicked SMS send button by ID: $id")
                 return true
             }
@@ -31,10 +39,10 @@ object SmsAutomator {
 
         // Try clicking by text/content description "Send", "SMS" or similar
         val clicked =
-            service.findAndClick("Send") ||
-                service.findAndClick("send") ||
-                service.findAndClick("SEND") ||
-                service.findAndClick("SMS")
+            actions.findAndClick("Send").isSuccess ||
+                actions.findAndClick("send").isSuccess ||
+                actions.findAndClick("SEND").isSuccess ||
+                actions.findAndClick("SMS").isSuccess
 
         if (clicked) {
             Log.d("SmsAutomator", "Successfully clicked SMS send button by text label")

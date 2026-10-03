@@ -225,7 +225,10 @@ class EqoAutomationFakeTreeTest {
         takeover.onTouch(TakeoverDetector.TouchSource.USER)
         takeover.onAgentActionFinished()
         assertTrue(takeover.isPaused)
-        takeover.resume()
+        takeover.resume(
+            ai.eqo.core.agent.UserResumeConfirmation
+                .forExplicitUserConfirmation(1L),
+        )
         assertFalse(takeover.isPaused)
         assertTrue(automation(root).tap("Send").isSuccess)
         assertEquals(1, screen.decoy.clickCount)

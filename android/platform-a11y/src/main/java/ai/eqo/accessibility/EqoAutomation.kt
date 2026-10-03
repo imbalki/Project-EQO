@@ -21,11 +21,14 @@ package ai.eqo.accessibility
  * @param rootProvider the active window's root node, adapted to [A11yNode].
  * @param serviceState reports whether the EQO accessibility service is bound.
  * @param takeover the shared takeover detector.
+ * @param isSecureWindow reports whether the active window is secure
+ *   (FLAG_SECURE). Screen text is never read from a secure window (SF-2).
  */
 class EqoAutomation(
     private val rootProvider: () -> A11yNode?,
     private val serviceState: () -> ServiceState,
     private val takeover: TakeoverDetector,
+    private val isSecureWindow: () -> Boolean = { false },
 ) {
     enum class ServiceState {
         AVAILABLE,
@@ -38,10 +41,11 @@ class EqoAutomation(
     fun observe(): A11yResult =
         runAction {
             val root = rootProvider()
-            if (root == null) {
-                A11yResult.failure(A11yError.NodeNotFound("active window"))
-            } else {
-                A11yResult.success(NodeTreeSearch.screenText(root))
+            when {
+                // TASK-012 (SF-2): nothing is read from a secure window.
+                isSecureWindow() -> A11yResult.failure(A11yError.SecureWindow)
+                root == null -> A11yResult.failure(A11yError.NodeNotFound("active window"))
+                else -> A11yResult.success(NodeTreeSearch.screenText(root))
             }
         }
 
@@ -88,7 +92,14 @@ class EqoAutomation(
             }
         }
 
-    private fun runAction(block: () -> A11yResult): A11yResult =
+    /**
+     * THE single takeover-gated action path (TASK-012 SF-1). Every action EQO
+     * performs — including the global/gesture actions routed through
+     * [GatedServiceActions] — must run inside this gate: it refuses while the
+     * takeover detector has paused the loop and brackets the call with the
+     * detector's agent-action window.
+     */
+    fun runAction(block: () -> A11yResult): A11yResult =
         when {
             takeover.isPaused -> A11yResult.failure(A11yError.TakeoverDetected)
             serviceState() == ServiceState.ACCESSIBILITY_DISABLED ->

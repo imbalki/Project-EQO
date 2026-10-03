@@ -59,6 +59,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(libs.junit)
+    // TASK-012: virtual-time test runs for the gated-automator tests.
+    testImplementation(libs.kotlinx.coroutines.test)
 
     // TASK-009 androidTest (device records + stub Hilt graph). All artifacts
     // come from the shared version catalog (lint UseTomlInstead); the pins are

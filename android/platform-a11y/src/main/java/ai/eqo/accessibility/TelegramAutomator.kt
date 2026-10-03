@@ -8,7 +8,9 @@ object TelegramAutomator {
     private const val TAG = "TelegramAutomator"
 
     suspend fun automateSend(message: String): Boolean {
+        // TASK-012 (SF-1): every action goes through the takeover-gated facade.
         val service = EQOAccessibilityService.getInstance() ?: return false
+        val actions = service.gatedActions
 
         // Wait for Telegram chat screen to render
         delay(2500)
@@ -48,14 +50,14 @@ object TelegramAutomator {
         // Type the message into the input field
         var typed = false
         for (id in inputIds) {
-            if (service.findAndTypeById(id, message)) {
+            if (actions.findAndTypeById(id, message).isSuccess) {
                 typed = true
                 break
             }
         }
         if (!typed) {
-            typed = service.findAndType("Message", message) ||
-                service.findAndType("Write a message...", message)
+            typed = actions.findAndType("Message", message).isSuccess ||
+                actions.findAndType("Write a message...", message).isSuccess
         }
 
         delay(600)
@@ -72,7 +74,7 @@ object TelegramAutomator {
 
         var sendClicked = false
         for (id in sendButtonIds) {
-            if (service.findAndClickById(id)) {
+            if (actions.findAndClickById(id).isSuccess) {
                 Log.d(TAG, "Successfully clicked send button by ID: $id")
                 sendClicked = true
                 break
@@ -80,9 +82,9 @@ object TelegramAutomator {
         }
 
         if (!sendClicked) {
-            sendClicked = service.findAndClick("Send") ||
-                service.findAndClick("Send message") ||
-                service.findAndClick("send")
+            sendClicked = actions.findAndClick("Send").isSuccess ||
+                actions.findAndClick("Send message").isSuccess ||
+                actions.findAndClick("send").isSuccess
             if (sendClicked) {
                 Log.d(TAG, "Successfully clicked send button by text label")
             }

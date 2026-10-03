@@ -1,0 +1,631 @@
+{
+  "totals": {
+    "tests": 438,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "suites": [
+    {
+      "module": "app",
+      "suite": "ai.eqo.AllowBackupManifestTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:04:35.065Z"
+    },
+    {
+      "module": "app",
+      "suite": "ai.eqo.MainActivityTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:04:35.489Z"
+    },
+    {
+      "module": "app",
+      "suite": "ai.eqo.SmsPermissionsManifestTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:04:36.467Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.ActionLoopRaceTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:26.709Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.ActionLoopResumeTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:27.851Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.ActionLoopSettleTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:27.940Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.ActionLoopTransitionsTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:28.142Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.ActionSequenceExecutorTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:28.282Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.AutoApprovalPolicyTest",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:28.385Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.ReplyDispatcherSmsComposeTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:29.014Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.SecurityReproRetryGateTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:41.280Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.SensitivityApprovalPolicyTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:41.435Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.SmsComposePolicyTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:41.506Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.SmsTermuxToolHiddenTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:41.515Z"
+    },
+    {
+      "module": "core-agent",
+      "suite": "ai.eqo.core.agent.StepVerifierTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:21:41.625Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.actions.base.ActionResultTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:00.543Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.agent.ActionRiskPolicyTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:00.687Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.agent.ActionSchemaTest",
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:00.727Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.agent.AliasResolverTest",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:00.759Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.agent.ChatErrorUiStateTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:00.886Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.agent.NeverAutoApproveTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:01.011Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.ClaudeModelCatalogTest",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:01.021Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.ConnectionTestPlannerTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:01.051Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.ConnectionTestRunnerEndpointSecurityTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:01.084Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.LiteRtCompatibilityTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:04.346Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.ModelArtifactIntegrityTest",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:04.520Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.ModelDownloadSchedulingTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "timestamp": "2026-10-03T12:06:06.043Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.ModelFetcherSecurityTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:36.226Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.ModelListParsersTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:06:55.085Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.ModelStoragePathsTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.377Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.OnDeviceLatencyProfileTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.433Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.OnDeviceModelRegistryCustomTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.445Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.PromptBudgetTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.449Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.ProviderCatalogTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.457Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.ProviderSelectionPolicyTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.472Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.WrappedLLMProviderTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.483Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.error.LLMErrorMapperTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.644Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.error.ProviderErrorDetailTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.678Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.prompts.SmsComposePromptContractTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.685Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.providers.CustomOpenAIProviderNetworkTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:16.731Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.providers.OpenRouterConnectionTestTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:17.251Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.providers.OpenRouterProviderRedactionTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:19.480Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.security.LogRedactorCrashHookTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:19.539Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.security.LogRedactorTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:19.563Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.llm.security.RedactingLogTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:19.646Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.util.DeviceCapabilitiesTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:19.916Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.util.DurationParserTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:27.613Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.core.util.NetworkErrorFormatterSecurityTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:27.626Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.data.models.AutoModeConfigTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:27.772Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.data.models.LLMConfigRedactionTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:27.787Z"
+    },
+    {
+      "module": "core-llm",
+      "suite": "ai.eqo.data.repository.SettingsRepositoryProviderCredentialsTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:27.795Z"
+    },
+    {
+      "module": "core-security",
+      "suite": "ai.eqo.core.security.LegacyPlaintextPreferencesSourceTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:38.004Z"
+    },
+    {
+      "module": "core-security",
+      "suite": "ai.eqo.core.security.LegacySecurePreferencesRetirementTest",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:38.061Z"
+    },
+    {
+      "module": "core-security",
+      "suite": "ai.eqo.core.security.OpenRouterKeyStorageTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:38.447Z"
+    },
+    {
+      "module": "core-security",
+      "suite": "ai.eqo.core.security.ProviderCostDisclosureGateTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:38.492Z"
+    },
+    {
+      "module": "core-security",
+      "suite": "ai.eqo.core.security.ProviderCredentialStoreTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:07:38.512Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.AutomatorsUseGatedRouteTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:31.554Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.EqoAutomationFakeTreeTest",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:32.272Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.EqoNeverGrantsTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:32.515Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.EqoSingleServiceManifestTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:32.731Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.GatedActionsGateTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:33.606Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.OwnerPromptSafetyTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:33.645Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.ScreenTextPrivacyTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:33.713Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.SmsAutomatorTakeoverGateTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:33.733Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.TakeoverDetectorTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:34.300Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.TakeoverSelfGestureTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:34.316Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.accessibility.UntrustedScreenTextTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:34.339Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.core.agent.NeedsInputParamKeyTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:34.377Z"
+    },
+    {
+      "module": "platform-a11y",
+      "suite": "ai.eqo.core.agent.TakeoverResumeUserOnlyTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-10-03T12:24:34.437Z"
+    }
+  ]
+}

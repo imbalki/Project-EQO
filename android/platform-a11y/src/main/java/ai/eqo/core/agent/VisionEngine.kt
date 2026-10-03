@@ -2,6 +2,7 @@
 package ai.eqo.core.agent
 
 import ai.eqo.accessibility.EQOAccessibilityService
+import ai.eqo.accessibility.UntrustedScreenText
 import ai.eqo.core.llm.LLMProviderFactory
 import ai.eqo.core.llm.LLMRequest
 import ai.eqo.core.llm.ResponseFormat
@@ -92,6 +93,7 @@ class VisionEngine
         ): String {
             val visionPrompt =
                 """
+                ${UntrustedScreenText.IMAGE_DIRECTIVE}
                 Analyze this Android screenshot.
                 User question: $userQuestion
                 
@@ -116,7 +118,9 @@ class VisionEngine
                 val response =
                     provider.complete(
                         LLMRequest(
-                            systemPrompt = "You are a vision AI that analyzes Android screenshots. Be concise and accurate.",
+                            systemPrompt =
+                                UntrustedScreenText.IMAGE_DIRECTIVE +
+                                    " You are a vision AI that analyzes Android screenshots. Be concise and accurate.",
                             messages = listOf(imageMessage),
                             temperature = 0.3f,
                             maxTokens = 500,
@@ -138,9 +142,7 @@ class VisionEngine
                 """
                 I extracted the following text from the user's Android screen:
                 
-                ---
-                $screenText
-                ---
+                ${UntrustedScreenText.wrap(screenText)}
                 
                 User question: $userQuestion
                 
@@ -160,7 +162,8 @@ class VisionEngine
                     provider.complete(
                         LLMRequest(
                             systemPrompt =
-                                "You are an AI that analyzes Android screen content from extracted text. " +
+                                UntrustedScreenText.DIRECTIVE +
+                                    " You are an AI that analyzes Android screen content from extracted text. " +
                                     "Be concise and accurate.",
                             messages = listOf(message),
                             temperature = 0.3f,
@@ -200,6 +203,7 @@ class VisionEngine
         ): String {
             val extractionPrompt =
                 """
+                ${UntrustedScreenText.IMAGE_DIRECTIVE}
                 Analyze this Android screenshot and extract the requested information.
                 Target topic: $topic
                 
@@ -230,7 +234,8 @@ class VisionEngine
                     provider.complete(
                         LLMRequest(
                             systemPrompt =
-                                "You are an expert information extraction and summarization AI for Android. " +
+                                UntrustedScreenText.IMAGE_DIRECTIVE +
+                                    " You are an expert information extraction and summarization AI for Android. " +
                                     "Extract clean, structured notes from screenshots.",
                             messages = listOf(imageMessage),
                             temperature = 0.2f,
@@ -258,9 +263,7 @@ class VisionEngine
                 """
                 The following text was extracted from the user's Android screen:
                 
-                ---
-                $screenText
-                ---
+                ${UntrustedScreenText.wrap(screenText)}
                 
                 Target topic: $topic
                 
@@ -290,7 +293,8 @@ class VisionEngine
                     provider.complete(
                         LLMRequest(
                             systemPrompt =
-                                "You are an expert information extraction and summarization AI for Android. " +
+                                UntrustedScreenText.DIRECTIVE +
+                                    " You are an expert information extraction and summarization AI for Android. " +
                                     "Extract clean, structured notes from screen text.",
                             messages = listOf(message),
                             temperature = 0.2f,

@@ -5,6 +5,7 @@ package ai.eqo.accessibility
  * tree that records every action performed on it, so observe/tap/scroll/type can
  * be asserted without any Android runtime or bound accessibility service.
  */
+@Suppress("LongParameterList") // test fixture: named defaults, one builder
 class FakeNode(
     override val text: CharSequence? = null,
     override val contentDescription: CharSequence? = null,
@@ -12,6 +13,7 @@ class FakeNode(
     override val isClickable: Boolean = false,
     override val isEditable: Boolean = false,
     override val isScrollable: Boolean = false,
+    override val isPassword: Boolean = false,
 ) : A11yNode {
     override val className: CharSequence = "android.widget.FrameLayout"
 

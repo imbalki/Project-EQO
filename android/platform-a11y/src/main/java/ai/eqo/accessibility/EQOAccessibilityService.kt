@@ -44,7 +44,10 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @AndroidEntryPoint
-class EQOAccessibilityService : AccessibilityService() {
+@Suppress("TooManyFunctions") // one service facade; a split is a recorded follow-up (TASK-012 evidence)
+class EQOAccessibilityService :
+    AccessibilityService(),
+    ServiceActionOps {
     @Inject
     lateinit var agentLoop: AgentLoop
 
@@ -102,8 +105,36 @@ class EQOAccessibilityService : AccessibilityService() {
                 }
             },
             takeover = takeoverDetector,
+            isSecureWindow = { isSecureWindowActive() },
         )
     }
+
+    /**
+     * TASK-012 (SF-1): the takeover-gated facade over this service's raw
+     * [ServiceActionOps]. Every automator action goes through here, which runs
+     * it inside [EqoAutomation.runAction].
+     */
+    val gatedActions: GatedServiceActions by lazy { GatedServiceActions(automation, this) }
+
+    /**
+     * TASK-012 (SF-2): true when the active window is secure (FLAG_SECURE).
+     *
+     * `AccessibilityWindowInfo.isSecure()` is NOT in the public SDK (verified
+     * with `javap -classpath android-36/android.jar android.view.accessibility.
+     * AccessibilityWindowInfo` -> only `isActive()` etc., no `isSecure`), so it
+     * is probed reflectively where the platform exposes it. When the platform
+     * hides it we cannot tell and report false — the residual exposure is
+     * recorded in android/Phase-One/evidence/task-012-action-loop.md.
+     */
+    fun isSecureWindowActive(): Boolean = windows.any { it.isActive && isSecureWindow(it) }
+
+    private fun isSecureWindow(window: android.view.accessibility.AccessibilityWindowInfo): Boolean =
+        try {
+            val isSecure = android.view.accessibility.AccessibilityWindowInfo::class.java.getMethod("isSecure")
+            isSecure.invoke(window) == true
+        } catch (_: Exception) {
+            false
+        }
 
     /**
      * BroadcastReceiver that tracks device lock/unlock state.
@@ -202,7 +233,7 @@ class EQOAccessibilityService : AccessibilityService() {
             } else {
                 TakeoverDetector.TouchSource.USER
             }
-        val tookOver = takeoverDetector.onTouch(source)
+        val tookOver = takeoverDetector.onTouch(source, android.os.SystemClock.elapsedRealtime())
         if (tookOver) {
             android.util.Log.i("EQOAccessibilityService", "TASK-009: user takeover detected - loop paused")
         }
@@ -627,12 +658,13 @@ class EQOAccessibilityService : AccessibilityService() {
 
     // --- Node Automation Methods ---
 
-    fun findAndClick(text: String): Boolean {
+    override fun findAndClick(text: String): Boolean {
         val rootNode = rootInActiveWindow ?: return false
         return nodeTraversal.findAndClick(rootNode, text)
     }
 
-    fun findAndClickById(viewId: String): Boolean {
+    @Suppress("ReturnCount") // typed early-outs; a single exit would only obscure them
+    override fun findAndClickById(viewId: String): Boolean {
         val rootNode = rootInActiveWindow ?: return false
         val nodes = rootNode.findAccessibilityNodeInfosByViewId(viewId)
         for (node in nodes) {
@@ -656,7 +688,8 @@ class EQOAccessibilityService : AccessibilityService() {
         return false
     }
 
-    fun findAndType(
+    @Suppress("ReturnCount") // typed early-outs; a single exit would only obscure them
+    override fun findAndType(
         searchText: String,
         content: String,
     ): Boolean {
@@ -677,7 +710,8 @@ class EQOAccessibilityService : AccessibilityService() {
         return false
     }
 
-    fun findAndTypeById(
+    @Suppress("ReturnCount") // typed early-outs; a single exit would only obscure them
+    override fun findAndTypeById(
         viewId: String,
         content: String,
     ): Boolean {
@@ -698,6 +732,12 @@ class EQOAccessibilityService : AccessibilityService() {
         return false
     }
 
+    /** TASK-012 (SF-1): raw global back, gated by [GatedServiceActions]. */
+    override fun performGlobalBack(): Boolean = performGlobalAction(GLOBAL_ACTION_BACK)
+
+    /** TASK-012 (SF-1): raw global home, gated by [GatedServiceActions]. */
+    override fun performGlobalHome(): Boolean = performGlobalAction(GLOBAL_ACTION_HOME)
+
     /**
      * Performs the IME 'enter/search/go' action on the currently focused editable
      * field — used to submit a search box after TYPE_TEXT/TYPE_ID types into it.
@@ -706,7 +746,7 @@ class EQOAccessibilityService : AccessibilityService() {
      * fails — falls back to tapping a nearby clickable control whose label reads like
      * a submit action ("search", "go", "send", "done", "submit", "ok", "enter").
      */
-    fun performImeEnter(): Boolean {
+    override fun performImeEnter(): Boolean {
         val focusedNode = rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
         val success =
             if (focusedNode != null) {
@@ -728,7 +768,7 @@ class EQOAccessibilityService : AccessibilityService() {
         return result
     }
 
-    fun performScroll(forward: Boolean): Boolean {
+    override fun performScroll(forward: Boolean): Boolean {
         val rootNode = rootInActiveWindow ?: return false
         val action = if (forward) AccessibilityNodeInfo.ACTION_SCROLL_FORWARD else AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
         val success = performScrollOnNode(rootNode, action)
@@ -756,7 +796,7 @@ class EQOAccessibilityService : AccessibilityService() {
 
     // --- Gesture Automation Methods (Coordinate Taps) ---
 
-    fun clickCoordinates(
+    override fun clickCoordinates(
         x: Float,
         y: Float,
     ): Boolean {
@@ -779,10 +819,15 @@ class EQOAccessibilityService : AccessibilityService() {
             object : GestureResultCallback() {
                 override fun onCompleted(gestureDescription: GestureDescription?) {
                     gestureInFlight.decrementAndGet()
+                    // TASK-012 (N-3): remember when OUR stroke finished, so a
+                    // late-arriving touch from it is tagged as a suspected
+                    // self-gesture takeover instead of a silent task-killer.
+                    takeoverDetector.onSelfGestureFinished(android.os.SystemClock.elapsedRealtime())
                 }
 
                 override fun onCancelled(gestureDescription: GestureDescription?) {
                     gestureInFlight.decrementAndGet()
+                    takeoverDetector.onSelfGestureFinished(android.os.SystemClock.elapsedRealtime())
                 }
             }
         val dispatched = dispatchGesture(gesture, callback, null)
@@ -794,7 +839,10 @@ class EQOAccessibilityService : AccessibilityService() {
 
     // --- Screen Text Extraction ---
 
+    @Suppress("ReturnCount") // each privacy refusal returns its typed empty result
     fun getScreenText(): String {
+        // TASK-012 (SF-2): nothing is read from a secure (FLAG_SECURE) window.
+        if (isSecureWindowActive()) return ""
         val rootNode = rootInActiveWindow ?: return ""
         val text = nodeTraversal.screenText(rootNode)
         rootNode.recycle()

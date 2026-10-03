@@ -21,6 +21,12 @@ interface A11yNode {
 
     val contentDescription: CharSequence?
 
+    /**
+     * TASK-012 (SF-2): true for password/masked fields. Their text and their
+     * subtree are never read into screen text.
+     */
+    val isPassword: Boolean
+
     /** `android:findViewById`-style resource id name, e.g. `ai.eqo.app:id/target`. */
     val viewIdResourceName: String?
 
@@ -56,6 +62,8 @@ class AccessibilityNodeAdapter(
     override val text: CharSequence? get() = node.text
 
     override val contentDescription: CharSequence? get() = node.contentDescription
+
+    override val isPassword: Boolean get() = node.isPassword()
 
     override val viewIdResourceName: String? get() = node.viewIdResourceName
 

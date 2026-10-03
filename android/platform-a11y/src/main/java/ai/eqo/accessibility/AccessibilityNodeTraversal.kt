@@ -34,6 +34,8 @@ class AccessibilityNodeTraversal
             node: AccessibilityNodeInfo,
             sb: StringBuilder,
         ) {
+            // TASK-012 (SF-2): never read password/masked fields (or their subtree).
+            if (node.isPassword()) return
             val nodeText = node.text?.toString()
             val contentDesc = node.contentDescription?.toString()
 

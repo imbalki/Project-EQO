@@ -29,6 +29,13 @@ sealed class A11yError {
 
     /** The user touched the screen during an agent action: the loop is paused. */
     data object TakeoverDetected : A11yError()
+
+    /**
+     * TASK-012 (SF-2): the active window is secure (FLAG_SECURE, e.g. a banking
+     * or authenticator screen). EQO reads nothing from it and reports the
+     * refusal as a typed error.
+     */
+    data object SecureWindow : A11yError()
 }
 
 /** Typed result of one accessibility action. */

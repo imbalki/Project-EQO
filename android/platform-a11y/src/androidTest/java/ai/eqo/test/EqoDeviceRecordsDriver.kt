@@ -64,11 +64,17 @@ object EqoDeviceRecordsDriver {
         what: String,
         block: () -> A11yResult,
     ): A11yResult {
-        takeover.resume()
+        takeover.resume(
+            ai.eqo.core.agent.UserResumeConfirmation
+                .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+        )
         val first = block()
         if (first is A11yResult.Failure && first.error is A11yError.TakeoverDetected) {
             record("NOTE: cleared a post-gesture takeover latch (own gesture noise) before $what")
-            takeover.resume()
+            takeover.resume(
+                ai.eqo.core.agent.UserResumeConfirmation
+                    .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+            )
             return block()
         }
         return first
@@ -97,7 +103,10 @@ object EqoDeviceRecordsDriver {
     private fun runAll(activity: EqoTestTargetActivity) {
         // Owner touches that landed before this run are not test events: reset
         // the takeover detector before any record counts a touch (lead rule).
-        TakeoverDetector.shared.resume()
+        TakeoverDetector.shared.resume(
+            ai.eqo.core.agent.UserResumeConfirmation
+                .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+        )
         val selected =
             activity.intent
                 .getStringExtra(EqoTestTargetActivity.EXTRA_RECORDS)
@@ -119,6 +128,9 @@ object EqoDeviceRecordsDriver {
                     record("SKIP: record4 needs records 1 and 3 to pass first")
                 }
             }
+            // TASK-012: the action-loop device scenario (run, user taps, loop
+            // pauses, resume, stop) lives in its own driver.
+            if (want("5")) EqoActionLoopScenarioDriver.run(activity)
         } catch (t: Throwable) {
             record("DRIVER FAILED: $t")
         }
@@ -214,7 +226,10 @@ object EqoDeviceRecordsDriver {
         val service = awaitService() ?: return
         val automation = service.automation
         val takeover = TakeoverDetector.shared
-        takeover.resume()
+        takeover.resume(
+            ai.eqo.core.agent.UserResumeConfirmation
+                .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+        )
         if (takeover.takeoverCount != 0) {
             record("NOTE: takeoverCount=${takeover.takeoverCount} before the window (pre-reset)")
         }
@@ -262,7 +277,10 @@ object EqoDeviceRecordsDriver {
         }
         record("PAUSE ok: plan-loop gate refused actions with typed TakeoverDetected")
 
-        takeover.resume()
+        takeover.resume(
+            ai.eqo.core.agent.UserResumeConfirmation
+                .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+        )
         record("takeover resumed by the driver for the remaining records")
     }
 
@@ -291,7 +309,10 @@ object EqoDeviceRecordsDriver {
             if (result is A11yResult.Failure && result.error is A11yError.TakeoverDetected) {
                 // The owner's own touches while navigating Settings are expected
                 // here; they are not a takeover record. Clear and keep polling.
-                takeover.resume()
+                takeover.resume(
+                    ai.eqo.core.agent.UserResumeConfirmation
+                        .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+                )
                 false
             } else {
                 result is A11yResult.Failure && result.error is A11yError.AccessibilityDisabled
@@ -332,7 +353,10 @@ object EqoDeviceRecordsDriver {
             record("FAIL: owner did not re-enable EQO within ${REENABLE_WINDOW_MS}ms")
             return false
         }
-        takeover.resume()
+        takeover.resume(
+            ai.eqo.core.agent.UserResumeConfirmation
+                .forExplicitUserConfirmation(android.os.SystemClock.elapsedRealtime()),
+        )
         return true
     }
 

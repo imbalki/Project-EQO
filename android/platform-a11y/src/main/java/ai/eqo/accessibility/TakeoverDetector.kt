@@ -4,6 +4,8 @@
  */
 package ai.eqo.accessibility
 
+import ai.eqo.core.agent.UserResumeConfirmation
+
 /**
  * Detects the user taking control while EQO is mid-action.
  *
@@ -30,9 +32,28 @@ class TakeoverDetector {
         AGENT_GESTURE,
     }
 
+    /** Why a takeover latched (TASK-012, security note N-3). */
+    enum class TakeoverCause {
+        /** A real user touch during an agent action. */
+        USER,
+
+        /**
+         * Latched within the attribution window right after one of EQO's own
+         * `dispatchGesture` strokes completed: most likely our own stroke's
+         * touch event seen late (the documented mis-attribution window). The
+         * takeover still latches (safe), but the loop pauses visibly with
+         * `SELF_GESTURE_TAKEOVER_SUSPECTED` instead of dying silently.
+         */
+        SELF_GESTURE_SUSPECTED,
+    }
+
     private val lock = Any()
 
     private var actionDepth = 0
+
+    private var lastSelfGestureFinishedAtMs: Long = NO_TIME
+
+    private var lastResumeConfirmation: UserResumeConfirmation? = null
 
     @Volatile
     var isPaused: Boolean = false
@@ -41,6 +62,11 @@ class TakeoverDetector {
     /** Number of user touches that triggered a takeover (1 while paused). */
     @Volatile
     var takeoverCount: Int = 0
+        private set
+
+    /** Cause of the most recent takeover latch. */
+    @Volatile
+    var lastTakeoverCause: TakeoverCause = TakeoverCause.USER
         private set
 
     fun onAgentActionStarted() {
@@ -59,20 +85,52 @@ class TakeoverDetector {
     /**
      * Reports one screen touch. Returns true when THIS touch triggered the
      * takeover (exactly once per takeover; later touches return false).
+     *
+     * TASK-012 (N-3): [nowMs] timestamps the touch (elapsed realtime). A
+     * touch attributed to the user that arrives within
+     * [SELF_GESTURE_ATTRIBUTION_WINDOW_MS] of EQO's own stroke completing is
+     * latched with [TakeoverCause.SELF_GESTURE_SUSPECTED] — still a takeover,
+     * but reported as a probable self-gesture mis-attribution.
      */
-    fun onTouch(source: TouchSource): Boolean =
+    fun onTouch(
+        source: TouchSource,
+        nowMs: Long = 0L,
+    ): Boolean =
         synchronized(lock) {
             val isUserTakeover = !isPaused && source == TouchSource.USER && actionDepth > 0
             if (isUserTakeover) {
                 isPaused = true
                 takeoverCount++
+                val withinSelfGestureWindow =
+                    lastSelfGestureFinishedAtMs != NO_TIME &&
+                        nowMs - lastSelfGestureFinishedAtMs in 0..SELF_GESTURE_ATTRIBUTION_WINDOW_MS
+                lastTakeoverCause =
+                    if (withinSelfGestureWindow) {
+                        TakeoverCause.SELF_GESTURE_SUSPECTED
+                    } else {
+                        TakeoverCause.USER
+                    }
             }
             isUserTakeover
         }
 
-    /** User hands control back to the agent (resume UX belongs to TASK-012). */
-    fun resume() {
-        synchronized(lock) { isPaused = false }
+    /** Records the completion of one of EQO's own `dispatchGesture` strokes. */
+    fun onSelfGestureFinished(nowMs: Long) {
+        synchronized(lock) { lastSelfGestureFinishedAtMs = nowMs }
+    }
+
+    /**
+     * User hands control back to the agent. TASK-012 (SF-4, spec criterion 4):
+     * user-initiated only — requires a [UserResumeConfirmation] minted by the
+     * user-facing control surface for an explicit user gesture. No
+     * agent-reachable code path may clear a latched takeover
+     * (`TakeoverResumeUserOnlyTest`).
+     */
+    fun resume(confirmation: UserResumeConfirmation) {
+        synchronized(lock) {
+            lastResumeConfirmation = confirmation
+            isPaused = false
+        }
     }
 
     companion object {
@@ -81,5 +139,13 @@ class TakeoverDetector {
          * (touch reporting) and AgentLoop (pause gate) without Hilt wiring.
          */
         val shared: TakeoverDetector = TakeoverDetector()
+
+        /**
+         * Window after EQO's own stroke completes in which a user-classified
+         * touch is treated as a suspected self-gesture mis-attribution (N-3).
+         */
+        const val SELF_GESTURE_ATTRIBUTION_WINDOW_MS: Long = 400L
+
+        private const val NO_TIME = Long.MIN_VALUE
     }
 }
