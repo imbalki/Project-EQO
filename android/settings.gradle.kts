@@ -20,3 +20,6 @@ include(":core-agent")
 include(":core-llm")
 include(":core-security")
 include(":platform-a11y")
+// TASK-007 (issue #12): EQO privileged helper, forked from Shizuku + Shizuku-API.
+include(":helper-server")
+include(":helper-client")

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TASK-007 (issue #12): client-role manifest of the EQO helper client, forked from
+     RikkaApps/Shizuku-API @ a27f6e4151ba7b39965ca47edb2bf0aeed7102e5
+     (provider/src/main/AndroidManifest.xml). The upstream uses-permission line for the API
+     permission is deliberately NOT carried here: in the single EQO APK the client is also the
+     allowlisted manager (it holds ai.eqo.app.helper.permission.MANAGER, see :helper-server) and
+     must not request the dangerous API permission. A non-manager client declares
+     ai.eqo.app.helper.permission.API_V23 in its own manifest instead (as the ShizukuProvider
+     javadoc instructs). The V3_SUPPORT metadata is read by the helper server
+     (ShizukuService.getApplications). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <meta-data
+            android:name="moe.shizuku.client.V3_SUPPORT"
+            android:value="true" />
+    </application>
+
+</manifest>

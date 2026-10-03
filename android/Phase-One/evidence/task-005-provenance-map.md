@@ -267,3 +267,24 @@ line-by-line semantic equivalence of the adapters (that is TASK-004's verify-mov
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/core/agent/NeedsInputParamKeyTest.kt` | MOVE | `ai.eqo.core.agent` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/test/java/com/opendroid/ai/core/agent/NeedsInputParamKeyTest.kt`) |
 
 (Count: 202 Kotlin files — 100% coverage of `git ls-files android/` *.kt.)
+
+## TASK-007 additions (issue #12): forked privileged helper
+
+Kind **FORK** = source forked from the privileged-helper upstreams (Shizuku server /
+Shizuku-API) at the study commits pinned in `task-007-helper-spike.md` / FEASIBILITY-REPORT
+§1, carrying an `// Origin:` header with the ORIGINAL upstream path. Fork deltas vs
+upstream are the D-004 lockstep rename (application id, `moe.shizuku.manager.permission.*`
+strings, binder extra key, provider-authority suffix, process name, starter binary name),
+the EQO app-id allowlist replacing the manager-must-be-installed gate, and documented
+spike cuts (rish remote shell, adb pairing native lib) - all itemised in
+`task-007-helper-spike.md`. The Java files of the two helper modules are forked the same
+way (this map covers Kotlin only, as before).
+
+| :helper-server | `android/helper-server/src/main/java/rikka/shizuku/server/ApkChangedObservers.kt` | FORK | `rikka.shizuku.server` | RikkaApps/Shizuku @ b844bc491f1790c72328e1a8e5b2349f8978f0ea (upstream path: `server/src/main/java/rikka/shizuku/server/ApkChangedObservers.kt`) |
+| :helper-server | `android/helper-server/src/main/java/rikka/shizuku/server/ktx/Handler.kt` | FORK | `rikka.shizuku.server.ktx` | RikkaApps/Shizuku @ b844bc491f1790c72328e1a8e5b2349f8978f0ea (upstream path: `server/src/main/java/rikka/shizuku/server/ktx/Handler.kt`) |
+| :helper-server | `android/helper-server/src/main/java/moe/shizuku/manager/ShizukuManagerProvider.kt` | FORK | `moe.shizuku.manager` | RikkaApps/Shizuku @ b844bc491f1790c72328e1a8e5b2349f8978f0ea (upstream path: `manager/src/main/java/moe/shizuku/manager/ShizukuManagerProvider.kt`; fork deltas: renamed binder extra key, manager Logger facade -> android.util.Log) |
+| :helper-client | `android/helper-client/src/main/java/ai/eqo/helper/client/HelperActivationState.kt` | EQO-NEW | `ai.eqo.helper.client` | imbalki/project-eqo (EQO-authored, TASK-007 issue #12) |
+| :helper-client | `android/helper-client/src/androidTest/java/ai/eqo/helper/client/MismatchedPermissionTest.kt` | EQO-NEW | `ai.eqo.helper.client` | imbalki/project-eqo (EQO-authored, TASK-007 issue #12) |
+| :app | `android/app/src/androidTest/java/ai/eqo/helper/HelperSpikeDeviceTest.kt` | EQO-NEW | `ai.eqo.helper` | imbalki/project-eqo (EQO-authored, TASK-007 issue #12) |
+
+(Count after TASK-007: 208 Kotlin files — 100% coverage of `git ls-files android/` *.kt., per `bash scripts/check-branding.sh` output `kt files: 208; provenance rows: 208`, exit 0.)

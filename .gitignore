@@ -9,6 +9,8 @@ local.properties
 # Android / Gradle
 .gradle/
 build/
+# TASK-007: CMake/NDK configure caches (not source)
+.cxx/
 captures/
 *.apk
 *.aab

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EQO-authored NEGATIVE FIXTURE (TASK-007, issue #12), test-only.
+     This client deliberately declares the OLD upstream permission string
+     moe.shizuku.manager.permission.API_V23 instead of the renamed
+     ai.eqo.app.helper.permission.API_V23 - the exact one-sided-rename mismatch D-004
+     warns about. Expected on device: the helper server does NOT deliver a binder to this
+     app and a privileged call fails loudly (IllegalStateException).
+     scripts/check-branding.sh and HelperRenameLockstepTest intentionally do NOT scan
+     androidTest fixtures (this string is the point of the fixture). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+
+    <application>
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.helper"
+            android:exported="true"
+            android:multiprocess="false"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+    </application>
+
+</manifest>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TASK-007 (issue #12): EQO-facing labels for the helper permissions (user-visible surface,
+     EQO naming only per D-004; upstream Shizuku strings/icons are not reused). -->
+<resources>
+    <string name="helper_permission_group_label">EQO helper</string>
+    <string name="helper_permission_group_description">Lets an app use the EQO privileged helper</string>
+    <string name="helper_permission_label">Use the EQO helper</string>
+    <string name="helper_permission_description">Lets an app run privileged operations through the EQO helper (shell-level access, activated over ADB)</string>
+</resources>
