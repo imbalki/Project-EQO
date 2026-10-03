@@ -15,6 +15,11 @@ android {
 
     defaultConfig {
         minSdk = 30
+
+        // TASK-009: the instrumentation/test APK hosts the single EQO
+        // accessibility service on a real device (androidTest-side wiring
+        // authorized by the lead, :platform-a11y scope only).
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -54,4 +59,25 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(libs.junit)
+
+    // TASK-009 androidTest (device records + stub Hilt graph). All artifacts
+    // come from the shared version catalog (lint UseTomlInstead); the pins are
+    // the same ones this task originally hardcoded (hilt 2.60.1, runner 1.7.0).
+    // Library `implementation` deps are not on the androidTest compile
+    // classpath, so the projects and jars the fakes reference are declared
+    // explicitly. Hilt refuses @HiltAndroidApp in a library's androidTest, so
+    // the test APK hosts dagger.hilt.android.testing.HiltTestApplication.
+    androidTestImplementation(project(":core-agent"))
+    androidTestImplementation(project(":core-llm"))
+    androidTestImplementation(project(":core-security"))
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.hilt.android)
+    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.kotlinx.coroutines.android)
+    androidTestImplementation(libs.kotlinx.serialization.json)
+    androidTestImplementation(libs.room.runtime)
+    androidTestImplementation(platform(libs.okhttp.bom))
+    androidTestImplementation(libs.okhttp)
+    androidTestImplementation(libs.androidx.test.runner)
+    kspAndroidTest(libs.hilt.compiler)
 }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TASK-009 (lead-authorized androidTest wiring, inside :platform-a11y scope only):
+  the instrumentation/test APK is the installable host for the single EQO
+  accessibility service on a real device. This manifest adds the test
+  application (Hilt graph) and the test target activity; the ONE accessibility
+  service comes from src/main/AndroidManifest.xml at manifest-merge time, so the
+  test APK still declares exactly one service (verified in the merged test
+  manifest).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      TASK-009: EqoTestHostApplication (not HiltTestApplication) so the Hilt
+      test component exists at process start and the system can create the
+      accessibility service at any time - see EqoTestHostApplication.kt.
+    -->
+    <application android:name="ai.eqo.test.EqoTestHostApplication">
+        <!--
+          TASK-009: exported so the device-records driver can be started from
+          the adb shell (am start with the runRecords boolean extra). Test APK
+          only - this activity never ships in a product app.
+        -->
+        <activity
+            android:name="ai.eqo.test.EqoTestTargetActivity"
+            android:exported="true" />
+    </application>
+
+</manifest>

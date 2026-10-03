@@ -12,4 +12,28 @@
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
+    <!--
+      TASK-009: exactly ONE accessibility service is registered here. Each
+      upstream donor project registers its own accessibility service; EQO merges
+      both donor implementations into this single service, and
+      EqoSingleServiceManifestTest fails the build if a second one ever appears
+      in any android/**/src/main manifest.
+    -->
+    <application>
+        <service
+            android:name="ai.eqo.accessibility.EQOAccessibilityService"
+            android:description="@string/eqo_accessibility_service_description"
+            android:exported="false"
+            android:label="@string/eqo_accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+    </application>
+
 </manifest>

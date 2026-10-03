@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TASK-009: stable resource ids for the androidTest target activity. Real
+  resource ids (not View.generateViewId) so the accessibility node tree exposes
+  viewIdResourceName and EqoAutomation.tapById/typeById can target them.
+-->
+<resources>
+    <item name="eqo_test_scroll" type="id" />
+    <item name="eqo_test_button" type="id" />
+    <item name="eqo_test_input" type="id" />
+    <item name="eqo_test_submit" type="id" />
+    <item name="eqo_test_status" type="id" />
+    <item name="eqo_test_prompt" type="id" />
+</resources>

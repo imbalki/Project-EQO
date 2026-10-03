@@ -13,6 +13,7 @@ ksp = "2.3.10"
 room = "2.8.4"
 datastore = "1.1.1"
 okhttp = "5.4.0"
+androidxTestRunner = "1.7.0"
 retrofit = "3.0.0"
 kotlinxSerialization = "1.8.1"
 coroutines = "1.10.2"
@@ -26,6 +27,7 @@ litertlm = "0.14.0"
 [libraries]
 junit = { module = "junit:junit", version.ref = "junit" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
@@ -45,6 +47,7 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTestCore" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 mlkit-genai-prompt = { module = "com.google.mlkit:genai-prompt", version.ref = "mlkitGenai" }
 litertlm-android = { module = "com.google.ai.edge.litertlm:litertlm-android", version.ref = "litertlm" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }

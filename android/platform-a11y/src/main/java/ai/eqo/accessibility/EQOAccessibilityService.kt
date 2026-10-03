@@ -72,6 +72,39 @@ class EQOAccessibilityService : AccessibilityService() {
     private var showFloatingButtonSetting = false
     private val imeSubmitLabels = listOf("search", "go", "send", "done", "submit", "ok", "enter")
 
+    // ── TASK-009: takeover detection and the typed automation layer ──────────
+
+    /**
+     * Shared with [AgentLoop] through [TakeoverDetector.shared]: latches true
+     * when the user touches the screen during an agent action, pausing the loop.
+     */
+    private val takeoverDetector = TakeoverDetector.shared
+
+    /** Non-zero while an EQO-dispatched gesture is in flight (touch attribution). */
+    private val gestureInFlight =
+        java.util.concurrent.atomic
+            .AtomicInteger(0)
+
+    private var touchProbeView: TouchProbeView? = null
+
+    /**
+     * Typed observe/tap/scroll/type layer over this service's node tree. Surfaces
+     * accessibility-disabled as a typed error with no silent retry.
+     */
+    val automation: EqoAutomation by lazy {
+        EqoAutomation(
+            rootProvider = { rootInActiveWindow?.let { AccessibilityNodeAdapter(it) } },
+            serviceState = {
+                if (instance != null) {
+                    EqoAutomation.ServiceState.AVAILABLE
+                } else {
+                    EqoAutomation.ServiceState.ACCESSIBILITY_DISABLED
+                }
+            },
+            takeover = takeoverDetector,
+        )
+    }
+
     /**
      * BroadcastReceiver that tracks device lock/unlock state.
      * Hides the floating button when the device is locked to prevent
@@ -134,15 +167,44 @@ class EQOAccessibilityService : AccessibilityService() {
                 floatingView?.updateState(state)
             }
         }
+
+        // TASK-009: start the touch probe that feeds takeover detection.
+        addTouchProbe()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
+        // TASK-009: TYPE_TOUCH_INTERACTION_START fires when a finger (or an
+        // injected touch) starts on the screen. Combined with the overlay touch
+        // probe below it feeds the takeover detector; the second source for the
+        // same touch is a no-op because the detector latches.
+        if (event.eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START) {
+            reportTouchToTakeoverDetector()
+        }
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val pkg = event.packageName?.toString()
             if (!pkg.isNullOrBlank() && pkg != packageName) {
                 habitRoutineEngine.get().recordAppOpen(pkg)
             }
+        }
+    }
+
+    /**
+     * TASK-009: one screen touch was observed. Touches seen while an
+     * EQO-dispatched gesture is in flight are attributed to that gesture; every
+     * other touch is the user's. A user touch during an agent action latches the
+     * takeover detector, which pauses the loop.
+     */
+    private fun reportTouchToTakeoverDetector() {
+        val source =
+            if (gestureInFlight.get() > 0) {
+                TakeoverDetector.TouchSource.AGENT_GESTURE
+            } else {
+                TakeoverDetector.TouchSource.USER
+            }
+        val tookOver = takeoverDetector.onTouch(source)
+        if (tookOver) {
+            android.util.Log.i("EQOAccessibilityService", "TASK-009: user takeover detected - loop paused")
         }
     }
 
@@ -158,8 +220,67 @@ class EQOAccessibilityService : AccessibilityService() {
             // Receiver may not have been registered
         }
         serviceScope.cancel()
+        removeTouchProbe()
         removeFloatingButton()
         instance = null
+    }
+
+    /**
+     * TASK-009: a 1x1 overlay window with FLAG_WATCH_OUTSIDE_TOUCH. It consumes
+     * exactly one screen pixel (top-left corner) and receives ACTION_OUTSIDE for
+     * every touch anywhere else on screen - including touches on other apps'
+     * windows - so the takeover detector sees user input while EQO works.
+     */
+    private fun addTouchProbe() {
+        if (touchProbeView != null) return
+        if (windowManager == null) {
+            windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        }
+        val probe = TouchProbeView(this)
+        val params =
+            WindowManager
+                .LayoutParams(
+                    1,
+                    1,
+                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+                    PixelFormat.TRANSLUCENT,
+                ).apply {
+                    gravity = Gravity.TOP or Gravity.START
+                    x = 0
+                    y = 0
+                }
+        probe.setOnTouchListener(
+            View.OnTouchListener { v, event ->
+                if (event.action == MotionEvent.ACTION_OUTSIDE) {
+                    reportTouchToTakeoverDetector()
+                }
+                if (event.action == MotionEvent.ACTION_UP) {
+                    // Lint ClickableViewAccessibility: report the genuine click
+                    // (touch released on the probe) through the a11y click path.
+                    v.performClick()
+                }
+                true
+            },
+        )
+        try {
+            windowManager?.addView(probe, params)
+            touchProbeView = probe
+        } catch (e: Exception) {
+            android.util.Log.w("EQOAccessibilityService", "TASK-009: touch probe not added", e)
+            touchProbeView = null
+        }
+    }
+
+    private fun removeTouchProbe() {
+        val probe = touchProbeView ?: return
+        touchProbeView = null
+        try {
+            windowManager?.removeView(probe)
+        } catch (e: Exception) {
+            // View may already be gone with the window session.
+        }
     }
 
     /**
@@ -378,6 +499,19 @@ class EQOAccessibilityService : AccessibilityService() {
             openMainActivityAction()
             return true
         }
+    }
+
+    /**
+     * TASK-009: the 1x1 takeover-probe window (see [addTouchProbe]). Named type
+     * for the same Lint `StaticFieldLeak` treatment as [TouchTargetView].
+     * `performClick` is overridden (and called from the probe's touch listener
+     * on ACTION_UP) per the Android accessibility guideline - the probe itself
+     * has no click action, so it just delegates to the base implementation.
+     */
+    private inner class TouchProbeView(
+        context: Context,
+    ) : View(context) {
+        override fun performClick(): Boolean = super.performClick()
     }
 
     inner class FloatingWidgetView(
@@ -638,7 +772,24 @@ class EQOAccessibilityService : AccessibilityService() {
                     addStroke(stroke)
                 }.build()
 
-        return dispatchGesture(gesture, null, null)
+        // TASK-009: mark the gesture in flight so the touch probe attributes the
+        // gesture's own touches to EQO instead of to the user.
+        gestureInFlight.incrementAndGet()
+        val callback =
+            object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription?) {
+                    gestureInFlight.decrementAndGet()
+                }
+
+                override fun onCancelled(gestureDescription: GestureDescription?) {
+                    gestureInFlight.decrementAndGet()
+                }
+            }
+        val dispatched = dispatchGesture(gesture, callback, null)
+        if (!dispatched) {
+            gestureInFlight.decrementAndGet()
+        }
+        return dispatched
     }
 
     // --- Screen Text Extraction ---

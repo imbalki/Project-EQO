@@ -108,6 +108,9 @@ class AgentLoop
         private val settingsRepository: ai.eqo.data.repository.SettingsRepository,
         private val reEvalEngine: dagger.Lazy<ReEvaluationEngine>,
     ) {
+        // TASK-009: shared with EQOAccessibilityService; a user touch during
+        // an agent action latches it and pauses this loop (checked per plan step).
+        private val takeoverDetector = ai.eqo.accessibility.TakeoverDetector.shared
         private val scope = CoroutineScope(Dispatchers.Default)
         private val json =
             Json {
@@ -1056,6 +1059,17 @@ class AgentLoop
                 // stops this loop promptly even on iterations that finish without ever
                 // hitting a suspending call that would otherwise surface the cancellation.
                 currentCoroutineContext().ensureActive()
+
+                // TASK-009: user takeover pauses the loop. Checked before every step
+                // (and therefore again right after any step that ran while the user
+                // touched the screen): no further action is dispatched, remaining steps
+                // stay PENDING, and the plan is marked PAUSED. Resume UX is TASK-012.
+                if (takeoverDetector.isPaused) {
+                    android.util.Log.i("AgentLoop", "TASK-009: user takeover - pausing plan loop")
+                    planManager.updatePlanStatus(PlanStatus.PAUSED)
+                    _agentState.value = AgentState.Idle
+                    break
+                }
 
                 val nextStep = planManager.getActiveStep()
                 if (nextStep == null) {

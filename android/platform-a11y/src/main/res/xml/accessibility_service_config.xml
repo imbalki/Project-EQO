@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TASK-009: the single EQO accessibility service config. Each upstream donor
+  registers its own service in its donor manifest; EQO merges both into this one
+  service (see EqoSingleServiceManifestTest and the TASK-009 evidence file for
+  the merged-manifest proof).
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewClicked|typeViewScrolled|typeViewTextChanged|typeTouchInteractionStart|typeTouchInteractionEnd"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagReportViewIds|flagIncludeNotImportantViews"
+    android:canPerformGestures="true"
+    android:canTakeScreenshot="true"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/eqo_accessibility_service_description"
+    android:notificationTimeout="100" />
