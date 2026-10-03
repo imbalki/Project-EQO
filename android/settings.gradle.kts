@@ -26,3 +26,5 @@ include(":adb-pairing")
 // TASK-007 (issue #12): EQO privileged helper, forked from Shizuku + Shizuku-API.
 include(":helper-server")
 include(":helper-client")
+// TASK-010 (issue #15): Chrome DevTools (CDP) spike, extracted from ClosePaw.
+include(":browser-cdp")

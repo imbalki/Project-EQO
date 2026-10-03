@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MagicNumber:DevtoolsHttpProtocol.kt$DevtoolsHttpProtocol$200</ID>
+    <ID>MagicNumber:DevtoolsHttpProtocol.kt$DevtoolsHttpProtocol$4</ID>
+    <ID>MaxLineLength:DevtoolsSetupTest.kt$DevtoolsSetupTest$private fun http200(body: String): ByteArray</ID>
+    <ID>MayBeConst:ChromePageController.kt$ChromePageController.Companion$private val FILL_TEMPLATE = "(function(){var el=document.querySelector(__SELECTOR__);" + "if(!el){return null;}" + "el.focus();el.value=__TEXT__;" + "el.dispatchEvent(new Event('input',{bubbles:true}));" + "el.dispatchEvent(new Event('change',{bubbles:true}));" + "return el.value;})()"</ID>
+    <ID>MayBeConst:ChromePageController.kt$ChromePageController.Companion$private val READ_TEMPLATE = "(function(){var el=document.querySelector(__SELECTOR__);" + "return el?el.value:null;})()"</ID>
+    <ID>ReturnCount:ChromeCdpClient.kt$ChromeCdpClient$private fun resolveDialogState(options: CdpOptions): JsonElement</ID>
+    <ID>ReturnCount:ChromeCdpClient.kt$ChromeCdpClient$private fun routeSessionId( method: String, options: CdpOptions, ): String?</ID>
+    <ID>ReturnCount:ChromeCdpClient.kt$ChromeCdpClient$private suspend fun recoverStaleSession(): Boolean</ID>
+    <ID>ReturnCount:ChromeCdpClient.kt$ChromeCdpClient$private suspend fun switchDirectPageTarget(targetId: String): Boolean</ID>
+    <ID>ReturnCount:ChromeCdpClient.kt$ChromeCdpClient$suspend fun send( method: String, params: JsonObject = JsonObject(emptyMap()), options: CdpOptions = CdpOptions(), ): JsonElement</ID>
+    <ID>ReturnCount:ChromePageController.kt$ChromePageController$private suspend fun evaluateStringOrNull(expression: String): String?</ID>
+    <ID>ReturnCount:DevtoolsEndpoint.kt$DevtoolsSocketProbe$fun probe(): Result</ID>
+    <ID>SwallowedException:ChromeCdpClient.kt$ChromeCdpClient$e: TimeoutCancellationException</ID>
+    <ID>SwallowedException:ChromeCdpSetupTest.kt$ChromeCdpSetupTest$e: CdpSetupError.ConsentRequired</ID>
+    <ID>SwallowedException:DevtoolsEndpoint.kt$DevtoolsEndpoint$e: CdpSetupError.MalformedResponse</ID>
+    <ID>SwallowedException:DevtoolsEndpoint.kt$DevtoolsEndpoint$e: Throwable</ID>
+    <ID>ThrowsCount:ChromeCdpClient.kt$ChromeCdpClient$private suspend fun sendRaw( method: String, params: JsonObject, sessionId: String?, ): JsonElement</ID>
+    <ID>ThrowsCount:ChromeCdpClient.kt$ChromeCdpClient$suspend fun send( method: String, params: JsonObject = JsonObject(emptyMap()), options: CdpOptions = CdpOptions(), ): JsonElement</ID>
+    <ID>ThrowsCount:DevtoolsHttpProtocol.kt$DevtoolsHttpProtocol$fun parseHttpBody(raw: ByteArray): String</ID>
+    <ID>TooGenericExceptionCaught:ChromeCdpClient.kt$ChromeCdpClient$recoveryError: Exception</ID>
+    <ID>TooGenericExceptionCaught:ChromeCdpClient.kt$ChromeCdpClient$t: Exception</ID>
+    <ID>TooGenericExceptionCaught:DevtoolsEndpoint.kt$DevtoolsEndpoint$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:DevtoolsHttpProtocol.kt$DevtoolsHttpProtocol$e: Throwable</ID>
+    <ID>TooManyFunctions:ChromeCdpClient.kt$ChromeCdpClient</ID>
+    <ID>UnusedParameter:ChromeCdpSetup.kt$ChromeCdpSetup$function: CdpFunction</ID>
+  </CurrentIssues>
+</SmellBaseline>

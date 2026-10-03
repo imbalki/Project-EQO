@@ -375,3 +375,33 @@ and one app-side wiring test.
 | :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/LoopbackAdbHost.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13 alignment/security follow-up) |
 | :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/LoopbackAdbHostTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13 alignment/security follow-up) |
 | :app | `android/app/src/test/kotlin/ai/eqo/ActivationWiringTest.kt` | EQO-NEW | `ai.eqo` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+
+## TASK-010 additions (issue #15)
+
+The eighteen TASK-010 Chrome DevTools (CDP) files in `:browser-cdp` are recorded below.
+Seven are **EXTRACT** rows (imoonkey/closepaw @ `75dae2653f5a6b25d5df51ee7008b0f830de1536`,
+package renamed to `ai.eqo.browser.cdp`; the shizuku/ sub-package is dropped and DevtoolsHttpProtocol
+is re-homed into the flat package); eleven are **EQO-NEW** (the setup orchestrator, informed-consent
+gate, typed setup errors, verified-endpoint probe, navigate/fill controller, and their tests).
+Donor's synthetic dialog-query string and DevTools User-Agent are rebranded to EQO. See
+`task-010-chrome-cdp-spike.md` for the full change ledger and the device test plan (PENDING owner
+presence).
+
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/CdpTransport.kt` | EXTRACT | `ai.eqo.browser.cdp` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/CdpTransport.kt`) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/ChromeCdpClient.kt` | EXTRACT | `ai.eqo.browser.cdp` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/ChromeCdpClient.kt`) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/ChromeCdpCommand.kt` | EXTRACT | `ai.eqo.browser.cdp` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/ChromeCdpCommand.kt`) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/ChromeCdpEventBuffer.kt` | EXTRACT | `ai.eqo.browser.cdp` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/ChromeCdpEventBuffer.kt`) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/ChromeCdpTarget.kt` | EXTRACT | `ai.eqo.browser.cdp` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/ChromeCdpTarget.kt`) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/DevtoolsHttpProtocol.kt` | EXTRACT | `ai.eqo.browser.cdp` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/shizuku/DevtoolsHttpProtocol.kt`; shizuku sub-package dropped) |
+| :browser-cdp | `android/browser-cdp/src/test/kotlin/ai/eqo/browser/cdp/FakeCdpConnection.kt` | EXTRACT | `ai.eqo.browser.cdp` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/test/kotlin/ai/closepaw/browser/cdp/FakeCdpConnection.kt`; adapted to JUnit) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/CdpConsent.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/CdpSetupError.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/ChromeControl.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/ChromeCdpSetup.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/ChromePageController.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+| :browser-cdp | `android/browser-cdp/src/main/kotlin/ai/eqo/browser/cdp/DevtoolsEndpoint.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+| :browser-cdp | `android/browser-cdp/src/test/kotlin/ai/eqo/browser/cdp/CdpConsentTest.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+| :browser-cdp | `android/browser-cdp/src/test/kotlin/ai/eqo/browser/cdp/ChromeCdpCommandTest.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+| :browser-cdp | `android/browser-cdp/src/test/kotlin/ai/eqo/browser/cdp/ChromeCdpSetupTest.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+| :browser-cdp | `android/browser-cdp/src/test/kotlin/ai/eqo/browser/cdp/ChromePageControllerTest.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+| :browser-cdp | `android/browser-cdp/src/test/kotlin/ai/eqo/browser/cdp/DevtoolsSetupTest.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
