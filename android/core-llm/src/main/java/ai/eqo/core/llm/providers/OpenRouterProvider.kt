@@ -7,6 +7,7 @@ import ai.eqo.core.llm.LLMResponse
 import ai.eqo.core.llm.ResponseFormat
 import ai.eqo.core.llm.error.ProviderErrorDetail
 import ai.eqo.core.llm.error.toSafeProviderException
+import ai.eqo.core.llm.security.LogRedactor
 import ai.eqo.core.llm.toOpenAIMessages
 import ai.eqo.data.repository.SettingsRepository
 import com.google.gson.Gson
@@ -45,6 +46,15 @@ class OpenRouterProvider
                     ?: config.apiKeys[name]
                     ?: throw IllegalStateException("API Key for $name is not set.")
 
+            // TASK-006: the resolved key is registered with the single
+            // log/crash redaction pipeline for the lifetime of the request.
+            return LogRedactor.register(apiKey).use { completeWithKey(request, apiKey) }
+        }
+
+        private suspend fun completeWithKey(
+            request: LLMRequest,
+            apiKey: String,
+        ): LLMResponse {
             val startTime = System.currentTimeMillis()
 
             val messagesList = request.messages.toOpenAIMessages(request.systemPrompt)

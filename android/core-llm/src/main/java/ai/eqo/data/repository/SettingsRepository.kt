@@ -1,6 +1,7 @@
 // Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/data/repository/SettingsRepository.kt
 package ai.eqo.data.repository
 
+import ai.eqo.core.llm.security.LogRedactor
 import ai.eqo.core.security.CredentialStoreResult
 import ai.eqo.core.security.ProviderCredentialId
 import ai.eqo.core.security.ProviderCredentialRecoveryState
@@ -94,10 +95,15 @@ class SettingsRepository internal constructor(
         val snapshot =
             (readCredentialSnapshot() as? CredentialSnapshotResult.Success)?.snapshot
                 ?: return persisted.copy(apiKeys = emptyMap(), elevenLabsApiKey = "")
-        return persisted.copy(
-            apiKeys = snapshot.providerApiKeys,
-            elevenLabsApiKey = snapshot.elevenLabsApiKey.orEmpty(),
-        )
+        val hydrated =
+            persisted.copy(
+                apiKeys = snapshot.providerApiKeys,
+                elevenLabsApiKey = snapshot.elevenLabsApiKey.orEmpty(),
+            )
+        // TASK-006: every credential materialized from storage is registered
+        // with the single log/crash redaction pipeline so it can never leak.
+        registerSecretsForRedaction(hydrated)
+        return hydrated
     }
 
     /**
@@ -120,6 +126,9 @@ class SettingsRepository internal constructor(
      * DataStore transaction, preserving the previously persisted configuration as retry input.
      */
     private fun storeSecretsAndStrip(config: LLMConfig): CredentialStripResult {
+        // TASK-006: keys being saved are plaintext in memory until the strip
+        // completes; register them with the redaction pipeline first.
+        registerSecretsForRedaction(config)
         val snapshot =
             when (val snapshotResult = readCredentialSnapshot()) {
                 is CredentialSnapshotResult.Success -> snapshotResult.snapshot
@@ -168,6 +177,19 @@ class SettingsRepository internal constructor(
         }
 
         return CredentialStripResult.Success(config.copy(apiKeys = emptyMap(), elevenLabsApiKey = ""))
+    }
+
+    /**
+     * Registers every live credential value with [LogRedactor] (idempotent,
+     * process-lifetime): once a key has been stored or hydrated it must stay
+     * scrubbed from all future log and crash output.
+     */
+    private fun registerSecretsForRedaction(config: LLMConfig) {
+        val secrets = config.apiKeys.values + config.elevenLabsApiKey
+        val registered = LogRedactor.registeredSecrets()
+        secrets
+            .filter { it.isNotBlank() && it !in registered }
+            .forEach { key -> LogRedactor.register(key) }
     }
 
     private fun persistCredential(

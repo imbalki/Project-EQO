@@ -1,6 +1,7 @@
 // Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/test/java/com/opendroid/ai/data/repository/SettingsRepositoryProviderCredentialsTest.kt
 package ai.eqo.data.repository
 
+import ai.eqo.core.llm.security.LogRedactor
 import ai.eqo.core.security.CredentialStoreResult
 import ai.eqo.core.security.ProviderCredentialId
 import ai.eqo.core.security.ProviderCredentialRecoveryState
@@ -194,6 +195,30 @@ class SettingsRepositoryProviderCredentialsTest {
             assertEquals("old-openai-secret", credentials.values[openAi])
             assertFalse(credentials.values.containsKey(ProviderCredentialId.ElevenLabsApiKey))
             assertTrue(repository.llmConfig.first().apiKeys["OpenAI"] == "old-openai-secret")
+        }
+
+    @Test
+    fun `stored and saved api keys are registered with the log redactor`() =
+        runBlocking {
+            val storedKey = "sk-or-v1-stored-0007"
+            val savedKey = "sk-or-v1-saved-0008"
+            val dataStore = newDataStore()
+            val credentials =
+                InMemoryProviderCredentialStore(
+                    initialValues = mapOf(ProviderCredentialId.ApiKey("OpenRouter") to storedKey),
+                )
+            val repository = SettingsRepository(dataStore, credentials, runStartupMigration = false)
+
+            // Load path: hydrating the key from storage registers it with the
+            // redactor, so logs and crash text can never carry it.
+            val hydrated = repository.llmConfig.first()
+            assertEquals(storedKey, hydrated.apiKeys["OpenRouter"])
+            assertTrue(LogRedactor.registeredSecrets().contains(storedKey))
+
+            // Save path: a newly saved key is registered before the strip commits.
+            repository.updateConfig { it.copy(apiKeys = mapOf("OpenRouter" to savedKey)) }
+            assertTrue(LogRedactor.registeredSecrets().contains(savedKey))
+            assertTrue(LogRedactor.registeredSecrets().contains(storedKey))
         }
 
     private fun newDataStore() =

@@ -198,10 +198,13 @@ class ModelFetcher
                         else -> ModelFetchOutcome.Success(emptyList())
                     }
                 } catch (e: Exception) {
-                    // Messages here reach the UI, so they carry the provider and status
-                    // only — never the request URL (it can hold the API key) or the
+                    // The log line carries the exception class name and fixed text
+                    // only: neither the message nor the throwable is logged, because
+                    // logcat renders the throwable's message and either can quote a
+                    // key-bearing URL. The user-facing message below keeps the
+                    // provider and the error detail; never the request URL or the
                     // response body.
-                    Log.e(tag, "Failed to fetch models for provider $provider: ${e.localizedMessage}", e)
+                    Log.e(tag, "Failed to fetch models for provider $provider: ${e.javaClass.simpleName}")
                     ModelFetchOutcome.Failed(
                         "Could not load models from $provider: ${e.localizedMessage ?: "network error"}",
                     )
@@ -246,12 +249,15 @@ class ModelFetcher
                     "https://generativelanguage.googleapis.com/v1beta/models"
                         .toHttpUrlOrNull()
                         ?.newBuilder()
-                        ?.addQueryParameter("key", apiKey)
                         ?.addQueryParameter("pageSize", "200")
                         ?.apply { pageToken?.let { addQueryParameter("pageToken", it) } }
                         ?.build()
                         ?: throw IOException("Could not build the Gemini models request.")
-                val page = getJson(url = url.toString(), headers = emptyMap())
+                // The key travels in the `x-goog-api-key` header (as GeminiProvider
+                // does for the chat path), never as a `key` query parameter: query
+                // parameters surface through server-side URL logs, `Request.url`
+                // rendering and exception messages.
+                val page = getJson(url = url.toString(), headers = mapOf("x-goog-api-key" to apiKey))
                 models += ModelListParsers.gemini(page, provider)
                 pageToken = page.optString("nextPageToken").takeIf { it.isNotBlank() }
                 pagesFetched++

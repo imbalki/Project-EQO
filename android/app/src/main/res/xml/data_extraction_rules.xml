@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TASK-006 security pass F3 (issue #11): nothing from this app is backed up
+     or device-transferred. `android:allowBackup="false"` is the master switch;
+     these rules make the same exclusion explicit for the Android 12+
+     data-extraction paths that lint [DataExtractionRules] requires at
+     targetSdk 36 (lead's F3 spec: "for targetSdk 36 also dataExtractionRules
+     excluding everything if lint requires").
+     The root exclusion drops everything; the three explicit exclusions per
+     section keep the original project's rules (see the provenance map) and are
+     asserted verbatim by ProviderCredentialStoreTest (exactly two sharedpref
+     exclusions, one per section). -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" path="." />
+        <exclude domain="sharedpref" path="."/>
+        <exclude domain="database" path="."/>
+        <exclude domain="file" path="datastore/"/>
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" path="." />
+        <exclude domain="sharedpref" path="."/>
+        <exclude domain="database" path="."/>
+        <exclude domain="file" path="datastore/"/>
+    </device-transfer>
+</data-extraction-rules>

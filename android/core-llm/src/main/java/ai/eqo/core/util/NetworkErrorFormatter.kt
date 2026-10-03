@@ -24,10 +24,15 @@ object NetworkErrorFormatter {
         val message =
             error?.localizedMessage ?: error?.message
                 ?: return "Something went wrong. Please try again."
-        return toUserMessage(message)
+        return toUserMessage(message, error?.javaClass?.simpleName)
     }
 
-    fun toUserMessage(message: String): String {
+    fun toUserMessage(message: String): String = toUserMessage(message, errorClass = null)
+
+    private fun toUserMessage(
+        message: String,
+        errorClass: String?,
+    ): String {
         val lower = message.lowercase()
         return when {
             lower.contains("unable to resolve host") ||
@@ -44,7 +49,9 @@ object NetworkErrorFormatter {
                 "Can't reach the configured server. Check your provider settings."
 
             else -> {
-                Log.e(TAG, "Unhandled network/provider error: $message")
+                // The message can quote a key-bearing URL, so the log carries the
+                // exception class name and fixed text only — never the message.
+                Log.e(TAG, "Unhandled network/provider error (${errorClass ?: "unknown"})")
                 "Something went wrong. Please try again."
             }
         }

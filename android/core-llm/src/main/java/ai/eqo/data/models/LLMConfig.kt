@@ -56,7 +56,12 @@ data class LLMConfig(
     val isDarkMode: Boolean = true,
     val lastModelFetch: Map<String, Long> = emptyMap(), // Provider -> last fetch timestamp
     val modelCache: Map<String, List<AIModel>> = emptyMap(), // Provider -> cached AIModels list
-)
+) {
+    // TASK-006 security pass F5: the generated data-class toString would render
+    // apiKeys and elevenLabsApiKey into logs and crash breadcrumbs. Fixed text
+    // only — the same contract as ProviderRequestConfig (LLMProvider.kt).
+    override fun toString(): String = "<redacted LLMConfig>"
+}
 
 fun LLMConfig.resolvedAutoMode(): AutoMode = autoMode ?: if (autoConfirmPlans) AutoMode.YOLO else AutoMode.OFF
 

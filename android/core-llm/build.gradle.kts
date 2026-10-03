@@ -67,4 +67,7 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     testImplementation(platform(libs.okhttp.bom))
     testImplementation(libs.mockwebserver3)
+    // F4 (TASK-006 security pass): a real TLS MockWebServer for the https
+    // endpoint-probe test (held certificate, no public CA).
+    testImplementation(libs.okhttp.tls)
 }
