@@ -54,6 +54,30 @@ Owner decisions recorded 2026-10-01. These supersede conflicting statements in t
 
 **Status:** DECIDED (owner, 2026-10-01). Recorded as ADR-0003 (`docs/adr/0003-android-11-floor-and-no-leap-sdk.md`). Open items are recorded there, not decided here (LiteRT-LM/Gemma minSdk verification in TASK-013; donor code above API 30 surfaced by compile/lint in TASK-003/004/007).
 
+## D-008 - Virtual display postponed to the next stage
+
+**Decision:** the **virtual display (background mode, TASK-011 / spike S4) is postponed out of Phase One** to the next stage. The first study build works in the foreground with the user watching and able to Pause, Stop or take over. The privileged helper (TASK-007) and wireless pairing (TASK-008) stay in Phase One; only the virtual-display spike and gate 6 move.
+
+**Rationale:** owner decision 2026-10-03, to shorten the path to the first usable build. There is one phone, so the virtual-display and Chrome-control spikes would run one after the other; postponing frees roughly 4 to 6 hours of phone time and about half a day on the first cut. Nothing else depends on it: TASK-015 and TASK-016 no longer wait for TASK-011.
+
+**Status:** DECIDED (owner, 2026-10-03). TASK-011 cards stay unreleased on the board (its phone card is not completed); gate 6 is recorded as deferred in the exit review (TASK-016). Revisit in Phase 2 planning.
+
+## D-009 - Local Gemma parked; the owner tests with OpenRouter
+
+**Decision:** **TASK-013 (local Gemma / LiteRT-LM) is parked.** The owner tests the first build with OpenRouter bring-your-own-key (D-001). D-006 (include the local path if feasible) is suspended, not removed: the code from the OpenDroid base stays in the tree, nothing is switched on or advertised.
+
+**Rationale:** owner decision 2026-10-03. The test phone has 3.8 GB RAM in total, so a Gemma model may not fit anyway. Alternatives considered for Phase 2, all free and open-source: llama.cpp's server through Termux on the phone (EQO's custom OpenAI-compatible endpoint already allows plain http for loopback only), or Ollama / LM Studio on a computer over the local network. PocketPal AI (installed on the test phone) has no API or server mode and keeps its models private, so it cannot be bridged.
+
+**Status:** DECIDED (owner, 2026-10-03). TASK-013 cards are blocked with that reason.
+
+## D-010 - No hard-block list for banking, authenticator and crypto-wallet apps for now
+
+**Decision:** the proposed **hard-block list** (EQO refuses banking, authenticator and crypto-wallet apps outright, as ClosePaw does) is **not built now**; the owner will add it later if needed. TASK-012 is structured so a block list can be added (its approval policy is a static policy over the executed action) but does not include one.
+
+**Rationale:** owner decision 2026-10-03. The security follow-ups found in the TASK-009 security pass (issue #50: gated action paths, secure-window and password filtering, untrusted-screen-text framing, user-initiated resume) stay in TASK-012: they close gaps found in review and are not part of this deferral.
+
+**Status:** DECIDED (owner, 2026-10-03). Issue #42 (research-fit docs change) is superseded by this decision plus the TASK-012 brief; the battery/background step for OEM skins (Realme UI 2.0) remains a recommendation for TASK-015.
+
 ---
 
 ## Open items (not yet decided)

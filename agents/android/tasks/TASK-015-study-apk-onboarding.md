@@ -1,7 +1,7 @@
 # TASK-015: Study APK and guided onboarding (S6)
 
 - Status: todo
-- Depends on: 007 to 014
+- Depends on: 007, 008, 010, 012, 014 (TASK-011 is deferred by D-008 and TASK-013 by D-009; onboarding has no virtual-display or local-model step). Also carries the follow-ups in issues #44 and #50 (disclosure gate and redaction wiring; gated actions and screen-text safety) and, as a recommendation, a battery/background-activity step for OEM skins such as Realme UI 2.0
 - Area: android
 - Gate: 1 to 8 (integration)
 - Models: author `mimo-v2.6-pro` (integration), `glm-5.3-flash` (screens), copy `deepseek-v4.1-flash`; reviewer `glm-5.3-flash`

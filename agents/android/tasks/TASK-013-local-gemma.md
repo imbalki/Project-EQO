@@ -1,6 +1,6 @@
 # TASK-013: Local Gemma in the first build (opportunistic)
 
-- Status: todo
+- Status: deferred (owner decision D-009, 2026-10-03: parked, the owner tests with OpenRouter; do not start)
 - Depends on: 004, 006
 - Area: android
 - Gate: none (decision D-006)

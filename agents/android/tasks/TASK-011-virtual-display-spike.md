@@ -1,6 +1,6 @@
 # TASK-011: Virtual display spike (S4)
 
-- Status: todo
+- Status: deferred (owner decision D-008, 2026-10-03: postponed to the next stage; do not start)
 - Depends on: 007, 008; needs a physical device
 - Area: android
 - Gate: 6 (DEV-09)
