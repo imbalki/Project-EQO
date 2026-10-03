@@ -53,6 +53,9 @@ dependencies {
     // Shizuku-API client). No separate helper app is installed.
     implementation(project(":helper-server"))
     implementation(project(":helper-client"))
+    // TASK-008 (issue #13): wireless-ADB pairing + the activation gate every privileged
+    // entry point consults.
+    implementation(project(":adb-pairing"))
 
     // androidx.core for androidx.core.content.FileProvider in AndroidManifest.xml
     // (authority ai.eqo.app.fileprovider); lint's MissingClass check flagged it (#10).

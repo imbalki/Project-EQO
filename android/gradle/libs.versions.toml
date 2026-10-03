@@ -28,6 +28,11 @@ litertlm = "0.14.0"
 hiddenApi = "4.4.0"
 gson = "2.13.1"
 parcelablelist = "2.0.1"
+# TASK-008: wireless-ADB pairing stack (donor pins from app/build.gradle.kts at 75dae265,
+# except Conscrypt upgraded for 16 KB native LOAD alignment; see TASK-008 evidence section 6).
+bouncycastle = "1.84"
+conscrypt = "2.7.0"
+eddsa = "0.3.0"
 
 [libraries]
 junit = { module = "junit:junit", version.ref = "junit" }
@@ -60,6 +65,11 @@ hidden-compat = { module = "dev.rikka.hidden:compat", version.ref = "hiddenApi" 
 hidden-stub = { module = "dev.rikka.hidden:stub", version.ref = "hiddenApi" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 parcelablelist = { module = "dev.rikka.rikkax.parcelablelist:parcelablelist", version.ref = "parcelablelist" }
+# TASK-008: wireless-ADB pairing stack (:adb-pairing).
+bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
+conscrypt-android = { module = "org.conscrypt:conscrypt-android", version.ref = "conscrypt" }
+eddsa = { module = "net.i2p.crypto:eddsa", version.ref = "eddsa" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

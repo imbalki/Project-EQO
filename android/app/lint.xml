@@ -14,4 +14,11 @@
     <issue id="AndroidGradlePluginVersion" severity="ignore" />
     <issue id="NewerVersionAvailable" severity="ignore" />
     <issue id="GradleDependency" severity="ignore" />
+    <!-- TASK-008: upstream EST JcaJceUtils$1 bytecode, not an EQO trust manager.
+         Shared with :adb-pairing. Exact artifact/version only; source sites remain
+         checked. See task-008-wireless-adb-pairing.md for the negative control
+         and SECURITY PASS MUST DECIDE disposition. A version change must be reviewed. -->
+    <issue id="TrustAllX509TrustManager">
+        <ignore regexp=".*[/\\]bcpkix-jdk18on[/\\]1\.84[/\\][^/\\]+[/\\]bcpkix-jdk18on-1\.84\.jar" />
+    </issue>
 </lint>

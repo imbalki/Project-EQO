@@ -1,0 +1,2066 @@
+TASK-008 loopback follow-up: real Gradle logs
+Targeted retry exit=0; exact gate exit=1; continue gate exit=1.
+
+===== loopback-tests-retry.log =====
+> Task :adb-pairing:loadKtlintReporters UP-TO-DATE
+> Task :adb-pairing:runKtlintFormatOverKotlinScripts UP-TO-DATE
+> Task :adb-pairing:runKtlintFormatOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintAndroidTestDebugSourceSetFormat SKIPPED
+> Task :adb-pairing:runKtlintFormatOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintAndroidTestReleaseSourceSetFormat SKIPPED
+> Task :adb-pairing:runKtlintFormatOverAndroidTestSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintAndroidTestSourceSetFormat SKIPPED
+> Task :adb-pairing:runKtlintFormatOverDebugSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintDebugSourceSetFormat SKIPPED
+> Task :adb-pairing:ktlintKotlinScriptFormat UP-TO-DATE
+> Task :adb-pairing:runKtlintFormatOverReleaseSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintReleaseSourceSetFormat SKIPPED
+> Task :adb-pairing:runKtlintFormatOverTestDebugSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintTestDebugSourceSetFormat SKIPPED
+> Task :adb-pairing:runKtlintFormatOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintTestFixturesDebugSourceSetFormat SKIPPED
+> Task :adb-pairing:runKtlintFormatOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintTestFixturesReleaseSourceSetFormat SKIPPED
+> Task :adb-pairing:runKtlintFormatOverTestFixturesSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintTestFixturesSourceSetFormat SKIPPED
+> Task :adb-pairing:runKtlintFormatOverTestReleaseSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintTestReleaseSourceSetFormat SKIPPED
+> Task :adb-pairing:runKtlintFormatOverMainSourceSet
+> Task :adb-pairing:ktlintMainSourceSetFormat
+> Task :adb-pairing:preBuild UP-TO-DATE
+> Task :adb-pairing:preDebugBuild UP-TO-DATE
+> Task :adb-pairing:generateDebugResources UP-TO-DATE
+> Task :adb-pairing:packageDebugResources UP-TO-DATE
+> Task :adb-pairing:processDebugNavigationResources UP-TO-DATE
+> Task :adb-pairing:parseDebugLocalResources UP-TO-DATE
+> Task :adb-pairing:generateDebugRFile UP-TO-DATE
+> Task :adb-pairing:runKtlintFormatOverTestSourceSet
+> Task :adb-pairing:ktlintTestSourceSetFormat
+> Task :adb-pairing:ktlintFormat
+> Task :adb-pairing:javaPreCompileDebug UP-TO-DATE
+> Task :adb-pairing:preDebugUnitTestBuild UP-TO-DATE
+> Task :adb-pairing:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :adb-pairing:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :adb-pairing:compileDebugKotlin
+> Task :adb-pairing:detekt
+> Task :adb-pairing:compileDebugJavaWithJavac NO-SOURCE
+> Task :adb-pairing:bundleLibRuntimeToJarDebug
+> Task :adb-pairing:bundleLibCompileToJarDebug
+> Task :adb-pairing:processDebugJavaRes UP-TO-DATE
+> Task :adb-pairing:compileDebugUnitTestKotlin
+> Task :adb-pairing:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :adb-pairing:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :adb-pairing:testDebugUnitTest
+
+[Incubating] Problems report is available at: file:///C:/Users/<user>/Claude/worktrees/task-008/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 43s
+23 actionable tasks: 10 executed, 13 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.7.0/userguide/configuration_cache_enabling.html
+
+===== loopback-final-exact-gate.log =====
+> Task :adb-pairing:preBuild UP-TO-DATE
+> Task :adb-pairing:preDebugBuild UP-TO-DATE
+> Task :adb-pairing:checkDebugAarMetadata UP-TO-DATE
+> Task :adb-pairing:mergeDebugJniLibFolders UP-TO-DATE
+> Task :adb-pairing:mergeDebugNativeLibs NO-SOURCE
+> Task :adb-pairing:stripDebugDebugSymbols NO-SOURCE
+> Task :adb-pairing:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :adb-pairing:generateDebugResources UP-TO-DATE
+> Task :adb-pairing:packageDebugResources UP-TO-DATE
+> Task :adb-pairing:processDebugNavigationResources UP-TO-DATE
+> Task :adb-pairing:parseDebugLocalResources UP-TO-DATE
+> Task :adb-pairing:generateDebugRFile UP-TO-DATE
+> Task :adb-pairing:extractDebugAnnotations
+> Task :adb-pairing:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :adb-pairing:generateDebugAssets UP-TO-DATE
+> Task :adb-pairing:mergeDebugAssets UP-TO-DATE
+> Task :adb-pairing:javaPreCompileDebug UP-TO-DATE
+> Task :adb-pairing:prepareDebugArtProfile UP-TO-DATE
+> Task :adb-pairing:prepareLintJarForPublish UP-TO-DATE
+> Task :adb-pairing:processDebugManifest UP-TO-DATE
+> Task :adb-pairing:writeDebugAarMetadata UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :helper-client:preBuild UP-TO-DATE
+> Task :helper-client:preDebugBuild UP-TO-DATE
+> Task :helper-client:processDebugNavigationResources UP-TO-DATE
+> Task :helper-server:preBuild UP-TO-DATE
+> Task :helper-server:preDebugBuild UP-TO-DATE
+> Task :helper-server:processDebugNavigationResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :helper-client:compileDebugAidl UP-TO-DATE
+> Task :helper-client:generateDebugResources UP-TO-DATE
+> Task :helper-client:packageDebugResources UP-TO-DATE
+> Task :helper-client:parseDebugLocalResources UP-TO-DATE
+> Task :helper-client:generateDebugRFile UP-TO-DATE
+> Task :helper-client:compileDebugKotlin UP-TO-DATE
+> Task :helper-client:javaPreCompileDebug UP-TO-DATE
+> Task :helper-client:compileDebugJavaWithJavac UP-TO-DATE
+> Task :helper-client:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :helper-server:generateDebugResources UP-TO-DATE
+> Task :helper-server:packageDebugResources UP-TO-DATE
+> Task :helper-server:parseDebugLocalResources UP-TO-DATE
+> Task :helper-server:generateDebugRFile UP-TO-DATE
+> Task :helper-server:compileDebugKotlin UP-TO-DATE
+> Task :helper-server:javaPreCompileDebug UP-TO-DATE
+> Task :helper-server:compileDebugJavaWithJavac UP-TO-DATE
+> Task :helper-server:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :helper-client:generateDebugAssets UP-TO-DATE
+> Task :helper-client:mergeDebugAssets UP-TO-DATE
+> Task :helper-server:generateDebugAssets UP-TO-DATE
+> Task :helper-server:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics UP-TO-DATE
+> Task :helper-client:processDebugJavaRes UP-TO-DATE
+> Task :helper-server:processDebugJavaRes UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :helper-server:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :helper-client:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :adb-pairing:mapDebugSourceSetPaths UP-TO-DATE
+> Task :adb-pairing:compileDebugLibraryResources UP-TO-DATE
+> Task :helper-client:writeDebugAarMetadata UP-TO-DATE
+> Task :helper-server:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :adb-pairing:extractDeepLinksDebug UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :helper-client:extractDeepLinksDebug UP-TO-DATE
+> Task :helper-client:processDebugManifest UP-TO-DATE
+> Task :helper-server:extractDeepLinksDebug UP-TO-DATE
+> Task :helper-server:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :helper-client:mapDebugSourceSetPaths UP-TO-DATE
+> Task :helper-client:compileDebugLibraryResources UP-TO-DATE
+> Task :helper-server:mapDebugSourceSetPaths UP-TO-DATE
+> Task :helper-server:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :adb-pairing:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :helper-client:mergeDebugJniLibFolders UP-TO-DATE
+> Task :helper-client:mergeDebugNativeLibs NO-SOURCE
+> Task :helper-client:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :helper-server:configureCMakeDebug[arm64-v8a]
+> Task :helper-server:buildCMakeDebug[arm64-v8a]
+> Task :helper-server:configureCMakeDebug[armeabi-v7a]
+> Task :helper-server:buildCMakeDebug[armeabi-v7a]
+> Task :helper-server:configureCMakeDebug[x86]
+> Task :helper-server:buildCMakeDebug[x86]
+> Task :helper-server:configureCMakeDebug[x86_64]
+> Task :helper-server:buildCMakeDebug[x86_64]
+> Task :helper-server:mergeDebugJniLibFolders UP-TO-DATE
+> Task :helper-server:mergeDebugNativeLibs UP-TO-DATE
+> Task :helper-server:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :core-agent:preBuild UP-TO-DATE
+> Task :core-agent:preDebugBuild UP-TO-DATE
+> Task :core-llm:preBuild UP-TO-DATE
+> Task :core-llm:preDebugBuild UP-TO-DATE
+> Task :core-llm:writeDebugAarMetadata UP-TO-DATE
+> Task :core-security:preBuild UP-TO-DATE
+> Task :core-security:preDebugBuild UP-TO-DATE
+> Task :core-security:writeDebugAarMetadata UP-TO-DATE
+> Task :core-agent:checkDebugAarMetadata UP-TO-DATE
+> Task :core-agent:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core-agent:mergeDebugNativeLibs NO-SOURCE
+> Task :core-agent:stripDebugDebugSymbols NO-SOURCE
+> Task :core-agent:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-agent:generateDebugResources UP-TO-DATE
+> Task :core-agent:packageDebugResources UP-TO-DATE
+> Task :core-agent:processDebugNavigationResources UP-TO-DATE
+> Task :core-agent:parseDebugLocalResources UP-TO-DATE
+> Task :core-agent:generateDebugRFile UP-TO-DATE
+> Task :core-llm:generateDebugResources UP-TO-DATE
+> Task :core-llm:packageDebugResources UP-TO-DATE
+> Task :core-llm:processDebugNavigationResources UP-TO-DATE
+> Task :core-llm:parseDebugLocalResources UP-TO-DATE
+> Task :core-llm:generateDebugRFile UP-TO-DATE
+> Task :core-security:generateDebugResources UP-TO-DATE
+> Task :core-security:packageDebugResources UP-TO-DATE
+> Task :core-security:processDebugNavigationResources UP-TO-DATE
+> Task :core-security:parseDebugLocalResources UP-TO-DATE
+> Task :core-security:generateDebugRFile UP-TO-DATE
+> Task :core-security:kspDebugKotlin UP-TO-DATE
+> Task :core-security:compileDebugKotlin UP-TO-DATE
+> Task :core-security:javaPreCompileDebug UP-TO-DATE
+> Task :core-security:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core-security:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core-security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core-llm:kspDebugKotlin UP-TO-DATE
+> Task :core-llm:compileDebugKotlin UP-TO-DATE
+> Task :core-llm:javaPreCompileDebug UP-TO-DATE
+> Task :core-llm:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core-security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core-llm:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core-llm:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core-agent:kspDebugKotlin UP-TO-DATE
+> Task :core-agent:extractDebugAnnotations UP-TO-DATE
+> Task :core-agent:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :core-agent:generateDebugAssets UP-TO-DATE
+> Task :core-agent:mergeDebugAssets UP-TO-DATE
+> Task :core-agent:compileDebugKotlin UP-TO-DATE
+> Task :core-agent:javaPreCompileDebug UP-TO-DATE
+> Task :core-agent:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core-llm:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core-agent:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core-agent:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :core-agent:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :core-agent:prepareDebugArtProfile UP-TO-DATE
+> Task :core-agent:prepareLintJarForPublish UP-TO-DATE
+> Task :core-agent:processDebugManifest UP-TO-DATE
+> Task :core-agent:processDebugJavaRes UP-TO-DATE
+> Task :core-agent:mergeDebugJavaResource UP-TO-DATE
+> Task :core-agent:syncDebugLibJars UP-TO-DATE
+> Task :core-agent:writeDebugAarMetadata UP-TO-DATE
+> Task :core-agent:bundleDebugAar UP-TO-DATE
+> Task :core-agent:assembleDebug UP-TO-DATE
+> Task :core-llm:checkDebugAarMetadata UP-TO-DATE
+> Task :core-llm:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core-llm:mergeDebugNativeLibs NO-SOURCE
+> Task :core-llm:stripDebugDebugSymbols NO-SOURCE
+> Task :core-llm:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-llm:extractDebugAnnotations UP-TO-DATE
+> Task :core-llm:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :core-llm:generateDebugAssets UP-TO-DATE
+> Task :core-llm:mergeDebugAssets UP-TO-DATE
+> Task :core-llm:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :core-llm:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :core-llm:prepareDebugArtProfile UP-TO-DATE
+> Task :core-llm:prepareLintJarForPublish UP-TO-DATE
+> Task :core-llm:processDebugManifest UP-TO-DATE
+> Task :core-llm:processDebugJavaRes UP-TO-DATE
+> Task :core-llm:mergeDebugJavaResource UP-TO-DATE
+> Task :core-llm:syncDebugLibJars UP-TO-DATE
+> Task :core-llm:bundleDebugAar UP-TO-DATE
+> Task :core-llm:assembleDebug UP-TO-DATE
+> Task :core-security:checkDebugAarMetadata UP-TO-DATE
+> Task :core-security:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core-security:mergeDebugNativeLibs NO-SOURCE
+> Task :core-security:stripDebugDebugSymbols NO-SOURCE
+> Task :core-security:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-security:extractDebugAnnotations UP-TO-DATE
+> Task :core-security:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :core-security:generateDebugAssets UP-TO-DATE
+> Task :core-security:mergeDebugAssets UP-TO-DATE
+> Task :core-security:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :core-security:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :core-security:prepareDebugArtProfile UP-TO-DATE
+> Task :core-security:prepareLintJarForPublish UP-TO-DATE
+> Task :core-security:processDebugManifest UP-TO-DATE
+> Task :core-security:processDebugJavaRes UP-TO-DATE
+> Task :core-security:mergeDebugJavaResource UP-TO-DATE
+> Task :core-security:syncDebugLibJars UP-TO-DATE
+> Task :core-security:bundleDebugAar UP-TO-DATE
+> Task :core-security:assembleDebug UP-TO-DATE
+> Task :helper-client:checkDebugAarMetadata UP-TO-DATE
+> Task :helper-client:stripDebugDebugSymbols NO-SOURCE
+> Task :helper-client:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :helper-client:extractDebugAnnotations UP-TO-DATE
+> Task :helper-client:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :helper-client:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :helper-client:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :helper-client:prepareDebugArtProfile UP-TO-DATE
+> Task :helper-client:prepareLintJarForPublish UP-TO-DATE
+> Task :helper-client:mergeDebugJavaResource UP-TO-DATE
+> Task :helper-client:syncDebugLibJars UP-TO-DATE
+> Task :helper-client:bundleDebugAar UP-TO-DATE
+> Task :helper-client:assembleDebug UP-TO-DATE
+> Task :helper-server:checkDebugAarMetadata UP-TO-DATE
+> Task :helper-server:stripDebugDebugSymbols UP-TO-DATE
+> Task :helper-server:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :helper-server:extractDebugAnnotations UP-TO-DATE
+> Task :helper-server:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :helper-server:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :helper-server:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :helper-server:prepareDebugArtProfile UP-TO-DATE
+> Task :helper-server:prepareLintJarForPublish UP-TO-DATE
+> Task :helper-server:mergeDebugJavaResource UP-TO-DATE
+> Task :helper-server:syncDebugLibJars UP-TO-DATE
+> Task :helper-server:bundleDebugAar UP-TO-DATE
+> Task :helper-server:assembleDebug UP-TO-DATE
+> Task :platform-a11y:preBuild UP-TO-DATE
+> Task :platform-a11y:preDebugBuild UP-TO-DATE
+> Task :platform-a11y:checkDebugAarMetadata UP-TO-DATE
+> Task :platform-a11y:mergeDebugJniLibFolders UP-TO-DATE
+> Task :platform-a11y:mergeDebugNativeLibs NO-SOURCE
+> Task :platform-a11y:stripDebugDebugSymbols NO-SOURCE
+> Task :platform-a11y:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-agent:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :platform-a11y:generateDebugResources UP-TO-DATE
+> Task :platform-a11y:packageDebugResources UP-TO-DATE
+> Task :platform-a11y:processDebugNavigationResources UP-TO-DATE
+> Task :platform-a11y:parseDebugLocalResources UP-TO-DATE
+> Task :platform-a11y:generateDebugRFile UP-TO-DATE
+> Task :platform-a11y:kspDebugKotlin UP-TO-DATE
+> Task :platform-a11y:extractDebugAnnotations UP-TO-DATE
+> Task :platform-a11y:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :platform-a11y:generateDebugAssets UP-TO-DATE
+> Task :platform-a11y:mergeDebugAssets UP-TO-DATE
+> Task :core-agent:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :platform-a11y:compileDebugKotlin UP-TO-DATE
+> Task :platform-a11y:javaPreCompileDebug UP-TO-DATE
+> Task :platform-a11y:compileDebugJavaWithJavac UP-TO-DATE
+> Task :platform-a11y:transformDebugClassesWithAsm UP-TO-DATE
+> Task :platform-a11y:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :platform-a11y:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :platform-a11y:prepareDebugArtProfile UP-TO-DATE
+> Task :platform-a11y:prepareLintJarForPublish UP-TO-DATE
+> Task :platform-a11y:processDebugManifest UP-TO-DATE
+> Task :platform-a11y:processDebugJavaRes UP-TO-DATE
+> Task :platform-a11y:mergeDebugJavaResource UP-TO-DATE
+> Task :platform-a11y:syncDebugLibJars UP-TO-DATE
+> Task :platform-a11y:writeDebugAarMetadata UP-TO-DATE
+> Task :platform-a11y:bundleDebugAar UP-TO-DATE
+> Task :platform-a11y:assembleDebug UP-TO-DATE
+> Task :adb-pairing:preReleaseBuild UP-TO-DATE
+> Task :adb-pairing:checkReleaseAarMetadata UP-TO-DATE
+> Task :adb-pairing:compileDebugKotlin
+> Task :adb-pairing:compileDebugJavaWithJavac NO-SOURCE
+> Task :adb-pairing:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :adb-pairing:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :adb-pairing:processDebugJavaRes UP-TO-DATE
+> Task :adb-pairing:mergeDebugJavaResource UP-TO-DATE
+> Task :adb-pairing:syncDebugLibJars
+> Task :adb-pairing:bundleDebugAar
+> Task :adb-pairing:assembleDebug
+> Task :adb-pairing:bundleLibRuntimeToDirDebug
+> Task :adb-pairing:bundleLibCompileToJarDebug
+> Task :app:compileDebugKotlin
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :adb-pairing:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :adb-pairing:mergeReleaseNativeLibs NO-SOURCE
+> Task :adb-pairing:stripReleaseDebugSymbols NO-SOURCE
+> Task :adb-pairing:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :adb-pairing:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :adb-pairing:generateReleaseResources UP-TO-DATE
+> Task :adb-pairing:packageReleaseResources UP-TO-DATE
+> Task :adb-pairing:processReleaseNavigationResources UP-TO-DATE
+> Task :adb-pairing:parseReleaseLocalResources UP-TO-DATE
+> Task :adb-pairing:generateReleaseRFile UP-TO-DATE
+> Task :adb-pairing:extractReleaseAnnotations
+> Task :adb-pairing:generateReleaseAssets UP-TO-DATE
+> Task :adb-pairing:mergeReleaseAssets UP-TO-DATE
+> Task :app:mergeLibDexDebug
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+> Task :adb-pairing:javaPreCompileRelease UP-TO-DATE
+> Task :adb-pairing:prepareReleaseArtProfile UP-TO-DATE
+> Task :adb-pairing:processReleaseManifest UP-TO-DATE
+> Task :adb-pairing:writeReleaseAarMetadata UP-TO-DATE
+> Task :adb-pairing:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :adb-pairing:mergeReleaseResources UP-TO-DATE
+> Task :adb-pairing:verifyReleaseResources UP-TO-DATE
+> Task :adb-pairing:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :helper-client:preReleaseBuild UP-TO-DATE
+> Task :helper-client:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :helper-client:mergeReleaseNativeLibs NO-SOURCE
+> Task :helper-client:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :helper-server:preReleaseBuild UP-TO-DATE
+> Task :helper-server:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :helper-server:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :helper-server:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :helper-server:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :helper-server:configureCMakeRelWithDebInfo[x86]
+> Task :helper-server:buildCMakeRelWithDebInfo[x86]
+> Task :helper-server:configureCMakeRelWithDebInfo[x86_64]
+> Task :helper-server:buildCMakeRelWithDebInfo[x86_64]
+> Task :helper-server:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :helper-server:mergeReleaseNativeLibs UP-TO-DATE
+> Task :helper-server:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeReleaseNativeLibs UP-TO-DATE
+> Task :app:stripReleaseDebugSymbols UP-TO-DATE
+> Task :app:extractReleaseNativeSymbolTables UP-TO-DATE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :helper-client:compileReleaseAidl UP-TO-DATE
+> Task :helper-client:generateReleaseResources UP-TO-DATE
+> Task :helper-client:packageReleaseResources UP-TO-DATE
+> Task :helper-client:processReleaseNavigationResources UP-TO-DATE
+> Task :helper-client:parseReleaseLocalResources UP-TO-DATE
+> Task :helper-client:generateReleaseRFile UP-TO-DATE
+> Task :helper-client:compileReleaseKotlin UP-TO-DATE
+> Task :helper-client:javaPreCompileRelease UP-TO-DATE
+> Task :helper-client:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :helper-client:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :helper-server:generateReleaseResources UP-TO-DATE
+> Task :helper-server:packageReleaseResources UP-TO-DATE
+> Task :helper-server:processReleaseNavigationResources UP-TO-DATE
+> Task :helper-server:parseReleaseLocalResources UP-TO-DATE
+> Task :helper-server:generateReleaseRFile UP-TO-DATE
+> Task :helper-server:compileReleaseKotlin UP-TO-DATE
+> Task :helper-server:javaPreCompileRelease UP-TO-DATE
+> Task :helper-server:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :helper-server:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :helper-client:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :app:checkReleaseDuplicateClasses UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :app:packageReleaseResources UP-TO-DATE
+> Task :app:processReleaseNavigationResources UP-TO-DATE
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+> Task :app:generateReleaseRFile UP-TO-DATE
+> Task :helper-server:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :adb-pairing:compileReleaseLibraryResources UP-TO-DATE
+> Task :helper-client:writeReleaseAarMetadata UP-TO-DATE
+> Task :helper-server:writeReleaseAarMetadata UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:compileReleaseNavigationResources UP-TO-DATE
+> Task :app:mergeReleaseResources UP-TO-DATE
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :adb-pairing:extractDeepLinksRelease UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :helper-client:extractDeepLinksRelease UP-TO-DATE
+> Task :helper-client:processReleaseManifest UP-TO-DATE
+> Task :helper-server:extractDeepLinksRelease UP-TO-DATE
+> Task :helper-server:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseMainManifest UP-TO-DATE
+> Task :app:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+> Task :helper-client:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :helper-client:compileReleaseLibraryResources UP-TO-DATE
+> Task :helper-server:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :helper-server:compileReleaseLibraryResources UP-TO-DATE
+> Task :app:processReleaseResources UP-TO-DATE
+> Task :app:desugarReleaseFileDependencies UP-TO-DATE
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexRelease UP-TO-DATE
+> Task :helper-client:prepareReleaseArtProfile UP-TO-DATE
+> Task :helper-server:prepareReleaseArtProfile UP-TO-DATE
+> Task :app:mergeReleaseArtProfile UP-TO-DATE
+> Task :helper-server:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :helper-client:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :helper-client:generateReleaseAssets UP-TO-DATE
+> Task :helper-client:mergeReleaseAssets UP-TO-DATE
+> Task :helper-server:generateReleaseAssets UP-TO-DATE
+> Task :helper-server:mergeReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets UP-TO-DATE
+> Task :app:compressReleaseAssets UP-TO-DATE
+> Task :app:extractReleaseVersionControlInfo UP-TO-DATE
+> Task :adb-pairing:extractProguardFiles UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :helper-client:processReleaseJavaRes UP-TO-DATE
+> Task :helper-client:createFullJarRelease UP-TO-DATE
+> Task :helper-client:extractProguardFiles UP-TO-DATE
+> Task :helper-client:generateReleaseLintModel UP-TO-DATE
+> Task :helper-server:processReleaseJavaRes UP-TO-DATE
+> Task :helper-server:createFullJarRelease UP-TO-DATE
+> Task :helper-server:extractProguardFiles UP-TO-DATE
+> Task :helper-server:generateReleaseLintModel UP-TO-DATE
+> Task :helper-server:checkReleaseAarMetadata UP-TO-DATE
+> Task :helper-server:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :helper-server:extractReleaseAnnotations UP-TO-DATE
+> Task :helper-server:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :helper-server:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :helper-server:mergeReleaseJavaResource UP-TO-DATE
+> Task :helper-server:syncReleaseLibJars UP-TO-DATE
+> Task :helper-server:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :helper-client:checkReleaseAarMetadata UP-TO-DATE
+> Task :helper-client:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :helper-client:extractReleaseAnnotations UP-TO-DATE
+> Task :helper-client:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :helper-client:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :helper-client:mergeReleaseJavaResource UP-TO-DATE
+> Task :helper-client:syncReleaseLibJars UP-TO-DATE
+> Task :helper-client:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :adb-pairing:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :helper-client:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :helper-client:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :helper-server:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :helper-server:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :helper-client:generateReleaseLintVitalModel UP-TO-DATE
+> Task :helper-server:generateReleaseLintVitalModel UP-TO-DATE
+> Task :app:optimizeReleaseResources UP-TO-DATE
+> Task :app:collectReleaseDependencies UP-TO-DATE
+> Task :app:sdkReleaseDependencyData UP-TO-DATE
+> Task :app:writeReleaseAppMetadata UP-TO-DATE
+> Task :app:writeReleaseSigningConfigVersions UP-TO-DATE
+> Task :core-agent:preReleaseBuild UP-TO-DATE
+> Task :core-llm:preReleaseBuild UP-TO-DATE
+> Task :core-llm:writeReleaseAarMetadata UP-TO-DATE
+> Task :core-security:preReleaseBuild UP-TO-DATE
+> Task :core-security:writeReleaseAarMetadata UP-TO-DATE
+> Task :core-agent:checkReleaseAarMetadata UP-TO-DATE
+> Task :core-agent:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :core-agent:mergeReleaseNativeLibs NO-SOURCE
+> Task :core-agent:stripReleaseDebugSymbols NO-SOURCE
+> Task :core-agent:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-agent:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core-agent:generateReleaseResources UP-TO-DATE
+> Task :core-agent:packageReleaseResources UP-TO-DATE
+> Task :core-agent:processReleaseNavigationResources UP-TO-DATE
+> Task :core-agent:parseReleaseLocalResources UP-TO-DATE
+> Task :core-agent:generateReleaseRFile UP-TO-DATE
+> Task :core-llm:generateReleaseResources UP-TO-DATE
+> Task :core-llm:packageReleaseResources UP-TO-DATE
+> Task :core-llm:processReleaseNavigationResources UP-TO-DATE
+> Task :core-llm:parseReleaseLocalResources UP-TO-DATE
+> Task :core-llm:generateReleaseRFile UP-TO-DATE
+> Task :core-security:generateReleaseResources UP-TO-DATE
+> Task :core-security:packageReleaseResources UP-TO-DATE
+> Task :core-security:processReleaseNavigationResources UP-TO-DATE
+> Task :core-security:parseReleaseLocalResources UP-TO-DATE
+> Task :core-security:generateReleaseRFile UP-TO-DATE
+> Task :core-security:kspReleaseKotlin UP-TO-DATE
+> Task :core-security:compileReleaseKotlin UP-TO-DATE
+> Task :core-security:javaPreCompileRelease UP-TO-DATE
+> Task :core-security:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core-security:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :core-security:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core-llm:kspReleaseKotlin UP-TO-DATE
+> Task :core-llm:compileReleaseKotlin UP-TO-DATE
+> Task :core-llm:javaPreCompileRelease UP-TO-DATE
+> Task :core-llm:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core-security:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core-llm:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :core-llm:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core-agent:kspReleaseKotlin UP-TO-DATE
+> Task :core-agent:extractReleaseAnnotations UP-TO-DATE
+> Task :core-agent:generateReleaseAssets UP-TO-DATE
+> Task :core-agent:mergeReleaseAssets UP-TO-DATE
+> Task :core-agent:compileReleaseKotlin UP-TO-DATE
+> Task :core-agent:javaPreCompileRelease UP-TO-DATE
+> Task :core-agent:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core-llm:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core-agent:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :core-agent:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core-agent:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core-agent:prepareReleaseArtProfile UP-TO-DATE
+> Task :core-agent:processReleaseManifest UP-TO-DATE
+> Task :core-agent:processReleaseJavaRes UP-TO-DATE
+> Task :core-agent:mergeReleaseJavaResource UP-TO-DATE
+> Task :core-agent:syncReleaseLibJars UP-TO-DATE
+> Task :core-agent:writeReleaseAarMetadata UP-TO-DATE
+> Task :core-agent:bundleReleaseAar UP-TO-DATE
+> Task :core-agent:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :core-agent:mergeReleaseResources UP-TO-DATE
+> Task :core-llm:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :core-llm:compileReleaseLibraryResources UP-TO-DATE
+> Task :core-security:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :core-security:compileReleaseLibraryResources UP-TO-DATE
+> Task :core-agent:verifyReleaseResources UP-TO-DATE
+> Task :core-agent:assembleRelease UP-TO-DATE
+> Task :core-llm:checkReleaseAarMetadata UP-TO-DATE
+> Task :core-llm:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :core-llm:mergeReleaseNativeLibs NO-SOURCE
+> Task :core-llm:stripReleaseDebugSymbols NO-SOURCE
+> Task :core-llm:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-llm:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core-llm:extractReleaseAnnotations UP-TO-DATE
+> Task :core-llm:generateReleaseAssets UP-TO-DATE
+> Task :core-llm:mergeReleaseAssets UP-TO-DATE
+> Task :core-llm:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core-llm:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core-llm:prepareReleaseArtProfile UP-TO-DATE
+> Task :core-llm:processReleaseManifest UP-TO-DATE
+> Task :core-llm:processReleaseJavaRes UP-TO-DATE
+> Task :core-llm:mergeReleaseJavaResource UP-TO-DATE
+> Task :core-llm:syncReleaseLibJars UP-TO-DATE
+> Task :core-llm:bundleReleaseAar UP-TO-DATE
+> Task :core-llm:mergeReleaseResources UP-TO-DATE
+> Task :core-llm:verifyReleaseResources UP-TO-DATE
+> Task :core-llm:assembleRelease UP-TO-DATE
+> Task :core-security:checkReleaseAarMetadata UP-TO-DATE
+> Task :core-security:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :core-security:mergeReleaseNativeLibs NO-SOURCE
+> Task :core-security:stripReleaseDebugSymbols NO-SOURCE
+> Task :core-security:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-security:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core-security:extractReleaseAnnotations UP-TO-DATE
+> Task :core-security:generateReleaseAssets UP-TO-DATE
+> Task :core-security:mergeReleaseAssets UP-TO-DATE
+> Task :core-security:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core-security:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core-security:prepareReleaseArtProfile UP-TO-DATE
+> Task :core-security:processReleaseManifest UP-TO-DATE
+> Task :core-security:processReleaseJavaRes UP-TO-DATE
+> Task :core-security:mergeReleaseJavaResource UP-TO-DATE
+> Task :core-security:syncReleaseLibJars UP-TO-DATE
+> Task :core-security:bundleReleaseAar UP-TO-DATE
+> Task :core-security:mergeReleaseResources UP-TO-DATE
+> Task :core-security:verifyReleaseResources UP-TO-DATE
+> Task :core-security:assembleRelease UP-TO-DATE
+> Task :helper-client:stripReleaseDebugSymbols NO-SOURCE
+> Task :helper-client:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :helper-client:bundleReleaseAar UP-TO-DATE
+> Task :helper-client:mergeReleaseResources UP-TO-DATE
+> Task :helper-client:verifyReleaseResources UP-TO-DATE
+> Task :helper-client:assembleRelease UP-TO-DATE
+> Task :helper-server:stripReleaseDebugSymbols UP-TO-DATE
+> Task :helper-server:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :helper-server:bundleReleaseAar UP-TO-DATE
+> Task :helper-server:mergeReleaseResources UP-TO-DATE
+> Task :helper-server:verifyReleaseResources UP-TO-DATE
+> Task :helper-server:assembleRelease UP-TO-DATE
+> Task :platform-a11y:preReleaseBuild UP-TO-DATE
+> Task :platform-a11y:checkReleaseAarMetadata UP-TO-DATE
+> Task :platform-a11y:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :platform-a11y:mergeReleaseNativeLibs NO-SOURCE
+> Task :platform-a11y:stripReleaseDebugSymbols NO-SOURCE
+> Task :platform-a11y:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :platform-a11y:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core-agent:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :platform-a11y:generateReleaseResources UP-TO-DATE
+> Task :platform-a11y:packageReleaseResources UP-TO-DATE
+> Task :platform-a11y:processReleaseNavigationResources UP-TO-DATE
+> Task :platform-a11y:parseReleaseLocalResources UP-TO-DATE
+> Task :platform-a11y:generateReleaseRFile UP-TO-DATE
+> Task :platform-a11y:kspReleaseKotlin UP-TO-DATE
+> Task :platform-a11y:extractReleaseAnnotations UP-TO-DATE
+> Task :platform-a11y:generateReleaseAssets UP-TO-DATE
+> Task :platform-a11y:mergeReleaseAssets UP-TO-DATE
+> Task :core-agent:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :platform-a11y:compileReleaseKotlin UP-TO-DATE
+> Task :platform-a11y:javaPreCompileRelease UP-TO-DATE
+> Task :platform-a11y:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :platform-a11y:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :platform-a11y:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :platform-a11y:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :platform-a11y:prepareReleaseArtProfile UP-TO-DATE
+> Task :platform-a11y:processReleaseManifest UP-TO-DATE
+> Task :platform-a11y:processReleaseJavaRes UP-TO-DATE
+> Task :platform-a11y:mergeReleaseJavaResource UP-TO-DATE
+> Task :platform-a11y:syncReleaseLibJars UP-TO-DATE
+> Task :platform-a11y:writeReleaseAarMetadata UP-TO-DATE
+> Task :platform-a11y:bundleReleaseAar UP-TO-DATE
+> Task :core-agent:compileReleaseLibraryResources UP-TO-DATE
+> Task :platform-a11y:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :platform-a11y:mergeReleaseResources UP-TO-DATE
+> Task :platform-a11y:verifyReleaseResources UP-TO-DATE
+> Task :platform-a11y:assembleRelease UP-TO-DATE
+> Task :adb-pairing:compileReleaseKotlin
+> Task :adb-pairing:compileReleaseJavaWithJavac NO-SOURCE
+> Task :adb-pairing:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :adb-pairing:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :adb-pairing:processReleaseJavaRes UP-TO-DATE
+> Task :adb-pairing:mergeReleaseJavaResource UP-TO-DATE
+> Task :adb-pairing:bundleLibRuntimeToJarDebug
+> Task :adb-pairing:syncReleaseLibJars
+> Task :adb-pairing:bundleReleaseAar
+> Task :adb-pairing:assembleRelease
+> Task :adb-pairing:bundleLibRuntimeToDirRelease
+> Task :adb-pairing:bundleLibCompileToJarRelease
+> Task :adb-pairing:bundleLibRuntimeToJarRelease
+> Task :app:compileReleaseKotlin
+> Task :app:compileReleaseJavaWithJavac NO-SOURCE
+> Task :app:dexBuilderRelease UP-TO-DATE
+> Task :app:mergeReleaseGlobalSynthetics UP-TO-DATE
+> Task :adb-pairing:generateReleaseLintVitalModel
+> Task :adb-pairing:lintVitalAnalyzeRelease
+> Task :adb-pairing:createFullJarRelease
+> Task :adb-pairing:generateReleaseLintModel
+> Task :app:generateReleaseLintVitalReportModel
+> Task :adb-pairing:bundleReleaseLocalLintAar
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease UP-TO-DATE
+> Task :app:lintVitalRelease
+> Task :app:processReleaseJavaRes UP-TO-DATE
+> Task :app:mergeReleaseJavaResource UP-TO-DATE
+> Task :adb-pairing:preDebugUnitTestBuild UP-TO-DATE
+> Task :adb-pairing:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :adb-pairing:compileDebugUnitTestKotlin
+> Task :adb-pairing:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :adb-pairing:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :adb-pairing:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:mergeDexRelease
+> Task :adb-pairing:testDebugUnitTest
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:compileReleaseArtProfile
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :helper-client:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :helper-server:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :app:testDebugUnitTest
+> Task :core-agent:preDebugUnitTestBuild UP-TO-DATE
+> Task :core-agent:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :core-agent:kspDebugUnitTestKotlin SKIPPED
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleRelease
+> Task :core-agent:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core-agent:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core-agent:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core-agent:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core-agent:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core-agent:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core-agent:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core-agent:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core-agent:testDebugUnitTest UP-TO-DATE
+> Task :core-llm:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core-llm:preDebugUnitTestBuild UP-TO-DATE
+> Task :core-llm:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core-llm:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core-llm:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core-llm:compileDebugLibraryResources UP-TO-DATE
+> Task :core-llm:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core-llm:generateDebugUnitTestResources UP-TO-DATE
+> Task :core-llm:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core-llm:extractDeepLinksDebug UP-TO-DATE
+> Task :core-security:extractDeepLinksDebug UP-TO-DATE
+> Task :core-llm:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core-llm:processDebugUnitTestManifest UP-TO-DATE
+> Task :core-security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core-security:compileDebugLibraryResources UP-TO-DATE
+> Task :core-llm:processDebugUnitTestResources UP-TO-DATE
+> Task :core-llm:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core-llm:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core-llm:kspDebugUnitTestKotlin SKIPPED
+> Task :core-llm:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core-llm:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core-llm:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core-llm:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core-llm:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core-llm:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core-llm:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core-llm:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core-llm:testDebugUnitTest UP-TO-DATE
+> Task :core-security:preDebugUnitTestBuild UP-TO-DATE
+> Task :core-security:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :core-security:kspDebugUnitTestKotlin SKIPPED
+> Task :core-security:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core-security:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core-security:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core-security:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core-security:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core-security:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core-security:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core-security:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core-security:testDebugUnitTest UP-TO-DATE
+> Task :helper-client:preDebugUnitTestBuild UP-TO-DATE
+> Task :helper-client:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :helper-client:compileDebugUnitTestKotlin NO-SOURCE
+> Task :helper-client:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :helper-client:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :helper-client:processDebugUnitTestJavaRes NO-SOURCE
+> Task :helper-client:testDebugUnitTest NO-SOURCE
+> Task :helper-server:preDebugUnitTestBuild UP-TO-DATE
+> Task :helper-server:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :helper-server:compileDebugUnitTestKotlin NO-SOURCE
+> Task :helper-server:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :helper-server:compileDebugUnitTestJavaWithJavac UP-TO-DATE
+> Task :helper-server:processDebugUnitTestJavaRes NO-SOURCE
+> Task :helper-server:testDebugUnitTest UP-TO-DATE
+> Task :platform-a11y:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :platform-a11y:preDebugUnitTestBuild UP-TO-DATE
+> Task :platform-a11y:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :platform-a11y:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :platform-a11y:kspDebugUnitTestKotlin SKIPPED
+> Task :platform-a11y:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :platform-a11y:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :platform-a11y:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :platform-a11y:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :platform-a11y:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :platform-a11y:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :platform-a11y:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :platform-a11y:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :platform-a11y:testDebugUnitTest UP-TO-DATE
+> Task :adb-pairing:bundleDebugLocalLintAar
+> Task :adb-pairing:createFullJarDebug
+> Task :adb-pairing:preDebugAndroidTestBuild UP-TO-DATE
+> Task :adb-pairing:writeDebugLintModelMetadata UP-TO-DATE
+> Task :adb-pairing:generateDebugAndroidTestLintModel
+> Task :adb-pairing:generateDebugLintReportModel
+> Task :adb-pairing:generateDebugUnitTestLintModel
+> Task :adb-pairing:lintAnalyzeDebugAndroidTest
+> Task :adb-pairing:lintAnalyzeDebugUnitTest
+> Task :adb-pairing:generateDebugLintModel
+> Task :helper-server:bundleDebugLocalLintAar UP-TO-DATE
+> Task :helper-client:bundleDebugLocalLintAar UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :helper-client:createFullJarDebug UP-TO-DATE
+> Task :helper-client:writeDebugLintModelMetadata UP-TO-DATE
+> Task :helper-server:createFullJarDebug UP-TO-DATE
+> Task :helper-server:writeDebugLintModelMetadata UP-TO-DATE
+> Task :app:generateDebugAndroidTestLintModel
+> Task :helper-client:generateDebugLintModel UP-TO-DATE
+> Task :helper-server:generateDebugLintModel UP-TO-DATE
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :helper-client:lintAnalyzeDebug UP-TO-DATE
+> Task :helper-server:lintAnalyzeDebug UP-TO-DATE
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :adb-pairing:lintAnalyzeDebug
+
+> Task :adb-pairing:lintReportDebug
+Wrote HTML report to file:///C:/Users/<user>/Claude/worktrees/task-008/android/adb-pairing/build/reports/lint-results-debug.html
+Wrote SARIF report to file:///C:/Users/<user>/Claude/worktrees/task-008/android/adb-pairing/build/reports/lint-results-debug.sarif
+Lint found 1 error. First failure:
+C:\Users\<user>\.gradle\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk18on\1.84\dab889a3259e27caec6e6c2f3bde94af036b2fcc\bcpkix-jdk18on-1.84.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+
+
+> Task :adb-pairing:lintDebug FAILED
+C:\Users\<user>\.gradle\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk18on\1.84\dab889a3259e27caec6e6c2f3bde94af036b2fcc\bcpkix-jdk18on-1.84.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+
+   Explanation for issues of type "TrustAllX509TrustManager":
+   This check looks for X509TrustManager implementations whose
+   checkServerTrusted or checkClientTrusted methods do nothing (thus trusting
+   any certificate chain) which could result in insecure network traffic
+   caused by trusting arbitrary TLS/SSL certificates presented by peers.
+
+   https://goo.gle/TrustAllX509TrustManager
+
+1 error
+
+> Task :app:lintAnalyzeDebugUnitTest
+
+[Incubating] Problems report is available at: file:///C:/Users/<user>/Claude/worktrees/task-008/android/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':adb-pairing:lintDebug' (registered by plugin 'com.android.internal.library').
+> Lint found errors in the project; aborting build.
+  
+  Fix the issues identified by lint, or create a baseline to see only new errors.
+  To create a baseline, run `gradlew updateLintBaseline` after adding the following to the module's build.gradle file:
+  ```
+  android {
+      lint {
+          baseline = file("lint-baseline.xml")
+      }
+  }
+  ```
+  For more details, see https://developer.android.com/studio/write/lint#snapshot
+  
+  C:\Users\<user>\.gradle\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk18on\1.84\dab889a3259e27caec6e6c2f3bde94af036b2fcc\bcpkix-jdk18on-1.84.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+  
+     Explanation for issues of type "TrustAllX509TrustManager":
+     This check looks for X509TrustManager implementations whose
+     checkServerTrusted or checkClientTrusted methods do nothing (thus trusting
+     any certificate chain) which could result in insecure network traffic
+     caused by trusting arbitrary TLS/SSL certificates presented by peers.
+  
+     https://goo.gle/TrustAllX509TrustManager
+  
+  1 error
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 1m 50s
+633 actionable tasks: 65 executed, 568 up-to-date
+
+===== loopback-final-continue-gate.log =====
+> Task :adb-pairing:preBuild UP-TO-DATE
+> Task :adb-pairing:preDebugBuild UP-TO-DATE
+> Task :adb-pairing:checkDebugAarMetadata UP-TO-DATE
+> Task :adb-pairing:mergeDebugJniLibFolders UP-TO-DATE
+> Task :adb-pairing:mergeDebugNativeLibs NO-SOURCE
+> Task :adb-pairing:stripDebugDebugSymbols NO-SOURCE
+> Task :adb-pairing:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :adb-pairing:generateDebugResources UP-TO-DATE
+> Task :adb-pairing:packageDebugResources UP-TO-DATE
+> Task :adb-pairing:processDebugNavigationResources UP-TO-DATE
+> Task :adb-pairing:parseDebugLocalResources UP-TO-DATE
+> Task :adb-pairing:generateDebugRFile UP-TO-DATE
+> Task :adb-pairing:extractDebugAnnotations UP-TO-DATE
+> Task :adb-pairing:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :adb-pairing:generateDebugAssets UP-TO-DATE
+> Task :adb-pairing:mergeDebugAssets UP-TO-DATE
+> Task :adb-pairing:compileDebugKotlin UP-TO-DATE
+> Task :adb-pairing:javaPreCompileDebug UP-TO-DATE
+> Task :adb-pairing:compileDebugJavaWithJavac NO-SOURCE
+> Task :adb-pairing:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :adb-pairing:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :adb-pairing:prepareDebugArtProfile UP-TO-DATE
+> Task :adb-pairing:prepareLintJarForPublish UP-TO-DATE
+> Task :adb-pairing:processDebugManifest UP-TO-DATE
+> Task :adb-pairing:processDebugJavaRes UP-TO-DATE
+> Task :adb-pairing:mergeDebugJavaResource UP-TO-DATE
+> Task :adb-pairing:syncDebugLibJars UP-TO-DATE
+> Task :adb-pairing:writeDebugAarMetadata UP-TO-DATE
+> Task :adb-pairing:bundleDebugAar UP-TO-DATE
+> Task :adb-pairing:assembleDebug UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :adb-pairing:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :helper-client:preBuild UP-TO-DATE
+> Task :helper-client:preDebugBuild UP-TO-DATE
+> Task :helper-client:processDebugNavigationResources UP-TO-DATE
+> Task :helper-server:preBuild UP-TO-DATE
+> Task :helper-server:preDebugBuild UP-TO-DATE
+> Task :helper-server:processDebugNavigationResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :helper-client:compileDebugAidl UP-TO-DATE
+> Task :helper-client:generateDebugResources UP-TO-DATE
+> Task :helper-client:packageDebugResources UP-TO-DATE
+> Task :helper-client:parseDebugLocalResources UP-TO-DATE
+> Task :helper-client:generateDebugRFile UP-TO-DATE
+> Task :helper-client:compileDebugKotlin UP-TO-DATE
+> Task :helper-client:javaPreCompileDebug UP-TO-DATE
+> Task :helper-client:compileDebugJavaWithJavac UP-TO-DATE
+> Task :helper-client:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :helper-server:generateDebugResources UP-TO-DATE
+> Task :helper-server:packageDebugResources UP-TO-DATE
+> Task :helper-server:parseDebugLocalResources UP-TO-DATE
+> Task :helper-server:generateDebugRFile UP-TO-DATE
+> Task :helper-server:compileDebugKotlin UP-TO-DATE
+> Task :helper-server:javaPreCompileDebug UP-TO-DATE
+> Task :helper-server:compileDebugJavaWithJavac UP-TO-DATE
+> Task :helper-server:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :helper-client:generateDebugAssets UP-TO-DATE
+> Task :helper-client:mergeDebugAssets UP-TO-DATE
+> Task :helper-server:generateDebugAssets UP-TO-DATE
+> Task :helper-server:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :helper-client:processDebugJavaRes UP-TO-DATE
+> Task :helper-server:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :helper-server:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :helper-client:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :adb-pairing:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :adb-pairing:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :adb-pairing:compileDebugLibraryResources UP-TO-DATE
+> Task :helper-client:writeDebugAarMetadata UP-TO-DATE
+> Task :helper-server:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :adb-pairing:extractDeepLinksDebug UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :helper-client:extractDeepLinksDebug UP-TO-DATE
+> Task :helper-client:processDebugManifest UP-TO-DATE
+> Task :helper-server:extractDeepLinksDebug UP-TO-DATE
+> Task :helper-server:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :helper-client:mapDebugSourceSetPaths UP-TO-DATE
+> Task :helper-client:compileDebugLibraryResources UP-TO-DATE
+> Task :helper-server:mapDebugSourceSetPaths UP-TO-DATE
+> Task :helper-server:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :adb-pairing:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :helper-client:mergeDebugJniLibFolders UP-TO-DATE
+> Task :helper-client:mergeDebugNativeLibs NO-SOURCE
+> Task :helper-client:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :helper-server:configureCMakeDebug[arm64-v8a]
+> Task :helper-server:buildCMakeDebug[arm64-v8a]
+> Task :helper-server:configureCMakeDebug[armeabi-v7a]
+> Task :helper-server:buildCMakeDebug[armeabi-v7a]
+> Task :helper-server:configureCMakeDebug[x86]
+> Task :helper-server:buildCMakeDebug[x86]
+> Task :helper-server:configureCMakeDebug[x86_64]
+> Task :helper-server:buildCMakeDebug[x86_64]
+> Task :helper-server:mergeDebugJniLibFolders UP-TO-DATE
+> Task :helper-server:mergeDebugNativeLibs UP-TO-DATE
+> Task :helper-server:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:packageDebug UP-TO-DATE
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug UP-TO-DATE
+> Task :core-agent:preBuild UP-TO-DATE
+> Task :core-agent:preDebugBuild UP-TO-DATE
+> Task :core-llm:preBuild UP-TO-DATE
+> Task :core-llm:preDebugBuild UP-TO-DATE
+> Task :core-llm:writeDebugAarMetadata UP-TO-DATE
+> Task :core-security:preBuild UP-TO-DATE
+> Task :core-security:preDebugBuild UP-TO-DATE
+> Task :core-security:writeDebugAarMetadata UP-TO-DATE
+> Task :core-agent:checkDebugAarMetadata UP-TO-DATE
+> Task :core-agent:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core-agent:mergeDebugNativeLibs NO-SOURCE
+> Task :core-agent:stripDebugDebugSymbols NO-SOURCE
+> Task :core-agent:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-agent:generateDebugResources UP-TO-DATE
+> Task :core-agent:packageDebugResources UP-TO-DATE
+> Task :core-agent:processDebugNavigationResources UP-TO-DATE
+> Task :core-agent:parseDebugLocalResources UP-TO-DATE
+> Task :core-agent:generateDebugRFile UP-TO-DATE
+> Task :core-llm:generateDebugResources UP-TO-DATE
+> Task :core-llm:packageDebugResources UP-TO-DATE
+> Task :core-llm:processDebugNavigationResources UP-TO-DATE
+> Task :core-llm:parseDebugLocalResources UP-TO-DATE
+> Task :core-llm:generateDebugRFile UP-TO-DATE
+> Task :core-security:generateDebugResources UP-TO-DATE
+> Task :core-security:packageDebugResources UP-TO-DATE
+> Task :core-security:processDebugNavigationResources UP-TO-DATE
+> Task :core-security:parseDebugLocalResources UP-TO-DATE
+> Task :core-security:generateDebugRFile UP-TO-DATE
+> Task :core-security:kspDebugKotlin UP-TO-DATE
+> Task :core-security:compileDebugKotlin UP-TO-DATE
+> Task :core-security:javaPreCompileDebug UP-TO-DATE
+> Task :core-security:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core-security:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core-security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core-llm:kspDebugKotlin UP-TO-DATE
+> Task :core-llm:compileDebugKotlin UP-TO-DATE
+> Task :core-llm:javaPreCompileDebug UP-TO-DATE
+> Task :core-llm:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core-security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core-llm:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core-llm:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core-agent:kspDebugKotlin UP-TO-DATE
+> Task :core-agent:extractDebugAnnotations UP-TO-DATE
+> Task :core-agent:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :core-agent:generateDebugAssets UP-TO-DATE
+> Task :core-agent:mergeDebugAssets UP-TO-DATE
+> Task :core-agent:compileDebugKotlin UP-TO-DATE
+> Task :core-agent:javaPreCompileDebug UP-TO-DATE
+> Task :core-agent:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core-llm:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core-agent:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core-agent:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :core-agent:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :core-agent:prepareDebugArtProfile UP-TO-DATE
+> Task :core-agent:prepareLintJarForPublish UP-TO-DATE
+> Task :core-agent:processDebugManifest UP-TO-DATE
+> Task :core-agent:processDebugJavaRes UP-TO-DATE
+> Task :core-agent:mergeDebugJavaResource UP-TO-DATE
+> Task :core-agent:syncDebugLibJars UP-TO-DATE
+> Task :core-agent:writeDebugAarMetadata UP-TO-DATE
+> Task :core-agent:bundleDebugAar UP-TO-DATE
+> Task :core-agent:assembleDebug UP-TO-DATE
+> Task :core-llm:checkDebugAarMetadata UP-TO-DATE
+> Task :core-llm:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core-llm:mergeDebugNativeLibs NO-SOURCE
+> Task :core-llm:stripDebugDebugSymbols NO-SOURCE
+> Task :core-llm:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-llm:extractDebugAnnotations UP-TO-DATE
+> Task :core-llm:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :core-llm:generateDebugAssets UP-TO-DATE
+> Task :core-llm:mergeDebugAssets UP-TO-DATE
+> Task :core-llm:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :core-llm:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :core-llm:prepareDebugArtProfile UP-TO-DATE
+> Task :core-llm:prepareLintJarForPublish UP-TO-DATE
+> Task :core-llm:processDebugManifest UP-TO-DATE
+> Task :core-llm:processDebugJavaRes UP-TO-DATE
+> Task :core-llm:mergeDebugJavaResource UP-TO-DATE
+> Task :core-llm:syncDebugLibJars UP-TO-DATE
+> Task :core-llm:bundleDebugAar UP-TO-DATE
+> Task :core-llm:assembleDebug UP-TO-DATE
+> Task :core-security:checkDebugAarMetadata UP-TO-DATE
+> Task :core-security:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core-security:mergeDebugNativeLibs NO-SOURCE
+> Task :core-security:stripDebugDebugSymbols NO-SOURCE
+> Task :core-security:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-security:extractDebugAnnotations UP-TO-DATE
+> Task :core-security:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :core-security:generateDebugAssets UP-TO-DATE
+> Task :core-security:mergeDebugAssets UP-TO-DATE
+> Task :core-security:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :core-security:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :core-security:prepareDebugArtProfile UP-TO-DATE
+> Task :core-security:prepareLintJarForPublish UP-TO-DATE
+> Task :core-security:processDebugManifest UP-TO-DATE
+> Task :core-security:processDebugJavaRes UP-TO-DATE
+> Task :core-security:mergeDebugJavaResource UP-TO-DATE
+> Task :core-security:syncDebugLibJars UP-TO-DATE
+> Task :core-security:bundleDebugAar UP-TO-DATE
+> Task :core-security:assembleDebug UP-TO-DATE
+> Task :helper-client:checkDebugAarMetadata UP-TO-DATE
+> Task :helper-client:stripDebugDebugSymbols NO-SOURCE
+> Task :helper-client:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :helper-client:extractDebugAnnotations UP-TO-DATE
+> Task :helper-client:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :helper-client:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :helper-client:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :helper-client:prepareDebugArtProfile UP-TO-DATE
+> Task :helper-client:prepareLintJarForPublish UP-TO-DATE
+> Task :helper-client:mergeDebugJavaResource UP-TO-DATE
+> Task :helper-client:syncDebugLibJars UP-TO-DATE
+> Task :helper-client:bundleDebugAar UP-TO-DATE
+> Task :helper-client:assembleDebug UP-TO-DATE
+> Task :helper-server:checkDebugAarMetadata UP-TO-DATE
+> Task :helper-server:stripDebugDebugSymbols UP-TO-DATE
+> Task :helper-server:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :helper-server:extractDebugAnnotations UP-TO-DATE
+> Task :helper-server:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :helper-server:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :helper-server:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :helper-server:prepareDebugArtProfile UP-TO-DATE
+> Task :helper-server:prepareLintJarForPublish UP-TO-DATE
+> Task :helper-server:mergeDebugJavaResource UP-TO-DATE
+> Task :helper-server:syncDebugLibJars UP-TO-DATE
+> Task :helper-server:bundleDebugAar UP-TO-DATE
+> Task :helper-server:assembleDebug UP-TO-DATE
+> Task :platform-a11y:preBuild UP-TO-DATE
+> Task :platform-a11y:preDebugBuild UP-TO-DATE
+> Task :platform-a11y:checkDebugAarMetadata UP-TO-DATE
+> Task :platform-a11y:mergeDebugJniLibFolders UP-TO-DATE
+> Task :platform-a11y:mergeDebugNativeLibs NO-SOURCE
+> Task :platform-a11y:stripDebugDebugSymbols NO-SOURCE
+> Task :platform-a11y:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-agent:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :platform-a11y:generateDebugResources UP-TO-DATE
+> Task :platform-a11y:packageDebugResources UP-TO-DATE
+> Task :platform-a11y:processDebugNavigationResources UP-TO-DATE
+> Task :platform-a11y:parseDebugLocalResources UP-TO-DATE
+> Task :platform-a11y:generateDebugRFile UP-TO-DATE
+> Task :platform-a11y:kspDebugKotlin UP-TO-DATE
+> Task :platform-a11y:extractDebugAnnotations UP-TO-DATE
+> Task :platform-a11y:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :platform-a11y:generateDebugAssets UP-TO-DATE
+> Task :platform-a11y:mergeDebugAssets UP-TO-DATE
+> Task :core-agent:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :platform-a11y:compileDebugKotlin UP-TO-DATE
+> Task :platform-a11y:javaPreCompileDebug UP-TO-DATE
+> Task :platform-a11y:compileDebugJavaWithJavac UP-TO-DATE
+> Task :platform-a11y:transformDebugClassesWithAsm UP-TO-DATE
+> Task :platform-a11y:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :platform-a11y:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :platform-a11y:prepareDebugArtProfile UP-TO-DATE
+> Task :platform-a11y:prepareLintJarForPublish UP-TO-DATE
+> Task :platform-a11y:processDebugManifest UP-TO-DATE
+> Task :platform-a11y:processDebugJavaRes UP-TO-DATE
+> Task :platform-a11y:mergeDebugJavaResource UP-TO-DATE
+> Task :platform-a11y:syncDebugLibJars UP-TO-DATE
+> Task :platform-a11y:writeDebugAarMetadata UP-TO-DATE
+> Task :platform-a11y:bundleDebugAar UP-TO-DATE
+> Task :platform-a11y:assembleDebug UP-TO-DATE
+> Task :adb-pairing:preReleaseBuild UP-TO-DATE
+> Task :adb-pairing:checkReleaseAarMetadata UP-TO-DATE
+> Task :adb-pairing:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :adb-pairing:mergeReleaseNativeLibs NO-SOURCE
+> Task :adb-pairing:stripReleaseDebugSymbols NO-SOURCE
+> Task :adb-pairing:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :adb-pairing:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :adb-pairing:generateReleaseResources UP-TO-DATE
+> Task :adb-pairing:packageReleaseResources UP-TO-DATE
+> Task :adb-pairing:processReleaseNavigationResources UP-TO-DATE
+> Task :adb-pairing:parseReleaseLocalResources UP-TO-DATE
+> Task :adb-pairing:generateReleaseRFile UP-TO-DATE
+> Task :adb-pairing:extractReleaseAnnotations UP-TO-DATE
+> Task :adb-pairing:generateReleaseAssets UP-TO-DATE
+> Task :adb-pairing:mergeReleaseAssets UP-TO-DATE
+> Task :adb-pairing:compileReleaseKotlin UP-TO-DATE
+> Task :adb-pairing:javaPreCompileRelease UP-TO-DATE
+> Task :adb-pairing:compileReleaseJavaWithJavac NO-SOURCE
+> Task :adb-pairing:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :adb-pairing:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :adb-pairing:prepareReleaseArtProfile UP-TO-DATE
+> Task :adb-pairing:processReleaseManifest UP-TO-DATE
+> Task :adb-pairing:processReleaseJavaRes UP-TO-DATE
+> Task :adb-pairing:mergeReleaseJavaResource UP-TO-DATE
+> Task :adb-pairing:syncReleaseLibJars UP-TO-DATE
+> Task :adb-pairing:writeReleaseAarMetadata UP-TO-DATE
+> Task :adb-pairing:bundleReleaseAar UP-TO-DATE
+> Task :adb-pairing:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :adb-pairing:mergeReleaseResources UP-TO-DATE
+> Task :adb-pairing:verifyReleaseResources UP-TO-DATE
+> Task :adb-pairing:assembleRelease UP-TO-DATE
+> Task :adb-pairing:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :helper-client:preReleaseBuild UP-TO-DATE
+> Task :helper-client:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :helper-client:mergeReleaseNativeLibs NO-SOURCE
+> Task :helper-client:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :helper-server:preReleaseBuild UP-TO-DATE
+> Task :helper-server:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :helper-server:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :helper-server:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :helper-server:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :helper-server:configureCMakeRelWithDebInfo[x86]
+> Task :helper-server:buildCMakeRelWithDebInfo[x86]
+> Task :helper-server:configureCMakeRelWithDebInfo[x86_64]
+> Task :helper-server:buildCMakeRelWithDebInfo[x86_64]
+> Task :helper-server:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :helper-server:mergeReleaseNativeLibs UP-TO-DATE
+> Task :helper-server:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeReleaseNativeLibs UP-TO-DATE
+> Task :app:stripReleaseDebugSymbols UP-TO-DATE
+> Task :app:extractReleaseNativeSymbolTables UP-TO-DATE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :helper-client:compileReleaseAidl UP-TO-DATE
+> Task :helper-client:generateReleaseResources UP-TO-DATE
+> Task :helper-client:packageReleaseResources UP-TO-DATE
+> Task :helper-client:processReleaseNavigationResources UP-TO-DATE
+> Task :helper-client:parseReleaseLocalResources UP-TO-DATE
+> Task :helper-client:generateReleaseRFile UP-TO-DATE
+> Task :helper-client:compileReleaseKotlin UP-TO-DATE
+> Task :helper-client:javaPreCompileRelease UP-TO-DATE
+> Task :helper-client:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :helper-client:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :helper-server:generateReleaseResources UP-TO-DATE
+> Task :helper-server:packageReleaseResources UP-TO-DATE
+> Task :helper-server:processReleaseNavigationResources UP-TO-DATE
+> Task :helper-server:parseReleaseLocalResources UP-TO-DATE
+> Task :helper-server:generateReleaseRFile UP-TO-DATE
+> Task :helper-server:compileReleaseKotlin UP-TO-DATE
+> Task :helper-server:javaPreCompileRelease UP-TO-DATE
+> Task :helper-server:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :helper-server:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :helper-client:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :adb-pairing:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :app:checkReleaseDuplicateClasses UP-TO-DATE
+> Task :adb-pairing:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :app:packageReleaseResources UP-TO-DATE
+> Task :app:processReleaseNavigationResources UP-TO-DATE
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+> Task :app:generateReleaseRFile UP-TO-DATE
+> Task :helper-server:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :app:compileReleaseKotlin UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :app:compileReleaseJavaWithJavac NO-SOURCE
+> Task :adb-pairing:compileReleaseLibraryResources UP-TO-DATE
+> Task :helper-client:writeReleaseAarMetadata UP-TO-DATE
+> Task :helper-server:writeReleaseAarMetadata UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:compileReleaseNavigationResources UP-TO-DATE
+> Task :app:mergeReleaseResources UP-TO-DATE
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :adb-pairing:extractDeepLinksRelease UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :helper-client:extractDeepLinksRelease UP-TO-DATE
+> Task :helper-client:processReleaseManifest UP-TO-DATE
+> Task :helper-server:extractDeepLinksRelease UP-TO-DATE
+> Task :helper-server:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseMainManifest UP-TO-DATE
+> Task :app:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+> Task :helper-client:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :helper-client:compileReleaseLibraryResources UP-TO-DATE
+> Task :helper-server:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :helper-server:compileReleaseLibraryResources UP-TO-DATE
+> Task :app:processReleaseResources UP-TO-DATE
+> Task :app:dexBuilderRelease UP-TO-DATE
+> Task :app:desugarReleaseFileDependencies UP-TO-DATE
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexRelease UP-TO-DATE
+> Task :app:mergeDexRelease UP-TO-DATE
+> Task :helper-client:prepareReleaseArtProfile UP-TO-DATE
+> Task :helper-server:prepareReleaseArtProfile UP-TO-DATE
+> Task :app:mergeReleaseArtProfile UP-TO-DATE
+> Task :helper-server:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :helper-client:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :adb-pairing:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :helper-client:generateReleaseAssets UP-TO-DATE
+> Task :helper-client:mergeReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseGlobalSynthetics UP-TO-DATE
+> Task :app:compileReleaseArtProfile UP-TO-DATE
+> Task :helper-server:generateReleaseAssets UP-TO-DATE
+> Task :helper-server:mergeReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets UP-TO-DATE
+> Task :app:compressReleaseAssets UP-TO-DATE
+> Task :app:extractReleaseVersionControlInfo UP-TO-DATE
+> Task :adb-pairing:extractProguardFiles UP-TO-DATE
+> Task :adb-pairing:generateReleaseLintVitalModel UP-TO-DATE
+> Task :adb-pairing:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :adb-pairing:createFullJarRelease UP-TO-DATE
+> Task :adb-pairing:generateReleaseLintModel UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :helper-client:processReleaseJavaRes UP-TO-DATE
+> Task :helper-client:createFullJarRelease UP-TO-DATE
+> Task :helper-client:extractProguardFiles UP-TO-DATE
+> Task :helper-client:generateReleaseLintModel UP-TO-DATE
+> Task :helper-server:processReleaseJavaRes UP-TO-DATE
+> Task :helper-server:createFullJarRelease UP-TO-DATE
+> Task :helper-server:extractProguardFiles UP-TO-DATE
+> Task :helper-server:generateReleaseLintModel UP-TO-DATE
+> Task :app:generateReleaseLintVitalReportModel UP-TO-DATE
+> Task :helper-server:checkReleaseAarMetadata UP-TO-DATE
+> Task :helper-server:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :helper-server:extractReleaseAnnotations UP-TO-DATE
+> Task :helper-server:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :helper-server:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :helper-server:mergeReleaseJavaResource UP-TO-DATE
+> Task :helper-server:syncReleaseLibJars UP-TO-DATE
+> Task :helper-server:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :helper-client:checkReleaseAarMetadata UP-TO-DATE
+> Task :helper-client:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :helper-client:extractReleaseAnnotations UP-TO-DATE
+> Task :helper-client:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :helper-client:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :helper-client:mergeReleaseJavaResource UP-TO-DATE
+> Task :helper-client:syncReleaseLibJars UP-TO-DATE
+> Task :helper-client:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :adb-pairing:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :adb-pairing:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :helper-client:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :helper-client:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :helper-server:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :helper-server:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :app:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :helper-client:generateReleaseLintVitalModel UP-TO-DATE
+> Task :helper-server:generateReleaseLintVitalModel UP-TO-DATE
+> Task :app:lintVitalReportRelease UP-TO-DATE
+> Task :app:lintVitalRelease
+> Task :app:processReleaseJavaRes UP-TO-DATE
+> Task :app:mergeReleaseJavaResource UP-TO-DATE
+> Task :app:optimizeReleaseResources UP-TO-DATE
+> Task :app:collectReleaseDependencies UP-TO-DATE
+> Task :app:sdkReleaseDependencyData UP-TO-DATE
+> Task :app:writeReleaseAppMetadata UP-TO-DATE
+> Task :app:writeReleaseSigningConfigVersions UP-TO-DATE
+> Task :app:packageRelease UP-TO-DATE
+> Task :app:createReleaseApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleRelease UP-TO-DATE
+> Task :core-agent:preReleaseBuild UP-TO-DATE
+> Task :core-llm:preReleaseBuild UP-TO-DATE
+> Task :core-llm:writeReleaseAarMetadata UP-TO-DATE
+> Task :core-security:preReleaseBuild UP-TO-DATE
+> Task :core-security:writeReleaseAarMetadata UP-TO-DATE
+> Task :core-agent:checkReleaseAarMetadata UP-TO-DATE
+> Task :core-agent:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :core-agent:mergeReleaseNativeLibs NO-SOURCE
+> Task :core-agent:stripReleaseDebugSymbols NO-SOURCE
+> Task :core-agent:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-agent:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core-agent:generateReleaseResources UP-TO-DATE
+> Task :core-agent:packageReleaseResources UP-TO-DATE
+> Task :core-agent:processReleaseNavigationResources UP-TO-DATE
+> Task :core-agent:parseReleaseLocalResources UP-TO-DATE
+> Task :core-agent:generateReleaseRFile UP-TO-DATE
+> Task :core-llm:generateReleaseResources UP-TO-DATE
+> Task :core-llm:packageReleaseResources UP-TO-DATE
+> Task :core-llm:processReleaseNavigationResources UP-TO-DATE
+> Task :core-llm:parseReleaseLocalResources UP-TO-DATE
+> Task :core-llm:generateReleaseRFile UP-TO-DATE
+> Task :core-security:generateReleaseResources UP-TO-DATE
+> Task :core-security:packageReleaseResources UP-TO-DATE
+> Task :core-security:processReleaseNavigationResources UP-TO-DATE
+> Task :core-security:parseReleaseLocalResources UP-TO-DATE
+> Task :core-security:generateReleaseRFile UP-TO-DATE
+> Task :core-security:kspReleaseKotlin UP-TO-DATE
+> Task :core-security:compileReleaseKotlin UP-TO-DATE
+> Task :core-security:javaPreCompileRelease UP-TO-DATE
+> Task :core-security:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core-security:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :core-security:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core-llm:kspReleaseKotlin UP-TO-DATE
+> Task :core-llm:compileReleaseKotlin UP-TO-DATE
+> Task :core-llm:javaPreCompileRelease UP-TO-DATE
+> Task :core-llm:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core-security:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core-llm:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :core-llm:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core-agent:kspReleaseKotlin UP-TO-DATE
+> Task :core-agent:extractReleaseAnnotations UP-TO-DATE
+> Task :core-agent:generateReleaseAssets UP-TO-DATE
+> Task :core-agent:mergeReleaseAssets UP-TO-DATE
+> Task :core-agent:compileReleaseKotlin UP-TO-DATE
+> Task :core-agent:javaPreCompileRelease UP-TO-DATE
+> Task :core-agent:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core-llm:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core-agent:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :core-agent:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core-agent:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core-agent:prepareReleaseArtProfile UP-TO-DATE
+> Task :core-agent:processReleaseManifest UP-TO-DATE
+> Task :core-agent:processReleaseJavaRes UP-TO-DATE
+> Task :core-agent:mergeReleaseJavaResource UP-TO-DATE
+> Task :core-agent:syncReleaseLibJars UP-TO-DATE
+> Task :core-agent:writeReleaseAarMetadata UP-TO-DATE
+> Task :core-agent:bundleReleaseAar UP-TO-DATE
+> Task :core-agent:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :core-agent:mergeReleaseResources UP-TO-DATE
+> Task :core-llm:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :core-llm:compileReleaseLibraryResources UP-TO-DATE
+> Task :core-security:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :core-security:compileReleaseLibraryResources UP-TO-DATE
+> Task :core-agent:verifyReleaseResources UP-TO-DATE
+> Task :core-agent:assembleRelease UP-TO-DATE
+> Task :core-llm:checkReleaseAarMetadata UP-TO-DATE
+> Task :core-llm:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :core-llm:mergeReleaseNativeLibs NO-SOURCE
+> Task :core-llm:stripReleaseDebugSymbols NO-SOURCE
+> Task :core-llm:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-llm:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core-llm:extractReleaseAnnotations UP-TO-DATE
+> Task :core-llm:generateReleaseAssets UP-TO-DATE
+> Task :core-llm:mergeReleaseAssets UP-TO-DATE
+> Task :core-llm:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core-llm:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core-llm:prepareReleaseArtProfile UP-TO-DATE
+> Task :core-llm:processReleaseManifest UP-TO-DATE
+> Task :core-llm:processReleaseJavaRes UP-TO-DATE
+> Task :core-llm:mergeReleaseJavaResource UP-TO-DATE
+> Task :core-llm:syncReleaseLibJars UP-TO-DATE
+> Task :core-llm:bundleReleaseAar UP-TO-DATE
+> Task :core-llm:mergeReleaseResources UP-TO-DATE
+> Task :core-llm:verifyReleaseResources UP-TO-DATE
+> Task :core-llm:assembleRelease UP-TO-DATE
+> Task :core-security:checkReleaseAarMetadata UP-TO-DATE
+> Task :core-security:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :core-security:mergeReleaseNativeLibs NO-SOURCE
+> Task :core-security:stripReleaseDebugSymbols NO-SOURCE
+> Task :core-security:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :core-security:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core-security:extractReleaseAnnotations UP-TO-DATE
+> Task :core-security:generateReleaseAssets UP-TO-DATE
+> Task :core-security:mergeReleaseAssets UP-TO-DATE
+> Task :core-security:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core-security:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core-security:prepareReleaseArtProfile UP-TO-DATE
+> Task :core-security:processReleaseManifest UP-TO-DATE
+> Task :core-security:processReleaseJavaRes UP-TO-DATE
+> Task :core-security:mergeReleaseJavaResource UP-TO-DATE
+> Task :core-security:syncReleaseLibJars UP-TO-DATE
+> Task :core-security:bundleReleaseAar UP-TO-DATE
+> Task :core-security:mergeReleaseResources UP-TO-DATE
+> Task :core-security:verifyReleaseResources UP-TO-DATE
+> Task :core-security:assembleRelease UP-TO-DATE
+> Task :helper-client:stripReleaseDebugSymbols NO-SOURCE
+> Task :helper-client:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :helper-client:bundleReleaseAar UP-TO-DATE
+> Task :helper-client:mergeReleaseResources UP-TO-DATE
+> Task :helper-client:verifyReleaseResources UP-TO-DATE
+> Task :helper-client:assembleRelease UP-TO-DATE
+> Task :helper-server:stripReleaseDebugSymbols UP-TO-DATE
+> Task :helper-server:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :helper-server:bundleReleaseAar UP-TO-DATE
+> Task :helper-server:mergeReleaseResources UP-TO-DATE
+> Task :helper-server:verifyReleaseResources UP-TO-DATE
+> Task :helper-server:assembleRelease UP-TO-DATE
+> Task :platform-a11y:preReleaseBuild UP-TO-DATE
+> Task :platform-a11y:checkReleaseAarMetadata UP-TO-DATE
+> Task :platform-a11y:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :platform-a11y:mergeReleaseNativeLibs NO-SOURCE
+> Task :platform-a11y:stripReleaseDebugSymbols NO-SOURCE
+> Task :platform-a11y:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :platform-a11y:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core-agent:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :platform-a11y:generateReleaseResources UP-TO-DATE
+> Task :platform-a11y:packageReleaseResources UP-TO-DATE
+> Task :platform-a11y:processReleaseNavigationResources UP-TO-DATE
+> Task :platform-a11y:parseReleaseLocalResources UP-TO-DATE
+> Task :platform-a11y:generateReleaseRFile UP-TO-DATE
+> Task :platform-a11y:kspReleaseKotlin UP-TO-DATE
+> Task :platform-a11y:extractReleaseAnnotations UP-TO-DATE
+> Task :platform-a11y:generateReleaseAssets UP-TO-DATE
+> Task :platform-a11y:mergeReleaseAssets UP-TO-DATE
+> Task :core-agent:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :platform-a11y:compileReleaseKotlin UP-TO-DATE
+> Task :platform-a11y:javaPreCompileRelease UP-TO-DATE
+> Task :platform-a11y:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :platform-a11y:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :platform-a11y:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :platform-a11y:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :platform-a11y:prepareReleaseArtProfile UP-TO-DATE
+> Task :platform-a11y:processReleaseManifest UP-TO-DATE
+> Task :platform-a11y:processReleaseJavaRes UP-TO-DATE
+> Task :platform-a11y:mergeReleaseJavaResource UP-TO-DATE
+> Task :platform-a11y:syncReleaseLibJars UP-TO-DATE
+> Task :platform-a11y:writeReleaseAarMetadata UP-TO-DATE
+> Task :platform-a11y:bundleReleaseAar UP-TO-DATE
+> Task :core-agent:compileReleaseLibraryResources UP-TO-DATE
+> Task :platform-a11y:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :platform-a11y:mergeReleaseResources UP-TO-DATE
+> Task :platform-a11y:verifyReleaseResources UP-TO-DATE
+> Task :platform-a11y:assembleRelease UP-TO-DATE
+> Task :adb-pairing:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :adb-pairing:preDebugUnitTestBuild UP-TO-DATE
+> Task :adb-pairing:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :adb-pairing:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :adb-pairing:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :adb-pairing:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :adb-pairing:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :adb-pairing:testDebugUnitTest UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :helper-client:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :helper-server:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :app:testDebugUnitTest UP-TO-DATE
+> Task :core-agent:preDebugUnitTestBuild UP-TO-DATE
+> Task :core-agent:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :core-agent:kspDebugUnitTestKotlin SKIPPED
+> Task :core-agent:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core-agent:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core-agent:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core-agent:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core-agent:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core-agent:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core-agent:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core-agent:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core-agent:testDebugUnitTest UP-TO-DATE
+> Task :core-llm:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core-llm:preDebugUnitTestBuild UP-TO-DATE
+> Task :core-llm:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core-llm:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core-llm:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core-llm:compileDebugLibraryResources UP-TO-DATE
+> Task :core-llm:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core-llm:generateDebugUnitTestResources UP-TO-DATE
+> Task :core-llm:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core-llm:extractDeepLinksDebug UP-TO-DATE
+> Task :core-security:extractDeepLinksDebug UP-TO-DATE
+> Task :core-llm:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core-llm:processDebugUnitTestManifest UP-TO-DATE
+> Task :core-security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core-security:compileDebugLibraryResources UP-TO-DATE
+> Task :core-llm:processDebugUnitTestResources UP-TO-DATE
+> Task :core-llm:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core-llm:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core-llm:kspDebugUnitTestKotlin SKIPPED
+> Task :core-llm:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core-llm:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core-llm:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core-llm:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core-llm:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core-llm:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core-llm:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core-llm:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core-llm:testDebugUnitTest UP-TO-DATE
+> Task :core-security:preDebugUnitTestBuild UP-TO-DATE
+> Task :core-security:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :core-security:kspDebugUnitTestKotlin SKIPPED
+> Task :core-security:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core-security:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core-security:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core-security:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core-security:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core-security:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core-security:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core-security:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core-security:testDebugUnitTest UP-TO-DATE
+> Task :helper-client:preDebugUnitTestBuild UP-TO-DATE
+> Task :helper-client:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :helper-client:compileDebugUnitTestKotlin NO-SOURCE
+> Task :helper-client:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :helper-client:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :helper-client:processDebugUnitTestJavaRes NO-SOURCE
+> Task :helper-client:testDebugUnitTest NO-SOURCE
+> Task :helper-server:preDebugUnitTestBuild UP-TO-DATE
+> Task :helper-server:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :helper-server:compileDebugUnitTestKotlin NO-SOURCE
+> Task :helper-server:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :helper-server:compileDebugUnitTestJavaWithJavac UP-TO-DATE
+> Task :helper-server:processDebugUnitTestJavaRes NO-SOURCE
+> Task :helper-server:testDebugUnitTest UP-TO-DATE
+> Task :platform-a11y:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :platform-a11y:preDebugUnitTestBuild UP-TO-DATE
+> Task :platform-a11y:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :platform-a11y:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :platform-a11y:kspDebugUnitTestKotlin SKIPPED
+> Task :platform-a11y:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :platform-a11y:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :platform-a11y:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :platform-a11y:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :platform-a11y:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :platform-a11y:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :platform-a11y:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :platform-a11y:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :platform-a11y:testDebugUnitTest UP-TO-DATE
+> Task :adb-pairing:bundleDebugLocalLintAar UP-TO-DATE
+> Task :adb-pairing:createFullJarDebug UP-TO-DATE
+> Task :adb-pairing:preDebugAndroidTestBuild UP-TO-DATE
+> Task :adb-pairing:writeDebugLintModelMetadata UP-TO-DATE
+> Task :adb-pairing:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :adb-pairing:generateDebugLintReportModel UP-TO-DATE
+> Task :adb-pairing:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :adb-pairing:lintAnalyzeDebug UP-TO-DATE
+> Task :adb-pairing:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :adb-pairing:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :adb-pairing:lintReportDebug UP-TO-DATE
+
+> Task :adb-pairing:lintDebug FAILED
+C:\Users\<user>\.gradle\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk18on\1.84\dab889a3259e27caec6e6c2f3bde94af036b2fcc\bcpkix-jdk18on-1.84.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+
+   Explanation for issues of type "TrustAllX509TrustManager":
+   This check looks for X509TrustManager implementations whose
+   checkServerTrusted or checkClientTrusted methods do nothing (thus trusting
+   any certificate chain) which could result in insecure network traffic
+   caused by trusting arbitrary TLS/SSL certificates presented by peers.
+
+   https://goo.gle/TrustAllX509TrustManager
+
+1 error
+
+> Task :adb-pairing:generateDebugLintModel UP-TO-DATE
+> Task :helper-server:bundleDebugLocalLintAar UP-TO-DATE
+> Task :helper-client:bundleDebugLocalLintAar UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :helper-client:createFullJarDebug UP-TO-DATE
+> Task :helper-client:writeDebugLintModelMetadata UP-TO-DATE
+> Task :helper-server:createFullJarDebug UP-TO-DATE
+> Task :helper-server:writeDebugLintModelMetadata UP-TO-DATE
+> Task :app:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :helper-client:generateDebugLintModel UP-TO-DATE
+> Task :helper-server:generateDebugLintModel UP-TO-DATE
+> Task :app:generateDebugLintReportModel UP-TO-DATE
+> Task :app:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :helper-client:lintAnalyzeDebug UP-TO-DATE
+> Task :helper-server:lintAnalyzeDebug UP-TO-DATE
+> Task :app:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :app:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :helper-client:preDebugAndroidTestBuild UP-TO-DATE
+> Task :helper-client:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :helper-client:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :helper-client:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :helper-client:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :helper-server:preDebugAndroidTestBuild UP-TO-DATE
+> Task :helper-server:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :helper-server:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :helper-server:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :helper-server:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :core-agent:bundleDebugLocalLintAar UP-TO-DATE
+> Task :core-llm:bundleDebugLocalLintAar UP-TO-DATE
+> Task :core-security:bundleDebugLocalLintAar UP-TO-DATE
+> Task :core-agent:createFullJarDebug UP-TO-DATE
+> Task :core-agent:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core-agent:writeDebugLintModelMetadata UP-TO-DATE
+> Task :core-llm:createFullJarDebug UP-TO-DATE
+> Task :core-llm:writeDebugLintModelMetadata UP-TO-DATE
+> Task :core-security:createFullJarDebug UP-TO-DATE
+> Task :core-security:writeDebugLintModelMetadata UP-TO-DATE
+> Task :core-agent:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :core-agent:extractProguardFiles UP-TO-DATE
+> Task :core-llm:extractProguardFiles UP-TO-DATE
+> Task :core-security:extractProguardFiles UP-TO-DATE
+> Task :core-security:generateDebugLintModel UP-TO-DATE
+> Task :core-llm:generateDebugLintModel UP-TO-DATE
+> Task :core-agent:generateDebugLintReportModel UP-TO-DATE
+> Task :core-agent:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :core-security:lintAnalyzeDebug UP-TO-DATE
+> Task :core-llm:lintAnalyzeDebug UP-TO-DATE
+> Task :core-agent:lintAnalyzeDebug UP-TO-DATE
+> Task :core-agent:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :core-agent:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :core-llm:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core-llm:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :core-llm:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :core-llm:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :core-llm:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :core-security:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core-security:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :core-security:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :core-security:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :core-security:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :core-agent:lintReportDebug UP-TO-DATE
+> Task :core-agent:lintDebug
+> Task :core-llm:generateDebugLintReportModel UP-TO-DATE
+> Task :core-llm:lintReportDebug UP-TO-DATE
+> Task :core-llm:lintDebug
+> Task :core-security:generateDebugLintReportModel UP-TO-DATE
+> Task :core-security:lintReportDebug UP-TO-DATE
+> Task :core-security:lintDebug
+> Task :helper-client:generateDebugLintReportModel UP-TO-DATE
+> Task :helper-client:lintReportDebug UP-TO-DATE
+> Task :helper-client:lintDebug
+> Task :helper-server:generateDebugLintReportModel UP-TO-DATE
+> Task :helper-server:lintReportDebug UP-TO-DATE
+> Task :helper-server:lintDebug
+> Task :core-agent:generateDebugLintModel UP-TO-DATE
+> Task :platform-a11y:bundleDebugLocalLintAar UP-TO-DATE
+> Task :platform-a11y:createFullJarDebug UP-TO-DATE
+> Task :platform-a11y:preDebugAndroidTestBuild UP-TO-DATE
+> Task :platform-a11y:writeDebugLintModelMetadata UP-TO-DATE
+> Task :platform-a11y:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :platform-a11y:extractProguardFiles UP-TO-DATE
+> Task :platform-a11y:generateDebugLintReportModel UP-TO-DATE
+> Task :platform-a11y:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :platform-a11y:lintAnalyzeDebug UP-TO-DATE
+> Task :platform-a11y:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :platform-a11y:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :platform-a11y:lintReportDebug UP-TO-DATE
+> Task :platform-a11y:lintDebug
+> Task :adb-pairing:loadKtlintReporters UP-TO-DATE
+> Task :adb-pairing:runKtlintCheckOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintAndroidTestDebugSourceSetCheck SKIPPED
+> Task :adb-pairing:runKtlintCheckOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintAndroidTestReleaseSourceSetCheck SKIPPED
+> Task :adb-pairing:runKtlintCheckOverAndroidTestSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintAndroidTestSourceSetCheck SKIPPED
+> Task :adb-pairing:runKtlintCheckOverDebugSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintDebugSourceSetCheck SKIPPED
+> Task :adb-pairing:runKtlintCheckOverKotlinScripts UP-TO-DATE
+> Task :adb-pairing:ktlintKotlinScriptCheck UP-TO-DATE
+> Task :app:lintAnalyzeDebug
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///C:/Users/<user>/Claude/worktrees/task-008/android/app/build/reports/lint-results-debug.html
+Wrote SARIF report to file:///C:/Users/<user>/Claude/worktrees/task-008/android/app/build/reports/lint-results-debug.sarif
+Lint found 1 error. First failure:
+C:\Users\<user>\.gradle\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk18on\1.84\dab889a3259e27caec6e6c2f3bde94af036b2fcc\bcpkix-jdk18on-1.84.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+
+
+> Task :app:lintDebug FAILED
+C:\Users\<user>\.gradle\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk18on\1.84\dab889a3259e27caec6e6c2f3bde94af036b2fcc\bcpkix-jdk18on-1.84.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+
+   Explanation for issues of type "TrustAllX509TrustManager":
+   This check looks for X509TrustManager implementations whose
+   checkServerTrusted or checkClientTrusted methods do nothing (thus trusting
+   any certificate chain) which could result in insecure network traffic
+   caused by trusting arbitrary TLS/SSL certificates presented by peers.
+
+   https://goo.gle/TrustAllX509TrustManager
+
+1 error
+
+> Task :adb-pairing:runKtlintCheckOverReleaseSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintReleaseSourceSetCheck SKIPPED
+> Task :adb-pairing:runKtlintCheckOverTestDebugSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintTestDebugSourceSetCheck SKIPPED
+> Task :adb-pairing:runKtlintCheckOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintTestFixturesDebugSourceSetCheck SKIPPED
+> Task :adb-pairing:runKtlintCheckOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintTestFixturesReleaseSourceSetCheck SKIPPED
+> Task :adb-pairing:runKtlintCheckOverTestFixturesSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintTestFixturesSourceSetCheck SKIPPED
+> Task :adb-pairing:runKtlintCheckOverTestReleaseSourceSet NO-SOURCE
+> Task :adb-pairing:ktlintTestReleaseSourceSetCheck SKIPPED
+> Task :adb-pairing:runKtlintCheckOverTestSourceSet UP-TO-DATE
+> Task :adb-pairing:ktlintTestSourceSetCheck UP-TO-DATE
+> Task :app:loadKtlintReporters UP-TO-DATE
+> Task :app:runKtlintCheckOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :app:ktlintAndroidTestDebugSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :app:ktlintAndroidTestReleaseSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverAndroidTestSourceSet UP-TO-DATE
+> Task :app:ktlintAndroidTestSourceSetCheck UP-TO-DATE
+> Task :app:runKtlintCheckOverDebugSourceSet NO-SOURCE
+> Task :app:ktlintDebugSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverKotlinScripts UP-TO-DATE
+> Task :app:ktlintKotlinScriptCheck UP-TO-DATE
+> Task :app:runKtlintCheckOverMainSourceSet UP-TO-DATE
+> Task :app:ktlintMainSourceSetCheck UP-TO-DATE
+> Task :app:runKtlintCheckOverReleaseSourceSet NO-SOURCE
+> Task :app:ktlintReleaseSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestDebugSourceSet NO-SOURCE
+> Task :app:ktlintTestDebugSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :app:ktlintTestFixturesDebugSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :app:ktlintTestFixturesReleaseSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestFixturesSourceSet NO-SOURCE
+> Task :app:ktlintTestFixturesSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestReleaseSourceSet NO-SOURCE
+> Task :app:ktlintTestReleaseSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestSourceSet UP-TO-DATE
+> Task :app:ktlintTestSourceSetCheck UP-TO-DATE
+> Task :app:ktlintCheck UP-TO-DATE
+> Task :core-agent:loadKtlintReporters UP-TO-DATE
+> Task :core-agent:runKtlintCheckOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :core-agent:ktlintAndroidTestDebugSourceSetCheck SKIPPED
+> Task :core-agent:runKtlintCheckOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :core-agent:ktlintAndroidTestReleaseSourceSetCheck SKIPPED
+> Task :core-agent:runKtlintCheckOverAndroidTestSourceSet NO-SOURCE
+> Task :core-agent:ktlintAndroidTestSourceSetCheck SKIPPED
+> Task :core-agent:runKtlintCheckOverDebugSourceSet NO-SOURCE
+> Task :core-agent:ktlintDebugSourceSetCheck SKIPPED
+> Task :core-agent:runKtlintCheckOverKotlinScripts UP-TO-DATE
+> Task :core-agent:ktlintKotlinScriptCheck UP-TO-DATE
+> Task :core-agent:runKtlintCheckOverMainSourceSet UP-TO-DATE
+> Task :core-agent:ktlintMainSourceSetCheck UP-TO-DATE
+> Task :core-agent:runKtlintCheckOverReleaseSourceSet NO-SOURCE
+> Task :core-agent:ktlintReleaseSourceSetCheck SKIPPED
+> Task :core-agent:runKtlintCheckOverTestDebugSourceSet NO-SOURCE
+> Task :core-agent:ktlintTestDebugSourceSetCheck SKIPPED
+> Task :core-agent:runKtlintCheckOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :core-agent:ktlintTestFixturesDebugSourceSetCheck SKIPPED
+> Task :core-agent:runKtlintCheckOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :core-agent:ktlintTestFixturesReleaseSourceSetCheck SKIPPED
+> Task :core-agent:runKtlintCheckOverTestFixturesSourceSet NO-SOURCE
+> Task :core-agent:ktlintTestFixturesSourceSetCheck SKIPPED
+> Task :core-agent:runKtlintCheckOverTestReleaseSourceSet NO-SOURCE
+> Task :core-agent:ktlintTestReleaseSourceSetCheck SKIPPED
+> Task :core-agent:runKtlintCheckOverTestSourceSet UP-TO-DATE
+> Task :core-agent:ktlintTestSourceSetCheck UP-TO-DATE
+> Task :core-agent:ktlintCheck UP-TO-DATE
+> Task :core-llm:loadKtlintReporters UP-TO-DATE
+> Task :core-llm:runKtlintCheckOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :core-llm:ktlintAndroidTestDebugSourceSetCheck SKIPPED
+> Task :core-llm:runKtlintCheckOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :core-llm:ktlintAndroidTestReleaseSourceSetCheck SKIPPED
+> Task :core-llm:runKtlintCheckOverAndroidTestSourceSet NO-SOURCE
+> Task :core-llm:ktlintAndroidTestSourceSetCheck SKIPPED
+> Task :core-llm:runKtlintCheckOverDebugSourceSet NO-SOURCE
+> Task :core-llm:ktlintDebugSourceSetCheck SKIPPED
+> Task :core-llm:runKtlintCheckOverKotlinScripts UP-TO-DATE
+> Task :core-llm:ktlintKotlinScriptCheck UP-TO-DATE
+> Task :core-llm:runKtlintCheckOverMainSourceSet UP-TO-DATE
+> Task :core-llm:ktlintMainSourceSetCheck UP-TO-DATE
+> Task :core-llm:runKtlintCheckOverReleaseSourceSet NO-SOURCE
+> Task :core-llm:ktlintReleaseSourceSetCheck SKIPPED
+> Task :core-llm:runKtlintCheckOverTestDebugSourceSet NO-SOURCE
+> Task :core-llm:ktlintTestDebugSourceSetCheck SKIPPED
+> Task :core-llm:runKtlintCheckOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :core-llm:ktlintTestFixturesDebugSourceSetCheck SKIPPED
+> Task :core-llm:runKtlintCheckOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :core-llm:ktlintTestFixturesReleaseSourceSetCheck SKIPPED
+> Task :core-llm:runKtlintCheckOverTestFixturesSourceSet NO-SOURCE
+> Task :core-llm:ktlintTestFixturesSourceSetCheck SKIPPED
+> Task :core-llm:runKtlintCheckOverTestReleaseSourceSet NO-SOURCE
+> Task :core-llm:ktlintTestReleaseSourceSetCheck SKIPPED
+> Task :core-llm:runKtlintCheckOverTestSourceSet UP-TO-DATE
+> Task :core-llm:ktlintTestSourceSetCheck UP-TO-DATE
+> Task :core-llm:ktlintCheck UP-TO-DATE
+> Task :core-security:loadKtlintReporters UP-TO-DATE
+> Task :core-security:runKtlintCheckOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :core-security:ktlintAndroidTestDebugSourceSetCheck SKIPPED
+> Task :core-security:runKtlintCheckOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :core-security:ktlintAndroidTestReleaseSourceSetCheck SKIPPED
+> Task :core-security:runKtlintCheckOverAndroidTestSourceSet NO-SOURCE
+> Task :core-security:ktlintAndroidTestSourceSetCheck SKIPPED
+> Task :core-security:runKtlintCheckOverDebugSourceSet NO-SOURCE
+> Task :core-security:ktlintDebugSourceSetCheck SKIPPED
+> Task :core-security:runKtlintCheckOverKotlinScripts UP-TO-DATE
+> Task :core-security:ktlintKotlinScriptCheck UP-TO-DATE
+> Task :core-security:runKtlintCheckOverMainSourceSet UP-TO-DATE
+> Task :core-security:ktlintMainSourceSetCheck UP-TO-DATE
+> Task :core-security:runKtlintCheckOverReleaseSourceSet NO-SOURCE
+> Task :core-security:ktlintReleaseSourceSetCheck SKIPPED
+> Task :core-security:runKtlintCheckOverTestDebugSourceSet NO-SOURCE
+> Task :core-security:ktlintTestDebugSourceSetCheck SKIPPED
+> Task :core-security:runKtlintCheckOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :core-security:ktlintTestFixturesDebugSourceSetCheck SKIPPED
+> Task :core-security:runKtlintCheckOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :core-security:ktlintTestFixturesReleaseSourceSetCheck SKIPPED
+> Task :core-security:runKtlintCheckOverTestFixturesSourceSet NO-SOURCE
+> Task :core-security:ktlintTestFixturesSourceSetCheck SKIPPED
+> Task :core-security:runKtlintCheckOverTestReleaseSourceSet NO-SOURCE
+> Task :core-security:ktlintTestReleaseSourceSetCheck SKIPPED
+> Task :core-security:runKtlintCheckOverTestSourceSet UP-TO-DATE
+> Task :core-security:ktlintTestSourceSetCheck UP-TO-DATE
+> Task :core-security:ktlintCheck UP-TO-DATE
+> Task :helper-client:loadKtlintReporters UP-TO-DATE
+> Task :helper-client:runKtlintCheckOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :helper-client:ktlintAndroidTestDebugSourceSetCheck SKIPPED
+> Task :helper-client:runKtlintCheckOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :helper-client:ktlintAndroidTestReleaseSourceSetCheck SKIPPED
+> Task :helper-client:runKtlintCheckOverAndroidTestSourceSet UP-TO-DATE
+> Task :helper-client:ktlintAndroidTestSourceSetCheck UP-TO-DATE
+> Task :helper-client:runKtlintCheckOverDebugSourceSet NO-SOURCE
+> Task :helper-client:ktlintDebugSourceSetCheck SKIPPED
+> Task :helper-client:runKtlintCheckOverKotlinScripts UP-TO-DATE
+> Task :helper-client:ktlintKotlinScriptCheck UP-TO-DATE
+> Task :helper-client:runKtlintCheckOverMainSourceSet UP-TO-DATE
+> Task :helper-client:ktlintMainSourceSetCheck UP-TO-DATE
+> Task :helper-client:runKtlintCheckOverReleaseSourceSet NO-SOURCE
+> Task :helper-client:ktlintReleaseSourceSetCheck SKIPPED
+> Task :helper-client:runKtlintCheckOverTestDebugSourceSet NO-SOURCE
+> Task :helper-client:ktlintTestDebugSourceSetCheck SKIPPED
+> Task :helper-client:runKtlintCheckOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :helper-client:ktlintTestFixturesDebugSourceSetCheck SKIPPED
+> Task :helper-client:runKtlintCheckOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :helper-client:ktlintTestFixturesReleaseSourceSetCheck SKIPPED
+> Task :helper-client:runKtlintCheckOverTestFixturesSourceSet NO-SOURCE
+> Task :helper-client:ktlintTestFixturesSourceSetCheck SKIPPED
+> Task :helper-client:runKtlintCheckOverTestReleaseSourceSet NO-SOURCE
+> Task :helper-client:ktlintTestReleaseSourceSetCheck SKIPPED
+> Task :helper-client:runKtlintCheckOverTestSourceSet NO-SOURCE
+> Task :helper-client:ktlintTestSourceSetCheck SKIPPED
+> Task :helper-client:ktlintCheck UP-TO-DATE
+> Task :helper-server:loadKtlintReporters UP-TO-DATE
+> Task :helper-server:runKtlintCheckOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :helper-server:ktlintAndroidTestDebugSourceSetCheck SKIPPED
+> Task :helper-server:runKtlintCheckOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :helper-server:ktlintAndroidTestReleaseSourceSetCheck SKIPPED
+> Task :helper-server:runKtlintCheckOverAndroidTestSourceSet NO-SOURCE
+> Task :helper-server:ktlintAndroidTestSourceSetCheck SKIPPED
+> Task :helper-server:runKtlintCheckOverDebugSourceSet NO-SOURCE
+> Task :helper-server:ktlintDebugSourceSetCheck SKIPPED
+> Task :helper-server:runKtlintCheckOverKotlinScripts UP-TO-DATE
+> Task :helper-server:ktlintKotlinScriptCheck UP-TO-DATE
+> Task :helper-server:runKtlintCheckOverMainSourceSet UP-TO-DATE
+> Task :helper-server:ktlintMainSourceSetCheck UP-TO-DATE
+> Task :helper-server:runKtlintCheckOverReleaseSourceSet NO-SOURCE
+> Task :helper-server:ktlintReleaseSourceSetCheck SKIPPED
+> Task :helper-server:runKtlintCheckOverTestDebugSourceSet NO-SOURCE
+> Task :helper-server:ktlintTestDebugSourceSetCheck SKIPPED
+> Task :helper-server:runKtlintCheckOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :helper-server:ktlintTestFixturesDebugSourceSetCheck SKIPPED
+> Task :helper-server:runKtlintCheckOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :helper-server:ktlintTestFixturesReleaseSourceSetCheck SKIPPED
+> Task :helper-server:runKtlintCheckOverTestFixturesSourceSet NO-SOURCE
+> Task :helper-server:ktlintTestFixturesSourceSetCheck SKIPPED
+> Task :helper-server:runKtlintCheckOverTestReleaseSourceSet NO-SOURCE
+> Task :helper-server:ktlintTestReleaseSourceSetCheck SKIPPED
+> Task :helper-server:runKtlintCheckOverTestSourceSet NO-SOURCE
+> Task :helper-server:ktlintTestSourceSetCheck SKIPPED
+> Task :helper-server:ktlintCheck UP-TO-DATE
+> Task :platform-a11y:loadKtlintReporters UP-TO-DATE
+> Task :platform-a11y:runKtlintCheckOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :platform-a11y:ktlintAndroidTestDebugSourceSetCheck SKIPPED
+> Task :platform-a11y:runKtlintCheckOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :platform-a11y:ktlintAndroidTestReleaseSourceSetCheck SKIPPED
+> Task :platform-a11y:runKtlintCheckOverAndroidTestSourceSet UP-TO-DATE
+> Task :platform-a11y:ktlintAndroidTestSourceSetCheck UP-TO-DATE
+> Task :platform-a11y:runKtlintCheckOverDebugSourceSet NO-SOURCE
+> Task :platform-a11y:ktlintDebugSourceSetCheck SKIPPED
+> Task :platform-a11y:runKtlintCheckOverKotlinScripts UP-TO-DATE
+> Task :platform-a11y:ktlintKotlinScriptCheck UP-TO-DATE
+> Task :platform-a11y:runKtlintCheckOverMainSourceSet UP-TO-DATE
+> Task :platform-a11y:ktlintMainSourceSetCheck UP-TO-DATE
+> Task :platform-a11y:runKtlintCheckOverReleaseSourceSet NO-SOURCE
+> Task :platform-a11y:ktlintReleaseSourceSetCheck SKIPPED
+> Task :platform-a11y:runKtlintCheckOverTestDebugSourceSet NO-SOURCE
+> Task :platform-a11y:ktlintTestDebugSourceSetCheck SKIPPED
+> Task :platform-a11y:runKtlintCheckOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :platform-a11y:ktlintTestFixturesDebugSourceSetCheck SKIPPED
+> Task :platform-a11y:runKtlintCheckOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :platform-a11y:ktlintTestFixturesReleaseSourceSetCheck SKIPPED
+> Task :platform-a11y:runKtlintCheckOverTestFixturesSourceSet NO-SOURCE
+> Task :platform-a11y:ktlintTestFixturesSourceSetCheck SKIPPED
+> Task :platform-a11y:runKtlintCheckOverTestReleaseSourceSet NO-SOURCE
+> Task :platform-a11y:ktlintTestReleaseSourceSetCheck SKIPPED
+> Task :platform-a11y:runKtlintCheckOverTestSourceSet UP-TO-DATE
+> Task :platform-a11y:ktlintTestSourceSetCheck UP-TO-DATE
+> Task :platform-a11y:ktlintCheck UP-TO-DATE
+> Task :adb-pairing:detekt
+> Task :app:detekt UP-TO-DATE
+> Task :core-agent:detekt UP-TO-DATE
+> Task :core-llm:detekt UP-TO-DATE
+> Task :core-security:detekt UP-TO-DATE
+> Task :helper-client:detekt UP-TO-DATE
+> Task :helper-server:detekt UP-TO-DATE
+> Task :platform-a11y:detekt UP-TO-DATE
+> Task :adb-pairing:runKtlintCheckOverMainSourceSet
+> Task :adb-pairing:ktlintMainSourceSetCheck UP-TO-DATE
+> Task :adb-pairing:ktlintCheck UP-TO-DATE
+
+[Incubating] Problems report is available at: file:///C:/Users/<user>/Claude/worktrees/task-008/android/build/reports/problems/problems-report.html
+
+FAILURE: Build completed with 2 failures.
+
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':adb-pairing:lintDebug' (registered by plugin 'com.android.internal.library').
+> Lint found errors in the project; aborting build.
+  
+  Fix the issues identified by lint, or create a baseline to see only new errors.
+  To create a baseline, run `gradlew updateLintBaseline` after adding the following to the module's build.gradle file:
+  ```
+  android {
+      lint {
+          baseline = file("lint-baseline.xml")
+      }
+  }
+  ```
+  For more details, see https://developer.android.com/studio/write/lint#snapshot
+  
+  C:\Users\<user>\.gradle\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk18on\1.84\dab889a3259e27caec6e6c2f3bde94af036b2fcc\bcpkix-jdk18on-1.84.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+  
+     Explanation for issues of type "TrustAllX509TrustManager":
+     This check looks for X509TrustManager implementations whose
+     checkServerTrusted or checkClientTrusted methods do nothing (thus trusting
+     any certificate chain) which could result in insecure network traffic
+     caused by trusting arbitrary TLS/SSL certificates presented by peers.
+  
+     https://goo.gle/TrustAllX509TrustManager
+  
+  1 error
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:lintDebug' (registered by plugin 'com.android.internal.application').
+> Lint found errors in the project; aborting build.
+  
+  Fix the issues identified by lint, or create a baseline to see only new errors.
+  To create a baseline, run `gradlew updateLintBaseline` after adding the following to the module's build.gradle file:
+  ```
+  android {
+      lint {
+          baseline = file("lint-baseline.xml")
+      }
+  }
+  ```
+  For more details, see https://developer.android.com/studio/write/lint#snapshot
+  
+  C:\Users\<user>\.gradle\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk18on\1.84\dab889a3259e27caec6e6c2f3bde94af036b2fcc\bcpkix-jdk18on-1.84.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+  
+     Explanation for issues of type "TrustAllX509TrustManager":
+     This check looks for X509TrustManager implementations whose
+     checkServerTrusted or checkClientTrusted methods do nothing (thus trusting
+     any certificate chain) which could result in insecure network traffic
+     caused by trusting arbitrary TLS/SSL certificates presented by peers.
+  
+     https://goo.gle/TrustAllX509TrustManager
+  
+  1 error
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 40s
+767 actionable tasks: 29 executed, 738 up-to-date
+

@@ -1,0 +1,32 @@
+android\app\build\outputs\apk\debug\app-debug.apk lib/arm64-v8a/libconscrypt_jni.so SHA256=b57fbe4527d8f9fb6a249f02034b32423bc9cae1caccb4ac3abe35b6aa226882
+LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x2862a0 0x2862a0 R E 0x4000
+LOAD           0x2862a0 0x000000000028a2a0 0x000000000028a2a0 0x017938 0x019d60 RW  0x4000
+LOAD           0x29dbd8 0x00000000002a5bd8 0x00000000002a5bd8 0x002250 0x0047f8 RW  0x4000
+android\app\build\outputs\apk\debug\app-debug.apk lib/armeabi-v7a/libconscrypt_jni.so SHA256=61fd465ac351894811df52926bcc752f5b18aa30304d1a15161031313e37a3a7
+LOAD           0x000000 0x00000000 0x00000000 0x1a31f0 0x1a31f0 R E 0x4000
+LOAD           0x1a31f0 0x001a71f0 0x001a71f0 0x0d3c4 0x10e10 RW  0x4000
+LOAD           0x1b05b4 0x001b85b4 0x001b85b4 0x0116c 0x02689 RW  0x4000
+android\app\build\outputs\apk\debug\app-debug.apk lib/x86/libconscrypt_jni.so SHA256=e9c5cb0396671a85e5505ccb00256932cef4204ac3cf6439ae8bb46bff2c9ed9
+LOAD           0x000000 0x00000000 0x00000000 0x298520 0x298520 R E 0x4000
+LOAD           0x298520 0x0029c520 0x0029c520 0x0d3ac 0x0fae0 RW  0x4000
+LOAD           0x2a58cc 0x002ad8cc 0x002ad8cc 0x0117c 0x02b64 RW  0x4000
+android\app\build\outputs\apk\debug\app-debug.apk lib/x86_64/libconscrypt_jni.so SHA256=b5e6823520dd79f41f36cf1e36a8d72c4651823188708a6c68e2fb752be8e55d
+LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x2be290 0x2be290 R E 0x4000
+LOAD           0x2be290 0x00000000002c2290 0x00000000002c2290 0x0176f8 0x019d70 RW  0x4000
+LOAD           0x2d5990 0x00000000002dd990 0x00000000002dd990 0x002258 0x0048f0 RW  0x4000
+android\app\build\outputs\apk\release\app-release-unsigned.apk lib/arm64-v8a/libconscrypt_jni.so SHA256=b57fbe4527d8f9fb6a249f02034b32423bc9cae1caccb4ac3abe35b6aa226882
+LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x2862a0 0x2862a0 R E 0x4000
+LOAD           0x2862a0 0x000000000028a2a0 0x000000000028a2a0 0x017938 0x019d60 RW  0x4000
+LOAD           0x29dbd8 0x00000000002a5bd8 0x00000000002a5bd8 0x002250 0x0047f8 RW  0x4000
+android\app\build\outputs\apk\release\app-release-unsigned.apk lib/armeabi-v7a/libconscrypt_jni.so SHA256=61fd465ac351894811df52926bcc752f5b18aa30304d1a15161031313e37a3a7
+LOAD           0x000000 0x00000000 0x00000000 0x1a31f0 0x1a31f0 R E 0x4000
+LOAD           0x1a31f0 0x001a71f0 0x001a71f0 0x0d3c4 0x10e10 RW  0x4000
+LOAD           0x1b05b4 0x001b85b4 0x001b85b4 0x0116c 0x02689 RW  0x4000
+android\app\build\outputs\apk\release\app-release-unsigned.apk lib/x86/libconscrypt_jni.so SHA256=e9c5cb0396671a85e5505ccb00256932cef4204ac3cf6439ae8bb46bff2c9ed9
+LOAD           0x000000 0x00000000 0x00000000 0x298520 0x298520 R E 0x4000
+LOAD           0x298520 0x0029c520 0x0029c520 0x0d3ac 0x0fae0 RW  0x4000
+LOAD           0x2a58cc 0x002ad8cc 0x002ad8cc 0x0117c 0x02b64 RW  0x4000
+android\app\build\outputs\apk\release\app-release-unsigned.apk lib/x86_64/libconscrypt_jni.so SHA256=b5e6823520dd79f41f36cf1e36a8d72c4651823188708a6c68e2fb752be8e55d
+LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x2be290 0x2be290 R E 0x4000
+LOAD           0x2be290 0x00000000002c2290 0x00000000002c2290 0x0176f8 0x019d70 RW  0x4000
+LOAD           0x2d5990 0x00000000002dd990 0x00000000002dd990 0x002258 0x0048f0 RW  0x4000

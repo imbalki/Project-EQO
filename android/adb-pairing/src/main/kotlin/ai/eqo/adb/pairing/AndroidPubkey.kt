@@ -1,0 +1,71 @@
+// Origin: imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536,
+//   path: app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AndroidPubkey.kt
+// TASK-008 (issue #13): extracted into :adb-pairing for the guided on-phone pairing flow.
+// Changes vs donor: package renamed to ai.eqo.adb.pairing; default peer label rebranded to
+// EQO. Provenance record: android/Phase-One/evidence/task-008-wireless-adb-pairing.md.
+
+/*
+ * Adapted from MuntashirAkon/libadb-android (Apache-2.0).
+ * Original Copyright (C) Muntashir Al-Islam.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+package ai.eqo.adb.pairing
+
+import java.math.BigInteger
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.security.interfaces.RSAPublicKey
+import java.util.Base64
+
+object AndroidPubkey {
+    const val ENCODED_SIZE = 524
+    const val MODULUS_SIZE_BYTES = 256
+    private const val MODULUS_SIZE_BITS = MODULUS_SIZE_BYTES * 8
+    private val R32: BigInteger = BigInteger.ONE.shiftLeft(32)
+
+    fun encode(publicKey: RSAPublicKey): ByteArray {
+        val modulus = publicKey.modulus
+        require(modulus.bitLength() == MODULUS_SIZE_BITS) {
+            "Only RSA-2048 is supported (got ${modulus.bitLength()} bits)"
+        }
+
+        val modulusSizeWords = MODULUS_SIZE_BITS / 32
+        val n0inv = R32.subtract(modulus.modInverse(R32)).toInt().toLong() and 0xFFFFFFFFL
+        val rr = BigInteger.ONE.shiftLeft(2 * MODULUS_SIZE_BITS).mod(modulus)
+
+        val buf = ByteBuffer.allocate(ENCODED_SIZE).order(ByteOrder.LITTLE_ENDIAN)
+        buf.putInt(modulusSizeWords)
+        buf.putInt(n0inv.toInt())
+        buf.put(toLittleEndianFixed(modulus, MODULUS_SIZE_BYTES))
+        buf.put(toLittleEndianFixed(rr, MODULUS_SIZE_BYTES))
+        buf.putInt(publicKey.publicExponent.toInt())
+        return buf.array()
+    }
+
+    fun encodeWithName(
+        publicKey: RSAPublicKey,
+        name: String,
+    ): ByteArray {
+        // Format: "<base64-pubkey> <name>" — NO trailing newline. Inside PeerInfo we rely on the
+        // surrounding zero-padding for NUL termination; AdbDebuggingManager appends its own
+        // newline when persisting to adb_keys (a trailing \n here would create a blank entry
+        // that adbd later flags as "Invalid base64 key ").
+        val b64 = Base64.getEncoder().encodeToString(encode(publicKey))
+        return "$b64 $name".toByteArray(Charsets.US_ASCII)
+    }
+
+    private fun toLittleEndianFixed(
+        value: BigInteger,
+        size: Int,
+    ): ByteArray {
+        val raw = value.toByteArray()
+        // BigInteger.toByteArray() is big-endian, two's-complement (may have sign byte).
+        val unsigned = if (raw.size > size && raw[0] == 0.toByte()) raw.copyOfRange(1, raw.size) else raw
+        require(unsigned.size <= size) { "Value larger than $size bytes (got ${unsigned.size})" }
+        val out = ByteArray(size)
+        for (i in unsigned.indices) {
+            out[i] = unsigned[unsigned.size - 1 - i]
+        }
+        return out
+    }
+}

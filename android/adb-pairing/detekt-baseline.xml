@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AdbWireProtocolClient.kt$AdbWireProtocolClient$buf[i] == 0x0D.toByte() &amp;&amp; buf[i + 1] == 0x0A.toByte() &amp;&amp; buf[i + 2] == 0x0D.toByte() &amp;&amp; buf[i + 3] == 0x0A.toByte()</ID>
+    <ID>CyclomaticComplexMethod:AdbWireProtocolClient.kt$AdbWireProtocolClient$private fun readUntilHttpComplete( input: InputStream, out: OutputStream, localId: Int, remoteId: Int, ): ByteArray</ID>
+    <ID>LongParameterList:AdbWireProtocolClient.kt$AdbWireProtocolClient$( input: InputStream, out: OutputStream, localId: Int, remoteId: Int, payload: ByteArray, maxPayload: Int, )</ID>
+    <ID>MagicNumber:AdbCryptoKeyStore.kt$AdbCryptoKeyStore$1000L</ID>
+    <ID>MagicNumber:AdbCryptoKeyStore.kt$AdbCryptoKeyStore$10L</ID>
+    <ID>MagicNumber:AdbCryptoKeyStore.kt$AdbCryptoKeyStore$160</ID>
+    <ID>MagicNumber:AdbCryptoKeyStore.kt$AdbCryptoKeyStore$2048</ID>
+    <ID>MagicNumber:AdbCryptoKeyStore.kt$AdbCryptoKeyStore$24L</ID>
+    <ID>MagicNumber:AdbCryptoKeyStore.kt$AdbCryptoKeyStore$365L</ID>
+    <ID>MagicNumber:AdbCryptoKeyStore.kt$AdbCryptoKeyStore$60L</ID>
+    <ID>MagicNumber:AdbCryptoKeyStore.kt$AdbCryptoKeyStore$60_000L</ID>
+    <ID>MagicNumber:AdbPairingClient.kt$AdbPairingClient.Companion$0xFFL</ID>
+    <ID>MagicNumber:AdbPairingClient.kt$AdbPairingClient.Companion$12</ID>
+    <ID>MagicNumber:AdbPairingClient.kt$AdbPairingClient.Companion$128</ID>
+    <ID>MagicNumber:AdbPairingClient.kt$AdbPairingClient.Companion$8</ID>
+    <ID>MagicNumber:AdbPairingTls.kt$AdbPairingTls$1000L</ID>
+    <ID>MagicNumber:AdbPairingTls.kt$AdbPairingTls$2048</ID>
+    <ID>MagicNumber:AdbPairingTls.kt$AdbPairingTls$24L</ID>
+    <ID>MagicNumber:AdbPairingTls.kt$AdbPairingTls$60L</ID>
+    <ID>MagicNumber:AdbPairingTls.kt$AdbPairingTls$60_000L</ID>
+    <ID>MagicNumber:AdbPairingTls.kt$AdbPairingTls$64</ID>
+    <ID>MagicNumber:AdbWireProtocolClient.kt$AdbStream.&lt;no name provided&gt;$0xff</ID>
+    <ID>MagicNumber:AdbWireProtocolClient.kt$AdbWireProtocolClient$3</ID>
+    <ID>MagicNumber:AdbWireProtocolClient.kt$AdbWireProtocolClient$4</ID>
+    <ID>MagicNumber:AndroidPubkey.kt$AndroidPubkey$0xFFFFFFFFL</ID>
+    <ID>MagicNumber:AndroidPubkey.kt$AndroidPubkey$32</ID>
+    <ID>MagicNumber:Spake25519.kt$Spake25519$32</ID>
+    <ID>MagicNumber:Spake25519.kt$Spake25519$64</ID>
+    <ID>MagicNumber:Spake25519.kt$Spake25519.Companion$0xff</ID>
+    <ID>MagicNumber:Spake25519.kt$Spake25519.Companion$16</ID>
+    <ID>MagicNumber:Spake25519.kt$Spake25519.Companion$3</ID>
+    <ID>MagicNumber:Spake25519.kt$Spake25519.Companion$32</ID>
+    <ID>MagicNumber:Spake25519.kt$Spake25519.Companion$4</ID>
+    <ID>MagicNumber:Spake25519.kt$Spake25519.Companion$64</ID>
+    <ID>MagicNumber:Spake25519.kt$Spake25519.Companion$7</ID>
+    <ID>MagicNumber:Spake25519.kt$Spake25519.Companion$8</ID>
+    <ID>MaxLineLength:AdbTlsClient.kt$AdbTlsClient$"host::features=shell_v2,cmd,stat_v2,fixed_push_mkdir,apex,abb_exec,sendrecv_v2 ".toByteArray(Charsets.UTF_8)</ID>
+    <ID>MaxLineLength:AdbWireProtocolClient.kt$AdbWireProtocolClient$else -&gt; throw IOException("unexpected cmd while waiting for 0x${"%08x".format(expected)}: 0x${"%08x".format(msg.command)}")</ID>
+    <ID>MaxLineLength:AdbWireProtocolClient.kt$AdbWireProtocolClient$throw IOException("truncated HTTP response: peer closed before headers complete (got ${current.size} bytes)")</ID>
+    <ID>MaxLineLength:Spake25519.kt$Spake25519.Companion$private</ID>
+    <ID>NestedBlockDepth:AdbWireProtocolClient.kt$AdbStream$private fun runReader()</ID>
+    <ID>NestedBlockDepth:AdbWireProtocolClient.kt$AdbWireProtocolClient$private fun readUntilHttpComplete( input: InputStream, out: OutputStream, localId: Int, remoteId: Int, ): ByteArray</ID>
+    <ID>ReturnCount:AdbPairingClient.kt$AdbPairingClient$private fun parsePeerGuid(plain: ByteArray): String?</ID>
+    <ID>ReturnCount:AdbWireProtocolClient.kt$AdbStream.&lt;no name provided&gt;$override fun read( b: ByteArray, off: Int, len: Int, ): Int</ID>
+    <ID>ReturnCount:AdbWireProtocolClient.kt$AdbStream.&lt;no name provided&gt;$private fun ensureBuffer(): ByteArray?</ID>
+    <ID>ReturnCount:AdbWireProtocolClient.kt$AdbWireProtocolClient$private fun findHeaderEnd(buf: ByteArray): Int</ID>
+    <ID>ThrowsCount:AdbCryptoKeyStore.kt$AdbCryptoKeyStore$private fun persist(material: Material)</ID>
+    <ID>ThrowsCount:AdbPairingPacket.kt$AdbPairingPacket.Companion$fun read(input: InputStream): AdbPairingPacket</ID>
+    <ID>ThrowsCount:AdbWireProtocolClient.kt$AdbWireProtocolClient$private fun handshakeAndOpen( input: InputStream, out: OutputStream, destination: String, ): Pair&lt;Int, Int&gt;</ID>
+    <ID>ThrowsCount:AdbWireProtocolClient.kt$AdbWireProtocolClient$private fun readExpecting( input: InputStream, expected: Int, allowAuth: Boolean, ): AdbProtocol.Message</ID>
+    <ID>ThrowsCount:AdbWireProtocolClient.kt$AdbWireProtocolClient$private fun readUntilHttpComplete( input: InputStream, out: OutputStream, localId: Int, remoteId: Int, ): ByteArray</ID>
+    <ID>TooGenericExceptionCaught:AdbWireProtocolClient.kt$AdbStream$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:AdbWireProtocolClient.kt$AdbWireProtocolClient$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:TlsExporter.kt$TlsExporter$t: Throwable</ID>
+    <ID>UnusedPrivateMember:AdbPairingTls.kt$AdbPairingTls$@Synchronized private fun ensureBouncyCastle()</ID>
+  </CurrentIssues>
+</SmellBaseline>

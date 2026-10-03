@@ -1,0 +1,16 @@
+{
+  "lint_reports": 8,
+  "lint_issues": 0,
+  "test_totals": {
+    "tests": 528,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "pairing": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

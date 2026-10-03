@@ -1,0 +1,223 @@
+> Task :adb-pairing:preBuild UP-TO-DATE
+> Task :adb-pairing:preDebugBuild UP-TO-DATE
+> Task :adb-pairing:checkDebugAarMetadata UP-TO-DATE
+> Task :adb-pairing:generateDebugResources UP-TO-DATE
+> Task :adb-pairing:packageDebugResources UP-TO-DATE
+> Task :adb-pairing:processDebugNavigationResources UP-TO-DATE
+> Task :adb-pairing:parseDebugLocalResources UP-TO-DATE
+> Task :adb-pairing:generateDebugRFile UP-TO-DATE
+> Task :adb-pairing:extractDebugAnnotations
+> Task :adb-pairing:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :adb-pairing:generateDebugAssets UP-TO-DATE
+> Task :adb-pairing:mergeDebugAssets UP-TO-DATE
+> Task :adb-pairing:javaPreCompileDebug UP-TO-DATE
+> Task :adb-pairing:prepareDebugArtProfile UP-TO-DATE
+> Task :adb-pairing:prepareLintJarForPublish UP-TO-DATE
+> Task :adb-pairing:processDebugManifest UP-TO-DATE
+> Task :adb-pairing:writeDebugAarMetadata UP-TO-DATE
+> Task :adb-pairing:preDebugAndroidTestBuild UP-TO-DATE
+> Task :adb-pairing:writeDebugLintModelMetadata UP-TO-DATE
+> Task :adb-pairing:extractProguardFiles UP-TO-DATE
+> Task :adb-pairing:preDebugUnitTestBuild UP-TO-DATE
+> Task :helper-client:preBuild UP-TO-DATE
+> Task :helper-client:preDebugBuild UP-TO-DATE
+> Task :helper-client:writeDebugAarMetadata UP-TO-DATE
+> Task :helper-server:preBuild UP-TO-DATE
+> Task :helper-server:preDebugBuild UP-TO-DATE
+> Task :helper-server:checkDebugAarMetadata UP-TO-DATE
+> Task :helper-client:compileDebugAidl UP-TO-DATE
+> Task :helper-client:generateDebugResources UP-TO-DATE
+> Task :helper-client:packageDebugResources UP-TO-DATE
+> Task :helper-client:processDebugNavigationResources UP-TO-DATE
+> Task :helper-client:parseDebugLocalResources UP-TO-DATE
+> Task :helper-client:generateDebugRFile UP-TO-DATE
+> Task :helper-client:compileDebugKotlin UP-TO-DATE
+> Task :helper-client:javaPreCompileDebug UP-TO-DATE
+> Task :helper-client:compileDebugJavaWithJavac UP-TO-DATE
+> Task :helper-client:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :helper-server:generateDebugResources UP-TO-DATE
+> Task :helper-server:packageDebugResources UP-TO-DATE
+> Task :helper-server:processDebugNavigationResources UP-TO-DATE
+> Task :helper-server:parseDebugLocalResources UP-TO-DATE
+> Task :helper-server:generateDebugRFile UP-TO-DATE
+> Task :helper-server:extractDebugAnnotations UP-TO-DATE
+> Task :helper-server:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :helper-server:generateDebugAssets UP-TO-DATE
+> Task :helper-server:mergeDebugAssets UP-TO-DATE
+> Task :helper-server:compileDebugKotlin UP-TO-DATE
+> Task :helper-server:javaPreCompileDebug UP-TO-DATE
+> Task :helper-server:compileDebugJavaWithJavac UP-TO-DATE
+> Task :helper-server:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :helper-server:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :helper-server:prepareDebugArtProfile UP-TO-DATE
+> Task :helper-server:prepareLintJarForPublish UP-TO-DATE
+> Task :helper-server:processDebugManifest UP-TO-DATE
+> Task :helper-server:processDebugJavaRes UP-TO-DATE
+> Task :helper-server:mergeDebugJavaResource UP-TO-DATE
+> Task :helper-server:syncDebugLibJars UP-TO-DATE
+> Task :helper-server:writeDebugAarMetadata UP-TO-DATE
+> Task :helper-server:bundleDebugLocalLintAar UP-TO-DATE
+> Task :helper-client:checkDebugAarMetadata UP-TO-DATE
+> Task :helper-client:extractDebugAnnotations UP-TO-DATE
+> Task :helper-client:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :helper-client:generateDebugAssets UP-TO-DATE
+> Task :helper-client:mergeDebugAssets UP-TO-DATE
+> Task :helper-client:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :helper-client:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :helper-client:prepareDebugArtProfile UP-TO-DATE
+> Task :helper-client:prepareLintJarForPublish UP-TO-DATE
+> Task :helper-client:processDebugManifest UP-TO-DATE
+> Task :helper-client:processDebugJavaRes UP-TO-DATE
+> Task :helper-client:mergeDebugJavaResource UP-TO-DATE
+> Task :helper-client:syncDebugLibJars UP-TO-DATE
+> Task :helper-client:bundleDebugLocalLintAar UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :helper-server:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :adb-pairing:mapDebugSourceSetPaths UP-TO-DATE
+> Task :adb-pairing:compileDebugLibraryResources UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :adb-pairing:extractDeepLinksDebug UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :helper-client:extractDeepLinksDebug UP-TO-DATE
+> Task :helper-server:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :helper-client:mapDebugSourceSetPaths UP-TO-DATE
+> Task :helper-client:compileDebugLibraryResources UP-TO-DATE
+> Task :helper-server:mapDebugSourceSetPaths UP-TO-DATE
+> Task :helper-server:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :helper-client:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :helper-client:createFullJarDebug UP-TO-DATE
+> Task :helper-client:writeDebugLintModelMetadata UP-TO-DATE
+> Task :helper-server:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :helper-server:createFullJarDebug UP-TO-DATE
+> Task :helper-server:writeDebugLintModelMetadata UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :helper-client:extractProguardFiles UP-TO-DATE
+> Task :helper-client:generateDebugLintModel UP-TO-DATE
+> Task :helper-server:extractProguardFiles UP-TO-DATE
+> Task :helper-server:generateDebugLintModel UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :helper-client:lintAnalyzeDebug UP-TO-DATE
+> Task :helper-server:lintAnalyzeDebug UP-TO-DATE
+> Task :helper-client:preDebugAndroidTestBuild UP-TO-DATE
+> Task :helper-client:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :helper-client:preDebugUnitTestBuild UP-TO-DATE
+> Task :helper-client:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :helper-client:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :helper-client:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :helper-server:preDebugAndroidTestBuild UP-TO-DATE
+> Task :helper-server:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :helper-server:preDebugUnitTestBuild UP-TO-DATE
+> Task :helper-server:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :helper-server:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :helper-server:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :adb-pairing:compileDebugKotlin
+> Task :adb-pairing:compileDebugJavaWithJavac NO-SOURCE
+> Task :adb-pairing:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :adb-pairing:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :adb-pairing:processDebugJavaRes UP-TO-DATE
+> Task :adb-pairing:mergeDebugJavaResource UP-TO-DATE
+> Task :adb-pairing:syncDebugLibJars
+> Task :adb-pairing:bundleDebugLocalLintAar
+> Task :adb-pairing:generateDebugLintReportModel
+> Task :adb-pairing:bundleLibRuntimeToJarDebug
+> Task :adb-pairing:createFullJarDebug
+> Task :adb-pairing:generateDebugAndroidTestLintModel
+> Task :adb-pairing:generateDebugUnitTestLintModel
+> Task :adb-pairing:lintAnalyzeDebugAndroidTest
+> Task :adb-pairing:lintAnalyzeDebugUnitTest
+> Task :adb-pairing:generateDebugLintModel
+> Task :adb-pairing:bundleLibCompileToJarDebug
+> Task :app:compileDebugKotlin
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :adb-pairing:lintAnalyzeDebug
+> Task :adb-pairing:lintReportDebug
+> Task :adb-pairing:lintDebug
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugUnitTest
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///C:/Users/<user>/Claude/worktrees/task-008/android/app/build/reports/lint-results-debug.html
+Wrote SARIF report to file:///C:/Users/<user>/Claude/worktrees/task-008/android/app/build/reports/lint-results-debug.sarif
+Lint found 1 error. First failure:
+C:\Users\<user>\.gradle\caches\9.7.0\transforms\e29b4ed492e60fac510fe873ff9a3270\transformed\out\jars\classes.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+
+
+> Task :app:lintDebug FAILED
+C:\Users\<user>\.gradle\caches\9.7.0\transforms\e29b4ed492e60fac510fe873ff9a3270\transformed\out\jars\classes.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+
+   Explanation for issues of type "TrustAllX509TrustManager":
+   This check looks for X509TrustManager implementations whose
+   checkServerTrusted or checkClientTrusted methods do nothing (thus trusting
+   any certificate chain) which could result in insecure network traffic
+   caused by trusting arbitrary TLS/SSL certificates presented by peers.
+
+   https://goo.gle/TrustAllX509TrustManager
+
+1 error
+
+[Incubating] Problems report is available at: file:///C:/Users/<user>/Claude/worktrees/task-008/android/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:lintDebug' (registered by plugin 'com.android.internal.application').
+> Lint found errors in the project; aborting build.
+
+  Fix the issues identified by lint, or create a baseline to see only new errors.
+  To create a baseline, run `gradlew updateLintBaseline` after adding the following to the module's build.gradle file:
+  ```
+  android {
+      lint {
+          baseline = file("lint-baseline.xml")
+      }
+  }
+  ```
+  For more details, see https://developer.android.com/studio/write/lint#snapshot
+
+  C:\Users\<user>\.gradle\caches\9.7.0\transforms\e29b4ed492e60fac510fe873ff9a3270\transformed\out\jars\classes.jar: Error: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+
+     Explanation for issues of type "TrustAllX509TrustManager":
+     This check looks for X509TrustManager implementations whose
+     checkServerTrusted or checkClientTrusted methods do nothing (thus trusting
+     any certificate chain) which could result in insecure network traffic
+     caused by trusting arbitrary TLS/SSL certificates presented by peers.
+
+     https://goo.gle/TrustAllX509TrustManager
+
+  1 error
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 29s
+138 actionable tasks: 25 executed, 113 up-to-date

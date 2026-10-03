@@ -5,4 +5,12 @@
     <string name="notices_title">Legal / open-source notices</string>
     <string name="notices_body">EQO is built on open-source software.
 Upstream names and their notices appear here and in the app NOTICE file: OpenDroid (Apache-2.0, OpenDroid Contributors), ClosePaw (Apache-2.0, ClosePaw Authors + NOTICE content), Shizuku (Apache-2.0, RikkaApps, with upstream naming terms) and Shizuku-API (MIT, RikkaW).</string>
+
+    <!-- TASK-008 (issue #13): first-run wireless-ADB activation surface. -->
+    <string name="activation_required">Activation required</string>
+    <string name="activation_active">Wireless ADB active</string>
+    <string name="activation_dialog_title">Wireless ADB</string>
+    <string name="privileged_action_button">Run privileged action</string>
+    <string name="privileged_feature_wireless_adb">Wireless ADB</string>
+    <string name="privileged_granted">Privileged action allowed.</string>
 </resources>

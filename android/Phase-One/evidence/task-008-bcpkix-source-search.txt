@@ -1,0 +1,10 @@
+Tracked Kotlin/Java source grep (JcaJceUtils|org\.bouncycastle\.est): 311 files, 0 hits
+
+Certificate/operator imports:
+android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbCryptoKeyStore.kt:11:import org.bouncycastle.cert.bc.BcX509ExtensionUtils
+android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbCryptoKeyStore.kt:12:import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
+android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbCryptoKeyStore.kt:13:import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
+android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbCryptoKeyStore.kt:17:import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbPairingTls.kt:12:import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
+android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbPairingTls.kt:13:import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
+android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbPairingTls.kt:15:import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder

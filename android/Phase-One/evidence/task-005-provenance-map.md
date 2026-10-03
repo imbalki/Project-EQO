@@ -320,3 +320,58 @@ have no upstream counterpart, and are recorded as **EQO-NEW** rows.
 | :platform-a11y | `android/platform-a11y/src/androidTest/java/ai/eqo/test/EqoActionLoopScenarioDriver.kt` | EQO-NEW | `ai.eqo.test` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/SecurityReproRetryGateTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO security reviewer repro, TASK-012 issue #17, t_d306e5bb; syntax repaired, regression retained) |
+
+## TASK-008 additions (issue #13)
+
+Thirty-five TASK-008 files are recorded below. Fourteen are **EXTRACT** rows (twelve
+production files plus two adapted tests): the
+ClosePaw wireless-ADB pairing stack moved from `imoonkey/closepaw` @ `75dae2653f5a6b25d5df51ee7008b0f830de1536`
+into the new `:adb-pairing` module. Unlike MOVE rows these are not byte-identical to the
+donor: the package was renamed to `ai.eqo.adb.pairing`, the default peer label was
+rebranded to `EQO`, the files were ktlint-formatted to this repo's style, and three
+comment-only adjustments were made (blank line before donor block headers; inline
+`/* autoClose = */` comment removed in AdbTlsClient.kt). Every extracted file carries an
+`// Origin:` header naming the donor commit and upstream path. The full change ledger is
+in `task-008-wireless-adb-pairing.md`. The remaining twenty-one rows are **EQO-NEW**:
+the guided activation flow, the activation gate, the device-side runner, their tests,
+and one app-side wiring test.
+
+| Module | Current file (repo-relative) | Kind | Package | Upstream origin |
+| --- | --- | --- | --- | --- |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbCryptoKeyStore.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbCryptoKeyStore.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbPairingClient.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbPairingClient.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbPairingPacket.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbPairingPacket.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbPairingTls.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbPairingTls.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbProtocol.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbProtocol.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbTlsClient.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbTlsClient.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbWireProtocolClient.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbWireProtocolClient.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AndroidPubkey.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AndroidPubkey.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/PairOnceCache.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/PairOnceCache.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/Spake25519.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/Spake25519.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/TlsExporter.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/TlsExporter.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/WirelessAdbProviders.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/WirelessAdbProviders.kt`) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ActivationCheck.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ActivationFailure.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ActivationGate.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ActivationSequence.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbPairingCode.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AndroidSettingsNames.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/FailureClassifier.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/PairingGuide.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/WirelessAdbEndpoints.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/AdbCryptoKeyStoreTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13; donor test concept, rewritten) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/AdbPairingCodeTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/AdbPairingPacketTest.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/test/kotlin/ai/closepaw/browser/cdp/wireless/AdbPairingPacketTest.kt`; adapted to JUnit asserts) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/AdbProtocolTest.kt` | EXTRACT | `ai.eqo.adb.pairing` | imoonkey/closepaw @ 75dae2653f5a6b25d5df51ee7008b0f830de1536 (upstream path: `app/src/test/kotlin/ai/closepaw/browser/cdp/wireless/AdbProtocolTest.kt`; adapted to JUnit asserts) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/ActivationGateTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/ActivationSequenceTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/AndroidSettingsNamesTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/FailureClassifierTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/PairingGuideTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/Spake25519RoundTripTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/WirelessAdbEndpointsTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/WirelessAdbActivationRunner.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/WirelessAdbActivationRunnerTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/LoopbackAdbHost.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13 alignment/security follow-up) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/LoopbackAdbHostTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13 alignment/security follow-up) |
+| :app | `android/app/src/test/kotlin/ai/eqo/ActivationWiringTest.kt` | EQO-NEW | `ai.eqo` | imbalki/project-eqo (EQO-authored, TASK-008 issue #13) |

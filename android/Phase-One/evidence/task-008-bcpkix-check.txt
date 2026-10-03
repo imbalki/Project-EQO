@@ -1,0 +1,18 @@
+== Secret scan (basic) ==
+== Shell scripts ==
+== Branding gate: user-visible code strings/lines (android/*/src/main *.kt, *.java) ==
+scanning 214 tracked source files
+OK: user-visible code carries no upstream product names in any case
+== Branding gate: multi-line prompt/notification bodies (triple-quoted, android/*/src/main *.kt) ==
+scanning 175 tracked Kotlin files
+OK: prompt/notification bodies clean
+== Branding gate: resources and manifest (android/app/src/main/res, AndroidManifest.xml) ==
+scanning 7 tracked resource/manifest files
+OK: resources/manifests clean
+== Branding gate: excluded Leap SDK (ADR-0003/D-007) ==
+OK: no Leap SDK references
+== Branding gate: provenance map covers exactly the tracked Kotlin files ==
+kt files: 270; provenance rows: 270
+OK: provenance map covers all Kotlin files and every row path exists in git ls-files
+BRANDING GATE PASSED
+OK
