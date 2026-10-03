@@ -4,7 +4,7 @@
 - Depends on: 007; needs devices on Android 11 (physical Realme Narzo 20, Realme UI 2.0), 12 and 13
 - Area: android
 - Gate: 3 (DEV-08)
-- Models: author `mimo-v2.6-pro`, reviewer `glm-5.3-flash`
+- Models: author `gpt-6.1-sol` (profile `eqo-trial`), reviewer `glm-5.3-flash`, security pass `mimo-v2.6-pro`
 - Branch: agent/android/<issue>-adb-pairing
 
 ## Goal

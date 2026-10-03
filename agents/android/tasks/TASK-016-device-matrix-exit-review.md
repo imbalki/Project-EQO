@@ -4,7 +4,7 @@
 - Depends on: 015; needs devices
 - Area: android (QA)
 - Gate: all eight (DEV-15), except gate 6 (virtual display), which D-008 defers to the next stage: record it as "deferred by owner decision D-008", not as pass or fail
-- Models: author `glm-5.3-flash`, reviewer `mimo-v2.6-pro`, summary `deepseek-v4.1-flash`
+- Models: author `gpt-6.1-sol` (profile `eqo-trial`), reviewer `glm-5.3-flash`, summary `deepseek-v4.1-flash`
 - Branch: agent/android/<issue>-exit-review
 
 ## Goal

@@ -4,7 +4,7 @@
 - Depends on: 007, 008; needs a physical device
 - Area: android
 - Gate: 6 (DEV-09)
-- Models: author `mimo-v2.6-pro`, reviewer `glm-5.3-flash`
+- Models: author `gpt-6.1-sol` (profile `eqo-trial`), reviewer `glm-5.3-flash`
 - Branch: agent/android/<issue>-virtual-display
 
 ## Goal

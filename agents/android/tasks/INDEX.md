@@ -15,12 +15,12 @@ Model routing: see `docs/agents/MODEL-ROUTING.md` and the "Decisions in force" s
 | TASK-004 | Adapter extraction into modules | 003 | 1 | no | done |
 | TASK-005 | Rebrand and provenance | 004 | 8 | no | done |
 | TASK-006 | OpenRouter BYOK and secret security | 004 | 8 | no | done (acceptance criterion 5 not met: issue #44) |
-| TASK-007 | Helper spike (Shizuku-derived) | 005 | 2 | yes | in-progress |
+| TASK-007 | Helper spike (Shizuku-derived) | 005 | 2 | yes | done (security SF-1 to fix before release) |
 | TASK-008 | Wireless ADB pairing | 007 | 3 | yes | todo |
 | TASK-009 | Accessibility merge | 004 | 4 | yes | done |
 | TASK-010 | Chrome CDP spike | 008 | 5 | yes | todo |
 | TASK-011 | Virtual display spike | 007, 008 | 6 | yes | deferred (D-008) |
-| TASK-012 | Action loop with Pause, Stop, takeover | 006, 009 | 7 | yes | in-progress (also carries issue #50) |
+| TASK-012 | Action loop with Pause, Stop, takeover | 006, 009 | 7 | yes | done (also carries issue #50) |
 | TASK-013 | Local Gemma (opportunistic, D-006) | 004, 006 | - | yes | deferred (D-009) |
 | TASK-014 | SMS compose-only and permission narrowing | 004 | 8 | no | done |
 | TASK-015 | Study APK and guided onboarding | 007, 008, 010, 012, 014 (011 deferred by D-008, 013 by D-009) | 1-5, 7, 8 | yes | todo |

@@ -4,7 +4,7 @@
 - Depends on: 004, 006
 - Area: android
 - Gate: none (decision D-006)
-- Models: author `glm-5.3-flash`, reviewer `mimo-v2.6-pro`
+- Models: author `gpt-6.1-sol` (profile `eqo-trial`), reviewer `glm-5.3-flash`
 - Branch: agent/android/<issue>-local-gemma
 
 ## Goal
