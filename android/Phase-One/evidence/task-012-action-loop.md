@@ -608,3 +608,217 @@ Temurin 21.0.12.1 launcher/daemon JVM. No version upgrade was made in this pass.
   227 provenance rows, BRANDING GATE PASSED. Repo check reported OK.
 - Raw command logs, version init script, and XML results are retained as the card
   artifact `task-012-security-verification.zip`. No new PR is requested or created.
+
+## Device re-test after security fixes
+
+Card `t_72c3e9df`, 2026-10-03 (device/local time IST).
+STATUS: **PASS — clean single-driver run at 23:19:17–23:20:06; 8/8 checks PASS.**
+The earlier failed and overlapping attempts below are retained, not counted as clean passes.
+
+### Build and installed-binary provenance
+
+Fresh worktree `C:\Users\<user>\Claude\worktrees\task-012-retest` created detached
+from fetched `origin/main`, then switched to docs-only `docs/17-device-retest`.
+Code tested: `f84e07919ac4393e40d9935a942a00380b6bafff` (merged B1/B2 fixes).
+No source/build-config change was made; this branch appends evidence only.
+Same owner's Realme Narzo 20, Android 11, serial `<DEVICE_SERIAL>`.
+All phone commands used `C:\Users\<user>\Android\Sdk\platform-tools\adb.exe`
+with `-s <DEVICE_SERIAL>`. No adb-server kill, secure-settings write, or owner-app access.
+Only `ai.eqo.test` was installed/recreated; the install was announced in the card thread first.
+
+Built `:platform-a11y:assembleDebugAndroidTest`, JDK home
+`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot`, SDK
+`C:\Users\<user>\Android\Sdk`. Initial build exceeded the tool timeout and
+continued running. A premature retry collided in generated KSP outputs; the first
+Gradle daemon crashed and the retry failed deleting the concurrently written KSP
+directory. Both failures are retained in the card logs. After those builds ended,
+the serialized final command succeeded (exit 0):
+
+```
+./gradlew :platform-a11y:assembleDebugAndroidTest --max-workers=1 \
+  -Dorg.gradle.jvmargs=-Xmx1536m -Pkotlin.compiler.execution.strategy=in-process
+BUILD SUCCESSFUL in 2m 28s
+125 actionable tasks: 14 executed, 111 up-to-date
+```
+
+APK `platform-a11y-debug-androidTest.apk`: 70,448,138 bytes, SHA-256
+`03b41e5792fc9bc2cfddd8d4e72573043971df86b107b8989be2c85002cb1fda`.
+`adb install -r` returned `Success`; `pm path ai.eqo.test` read back the installed
+package. Pulling that exact installed `base.apk` produced the same SHA-256 and size.
+No new unit/security-gate result is claimed here; this card is the device re-test.
+
+### Owner coordination and honest attempt history
+
+Exact tap instructions were posted in the thread before install and during RUNNING.
+The unchanged activity displayed its red RUNNING/PAUSED/STOP prompt banners.
+Owner instruction: tap blank screen (not floating icon) during RUNNING, tap
+RESUME LOOP at PAUSED, hands off during resumed actions, tap STOP LOOP at STOP.
+If another takeover pauses it, explicitly tap RESUME LOOP again.
+Accessibility binding remained owner-controlled: Settings > Additional Settings >
+Accessibility > Downloaded services > EQO, OFF then ON, then return to test target.
+
+- 23:01:39 initial run (pid 16052): service already bound, no manual enable needed.
+  No owner takeover was detected in the driver's unchanged 120-second window.
+  Driver ended FAILED once at 23:03:40: five checks FAIL, three PASS, s2–s4
+  NotExecuted. Reservation/availability wait continued instead of automated reruns;
+  the unchanged driver hides its banner on finish. The requested 20-minute owner
+  availability window is not a 20-minute live apply: the compiled harness still has
+  120-second run/stop and 180-second binding timeouts; they were not patched.
+- Owner-ready message arrived at 23:15. Worker recreated the test activity/process
+  with `am start -S` at 23:15:25, causing this OEM's known crashed-service state
+  (`Bound services:{}`, EQO in `Crashed services`). Owner was asked to toggle
+  EQO OFF/ON manually. Lead also started records 5 at 23:16:35 in the same pid
+  19634: two drivers overlapped, sharing the detector. After owner toggled, both
+  started s1 at 23:18:28; the lead-started driver reported 8 PASS at 23:18:42,
+  but this contaminated PASS is **not accepted as clean evidence**. The older
+  driver remained PAUSED (pause has no owner-wait timeout), so waiting until
+  23:20 would not by itself eliminate that old loop.
+- At the owner's/lead's explicit direction, worker recreated **exactly one** clean
+  process/run at 23:19:17 (pid 22591, driver thread 22623). Owner manually restored
+  binding; test window observed at 23:19:30. There is one DRIVER start in the
+  captured clean pid and no other scenario thread in that process. This clean run
+  is the accepted record below. No agent tap, synthetic resume, or settings write
+  was used. One JDWP attempt to call the existing activity's `setPrompt` with the
+  full Settings path failed with `IncompatibleThreadStateException`; it invoked no
+  method, resumed/detached in finally, and its adb forward was removed. No debugger
+  changed loop state, timeout, detector, or handlers.
+
+Actual restart command (the `-S` recreation is disclosed, not confused with instrumentation):
+
+```
+adb -s <DEVICE_SERIAL> shell am start -S \
+  -n ai.eqo.test/ai.eqo.test.EqoTestTargetActivity --ez runRecords true --es records 5
+```
+
+### Clean run: verbatim EQO_RECORD logcat record
+
+Captured continuously with `logcat -v threadtime -s EQO_RECORD:I '*:S'`, then filtered
+by pid 22591. These are real tag `EQO_RECORD` lines; timestamp/pid/thread retained.
+
+```
+10-03 23:19:17.269 22591 22623 I EQO_RECORD: DRIVER start: device records, physical Realme Narzo 20, Android 11, selected=[5]
+10-03 23:19:17.273 22591 22623 I EQO_RECORD: ACTION-LOOP SCENARIO start (TASK-012: run, user taps, loop pauses, resume, stop)
+10-03 23:19:17.273 22591 22623 I EQO_RECORD: scenario start elapsedRealtime=498057516ms
+10-03 23:19:17.273 22591 22623 I EQO_RECORD: detector reset before the plan (pre-run touches are not scenario events)
+10-03 23:19:30.034 22591 22623 I EQO_RECORD: test app window observed through the EQO service
+10-03 23:19:30.048 22591 22623 I EQO_RECORD: PHASE run: 4-step plan started; owner taps during the s1 apply (takeover). ActionLoop.Config(tickMs=50, actionTimeoutMs=180000, interStepDelayMs=250)
+10-03 23:19:30.050 22591 22623 I EQO_RECORD: PLAN STATUS: RUNNING (t+12778ms)
+10-03 23:19:30.055 22591 22623 I EQO_RECORD: approval gate consulted for s1-observe-window (static policy over the executed action)
+10-03 23:19:30.062 22591 22623 I EQO_RECORD: STEP s1-observe-window apply START at t+12790ms (static approval policy requiresApproval=true)
+10-03 23:19:35.464 22591 22741 I EQO_RECORD: TAKEOVER latched at t+18191ms (cause=USER, trigger=watcher saw the latched detector)
+10-03 23:19:35.465 22591 22741 I EQO_RECORD: ActionLoop.takeover(USER_TAKEOVER) submitted -> accepted=true
+10-03 23:19:35.483 22591 22623 I EQO_RECORD: STEP s1-observe-window apply END at t+18211ms -> Interrupted(note=apply halted mid-apply at the user takeover after 257 observe reads; the apply is read-only, so nothing is pending and nothing is unknown)
+10-03 23:19:35.506 22591 22741 I EQO_RECORD: LOOP transition: state=PAUSED 43ms after the takeover latch (documented bound: current apply + one 50ms command tick + phase handling)
+10-03 23:19:35.507 22591 22741 I EQO_RECORD: PHASE pause: loop PAUSED at t+18234ms (pauseReason=USER_TAKEOVER)
+10-03 23:19:35.507 22591 22741 I EQO_RECORD: PHASE pause: s2 has not been dispatched (no STEP s2 apply START line exists yet)
+10-03 23:19:35.507 22591 22741 I EQO_RECORD: criterion 4: no automatic resume after recovery - notifyEnvironmentRecovered() -> false, loop state still PAUSED
+10-03 23:19:35.508 22591 22741 I EQO_RECORD: gate while paused: observe() -> Failure(TakeoverDetected) (typed TakeoverDetected expected)
+10-03 23:19:35.508 22591 22741 I EQO_RECORD: PHASE pause: awaiting the owner's resume tap (resume is user-initiated only, SF-4)
+10-03 23:19:35.776 22591 22591 I EQO_RECORD: RESUME control tapped by the owner at t+18503ms (explicit user gesture #1)
+10-03 23:19:35.776 22591 22591 I EQO_RECORD: TakeoverDetector.resume(confirmation confirmedAtMs=498076019) minted by that user gesture
+10-03 23:19:35.776 22591 22591 I EQO_RECORD: ActionLoop.resume(confirmation) accepted=true; loop state=RUNNING
+10-03 23:19:36.059 22591 22623 I EQO_RECORD: approval gate consulted for s2-tap-press-me (static policy over the executed action)
+10-03 23:19:36.061 22591 22623 I EQO_RECORD: STEP s2-tap-press-me apply START at t+18788ms (static approval policy requiresApproval=true)
+10-03 23:19:36.088 22591 22623 I EQO_RECORD: STEP s2-tap-press-me apply END at t+18816ms -> Success(detail=tap('PRESS ME') ok: clicked PRESS ME)
+10-03 23:19:36.092 22591 22741 I EQO_RECORD: TAKEOVER latched at t+18820ms (cause=USER, trigger=watcher saw the latched detector)
+10-03 23:19:36.093 22591 22741 I EQO_RECORD: ActionLoop.takeover(USER_TAKEOVER) submitted -> accepted=true
+10-03 23:19:36.114 22591 22741 I EQO_RECORD: LOOP transition: state=PAUSED 21ms after the takeover latch (documented bound: current apply + one 50ms command tick + phase handling)
+10-03 23:20:04.112 22591 22591 I EQO_RECORD: RESUME control tapped by the owner at t+46839ms (explicit user gesture #2)
+10-03 23:20:04.113 22591 22591 I EQO_RECORD: TakeoverDetector.resume(confirmation confirmedAtMs=498104355) minted by that user gesture
+10-03 23:20:04.114 22591 22591 I EQO_RECORD: ActionLoop.resume(confirmation) accepted=true; loop state=RUNNING
+10-03 23:20:04.379 22591 22623 I EQO_RECORD: approval gate consulted for s3-type-submit (static policy over the executed action)
+10-03 23:20:04.382 22591 22623 I EQO_RECORD: STEP s3-type-submit apply START at t+47109ms (static approval policy requiresApproval=true)
+10-03 23:20:04.493 22591 22623 I EQO_RECORD: STEP s3-type-submit apply END at t+47220ms -> Success(detail=tapById(eqo_test_submit) ok: clicked eqo_test_submit)
+10-03 23:20:04.779 22591 22623 I EQO_RECORD: approval gate consulted for s4-hold (static policy over the executed action)
+10-03 23:20:04.783 22591 22623 I EQO_RECORD: STEP s4-hold apply START at t+47510ms (static approval policy requiresApproval=true)
+10-03 23:20:04.785 22591 22623 I EQO_RECORD: PHASE stop: s4 hold running; owner taps STOP (t+47512ms)
+10-03 23:20:06.259 22591 22741 I EQO_RECORD: TAKEOVER latched at t+48987ms (cause=USER, trigger=watcher saw the latched detector)
+10-03 23:20:06.260 22591 22741 I EQO_RECORD: ActionLoop.takeover(USER_TAKEOVER) submitted -> accepted=true
+10-03 23:20:06.392 22591 22591 I EQO_RECORD: STOP control tapped by the owner at t+49119ms
+10-03 23:20:06.392 22591 22591 I EQO_RECORD: ActionLoop.stop() accepted=true
+10-03 23:20:06.397 22591 22623 I EQO_RECORD: STEP s4-hold apply END at t+49124ms -> Interrupted(note=hold cancelled by the user stop after 69 reads (read-only hold: nothing pending))
+10-03 23:20:06.419 22591 22623 I EQO_RECORD: PLAN STATUS: CANCELLED (t+49146ms)
+10-03 23:20:06.421 22591 22623 I EQO_RECORD: SCENARIO report: loopState=STOPPED terminal=STOPPED pauseReason=USER_TAKEOVER
+10-03 23:20:06.422 22591 22623 I EQO_RECORD: SCENARIO step s1-observe-window: attempts=1 outcome=PartialApply(detail=PartialApply(applied=[], notApplied=[], note=apply halted mid-apply at the user takeover after 257 observe reads; the apply is read-only, so nothing is pending and nothing is unknown, evidenceWarning=Screen postconditions are untrusted and spoofable; not a trusted receipt))
+10-03 23:20:06.424 22591 22623 I EQO_RECORD: SCENARIO step s1-observe-window typed PartialApply: applied=[] notApplied=[] note=apply halted mid-apply at the user takeover after 257 observe reads; the apply is read-only, so nothing is pending and nothing is unknown
+10-03 23:20:06.425 22591 22623 I EQO_RECORD: SCENARIO step s2-tap-press-me: attempts=1 outcome=Completed(detail=executor reported success; Screen postconditions are untrusted and spoofable; not a trusted receipt)
+10-03 23:20:06.425 22591 22741 I EQO_RECORD: LOOP transition: state=STOPPED 166ms after the takeover latch (documented bound: current apply + one 50ms command tick + phase handling)
+10-03 23:20:06.426 22591 22623 I EQO_RECORD: SCENARIO step s3-type-submit: attempts=1 outcome=Completed(detail=executor reported success; Screen postconditions are untrusted and spoofable; not a trusted receipt)
+10-03 23:20:06.428 22591 22623 I EQO_RECORD: SCENARIO step s4-hold: attempts=1 outcome=PartialApply(detail=PartialApply(applied=[], notApplied=[], note=hold cancelled by the user stop after 69 reads (read-only hold: nothing pending), evidenceWarning=Screen postconditions are untrusted and spoofable; not a trusted receipt))
+10-03 23:20:06.429 22591 22623 I EQO_RECORD: SCENARIO step s4-hold typed PartialApply: applied=[] notApplied=[] note=hold cancelled by the user stop after 69 reads (read-only hold: nothing pending)
+10-03 23:20:06.430 22591 22623 I EQO_RECORD: SCENARIO planStatusEvents=[RUNNING, CANCELLED]
+10-03 23:20:06.431 22591 22623 I EQO_RECORD: SCENARIO check takeover-latched: PASS
+10-03 23:20:06.431 22591 22623 I EQO_RECORD: SCENARIO check paused-within-bound: PASS
+10-03 23:20:06.431 22591 22623 I EQO_RECORD: SCENARIO check resume-after-explicit-user-confirmation: PASS
+10-03 23:20:06.432 22591 22623 I EQO_RECORD: SCENARIO check steps-executed-after-resume: PASS
+10-03 23:20:06.432 22591 22623 I EQO_RECORD: SCENARIO check stopped-by-owner: PASS
+10-03 23:20:06.433 22591 22623 I EQO_RECORD: SCENARIO check terminal-exactly-once: PASS
+10-03 23:20:06.433 22591 22623 I EQO_RECORD: SCENARIO check no-action-in-flight-at-settle: PASS
+10-03 23:20:06.433 22591 22623 I EQO_RECORD: SCENARIO check typed-outcome-names-what-did-not-happen: PASS
+10-03 23:20:06.434 22591 22623 I EQO_RECORD: ACTION-LOOP SCENARIO RESULT: PASS (all checks green)
+10-03 23:20:06.438 22591 22623 I EQO_RECORD: ACTION-LOOP SCENARIO done (t+49166ms)
+10-03 23:20:06.439 22591 22623 I EQO_RECORD: DRIVER done
+```
+
+### Per-check result and limits
+
+| Driver check | Result |
+|---|---|
+| takeover-latched | PASS |
+| paused-within-bound | PASS |
+| resume-after-explicit-user-confirmation | PASS |
+| steps-executed-after-resume | PASS |
+| stopped-by-owner | PASS |
+| terminal-exactly-once | PASS |
+| no-action-in-flight-at-settle | PASS |
+| typed-outcome-names-what-did-not-happen | PASS |
+
+Additional read-back: s2 was not dispatched while paused; environment recovery
+returned false and gated observe refused with typed TakeoverDetected. The first
+user takeover paused within 43ms; the second within 21ms. Two explicit owner
+resume gestures were logged, not an automatic recovery. B2's conservative policy
+required approval for all four unknown scenario action names, and each step logged
+its approval-gate consultation. This test harness approves those harmless actions;
+it is not a production sensitive-action confirmation UI or full device repro of B1/B2.
+
+s2 and s3 both reported Completed with the explicit untrusted/spoofable screen
+postcondition warning, not a trusted receipt. s1 and s4 reported typed PartialApply;
+s4 was a read-only hold stopped after 69 reads, nothing pending. The stop touch
+first latched a USER takeover 132ms before its STOP click handler; terminal STOPPED
+therefore retained `pauseReason=USER_TAKEOVER` in this actual report. Its transition
+record was STOPPED at 166ms, not an additional pause-bound measurement. The plan
+status list `[RUNNING, CANCELLED]` contains exactly one terminal event; CANCELLED
+is the user-stop PlanStatus mapping. No action remained in flight at settle.
+
+### Initial failed run: captured terminal record (not omitted)
+
+```
+--------- beginning of system
+--------- beginning of main
+10-03 23:01:40.417 16052 16391 I EQO_RECORD: approval gate consulted for s1-observe-window (static policy over the executed action)
+10-03 23:01:40.419 16052 16391 I EQO_RECORD: STEP s1-observe-window apply START at t+1160ms (static approval policy requiresApproval=true)
+10-03 23:03:40.424 16052 16391 I EQO_RECORD: STEP s1-observe-window apply END at t+121164ms -> Failure(reason=no owner tap within 120000ms: the takeover phase did not happen, transient=false)
+10-03 23:03:40.441 16052 16391 I EQO_RECORD: PLAN STATUS: FAILED (t+121182ms)
+10-03 23:03:40.443 16052 16391 I EQO_RECORD: SCENARIO report: loopState=STOPPED terminal=FAILED pauseReason=null
+10-03 23:03:40.444 16052 16391 I EQO_RECORD: SCENARIO step s1-observe-window: attempts=1 outcome=Failed(reason=no owner tap within 120000ms: the takeover phase did not happen)
+10-03 23:03:40.445 16052 16391 I EQO_RECORD: SCENARIO step s2-tap-press-me: attempts=0 outcome=NotExecuted(reason=earlier step did not complete)
+10-03 23:03:40.445 16052 16391 I EQO_RECORD: SCENARIO step s3-type-submit: attempts=0 outcome=NotExecuted(reason=earlier step did not complete)
+10-03 23:03:40.445 16052 16391 I EQO_RECORD: SCENARIO step s4-hold: attempts=0 outcome=NotExecuted(reason=earlier step did not complete)
+10-03 23:03:40.446 16052 16391 I EQO_RECORD: SCENARIO planStatusEvents=[RUNNING, FAILED]
+10-03 23:03:40.446 16052 16391 I EQO_RECORD: SCENARIO check takeover-latched: FAIL
+10-03 23:03:40.446 16052 16391 I EQO_RECORD: SCENARIO check paused-within-bound: FAIL
+10-03 23:03:40.447 16052 16391 I EQO_RECORD: SCENARIO check resume-after-explicit-user-confirmation: FAIL
+10-03 23:03:40.447 16052 16391 I EQO_RECORD: SCENARIO check steps-executed-after-resume: FAIL
+10-03 23:03:40.448 16052 16391 I EQO_RECORD: SCENARIO check stopped-by-owner: FAIL
+10-03 23:03:40.448 16052 16391 I EQO_RECORD: SCENARIO check terminal-exactly-once: PASS
+10-03 23:03:40.448 16052 16391 I EQO_RECORD: SCENARIO check no-action-in-flight-at-settle: PASS
+10-03 23:03:40.449 16052 16391 I EQO_RECORD: SCENARIO check typed-outcome-names-what-did-not-happen: PASS
+10-03 23:03:40.449 16052 16391 I EQO_RECORD: ACTION-LOOP SCENARIO RESULT: FAIL (takeover-latched)
+10-03 23:03:40.454 16052 16391 I EQO_RECORD: ACTION-LOOP SCENARIO done (t+121194ms)
+10-03 23:03:40.454 16052 16391 I EQO_RECORD: DRIVER done
+```
+
+Raw build/record logs are retained in the card verification attachment. No PR was
+created; lead will open the docs branch. No code change was made for failed attempts.
+
+PHONE RELEASED
