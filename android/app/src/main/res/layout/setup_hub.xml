@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TASK-015 (issue #20): capability readiness dashboard (UF-08, S-19). -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_hub_title"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_hub_subtitle" />
+
+        <TextView
+            android:id="@+id/row_model_key"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:text="@string/setup_hub_row_model_key" />
+
+        <TextView
+            android:id="@+id/row_accessibility"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:text="@string/setup_hub_row_accessibility" />
+
+        <TextView
+            android:id="@+id/row_wireless_adb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:text="@string/setup_hub_row_wireless_adb" />
+
+        <TextView
+            android:id="@+id/row_helper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:text="@string/setup_hub_row_helper" />
+
+        <TextView
+            android:id="@+id/row_chrome_consent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:text="@string/setup_hub_row_chrome_consent" />
+
+        <Button
+            android:id="@+id/setup_recheck_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_hub_recheck" />
+
+        <Button
+            android:id="@+id/setup_task_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_hub_open_task" />
+
+        <Button
+            android:id="@+id/setup_legal_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/notices_button" />
+    </LinearLayout>
+</ScrollView>

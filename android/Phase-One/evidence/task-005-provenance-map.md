@@ -405,3 +405,36 @@ presence).
 | :browser-cdp | `android/browser-cdp/src/test/kotlin/ai/eqo/browser/cdp/ChromeCdpSetupTest.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
 | :browser-cdp | `android/browser-cdp/src/test/kotlin/ai/eqo/browser/cdp/ChromePageControllerTest.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
 | :browser-cdp | `android/browser-cdp/src/test/kotlin/ai/eqo/browser/cdp/DevtoolsSetupTest.kt` | EQO-NEW | `ai.eqo.browser.cdp` | imbalki/project-eqo (EQO-authored, TASK-010 issue #15) |
+
+## TASK-015 additions (issue #20)
+
+The TASK-015 study-app files (guided onboarding screens, capability readiness model,
+recovery catalog, study-flow gates, task screen and ActionLoop wiring, plus their host
+tests) are EQO-authored with no upstream counterpart and are recorded as **EQO-NEW**
+rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #20)`.
+
+| Module | File | Kind | Package | Provenance |
+|---|---|---|---|---|
+| :app | `android/app/src/main/kotlin/ai/eqo/legal/LegalNoticesActivity.kt` | EQO-NEW | `ai.eqo.legal` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/AccessibilitySetupActivity.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/ChromeConsentActivity.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/ModelKeySetupActivity.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/SetupHubActivity.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/StudySetup.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WirelessAdbSetupActivity.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/study/CapabilityReadiness.kt` | EQO-NEW | `ai.eqo.study` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/study/FailureClass.kt` | EQO-NEW | `ai.eqo.study` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/study/StudyFlowGate.kt` | EQO-NEW | `ai.eqo.study` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/study/TaskPresentation.kt` | EQO-NEW | `ai.eqo.study` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/EqoAutomationPort.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/StudyLoopWiring.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/StudyTaskController.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/ConfirmationTouchGuard.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/ProtectedConfirmationTouches.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/ConfirmationTouchGuardTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskActivity.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/study/CapabilityReadinessTest.kt` | EQO-NEW | `ai.eqo.study` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/study/RecoveryCatalogTest.kt` | EQO-NEW | `ai.eqo.study` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/study/StudyFlowGateTest.kt` | EQO-NEW | `ai.eqo.study` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/study/TaskPresentationTest.kt` | EQO-NEW | `ai.eqo.study` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/StudyLoopWiringTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |

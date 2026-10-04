@@ -56,6 +56,16 @@ dependencies {
     // TASK-008 (issue #13): wireless-ADB pairing + the activation gate every privileged
     // entry point consults.
     implementation(project(":adb-pairing"))
+    // TASK-015 (issue #20): the study app is the production caller of the action loop
+    // (core-agent), the model/credential layer (core-llm, core-security) and the one
+    // accessibility service (platform-a11y).
+    implementation(project(":core-agent"))
+    implementation(project(":core-llm"))
+    implementation(project(":core-security"))
+    implementation(project(":platform-a11y"))
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.okhttp)
 
     // androidx.core for androidx.core.content.FileProvider in AndroidManifest.xml
     // (authority ai.eqo.app.fileprovider); lint's MissingClass check flagged it (#10).

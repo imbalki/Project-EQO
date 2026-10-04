@@ -27,4 +27,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/notices_button" />
+
+    <!-- TASK-015: entries into the guided onboarding and the study task screen. -->
+    <Button
+        android:id="@+id/open_setup_hub_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/setup_hub_title" />
+
+    <Button
+        android:id="@+id/open_task_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/setup_hub_open_task" />
 </LinearLayout>

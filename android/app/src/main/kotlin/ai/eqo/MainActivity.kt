@@ -27,6 +27,13 @@ class MainActivity : Activity() {
         setContentView(R.layout.main)
         findViewById<Button>(R.id.notices_button).setOnClickListener { showNotices() }
         findViewById<Button>(R.id.privileged_action_button).setOnClickListener { runPrivilegedAction() }
+        // TASK-015: entries into the guided onboarding and the study task screen.
+        findViewById<Button>(R.id.open_setup_hub_button).setOnClickListener {
+            startActivity(Intent(this, ai.eqo.onboarding.SetupHubActivity::class.java))
+        }
+        findViewById<Button>(R.id.open_task_button).setOnClickListener {
+            startActivity(Intent(this, ai.eqo.task.TaskActivity::class.java))
+        }
     }
 
     override fun onResume() {

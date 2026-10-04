@@ -2,11 +2,11 @@
 package ai.eqo.accessibility
 
 import ai.eqo.NotificationTapTarget
-import ai.eqo.R
 import ai.eqo.core.agent.AgentLoop
 import ai.eqo.core.agent.AgentState
 import ai.eqo.core.service.ServiceBridge
 import ai.eqo.data.repository.SettingsRepository
+import ai.eqo.platform.R
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.animation.ValueAnimator

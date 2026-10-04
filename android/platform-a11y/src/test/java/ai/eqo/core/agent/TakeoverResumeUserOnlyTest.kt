@@ -51,6 +51,10 @@ class TakeoverResumeUserOnlyTest {
     @Test
     fun `no production code mints a user confirmation outside the user-facing UI`() {
         val mint = Regex("""\bforExplicitUserConfirmation\b""")
+        // TASK-015 (issue #20): the ONE mint site in app code is the resume button's click
+        // handler in the study task screen — a real user gesture, exactly the case this
+        // test's name describes. Loop, recovery, agent and service code stay banned.
+        val userFacingMintSite = "app/src/main/kotlin/ai/eqo/task/TaskActivity.kt"
         val offenders = mutableListOf<String>()
         listOf(
             "app/src/main",
@@ -68,6 +72,8 @@ class TakeoverResumeUserOnlyTest {
                             androidRoot(),
                             "core-agent/src/main/java/ai/eqo/core/agent/UserResumeConfirmation.kt",
                         ).canonicalFile
+                }.filter {
+                    it.canonicalFile != File(androidRoot(), userFacingMintSite).canonicalFile
                 }.forEach { file ->
                     if (mint.containsMatchIn(file.readText())) {
                         offenders += file.name
@@ -78,6 +84,10 @@ class TakeoverResumeUserOnlyTest {
             "SF-4: agent-reachable code must never mint a resume confirmation",
             emptyList<String>(),
             offenders,
+        )
+        assertTrue(
+            "SF-4: the single allowlisted user-facing mint site must exist",
+            File(androidRoot(), userFacingMintSite).isFile,
         )
     }
 

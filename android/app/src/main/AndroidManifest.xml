@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -15,6 +17,38 @@
             </intent-filter>
             <!-- TASK-005: `eqo://` deep links. MainActivity resolves eqo://legal to the
                  Legal / open-source notices screen (UF-14, S-28). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="eqo" android:host="legal" />
+            </intent-filter>
+        </activity>
+        <!-- TASK-015 (issue #20): guided onboarding screens (UF-02..UF-06), the capability
+             dashboard (UF-08), the study task screen (UF-09/UF-10) and the offline legal /
+             open-source notices screen (UF-14). -->
+        <activity
+            android:name=".onboarding.SetupHubActivity"
+            android:exported="false" />
+        <activity
+            android:name=".onboarding.ModelKeySetupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".onboarding.AccessibilitySetupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".onboarding.WirelessAdbSetupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".onboarding.ChromeConsentActivity"
+            android:exported="false" />
+        <activity
+            android:name=".task.TaskActivity"
+            android:exported="false" />
+        <activity
+            android:name=".legal.LegalNoticesActivity"
+            android:exported="true">
+            <!-- REQ-INS-03: legal notices reachable in <=3 taps and via eqo://legal. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

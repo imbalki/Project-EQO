@@ -8,9 +8,11 @@ plugins {
 }
 
 android {
-    // Namespace matches the moved code's `import ai.eqo.R` (R handling,
-    // TASK-004 extraction map decision 8), so no moved file changes for resources.
-    namespace = "ai.eqo"
+    // TASK-015 (issue #20): unique per library (it used to collide with :app's `ai.eqo`,
+    // which only surfaced once the study app depends on this module). The moved code's
+    // `import ai.eqo.R` became `import ai.eqo.platform.R` (TASK-004 extraction map
+    // decision 8: no other moved file changes for resources).
+    namespace = "ai.eqo.platform"
     compileSdk = 36
 
     defaultConfig {
