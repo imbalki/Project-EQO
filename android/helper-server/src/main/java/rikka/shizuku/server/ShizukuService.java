@@ -1,7 +1,6 @@
 // Origin: RikkaApps/Shizuku @ b844bc491f1790c72328e1a8e5b2349f8978f0ea, path: server/src/main/java/rikka/shizuku/server/ShizukuService.java
 package rikka.shizuku.server;
 
-import static android.Manifest.permission.WRITE_SECURE_SETTINGS;
 import static rikka.shizuku.ShizukuApiConstants.ATTACH_APPLICATION_API_VERSION;
 import static rikka.shizuku.ShizukuApiConstants.ATTACH_APPLICATION_PACKAGE_NAME;
 import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_PERMISSION_GRANTED;
@@ -264,20 +263,8 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
         if (!isManager) {
             reply.putBoolean(BIND_APPLICATION_PERMISSION_GRANTED, Objects.requireNonNull(clientRecord).allowed);
             reply.putBoolean(BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, false);
-        } else {
-            try {
-                PermissionManagerApis.grantRuntimePermission(MANAGER_APPLICATION_ID,
-                        WRITE_SECURE_SETTINGS, UserHandleCompat.getUserId(callingUid));
-            } catch (Throwable e) {
-                // TASK-007 (issue #12) fork change: upstream catches RemoteException only.
-                // On a device where the server runs as the shell uid (activation over
-                // `adb shell`) without android.permission.GRANT_RUNTIME_PERMISSIONS this
-                // call throws SecurityException, which aborted the whole attach handshake
-                // (bindApplication never ran, client binder callbacks never fired). The
-                // grant is best-effort; the handshake must not depend on it.
-                LOGGER.w(e, "grant WRITE_SECURE_SETTINGS (skipped, non-fatal)");
-            }
         }
+        // TASK-007 SF-1: attach only exchanges binder metadata; no manager grants.
         try {
             application.bindApplication(reply);
         } catch (Throwable e) {

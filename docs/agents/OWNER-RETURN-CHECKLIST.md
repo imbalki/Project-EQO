@@ -37,6 +37,16 @@ Realme Narzo 20 (RMX2193), Android 11 (API 30), Realme UI 2.0, serial `<DEVICE_S
    cd C:\Users\<user>\Claude\project-eqo\android
    ```
 
+## TASK-007 SF-1 re-check — before the owner enables accessibility (BOTH)
+
+PENDING owner presence; no phone used for task-060. Install the hardened debug APK,
+record read-only `settings get secure enabled_accessibility_services` before and after
+helper activation, and confirm EQO is not auto-enabled (if already enabled, the owner
+switches it off manually first). Run `HelperSpikeDeviceTest#activationAndShellUid` and
+`#survivesAppRestart`: activation and binder delivery must still pass, `getUid()==2000`.
+Record the APK/commit and logs. Never grant permissions or write secure settings to
+prepare this check; only the owner enables accessibility by hand afterwards.
+
 ## Phase 1 — TASK-015 study APK: install and first-run walkthrough (the first usable build)
 
 Do this first so the same APK is on the phone for everything else. Source: `android/Phase-One/evidence/task-015-study-apk.md` §5.
@@ -164,7 +174,7 @@ Output: `android/Phase-One/evidence/exit-review.md` with the gate table, the ope
 
 | Source | What | Must be done before |
 |---|---|---|
-| TASK-007 SF-1 | The helper keeps upstream's `WRITE_SECURE_SETTINGS` self-grant to the manager (`helper-server/.../ShizukuService.java`); where the server runs as root it silently grants EQO `WRITE_SECURE_SETTINGS` | Remove or consent-gate it before release |
+| TASK-007 SF-1 | Manager self-grant removed entirely in task-060; all-module JVM guard prevents secure-settings permissions/writes returning | PENDING owner-presence device re-check: helper activation + binder delivery still work without the grant; `getUid()==2000`; accessibility is not auto-enabled |
 | TASK-007 SF-2 / SF-3 | No signing-cert / uid pin if the manager allowlist grows past one id; no binder-provenance check if the broadcast is ever sent cross-uid | Before the manager allowlist grows past one id / before the broadcast is sent cross-uid |
 | TASK-008 SF-1 | The connect-plane TLS accepts any server certificate (AOSP parity; loopback-only guard + annotations only) | Post-pairing server-key pinning / enrollment / rotation before any production caller uses the connect plane; it also blocks TASK-008 D2-D7 and the TASK-015 study gate |
 | TASK-010 SF-1 | The DevTools endpoint check is name-only | Socket-owner verification before any production CDP caller; it also blocks the TASK-010 device criteria and the TASK-015 study gate |

@@ -280,6 +280,17 @@ spike cuts (rish remote shell, adb pairing native lib) - all itemised in
 `task-007-helper-spike.md`. The Java files of the two helper modules are forked the same
 way (this map covers Kotlin only, as before).
 
+TASK-007 SF-1 / task-060 Java delta ledger (no Kotlin row/count changes):
+
+- `helper-server/src/main/java/rikka/shizuku/server/ShizukuService.java`: FORK,
+  RikkaApps/Shizuku @ `b844bc491f1790c72328e1a8e5b2349f8978f0ea`, original
+  `server/src/main/java/rikka/shizuku/server/ShizukuService.java`; removed the manager
+  secure-settings self-grant entirely, replacing the earlier best-effort grant fork delta.
+  Original `Origin:` header retained; attach reply and non-fatal callback unchanged.
+- `helper-server/src/test/java/rikka/shizuku/server/NoSecureSettingsWriteTest.java`:
+  EQO-NEW, authored for issue #12; scans every module's main text sources/resources and
+  manifests, with only comments excluded; negative fixtures are test-only.
+
 | :helper-server | `android/helper-server/src/main/java/rikka/shizuku/server/ApkChangedObservers.kt` | FORK | `rikka.shizuku.server` | RikkaApps/Shizuku @ b844bc491f1790c72328e1a8e5b2349f8978f0ea (upstream path: `server/src/main/java/rikka/shizuku/server/ApkChangedObservers.kt`) |
 | :helper-server | `android/helper-server/src/main/java/rikka/shizuku/server/ktx/Handler.kt` | FORK | `rikka.shizuku.server.ktx` | RikkaApps/Shizuku @ b844bc491f1790c72328e1a8e5b2349f8978f0ea (upstream path: `server/src/main/java/rikka/shizuku/server/ktx/Handler.kt`) |
 | :helper-server | `android/helper-server/src/main/java/moe/shizuku/manager/ShizukuManagerProvider.kt` | FORK | `moe.shizuku.manager` | RikkaApps/Shizuku @ b844bc491f1790c72328e1a8e5b2349f8978f0ea (upstream path: `manager/src/main/java/moe/shizuku/manager/ShizukuManagerProvider.kt`; fork deltas: renamed binder extra key, manager Logger facade -> android.util.Log) |

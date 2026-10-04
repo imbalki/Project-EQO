@@ -198,13 +198,101 @@ Revocation: `HelperSpikeDeviceTest#revocationExitsCleanly` (manager calls `exit(
    `SecurityException: grantRuntimePermission: Neither user 2000 nor current process has android.permission.GRANT_RUNTIME_PERMISSIONS`,
    which aborted `attachApplication` before `bindApplication` — the client never received its
    binder-received callbacks (`W ShizukuApplication: java.lang.SecurityException...` at
-   `Shizuku.attachApplicationV13`). Fork fix: the grant is best-effort (catch `Throwable`, logged
-   `grant WRITE_SECURE_SETTINGS (skipped, non-fatal)`), handshake continues. **For the security
-   pass:** upstream's manager `WRITE_SECURE_SETTINGS` self-grant is kept as upstream behavior
-   (only succeeds where the server runs as root); whether EQO keeps it at all is a decision left
-   to the security pass.
+   `Shizuku.attachApplicationV13`). The original spike fix caught `Throwable` and treated the
+   grant as best-effort. **Superseded by TASK-007 SF-1 hardening (task-060):** the manager
+   self-grant and its import/catch/logging block are removed entirely, including on root.
+   The reply metadata, non-manager permission fields and non-fatal `bindApplication`
+   callback handling are unchanged. Accessibility is enabled only by the owner in Settings.
+   Post-removal phone checks are PENDING owner presence; earlier device PASS records below
+   describe the pre-removal build, not this hardening build.
 2. `useLegacyPackaging` is required for the starter-as-library packaging (without it
    `extractNativeLibs="false"` leaves nothing executable on disk).
+
+## TASK-007 SF-1 hardening — task-060 host verification
+
+Base `origin/main`: `5f1ce5174141636ef7135c65bf551aebfc3a1771`.
+Code + guard commit: `55cd1555e3a9f1ce7579c4198a15e49a89a10287` on
+`agent/android/60-helper-no-secure-settings`. No phone used; device re-check remains
+PENDING owner presence in `docs/agents/OWNER-RETURN-CHECKLIST.md`.
+
+### Source audit and JVM regression guard
+
+Repo-wide searches covered `WRITE_SECURE_SETTINGS`, `grantRuntimePermission`,
+`Settings.Secure`, `put*ForUser`, `content://settings`, settings CLI put/delete/reset,
+`enabled_accessibility_services` and `ACCESSIBILITY_ENABLED`.
+
+- The manager grant/import are gone. Two remaining `grantRuntimePermission` calls in
+  `ShizukuService` grant only `ServerConstants.PERMISSION`
+  (`ai.eqo.app.helper.permission.API_V23`) in the existing approved-client permission
+  flow; neither writes secure settings. The attach path contains no permission grant.
+- Production `StudySetup.kt` uses `Settings.Secure.getString` only. Instrumentation
+  probes in `EqoDeviceRecordsDriver` / `EqoDeviceRecordsTest` are also read-only.
+- Remaining forbidden-token hits are documentation/comments and negative test fixtures.
+  No declared source manifest requests `WRITE_SECURE_SETTINGS` (including androidTest).
+  `AppSettingsStore` writes app-owned preferences, not the Android settings provider.
+- `NoSecureSettingsWriteTest` discovers all module `src/main` trees and scans text
+  sources/resources/manifests (Java, Kotlin, native code, scripts included). Only comments
+  are excluded; literals are preserved, including URI/command strings. It rejects the
+  permission, `Secure.put*` (including static imports/multiline calls), settings CLI
+  writes, direct secure-provider URI usage and representative reflective Secure names.
+  This is a source guard, not a proof against arbitrary dynamically constructed writes.
+- Two new JVM tests pass, including forbidden permission/manifest/API/command/provider
+  fixtures and allowed read/comment cases. An initial guard regex stack overflow on large
+  text sources was fixed with possessive literal repetition before the passing commit.
+
+### Merged manifest permissions — before and after
+
+Before: `:app:processDebugMainManifest :app:processReleaseMainManifest` on the unedited
+base, exit 0. After: manifests from the full passing debug/release gate. Parsed XML
+`uses-permission*` lists compare exactly equal in both variants. The complete list for
+both debug and release is below; each row is present before AND after:
+
+| Requested permission | Before debug/release | After debug/release |
+|---|---|---|
+| `ai.eqo.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | yes | yes |
+| `ai.eqo.app.helper.permission.MANAGER` | yes | yes |
+| `android.permission.ACCESS_COARSE_LOCATION` | yes | yes |
+| `android.permission.ACCESS_FINE_LOCATION` | yes | yes |
+| `android.permission.ACCESS_NETWORK_STATE` | yes | yes |
+| `android.permission.FOREGROUND_SERVICE` | yes | yes |
+| `android.permission.FOREGROUND_SERVICE_DATA_SYNC` | yes | yes |
+| `android.permission.INTERNET` | yes | yes |
+| `android.permission.READ_PHONE_STATE` | yes | yes |
+| `android.permission.RECEIVE_BOOT_COMPLETED` | yes | yes |
+| `android.permission.WAKE_LOCK` | yes | yes |
+| `com.google.android.apps.aicore.service.BIND_SERVICE` | yes | yes |
+
+`android.permission.WRITE_SECURE_SETTINGS`: absent before and after. This fix removes
+an imperative server-side grant, not a manifest request.
+
+### Toolchain and full gate — actual output
+
+`./gradlew --version`: Gradle **9.7.0**, Launcher JVM **21.0.12.1** (Eclipse Adoptium),
+embedded Kotlin **2.4.0**. An init-script `help` run printed the resolved buildscript
+artifacts **com.android.tools.build:gradle:9.3.1** and
+**org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0**, and `minSdk=30` for every Android
+module. `:helper-server` prints **NDK=29.0.14206865**; its generated debug/release
+CMakeCache files for all four ABIs also resolve that NDK. Other modules report AGP's
+unused default NDK 28.2.13676358, not a claim of a repository-wide NDK pin.
+
+From `android/`, one Gradle invocation at a time:
+
+```text
+./gradlew assembleDebug assembleRelease testDebugUnitTest lintDebug ktlintCheck detekt --max-workers=2 -Dorg.gradle.jvmargs=-Xmx1536m -Pkotlin.daemon.jvmargs=-Xmx1024m
+BUILD SUCCESSFUL in 29m 32s
+897 actionable tasks: 838 executed, 59 up-to-date
+```
+
+JUnit XML aggregation: **605 tests, 0 failures, 0 errors, 1 skipped**. The new guard suite:
+**2 tests, 0 failures, 0 errors, 0 skipped**. Both app APK variants built (release remains
+unsigned); lintDebug, ktlintCheck and detekt pass. Existing deprecation/compiler warnings
+remain; no baseline or suppression added. The foreground tool timed out while Gradle
+continued; the original process was monitored to this successful finish, not overlapped
+with a second Gradle invocation.
+
+Repo scripts live at the repository root, not under `android/`. After correcting that
+working directory, `bash scripts/check-branding.sh` and `bash scripts/check.sh` both exit 0;
+branding reports **311 Kotlin files / 311 provenance rows**, `BRANDING GATE PASSED`.
 
 ## Receiver export flag (TASK-007 fix card: lint error)
 
