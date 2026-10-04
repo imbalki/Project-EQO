@@ -1,6 +1,6 @@
 # Phase One status and handoff (runbook for ANY agent)
 
-Last updated: 2026-10-03 about 23:40 local. TASK-001 to 007, 009, 012 and 014 are merged. Next: TASK-008 (wireless ADB pairing) and TASK-010 (Chrome CDP) are the remaining device spikes, then TASK-015 (study APK) and TASK-016 (exit review). Update this page in the PR that finishes each task. It is written so that a person or **any** AI agent (Claude Code, Codex, Hermes, anything that can run a shell, `git`, `gh` and `hermes`) can continue the work from the repo alone, with no knowledge held only by a previous chat.
+Last updated: 2026-10-04 about 09:15 local. TASK-001 to 010, 012, 014 and 015 are merged; the code for every Phase One task is now in `main` (PRs #53 to #57 landed after the last refresh). TASK-011 is **deferred** (D-008) and TASK-013 **deferred/parked** (D-009); **TASK-016** (device matrix and exit review) is the only task still open and needs the owner and the phone. **In flight: nothing.** The device tests waiting for the owner are collected in `docs/agents/OWNER-RETURN-CHECKLIST.md`. Update this page in the PR that finishes each task. It is written so that a person or **any** AI agent (Claude Code, Codex, Hermes, anything that can run a shell, `git`, `gh` and `hermes`) can continue the work from the repo alone, with no knowledge held only by a previous chat.
 
 ## 0. Read this first
 
@@ -67,19 +67,19 @@ If Hermes is unavailable, do each task yourself by following its spec in `agents
 | 005 identity, branding, NOTICE | #10 | **Done** (PR #43, `97fc72b`) | `evidence/task-005-*` |
 | 006 OpenRouter key, redaction | #11 | **Done with a known gap** (PR #46, `edf9403`): acceptance criterion 5 (cost disclosure before first use) is NOT MET; redactor and crash hook have no production callers yet. Follow-ups: issue #44 | `evidence/task-006-byok-security.md` |
 | 007 helper spike (Shizuku-derived) | #12 | **Done** (PR #51, `87c8223`): helper runs under EQO's app id, survives binder death and revocation, no separate helper app. Security pass PASS with SF-1 to fix before release/S2 (section 11) | `evidence/task-007-helper-spike.md` |
-| 008 wireless ADB pairing | #13 | **Next** (TASK-007 is done; needs the phone) | |
+| 008 wireless ADB pairing | #13 | **Done** (PR #55, `2076ae5`): `:adb-pairing` extracted, guided first-run activation surface, full gate green. Device scenarios D1-D8 not run (owner away); **security SF-1 open** (connect-plane TLS accepts any server cert — section 11) | `evidence/task-008-wireless-adb-pairing.md` |
 | 009 one accessibility service, takeover | #14 | **Done** (PR #49, `70b26e0`): criteria 1 to 4 pass on the physical phone, criterion 5 not tested. Security follow-ups: issue #50 | `evidence/task-009-accessibility.md` |
-| 010 Chrome CDP spike | #15 | Waiting on 008 | |
+| 010 Chrome CDP spike | #15 | **Done** (PR #56, `5dc0a5d`): `:browser-cdp` extracted, consent + setup orchestration + navigate/fill/read-back host-tested. Device ACs not run (owner away); no production CDP transport is wired | `evidence/task-010-chrome-cdp-spike.md` |
 | 011 virtual display | #16 | **Deferred (D-008)** | |
-| 012 action loop, Pause/Stop/takeover | #17 | **Done** (PR #52, `f84e079`): the loop, states and race tests are implemented; carries issue #50 (SF-1 to SF-4 and N-3 landed here). **Nothing constructs `ActionLoop` in `main`/`:app` yet** (TASK-015 wiring) | `evidence/task-012-action-loop.md` |
-| 013 local Gemma | #18 | **Parked (D-009)** | |
+| 012 action loop, Pause/Stop/takeover | #17 | **Done** (PR #52, `f84e079`; device re-test recorded in PR #53, `8956b91`): the loop, states and race tests are implemented; carries issue #50 (SF-1 to SF-4 and N-3 landed here). **`StudyTaskController` (TASK-015) is the first production constructor of `ActionLoop`** | `evidence/task-012-action-loop.md` |
+| 013 local Gemma | #18 | **Deferred (D-009)** | |
 | 014 SMS compose-only, permissions | #19 | **Done** (PR #45, `9120e1d`) | `evidence/task-014-sms-permissions.md` |
-| 015 study APK and onboarding | #20 | Waiting (needs 008 and 010 done; 007, 012, 014 done). Also carries issues #44 and #50; wires `ActionLoop` into the app | |
-| 016 device matrix and exit review | #21 | Waiting on 015; gate 6 is recorded as deferred | |
+| 015 study APK and onboarding | #20 | **Done** (PR #57, `c34d42e`): one sideload study APK that builds and installs (host), guided onboarding, wires `ActionLoop` with real permission/approval policies. Carries issues #44 and #50. The shipped study flow keeps the wireless-ADB and CDP transports **off** (`StudyFlowGate`) pending the SF-1 pinning/socket work; device criteria not run (owner away) | `evidence/task-015-study-apk.md` |
+| 016 device matrix and exit review | #21 | **Pending** — the only open task; needs the owner and the phone. Gate 6 is recorded as deferred (D-008) | |
 
 Issue numbers: TASK-001 to 004 were #6 to #9, moved by an interrupted command and moved back (#33 to #36). Commit messages from before say `Refs #6/#7/#8`: read as #33/#34/#35.
 
-Pull requests: merged #2 to #5, #22, #26, #27, #29 to #32, #38, #40, #41, #43, #45, #46, #48, #49, #51, #52. None open. Open issues to know: #25 (UX), #44 (TASK-015 follow-ups from the TASK-006 security pass), #47 (this documentation refresh), #50 (TASK-012 follow-ups from the TASK-009 security pass; SF-1 to SF-4 and N-3 landed in PR #52). #42 is closed (superseded by D-010 and the TASK-012 brief).
+Pull requests: merged #2 to #5, #22, #26, #27, #29 to #32, #38, #40, #41, #43, #45, #46, #48, #49, #51, #52, #53 (TASK-012 device re-test records), #54 (docs), #55 (TASK-008), #56 (TASK-010), #57 (TASK-015). None open. Open issues to know: #25 (UX), #44 (TASK-015 follow-ups from the TASK-006 security pass), #47 (this documentation refresh), #50 (TASK-012 follow-ups from the TASK-009 security pass; SF-1 to SF-4 and N-3 landed in PR #52). #42 is closed (superseded by D-010 and the TASK-012 brief).
 
 ## 6. The operating loop (do exactly this for every task)
 
@@ -107,9 +107,9 @@ The lead (you) drives; workers are Hermes cards. A task is a chain of cards: **a
 
 ## 7. In flight right now (check with `hermes kanban --board eqo-android list --status running`)
 
-Nothing is running on the board as of this update. **TASK-007** (PR #51) and **TASK-012** (PR #52) are merged, and the two-worker model trial is finished (result in section 4); its two branches (`agent/android/44-shape-redaction-sol`, `agent/android/44-shape-redaction-mimo`) still exist on origin with no PR opened from either.
+Nothing is running on the board as of this update. **TASK-007** (PR #51), **TASK-012** (PR #52), **TASK-008** (PR #55), **TASK-010** (PR #56) and **TASK-015** (PR #57) are merged. The two-worker model trial is finished (result in section 4); its two branches (`agent/android/44-shape-redaction-sol`, `agent/android/44-shape-redaction-mimo`) still exist on origin with no PR opened from either. Only **TASK-016** remains, and it cannot start until the device tests below have run.
 
-**TASK-008** (wireless ADB pairing) is the next device spike. It, and any other phone test (device scenarios, TASK-009-style accessibility records), wait until the owner is back: **owner away — phone tests queue for his return.** Only one worker may use the phone at a time.
+Every remaining test needs the phone: the TASK-008 wireless-pairing scenarios D1-D8, the TASK-010 CDP steps, the TASK-015 study-APK install and first-run walkthrough, then the TASK-016 matrix. They wait until the owner is back: **owner away — phone tests queue for his return.** The queue is written out in `docs/agents/OWNER-RETURN-CHECKLIST.md`. Only one worker may use the phone at a time.
 
 ## 8. The team and the board
 
@@ -135,28 +135,37 @@ All `eqo-*` profiles except the probe and trial fall back to `opencode-go` / `de
 - **Hermes is slow when the machine is busy:** long hermes commands may exceed tool timeouts; run them in the background and read the output file. The status line's running list can come back empty.
 - **A fix commit can wake a dormant test** (the upstream backup-rules test was skipped until backup rule files existed, then failed in CI): read CI failures instead of guessing.
 
+### Lessons learned tonight (2026-10-04)
+
+- **Never close an author card while its worker is still editing.** Doing that kills the worker mid-write and leaves uncommitted work in its worktree (this is how the TASK-015 lint WIP was nearly lost; it survived only because it was found in the worktree and reviewed before the card was finished).
+- **A card that hits the Hermes block-loop limit moves to `triage`, and the CLI cannot promote a `triage` card** (section 8). Do not keep re-blocking it: create a **continuation card** for the remaining work and leave the triage card alone.
+- **Reviewers must not run a forced full Gradle.** The build is the lead's gate; a reviewer's forced full run competes with the lead's gate for the machine's 15.7 GB and can kill both. Reviewers work in a scratch clone and run no Gradle where possible (section 6, step 6).
+- **A full build takes 15 to 30 minutes; the serialized gate has been seen from about 6m 55s to 1h 25m on a busy machine.** Plan dispatch around it and never start a second Gradle invocation while one is running.
+- **Owner approvals (restated):** a PR the owner asked for may be merged under the **standing approval** once review+security say PASS, the lead's fresh-clone gate is green and CI is green; the phone is **project-only** (no personal use); and the owner **may be away**, in which case phone tests queue and are not started (section 6).
+
 ## 10. Devices
 
-- **Physical:** Realme Narzo 20 (RMX2193), Android 11 (API 30), 3.8 GB RAM, 22 GB free, serial `<DEVICE_SERIAL>` over USB with USB debugging authorized. Installed apart from stock apps: `ai.eqo.test` (TASK-009 instrumentation APK, its "EQO" accessibility service is switched on by the owner: leave it alone unless a task says otherwise; when TASK-009-style testing is over, switch it off and uninstall it) and `com.pocketpalai` (the owner's own app: never touch). 
+- **Physical:** Realme Narzo 20 (RMX2193), Android 11 (API 30), 3.8 GB RAM, 22 GB free, serial `<DEVICE_SERIAL>` over USB with USB debugging authorized. Installed apart from stock apps: `ai.eqo.app` (the study APK), `ai.eqo.test` (TASK-009 instrumentation APK, its "EQO" accessibility service is switched on by the owner: leave it alone unless a task says otherwise), `ai.eqo.app.test` and `ai.eqo.helper.client.test` (TASK-007 instrumentation and the mismatched-permission fixture), and `com.pocketpalai` (the owner's own app: never touch). The clean-up list for the test packages is in `docs/agents/OWNER-RETURN-CHECKLIST.md`. 
 - **Emulators:** `eqo-api31` (Android 12) and `eqo-api33` (Android 13), AVD home `C:\Users\<user>\Android\avd`. Label emulator evidence "emulator" next to physical evidence. No physical Android 12 or 13 device has been available so far; those two API levels are still untested (section 11).
 
 ## 11. Open follow-ups
 
-1. **Security SF-1 (TASK-007 security pass):** the helper keeps upstream's `WRITE_SECURE_SETTINGS` self-grant to the manager (`helper-server/.../ShizukuService.java`). Under `adb shell` activation it fails harmlessly, but where the server runs as root it silently gives EQO `WRITE_SECURE_SETTINGS` — enough to enable EQO's own accessibility service and rewrite secure settings without consent. **Remove it or gate it behind explicit user consent before release / TASK-008 (S2).** Also from that pass: SF-2 (pin the signing cert or uid if the manager allowlist grows past one id) and SF-3 (verify binder provenance if the broadcast is ever sent cross-uid).
-2. Issue #44 (for TASK-015): enforce the cost-disclosure gate at the provider boundary and show the screen; install `RedactingLog` and `LogRedactorCrashHook` in an `Application` class and replace the 168 direct `Log` call sites; shape-based redaction (the N1 trial task); release rotated keys from `SecretRegistry`.
-3. Issue #50 (for TASK-012): SF-1 to SF-4 and N-3 are implemented in PR #52. Residuals: secure-window detection is reflection-based (`AccessibilityWindowInfo.isSecure()` is hidden in the public SDK), any future observe->model sink must go through `UntrustedScreenText.wrap`, and the grant-time copy (N-7) still says "the moment you touch the screen EQO pauses" without the mid-gesture caveat; the hard-block list (#42) is deliberately not built (D-010).
-4. **Nothing constructs `ActionLoop` in `main`/`:app` yet** — the loop and its policy are unit- and race-tested but unwired; TASK-015 wires it (the loop's callers supply permission/approval/execute/observe lambdas).
-5. **Android 12 and 13 are untested** (the owner has no such device; only the `eqo-api31`/`eqo-api33` emulators exist). Everything so far is Android 11.
-6. **TASK-008 is pending** (wireless ADB pairing; needs the phone).
-7. The Shizuku trademark/naming question must be settled before any public distribution (`NOTICE` flags it and claims nothing).
-8. `AGENTS.md` line 21 says "D-001 to D-006"; it should say D-010. Protected file: needs the owner's approval.
-9. `docs/USER-FLOWS.md` should be updated from `android/Phase-One/design/README.md`; `ci.yml` wrapper-validation and setup-gradle steps are not gated; the four named lint suppressions in `android/app/lint.xml` stay "no new entries without a stated reason".
-10. Not verified anywhere yet: screenshots of the app label and notices screen (TASK-005), the cost-disclosure screen, Keystore behaviour on a phone, the deep link on a device.
+1. **TASK-007 SF-1 (helper):** the helper keeps upstream's `WRITE_SECURE_SETTINGS` self-grant to the manager (`helper-server/.../ShizukuService.java`). Under `adb shell` activation it fails harmlessly, but where the server runs as root it silently gives EQO `WRITE_SECURE_SETTINGS` — enough to enable EQO's own accessibility service and rewrite secure settings without consent. **Remove it or gate it behind explicit user consent before release.** Also from that pass: **SF-2** (pin the signing cert or uid if the manager allowlist grows past one id) and **SF-3** (verify binder provenance if the broadcast is ever sent cross-uid).
+2. **TASK-008 SF-1 (wireless connect plane):** the connect-plane TLS accepts any server certificate (AOSP client parity; a loopback-only guard, method/class-scoped annotations, and a dependency-path lint exception for the unused Bouncy Castle EST helper are the only mitigations). **Post-pairing server-key pinning / enrollment / rotation must be defined and enforced before any production caller uses the connect plane.** The TASK-015 study build therefore keeps `WIRELESS_CONNECT_PLANE_IN_STUDY_FLOW = false`.
+3. **TASK-010 SF-1 (CDP):** the DevTools endpoint check is name-only; when a production CDP caller is introduced, **socket-owner verification** must land before it. The TASK-015 study build keeps `CHROME_CDP_IN_STUDY_FLOW = false` and constructs no CDP client.
+4. Issue #44 (carried by TASK-015, still open): enforce the cost-disclosure gate at the provider boundary and show the screen; install `RedactingLog` and `LogRedactorCrashHook` in an `Application` class and replace the direct `Log` call sites; shape-based redaction (the N1 trial task); release rotated keys from `SecretRegistry`.
+5. Issue #50 (carried by TASK-012, residual): SF-1 to SF-4 and N-3 are implemented in PR #52. Residuals: secure-window detection is reflection-based (`AccessibilityWindowInfo.isSecure()` is hidden in the public SDK), any future observe->model sink must go through `UntrustedScreenText.wrap`, and the grant-time copy (N-7) still says "the moment you touch the screen EQO pauses" without the mid-gesture caveat; the hard-block list (#42) is deliberately not built (D-010).
+6. **No device criteria for TASK-008, TASK-010 or TASK-015 have run** (owner away; no phone session). Their device test plans are queued in `docs/agents/OWNER-RETURN-CHECKLIST.md`; TASK-016 cannot start until they pass.
+7. **Android 12 and 13 are untested** (the owner has no such device; only the `eqo-api31`/`eqo-api33` emulators exist). Everything so far is Android 11.
+8. The Shizuku trademark/naming question must be settled before any public distribution (`NOTICE` flags it and claims nothing).
+9. `AGENTS.md` line 21 says "D-001 to D-006"; it should say D-010. Protected file: needs the owner's approval.
+10. `docs/USER-FLOWS.md` should be updated from `android/Phase-One/design/README.md`; `ci.yml` wrapper-validation and setup-gradle steps are not gated; the four named lint suppressions in `android/app/lint.xml` stay "no new entries without a stated reason".
+11. Not verified anywhere yet: device screenshots of the app label and notices screen (TASK-005), the cost-disclosure screen, Keystore behaviour on a phone, the deep link on a device, the study-APK install and first-run, wireless pairing, and the CDP steps.
 
 ## 12. Next steps (in order)
 
-1. **TASK-008** (wireless ADB pairing, after TASK-007): release its phone card, brief, author on GPT 6.1 Sol (`eqo-trial`), review (`eqo-reviewer-glm`), security pass (`eqo-security`), verify in a fresh clone, then PR. It needs the phone, so it waits for the owner (owner away: phone tests queue for his return).
-2. **TASK-010** (Chrome CDP spike, after TASK-008): same chain.
-3. **TASK-015** when 008 and 010 are done (007, 012 and 014 already done): wire `ActionLoop` into the app, close issues #44 and #50, then **TASK-016** (exit review; gate 6 recorded as deferred). First usable build is the study APK from TASK-015.
-4. Fix security SF-1 (remove or consent-gate the `WRITE_SECURE_SETTINGS` self-grant) before release.
-5. Keep this page current after every merge (docs PR, owner approves).
+1. **Owner returns:** run `docs/agents/OWNER-RETURN-CHECKLIST.md` in order — study-APK install and first-run walkthrough (TASK-015), the wireless-pairing scenarios D1-D8 (TASK-008), the CDP device steps (TASK-010) — recording exact commands and outputs with the phone.
+2. **TASK-016** (device matrix and exit review) once those device records exist: run the eight exit gates, record pass / fail / defect per gate, record gate 6 as deferred (D-008), and recommend proceed-to-Phase-Two or a fix list.
+3. Fix the security carries before release: the TASK-007 `WRITE_SECURE_SETTINGS` self-grant, the TASK-008 connect-plane server-key pinning, and the TASK-010 socket-owner verification — each with the tests its evidence doc asks for.
+4. Close issues #44 and #50 as their work lands.
+5. Keep this page and the checklist current after every merge (docs PR, owner approves).
