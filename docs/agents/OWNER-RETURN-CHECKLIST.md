@@ -1,6 +1,6 @@
 # Owner-return checklist — phone tests queued for the owner
 
-Companion to `docs/agents/PHASE-ONE-STATUS.md`. This is the ordered queue of phone work that runs when the owner is back with the project phone. **Nothing in this file has been run yet:** the owner was away for TASK-008, TASK-010 and TASK-015, so every device criterion in those tasks is still **PENDING owner presence** (each task's evidence doc says so). TASK-016 (device matrix and exit review) cannot start until the records below exist.
+Companion to `docs/agents/PHASE-ONE-STATUS.md`. This is the ordered queue of phone work that runs when the owner is back with the project phone. **Updated 2026-10-04 ~15:00:** the first real-device session ran on the owner's Realme RMX2193, so the Phase 1 install and first-run walkthrough (up to the model key) are **DONE** and the real-app accessibility smoke is **DONE** (after the #61 repair). The remaining Phase 1 items below, and all of TASK-008, TASK-010 and TASK-016, are still **PENDING**. TASK-016 (device matrix and exit review) cannot start until those records exist. The Android 12+ **emulator route** is the last section of this file.
 
 Legend:
 
@@ -39,19 +39,26 @@ Realme Narzo 20 (RMX2193), Android 11 (API 30), Realme UI 2.0, serial `<DEVICE_S
 
 ## TASK-007 SF-1 re-check — before the owner enables accessibility (BOTH)
 
-PENDING owner presence; no phone used for task-060. Install the hardened debug APK,
-record read-only `settings get secure enabled_accessibility_services` before and after
-helper activation, and confirm EQO is not auto-enabled (if already enabled, the owner
-switches it off manually first). Run `HelperSpikeDeviceTest#activationAndShellUid` and
-`#survivesAppRestart`: activation and binder delivery must still pass, `getUid()==2000`.
-Record the APK/commit and logs. Never grant permissions or write secure settings to
-prepare this check; only the owner enables accessibility by hand afterwards.
+**Partially run 2026-10-04.** The self-grant the check targets was removed in **#60 (`7096870`, merged 11:23)** — the helper no longer self-grants `WRITE_SECURE_SETTINGS`. In the 2026-10-04 smoke the helper was activated over USB adb (`libeqo-starter.so --apk=...`) and reported **"helper binder is alive"**, which exercises the activation+binder path without the grant. The explicit SF-1 records below (read-only before/after `settings get secure enabled_accessibility_services`; `getUid()==2000`; running `HelperSpikeDeviceTest#activationAndShellUid` / `#survivesAppRestart`) were **not** captured and remain to do. Never grant permissions or write secure settings to prepare this check; only the owner enables accessibility by hand.
+
+Original instruction: install the hardened debug APK, record read-only `settings get secure enabled_accessibility_services` before and after helper activation, and confirm EQO is not auto-enabled (if already enabled, the owner switches it off manually first). Run `HelperSpikeDeviceTest#activationAndShellUid` and `#survivesAppRestart`: activation and binder delivery must still pass, `getUid()==2000`. Record the APK/commit and logs.
 
 ## Phase 1 — TASK-015 study APK: install and first-run walkthrough (the first usable build)
 
 Do this first so the same APK is on the phone for everything else. Source: `android/Phase-One/evidence/task-015-study-apk.md` §5.
 
-**1a. Build + install (LEAD; 15-30 min, one Gradle run at a time):**
+**Real-device smoke record (2026-10-04, owner's Realme RMX2193, Android 11).** Study app `ai.eqo.app` **0.1.0** built from `main`:
+
+- **Install OK** — package present, app launches.
+- **Home screen** shows four buttons: *Run privileged action*, *Open-source notices*, *Set up EQO*, *Open the task screen*.
+- **Task screen** opens: capability rows read **"Not set up"** before setup; the Pause / Stop / Take over / Resume controls are present.
+- **Setup hub** rows were checked one by one.
+- **Accessibility:** enabling EQO accessibility FIRST **crashed the app** — `FATAL EXCEPTION`: *"Hilt service must be attached to an @HiltAndroidApp Application"*, with 28 missing production bindings across six donor seams. **Fixed in #61 (`4817126`).** After the fix, accessibility enabled and bound: `dumpsys accessibility` showed **`Crashed services {}`** and logcat had **no application `FATAL EXCEPTION`**.
+- **Helper:** activated over USB adb (`libeqo-starter.so --apk=...`); **"helper binder is alive"** was shown.
+- **Setup-hub rows** show their state words after #62 (`e089828`).
+- **Still pending (owner):** model-key entry (the owner types it on the phone; the lead must never type API keys); browser consent (the owner's decision). Wireless pairing is intentionally **off** in the study build.
+
+**1a. Build + install (LEAD; 15-30 min, one Gradle run at a time) — DONE 2026-10-04:**
 ```
 ./gradlew :app:assembleDebug
 "$ADB" install -r app/build/outputs/apk/debug/app-debug.apk 2>&1 | tee task-015-install.log
@@ -59,7 +66,7 @@ Do this first so the same APK is on the phone for everything else. Source: `andr
 ```
 Caveat (real): the task's own install command names `app-release.apk`, but the release build here is produced **unsigned** (`app-release-unsigned.apk`) and `android/app/build.gradle.kts` has no signing config, so the unsigned release cannot sideload. Install the debug APK for the walkthrough, and settle the signing decision before claiming TASK-015 acceptance criterion 1 ("the release APK builds reproducibly and installs").
 
-**1b. First-run walkthrough recording (BOTH):**
+**1b. First-run walkthrough recording (BOTH) — DONE (up to the model key) 2026-10-04:**
 ```
 "$ADB" shell screenrecord /sdcard/task-015-first-run.mp4 &
 "$ADB" shell am start -n ai.eqo.app/ai.eqo.MainActivity
@@ -72,12 +79,16 @@ Caveat (real): the task's own install command names `app-release.apk`, but the r
 ```
 Expected: every screen reachable without outside instructions. Honest state: the wireless-ADB and browser rows show "did not run — not available in the study build" (the study-flow gates are off pending the TASK-008 / TASK-010 SF-1 work). Acceptance criterion 2 ("a person who has not seen the project completes setup using only the app") therefore cannot be claimed until that pinning/socket work lands.
 
-**1b.1. Real-app accessibility smoke test (BOTH, required before declaring the APK usable):** enable accessibility on the REAL `ai.eqo.app`, not the `ai.eqo.test` harness, in Android Settings. Confirm the service stays bound and no `FATAL EXCEPTION` for `ai.eqo.app` appears in logcat. Capture both records:
+Observed 2026-10-04: home screen (four buttons), setup hub (rows checked one by one), task screen ("Not set up" rows; Pause/Stop/Take over/Resume) and the walkthrough up to the **model-key screen** were reached. Continuing past the model key needs the owner's key entry (the lead must never type API keys) and the browser-consent decision; both remain.
+
+**1b.1. Real-app accessibility smoke test (BOTH, required before declaring the APK usable) — DONE 2026-10-04 (after the #61 fix):** enable accessibility on the REAL `ai.eqo.app`, not the `ai.eqo.test` harness, in Android Settings. Confirm the service stays bound and no `FATAL EXCEPTION` for `ai.eqo.app` appears in logcat. Capture both records:
 ```
 "$ADB" shell dumpsys accessibility > task-015-real-app-accessibility.txt
 "$ADB" logcat -d > task-015-real-app-logcat.txt
 ```
 Inspect the bound-service list for `ai.eqo.app/ai.eqo.accessibility.EQOAccessibilityService` (not merely the enabled list). Toggle off/on, return to EQO and repeat; the process must survive. `RealAccessibilityServiceSmokeTest` is owner-pending and requires this manual OS grant; it must never self-enable accessibility. Test-app Hilt success is not production-app evidence.
+
+Observed 2026-10-04: the first enable **crashed** (`FATAL EXCEPTION`: "Hilt service must be attached to an @HiltAndroidApp Application"; 28 missing production bindings for six donor seams). #61 made the service plain and gave the app a production `EqoApplication`; after installing the fix, accessibility enabled and stayed bound — `dumpsys accessibility` showed `Crashed services {}` and there was no application `FATAL EXCEPTION`. The old test app `ai.eqo.test`, which held the accessibility entry, was uninstalled so the real `ai.eqo.app` service could bind (see §5 clean-up; re-install it only for TASK-009 instrumentation). A fresh off/on toggle record and the exact bound-service line were not separately captured and can be added on the next session.
 
 **1c. Per-capability readiness (BOTH):** every row shows its own state. Kill the helper / toggle accessibility off mid-run and confirm only the affected row and its dependents change. Nothing may flip a row it does not own.
 
@@ -168,9 +179,9 @@ Output: `android/Phase-One/evidence/exit-review.md` with the gate table, the ope
 ## Phase 5 — Clean-up (LEAD; ~5 min)
 
 - **Leftover helper process:** `"$ADB" shell ps -A | grep eqo_helper`. The helper exits when activation is revoked; if a stray `eqo_helper_server` remains after the tests, stop it only inside a window announced in the task thread (it is restarted by a new activation). Never `adb kill-server`.
-- **Test packages** to remove once the device work is over (switch the `ai.eqo.test` accessibility service off first in Settings > Additional Settings > Accessibility > Downloaded services):
+- **Test packages** to remove once the device work is over (switch the `ai.eqo.test` accessibility service off first in Settings > Additional Settings > Accessibility > Downloaded services). **Updated 2026-10-04:** `ai.eqo.test` was already uninstalled during the smoke because it held the accessibility entry; re-install it only when running TASK-009 instrumentation, and uninstall it again afterwards:
   ```
-  "$ADB" uninstall ai.eqo.test                 # TASK-009 instrumentation
+  "$ADB" uninstall ai.eqo.test                 # TASK-009 instrumentation (uninstalled 2026-10-04)
   "$ADB" uninstall ai.eqo.app.test             # TASK-007 instrumentation
   "$ADB" uninstall ai.eqo.helper.client.test   # TASK-007 mismatched-permission fixture
   ```
@@ -181,7 +192,7 @@ Output: `android/Phase-One/evidence/exit-review.md` with the gate table, the ope
 
 | Source | What | Must be done before |
 |---|---|---|
-| TASK-007 SF-1 | Manager self-grant removed entirely in task-060; all-module JVM guard prevents secure-settings permissions/writes returning | PENDING owner-presence device re-check: helper activation + binder delivery still work without the grant; `getUid()==2000`; accessibility is not auto-enabled |
+| TASK-007 SF-1 | Manager self-grant removed entirely in #60 (`7096870`); all-module JVM guard prevents secure-settings permissions/writes returning. The helper activated in the 2026-10-04 smoke ("helper binder is alive") | Still owed: the explicit SF-1 device re-check records — read-only before/after `enabled_accessibility_services`; `getUid()==2000`; accessibility is not auto-enabled |
 | TASK-007 SF-2 / SF-3 | No signing-cert / uid pin if the manager allowlist grows past one id; no binder-provenance check if the broadcast is ever sent cross-uid | Before the manager allowlist grows past one id / before the broadcast is sent cross-uid |
 | TASK-008 SF-1 | The connect-plane TLS accepts any server certificate (AOSP parity; loopback-only guard + annotations only) | Post-pairing server-key pinning / enrollment / rotation before any production caller uses the connect plane; it also blocks TASK-008 D2-D7 and the TASK-015 study gate |
 | TASK-010 SF-1 | The DevTools endpoint check is name-only | Socket-owner verification before any production CDP caller; it also blocks the TASK-010 device criteria and the TASK-015 study gate |
@@ -189,3 +200,30 @@ Output: `android/Phase-One/evidence/exit-review.md` with the gate table, the ope
 | Android 12/13 untested | No such device exists; only the `eqo-api31` / `eqo-api33` emulators | Test on 12/13, or record "untested", before TASK-016 gates 3/5/8 |
 | Shizuku naming | `NOTICE` flags the trademark question and claims nothing | Settle before any public distribution |
 | Issues #44 and #50 | Open follow-ups: #44 (cost-disclosure gate + redaction wiring), #50 (residual secure-window / untrusted-screen-text items) | Close as the work lands, before release |
+
+## Emulator route — Android 12+ (API 31 / API 33) [LEAD]
+
+Full feasibility, disk/RAM budget and the first-run step list: `docs/agents/EMULATOR-FEASIBILITY.md` (merged as #59, `efea2ab`). Use this for the Android 12/13 lanes (TASK-008 D8 and TASK-016 gates 3/5/8) while no physical 12/13 device exists. **Label every record "emulator".**
+
+- **AVDs already exist:** `eqo-api31` (Android 12) and `eqo-api33` (Android 13), both Pixel-6 profile, 2 GB RAM, 4 cores; both system images are already on disk (zero download). The AVD home is the **non-default** `C:\Users\<user>\Android\avd` — export it first or `avdmanager`/`emulator` report "no AVDs".
+- **Serialize with Gradle (15.7 GB host):** one emulator (~2.4–2.8 GB host footprint) and one Gradle build (~4–5 GB here) cannot cohabit safely. Stop Gradle daemons (`android\gradlew --stop`) before booting the emulator, and `adb emu kill` before starting a build. Never co-run the two.
+- Boot headless and wait for boot:
+  ```
+  export ANDROID_AVD_HOME='C:\Users\<user>\Android\avd'
+  "$ANDROID_HOME/emulator/emulator" -avd eqo-api31 -no-window -no-audio -no-snapshot -gpu swiftshader_indirect
+  "$ADB" wait-for-device
+  # poll until: "$ADB" shell getprop sys.boot_completed == 1  (first cold boot 5-15 min)
+  ```
+- Install the study APK: `"$ADB" install -r app/build/outputs/apk/debug/app-debug.apk`.
+
+**Accessibility on an emulator — an explicit emulator-only exception to the phone rules.** The safety rules above forbid writing secure settings, and on the owner's phone the owner enables accessibility by hand; that rule is about the owner's Realme RMX2193 and must never be relaxed on it. On the emulator there is no owner tap, so enable EQO's service one of these two ways:
+
+1. **UI automation (preferred — exercises the same Settings path as the phone):** drive Settings → Additional Settings → Accessibility → Downloaded apps → EQO and toggle it on (uiautomator taps over adb).
+2. **Emulator-only `settings put` exception (for repeated runs):**
+   ```
+   "$ADB" shell settings put secure enabled_accessibility_services ai.eqo.app/ai.eqo.accessibility.EQOAccessibilityService
+   "$ADB" shell settings put secure accessibility_enabled 1
+   ```
+   This is allowed **on the emulator only**. It is exactly what the phone rules forbid on the owner's phone, and it is why Realme records remain the authority for anything the OS grant can change.
+
+**What emulator evidence is not valid for:** wireless-debugging pairing UX and failure modes (the emulator network is NAT/simulated), and Realme/ColorOS OEM behaviour (battery/autostart killing, permission dialogs). Helper activation via `adb shell` is probably available on the google_apis (userdebug) images but unconfirmed — record it as "emulator, not evidence for on-device pairing".
