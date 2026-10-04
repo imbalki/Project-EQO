@@ -27,11 +27,12 @@ class WirelessAdbSetupActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.wireless_adb)
         findViewById<Button>(R.id.wireless_adb_run_button).setOnClickListener { runChecks() }
+        findViewById<Button>(R.id.setup_return_button).setOnClickListener { finish() }
         render()
     }
 
     private fun render() {
-        ActivationCheck.entries.forEach { check -> renderCheck(check, getString(R.string.state_not_set_up)) }
+        runChecks()
         findViewById<TextView>(R.id.wireless_adb_guidance).text = ""
         val gateNotice = findViewById<TextView>(R.id.wireless_adb_gate_notice)
         gateNotice.text =
@@ -73,12 +74,12 @@ class WirelessAdbSetupActivity : Activity() {
             if (permitted) {
                 ""
             } else {
-                "Pending ${StudyFlowGate.WIRELESS_CONNECT_PENDING_WORK}. Until then, follow the pairing steps " +
-                    "in Android's own settings: Developer options > Wireless debugging > " +
-                    "Pair device with pairing code, and read the pairing code, the pairing port and the " +
-                    "connection port exactly as Android shows them."
+                getString(R.string.wireless_adb_gated_notice)
             }
         findViewById<TextView>(R.id.wireless_adb_guidance).text = guidance
+        listOf(R.id.pairing_code_input, R.id.pairing_port_input, R.id.connection_port_input).forEach {
+            findViewById<android.widget.EditText>(it).isEnabled = permitted
+        }
     }
 
     private fun renderCheck(

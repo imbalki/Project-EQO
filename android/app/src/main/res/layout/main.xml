@@ -1,43 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <TextView
-        android:layout_width="wrap_content"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/eqo_label" />
-
-    <!-- TASK-008: wireless-ADB activation state (fresh install = activation required). -->
-    <TextView
-        android:id="@+id/activation_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/activation_required" />
-
-    <Button
-        android:id="@+id/privileged_action_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/privileged_action_button" />
-
-    <Button
-        android:id="@+id/notices_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/notices_button" />
-
-    <!-- TASK-015: entries into the guided onboarding and the study task screen. -->
-    <Button
-        android:id="@+id/open_setup_hub_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/setup_hub_title" />
-
-    <Button
-        android:id="@+id/open_task_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/setup_hub_open_task" />
-</LinearLayout>
+        android:orientation="vertical"
+        android:padding="16dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityHeading="true"
+            android:textStyle="bold"
+            android:text="@string/eqo_label" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/home_explanation" />
+        <TextView
+            android:id="@+id/activation_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite"
+            android:text="@string/activation_required" />
+        <Button
+            android:id="@+id/open_setup_hub_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/setup_hub_title" />
+        <Button
+            android:id="@+id/open_task_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/setup_hub_open_task" />
+        <Button
+            android:id="@+id/notices_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/notices_button" />
+        <Button
+            android:id="@+id/privileged_action_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/privileged_action_button" />
+    </LinearLayout>
+</ScrollView>

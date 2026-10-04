@@ -8,12 +8,11 @@ Upstream names and their notices appear here and in the app NOTICE file: OpenDro
 Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTICE file and in the repository LICENSES directory. This study build is provided for research use, without warranty of any kind.</string>
 
     <!-- TASK-008 (issue #13): first-run wireless-ADB activation surface. -->
-    <string name="activation_required">Activation required</string>
-    <string name="activation_active">Wireless ADB active</string>
-    <string name="activation_dialog_title">Wireless ADB</string>
-    <string name="privileged_action_button">Run privileged action</string>
-    <string name="privileged_feature_wireless_adb">Wireless ADB</string>
-    <string name="privileged_granted">Privileged action allowed.</string>
+    <string name="activation_required">Next: Set up EQO before trying the sample task. Some features are unavailable in this study build.</string>
+    <string name="activation_dialog_title">Helper availability</string>
+    <string name="privileged_action_button">Check helper availability</string>
+    <string name="privileged_feature_wireless_adb">Helper connection</string>
+    <string name="privileged_granted">The helper action is allowed. This check does not run a phone command.</string>
 
     <!-- TASK-015 (issue #20): capability row states (USER-FLOWS.md 16.2 wording). -->
     <string name="state_not_set_up">Not set up</string>
@@ -21,55 +20,55 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="state_ready">Ready</string>
     <string name="state_needs_attention">Needs attention</string>
     <string name="state_gated">Not available in the study build</string>
-    <string name="state_dependent">Dependent — re-check needed</string>
+    <string name="state_dependent">Check again — another connection changed</string>
 
     <!-- TASK-015: setup hub (UF-08, S-19). One row per capability, each showing its own state. -->
     <string name="setup_hub_title">Set up EQO</string>
-    <string name="setup_hub_subtitle">Each item below is checked on its own. Passing one never implies another is ready.</string>
-    <string name="setup_hub_row_model_key">Model key (OpenRouter)</string>
-    <string name="setup_hub_row_accessibility">Accessibility service</string>
+    <string name="setup_hub_subtitle">Tap the Next item to continue. Each item has its own check. Unavailable features cannot be finished in this study build.</string>
+    <string name="setup_hub_row_model_key">AI provider key (OpenRouter)</string>
+    <string name="setup_hub_row_accessibility">Screen control (Accessibility)</string>
     <string name="setup_hub_row_wireless_adb">Wireless debugging pairing</string>
-    <string name="setup_hub_row_helper">Privileged helper</string>
-    <string name="setup_hub_row_chrome_consent">Browser consent</string>
-    <string name="setup_hub_open_task">Open the task screen</string>
+    <string name="setup_hub_row_helper">Helper connection</string>
+    <string name="setup_hub_row_chrome_consent">Browser control (optional)</string>
+    <string name="setup_hub_open_task">Try the sample task</string>
     <string name="setup_hub_recheck">Re-check everything</string>
     <string name="setup_hub_recheck_complete">Re-check complete. Results updated below.</string>
 
     <!-- TASK-015: model key setup (UF-02, S-04/S-05). -->
-    <string name="model_key_title">Model key</string>
-    <string name="model_key_explanation">EQO needs your own model provider key. The key is stored in the Android Keystore and never written to logs.</string>
+    <string name="model_key_title">Connect your AI provider</string>
+    <string name="model_key_explanation">Paste your OpenRouter API key and a model name from your account, then tap Check and save key. Your key stays encrypted on this phone and is never logged. OpenRouter may charge your account for usage.</string>
     <string name="model_key_hint">OpenRouter API key</string>
-    <string name="model_model_hint">Model id to probe with (as listed by your provider)</string>
-    <string name="model_key_validate">Validate and store key</string>
+    <string name="model_model_hint">Model name from OpenRouter (for example, provider/model)</string>
+    <string name="model_key_validate">Check and save key</string>
     <string name="model_key_not_set">No key stored yet.</string>
     <string name="model_key_validating">Checking the key with the provider\u2026</string>
-    <string name="model_key_connected">Connected. The key is stored in the Android Keystore.</string>
-    <string name="model_key_validation_failed">The provider rejected the request.</string>
+    <string name="model_key_connected">Ready — your key is saved securely. Next: return to setup.</string>
+    <string name="model_key_validation_failed">Needs attention — checking or saving the key failed. Follow the guidance below.</string>
 
     <!-- TASK-015: accessibility setup (UF-03, S-06/S-07/S-25). -->
-    <string name="accessibility_title">Accessibility service</string>
-    <string name="accessibility_explanation">EQO drives apps through Android\'s accessibility service. You turn it on in Android\'s own settings — EQO never turns it on for you and never claims a grant it did not make.</string>
+    <string name="accessibility_title">Turn on screen control</string>
+    <string name="accessibility_explanation">EQO needs Accessibility to read and tap the screen for tasks you choose. Next: open Android Accessibility settings, find EQO under Downloaded apps and turn it on. Only you can change this setting.</string>
     <string name="accessibility_open_app_settings">Open EQO app info</string>
     <string name="accessibility_open_settings">Open Android Accessibility settings</string>
     <string name="accessibility_recheck">I turned it on — check again</string>
-    <string name="accessibility_enabled">The EQO accessibility service is on.</string>
+    <string name="accessibility_enabled">Ready — screen control is on. Next: return to setup.</string>
     <string name="accessibility_disabled">The EQO accessibility service is off. Open Settings &gt; Accessibility &gt; EQO and turn it on.</string>
     <string name="accessibility_restricted_hint">Android 13+ may block this grant for sideloaded apps. This is Android\'s protection, not an EQO error: Settings &gt; Apps &gt; EQO &gt; three-dot menu &gt; Allow restricted settings, then try the toggle again.</string>
 
     <!-- TASK-015: guided wireless ADB (UF-04/UF-05, S-08..S-11). Two ports, two names (REQ-ADB-05). -->
     <string name="wireless_adb_title">Wireless debugging</string>
-    <string name="wireless_adb_explanation">Android\'s wireless debugging uses two different ports. The pairing port is shown inside the "Pair device with pairing code" dialog, next to the pairing code. The connection port is the "IP address &amp; port" value on the wireless debugging screen itself.</string>
+    <string name="wireless_adb_explanation">Reference guide only: Settings → About phone → Build number (tap seven times) → Developer options → Wireless debugging → Pair device with pairing code. You do not need to do this for the unavailable feature in this build. Android\'s wireless debugging uses two different ports. The pairing port is shown inside the "Pair device with pairing code" dialog, next to the pairing code. The connection port is the "IP address &amp; port" value on the wireless debugging screen itself.</string>
     <string name="wireless_adb_pairing_code_hint">Pairing code (six digits)</string>
     <string name="wireless_adb_pairing_port_hint">Pairing port</string>
     <string name="wireless_adb_connection_port_hint">Connection port</string>
-    <string name="wireless_adb_run_checks">Run the activation checks</string>
+    <string name="wireless_adb_run_checks">Check feature availability</string>
     <string name="wireless_adb_check_pair">Pair</string>
     <string name="wireless_adb_check_connect">Connect</string>
     <string name="wireless_adb_check_helper_start">Helper start</string>
     <string name="wireless_adb_check_authorize">Helper authorization</string>
-    <string name="wireless_adb_check_binder">Binder health</string>
-    <string name="wireless_adb_check_not_run">Did not run — an earlier step failed first.</string>
-    <string name="wireless_adb_gated_notice">The live connection step is switched off in this study build until the server-key pinning work lands (security follow-up SF-1). The steps below still explain exactly what to tap in Android\'s own settings, and every check reports its own state.</string>
+    <string name="wireless_adb_check_binder">Helper connection health</string>
+    <string name="wireless_adb_check_not_run">Not checked — no connection was attempted.</string>
+    <string name="wireless_adb_gated_notice">Not available in this study build. The secure connection is not finished, so EQO cannot pair, connect or start the helper here. Next: return to setup. You do not need to change Android settings for this unavailable feature.</string>
 
     <!-- TASK-015: helper (UF-05, S-10/S-11). Its own capability, its own state. -->
 
@@ -80,9 +79,9 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="chrome_consent_decline_effect">Declining turns off browser control only. Everything else keeps working.</string>
     <string name="chrome_consent_accept">I understand — allow browser control</string>
     <string name="chrome_consent_decline">No thanks — keep browser control off</string>
-    <string name="chrome_consent_accepted">Browser control is allowed. Browser functions are still off in this study build (see the note below).</string>
-    <string name="chrome_consent_declined">Browser control is off. You can change this any time.</string>
-    <string name="chrome_consent_gated_notice">Browser functions are switched off in this study build until the debugging-endpoint ownership checks land (security follow-up SF-1). Your consent answer is kept either way, and no page content has been sent.</string>
+    <string name="chrome_consent_accepted">Choice saved: allow browser control. It is still unavailable in this study build. Next: return to setup.</string>
+    <string name="chrome_consent_declined">Choice saved: browser control off. Next: return to setup. You can change this any time.</string>
+    <string name="chrome_consent_gated_notice">Browser control is not available in this study build while connection safety checks are unfinished. Your choice is saved, but no web page content is sent. Next: choose your preference, then return to setup.</string>
 
     <!-- TASK-015: legal / open-source notices screen (UF-14, REQ-INS-03). -->
     <string name="legal_title">Legal &amp; open-source notices</string>
@@ -91,14 +90,14 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="legal_close">Close</string>
 
     <!-- TASK-015: task screen (UF-09/UF-10, REQ-TASK-01..07). -->
-    <string name="task_title">Task</string>
+    <string name="task_title">Sample task</string>
     <string name="task_start">Run the sample task</string>
     <string name="task_pause">Pause after the current step</string>
     <string name="task_stop">Stop completely</string>
     <string name="task_takeover">Take over now</string>
     <string name="task_resume">Resume after my confirmation</string>
     <string name="task_resume_confirm_title">Resume the task?</string>
-    <string name="task_resume_confirm_message">EQO continues from where it paused. It re-checks the screen before doing anything else.</string>
+    <string name="task_resume_confirm_message">EQO continues from where it paused and checks the screen again. Sensitive steps still need your approval. Cancel keeps the task paused.</string>
     <string name="task_resume_confirm_yes">Yes, resume</string>
     <string name="task_approval_title">Approve this step?</string>
     <plurals name="task_approval_countdown">
@@ -108,4 +107,57 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_approval_approve">Approve</string>
     <string name="task_approval_reject">Reject</string>
     <string name="task_unknown_result">Unknown result — verify manually.</string>
+
+    <!-- Owner-facing presentation; readiness and safety decisions stay in their own models. -->
+    <string name="home_explanation">Start with setup. The sample reads the screen, scrolls down and opens an SMS draft after approval; it never sends a message. This study build is not a general task assistant yet.</string>
+    <string name="setup_return">Return to setup</string>
+    <string name="setup_next">Next: %1$s</string>
+    <string name="setup_row_format">%1$s — %2$s\n%3$s</string>
+    <string name="setup_row_next">Next: %1$s</string>
+    <string name="setup_all_ready">Ready — next: try the sample task.</string>
+    <string name="hint_model">Tap to enter or check your provider key.</string>
+    <string name="hint_accessibility">Tap to open Android settings and turn on screen control.</string>
+    <string name="hint_wireless">Tap to read the guide. This connection is unavailable in the study build.</string>
+    <string name="hint_helper">Tap to review the helper guide. This build cannot start the helper here; it must report its own healthy connection.</string>
+    <string name="hint_browser">Tap to choose whether browser control may be used. It is optional and unavailable in this build.</string>
+    <string name="hint_ready">Ready. Tap to review or change this item.</string>
+    <string name="hint_wait">Checking — wait for the result before checking again.</string>
+    <string name="hint_blocked">Unavailable in this build. You cannot finish this item here; tap for details.</string>
+    <string name="model_empty">Enter both the API key and model name, then tap Check and save key.</string>
+    <string name="model_storage_failed">The key could not be saved securely. Check your phone storage and try Check and save key again.</string>
+    <string name="model_error_auth">OpenRouter rejected the key. Copy the whole key again, then check it.</string>
+    <string name="model_error_rate">OpenRouter is busy. Wait a while, then tap Check and save key. EQO will not retry automatically.</string>
+    <string name="model_error_credit">Your OpenRouter account needs credit. Add credit at openrouter.ai/credits, then check again.</string>
+    <string name="model_error_model">This model cannot handle the request. Choose another model name from OpenRouter, then check again.</string>
+    <string name="model_error_network">Could not reach OpenRouter. Check your internet connection, then check again. EQO will not retry automatically.</string>
+    <string name="accessibility_steps_copy">1. Open Android Settings → Accessibility → Downloaded apps (the name may vary by phone).\n2. Select EQO and turn it on after reading Android’s warning.\n3. Come back here to see the check result.</string>
+    <string name="accessibility_checked">Check complete. Screen control status updated.</string>
+    <string name="chrome_consent_unanswered">Next: choose whether to allow browser control. No choice has been saved yet.</string>
+    <string name="task_idle">Not started. Next: review setup, then run the sample when ready.</string>
+    <string name="task_explanation">Sample only: read the current screen, scroll down, then open an SMS draft after approval. Nothing is sent. Pause waits for the current step; Stop ends the run; Take over returns control to you.</string>
+    <string name="task_step_observe">Read the current screen</string>
+    <string name="task_step_scroll">Scroll down</string>
+    <string name="task_step_compose">Open an SMS draft (does not send)</string>
+    <string name="task_step_other">Task step</string>
+    <string name="task_pending">Waiting</string>
+    <string name="task_running">Working</string>
+    <string name="task_done">Done</string>
+    <string name="task_failed">Needs attention — review setup before trying again.</string>
+    <string name="task_paused">Paused — resume only when you choose and confirm.</string>
+    <string name="task_cancelled">Stopped or cancelled</string>
+    <string name="task_completed">Completed — check the result on your phone.</string>
+    <string name="task_approval_context">Action: %1$s\nTarget: %2$s\nApp: %3$s</string>
+    <string name="task_none">None</string>
+    <string name="task_receipt_format">Result: %1$s\nDone: %2$s\nDid not run: %3$s</string>
+    <string name="task_receipt_unknown">\nUnknown result — check on your phone: %1$s</string>
+    <string name="task_draft_body">EQO study draft — nothing is sent without you</string>
+    <string name="task_rejected">You rejected this step.</string>
+    <string name="task_current_app">The current app</string>
+    <string name="task_helper_lost">The helper stopped responding. Return to setup to review its connection.</string>
+    <string name="task_permission_missing">An Android permission is missing. Open Settings → Apps → EQO → Permissions to review it. EQO cannot grant it.</string>
+    <string name="task_step_failed">The step could not finish. Check the current screen and setup, then decide whether to try again.</string>
+    <string name="task_draft_opened">Draft opened in the messaging app. Nothing was sent.</string>
+    <string name="task_target_format">Recipient: %1$s; Message: %2$s</string>
+    <string name="task_no_recipient">No recipient selected</string>
+    <string name="task_did_not_run">This step did not run. It was skipped or cancelled before completion; check the task result above.</string>
 </resources>

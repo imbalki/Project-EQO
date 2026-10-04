@@ -14,6 +14,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/legal_title"
+            android:accessibilityHeading="true"
             android:textStyle="bold" />
 
         <TextView
@@ -34,8 +35,9 @@
 
         <Button
             android:id="@+id/legal_close_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/legal_close" />
+            android:text="@string/legal_close"
+            android:minHeight="48dp" />
     </LinearLayout>
 </ScrollView>

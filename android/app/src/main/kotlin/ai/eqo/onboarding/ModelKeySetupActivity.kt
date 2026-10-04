@@ -30,16 +30,18 @@ class ModelKeySetupActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.model_key)
         findViewById<Button>(R.id.model_key_validate_button).setOnClickListener { validate() }
+        findViewById<Button>(R.id.setup_return_button).setOnClickListener { finish() }
         render()
     }
 
     private fun render() {
+        findViewById<Button>(R.id.model_key_validate_button).isEnabled = StudySetup.modelKey != ModelKeyState.VALIDATING
         val status = findViewById<TextView>(R.id.model_key_status)
         val guidance = findViewById<TextView>(R.id.model_key_guidance)
         when (StudySetup.modelKey) {
             ModelKeyState.NOT_SET -> {
                 status.setText(R.string.model_key_not_set)
-                guidance.text = ""
+                guidance.text = lastFailureGuidance
             }
             ModelKeyState.VALIDATING -> {
                 status.setText(R.string.model_key_validating)
@@ -65,7 +67,7 @@ class ModelKeySetupActivity : Activity() {
         val key = findViewById<EditText>(R.id.model_key_input).text.toString().trim()
         val model = findViewById<EditText>(R.id.model_model_input).text.toString().trim()
         if (key.isBlank() || model.isBlank()) {
-            lastFailureGuidance = getString(R.string.model_key_explanation)
+            lastFailureGuidance = getString(R.string.model_empty)
             StudySetup.modelKey = ModelKeyState.NOT_SET
             render()
             return
@@ -106,15 +108,22 @@ class ModelKeySetupActivity : Activity() {
                     if (stored is CredentialStoreResult.Success) {
                         ""
                     } else {
-                        FailureClass.MODEL_UNAUTHORIZED.repair
+                        getString(R.string.model_storage_failed)
                     }
             }
             is ConnectionTestState.Failed -> {
                 StudySetup.modelKey = ModelKeyState.FAILED
                 val recovery = FailureClass.forLlmErrorCode(state.error.code)
                 lastFailureGuidance =
-                    (recovery?.repair ?: FailureClass.MODEL_NETWORK.repair) +
-                    "\n" + (recovery?.resumeRule ?: FailureClass.MODEL_NETWORK.resumeRule)
+                    getString(
+                        when (recovery) {
+                            FailureClass.MODEL_UNAUTHORIZED -> R.string.model_error_auth
+                            FailureClass.MODEL_RATE_LIMITED -> R.string.model_error_rate
+                            FailureClass.MODEL_CREDIT -> R.string.model_error_credit
+                            FailureClass.MODEL_INCOMPATIBLE -> R.string.model_error_model
+                            else -> R.string.model_error_network
+                        },
+                    )
             }
             else -> {
                 StudySetup.modelKey = ModelKeyState.NOT_SET

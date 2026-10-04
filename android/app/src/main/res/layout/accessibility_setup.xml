@@ -14,6 +14,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/accessibility_title"
+            android:accessibilityHeading="true"
             android:textStyle="bold" />
 
         <TextView
@@ -26,26 +27,24 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-        <Button
-            android:id="@+id/accessibility_app_settings_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/accessibility_open_app_settings" />
 
         <Button
             android:id="@+id/accessibility_settings_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/accessibility_open_settings" />
+            android:text="@string/accessibility_open_settings"
+            android:minHeight="48dp" />
 
         <Button
             android:id="@+id/accessibility_recheck_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/accessibility_recheck" />
+            android:text="@string/accessibility_recheck"
+            android:minHeight="48dp" />
 
         <TextView
             android:id="@+id/accessibility_status"
+            android:accessibilityLiveRegion="polite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/accessibility_disabled" />
@@ -55,5 +54,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/accessibility_restricted_hint" />
+        <Button
+            android:id="@+id/setup_return_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/setup_return" />
+        <Button
+            android:id="@+id/accessibility_app_settings_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/accessibility_open_app_settings"
+            android:minHeight="48dp" />
     </LinearLayout>
 </ScrollView>

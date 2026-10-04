@@ -14,6 +14,7 @@ import android.app.Activity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 
 class AccessibilitySetupActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,7 +26,11 @@ class AccessibilitySetupActivity : Activity() {
         findViewById<Button>(R.id.accessibility_settings_button).setOnClickListener {
             startActivity(AccessibilitySetupGuide.accessibilitySettingsIntent())
         }
-        findViewById<Button>(R.id.accessibility_recheck_button).setOnClickListener { render() }
+        findViewById<Button>(R.id.accessibility_recheck_button).setOnClickListener {
+            render()
+            Toast.makeText(this, R.string.accessibility_checked, Toast.LENGTH_SHORT).show()
+        }
+        findViewById<Button>(R.id.setup_return_button).setOnClickListener { finish() }
         render()
     }
 
@@ -36,20 +41,13 @@ class AccessibilitySetupActivity : Activity() {
     }
 
     private fun render() {
-        val steps =
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                AccessibilitySetupGuide.stepsForApi33Plus()
-            } else {
-                AccessibilitySetupGuide.stepsForApi30To32()
-            }
-        findViewById<TextView>(R.id.accessibility_steps).text =
-            steps.joinToString("\n\n") { step -> "${step.order}. ${step.screen}\n${step.instruction}" }
+        findViewById<TextView>(R.id.accessibility_steps).setText(R.string.accessibility_steps_copy)
         val enabled = StudySetup.accessibilityServiceEnabled(this)
         findViewById<TextView>(R.id.accessibility_status).setText(
             if (enabled) R.string.accessibility_enabled else R.string.accessibility_disabled,
         )
         findViewById<TextView>(R.id.accessibility_guidance).text =
-            if (enabled) {
+            if (enabled || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {
                 ""
             } else {
                 getString(R.string.accessibility_restricted_hint)

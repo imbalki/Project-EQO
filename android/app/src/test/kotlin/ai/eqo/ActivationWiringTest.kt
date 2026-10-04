@@ -12,16 +12,17 @@ import java.io.File
  * privileged entry points refuse with guidance until done."
  *
  * The behavior of the gate itself is tested in :adb-pairing; this guard pins the app-side
- * wiring and the exact user-visible literal, in the source-guard style of
+ * wiring and the user-visible next-step guidance, in the source-guard style of
  * `MainActivityTest` / `AllowBackupManifestTest`.
  */
 class ActivationWiringTest {
     @Test
-    fun activationRequiredLiteralMatchesTheGate() {
+    fun activationRequiredCopyExplainsTheNextStepWithoutChangingTheGate() {
         val strings = File("src/main/res/values/strings.xml").readText()
         val literal = Regex("<string name=\"activation_required\">([^<]+)</string>").find(strings)?.groupValues?.get(1)
-        assertEquals("Activation required", literal)
-        assertEquals(literal, WirelessAdbActivation().activationRequiredMessage)
+        assertTrue(literal?.contains("Next: Set up EQO") == true)
+        assertTrue(literal?.contains("unavailable") == true)
+        assertEquals("Activation required", WirelessAdbActivation().activationRequiredMessage)
     }
 
     @Test

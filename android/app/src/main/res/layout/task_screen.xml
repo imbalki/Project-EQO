@@ -14,18 +14,31 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/task_title"
+            android:accessibilityHeading="true"
             android:textStyle="bold" />
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/task_explanation" />
+        <Button
+            android:id="@+id/task_setup_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/setup_hub_title" />
+        <TextView
             android:id="@+id/task_state"
+            android:accessibilityLiveRegion="polite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <Button
             android:id="@+id/task_start_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/task_start" />
+            android:text="@string/task_start"
+            android:minHeight="48dp" />
 
         <!-- One row per step: name, live state, elapsed time (REQ-TASK-01). -->
         <LinearLayout
@@ -36,30 +49,35 @@
 
         <Button
             android:id="@+id/task_pause_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/task_pause" />
+            android:text="@string/task_pause"
+            android:minHeight="48dp" />
 
         <Button
             android:id="@+id/task_stop_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/task_stop" />
+            android:text="@string/task_stop"
+            android:minHeight="48dp" />
 
         <Button
             android:id="@+id/task_takeover_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/task_takeover" />
+            android:text="@string/task_takeover"
+            android:minHeight="48dp" />
 
         <Button
             android:id="@+id/task_resume_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/task_resume" />
+            android:text="@string/task_resume"
+            android:minHeight="48dp" />
 
         <TextView
             android:id="@+id/task_receipt"
+            android:accessibilityLiveRegion="polite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>

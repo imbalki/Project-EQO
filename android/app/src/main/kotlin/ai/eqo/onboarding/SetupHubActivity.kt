@@ -13,9 +13,11 @@ import ai.eqo.legal.LegalNoticesActivity
 import ai.eqo.study.CapabilityId
 import ai.eqo.study.CapabilityState
 import ai.eqo.study.CapabilityStatus
+import ai.eqo.study.ReadinessSnapshot
 import ai.eqo.task.TaskActivity
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -69,6 +71,15 @@ class SetupHubActivity : Activity() {
     /** Re-reads every capability through its own probe and renders one row per capability. */
     private fun render() {
         val snapshot = StudySetup.snapshot(applicationContext, helperState = StudySetup.helper.state)
+        val next = nextCapability(snapshot)
+        findViewById<TextView>(R.id.setup_next).text =
+            if (next ==
+                null
+            ) {
+                getString(R.string.setup_all_ready)
+            } else {
+                getString(R.string.setup_next, getString(rowHint(next, snapshot.rowFor(next)?.state)))
+            }
         renderRow(R.id.row_model_key, R.string.setup_hub_row_model_key, snapshot.rowFor(CapabilityId.MODEL_KEY))
         renderRow(
             R.id.row_accessibility,
@@ -86,6 +97,12 @@ class SetupHubActivity : Activity() {
             R.string.setup_hub_row_chrome_consent,
             snapshot.rowFor(CapabilityId.CHROME_CONSENT),
         )
+        rowIds.forEach { (id, viewId) ->
+            val view = findViewById<TextView>(viewId)
+            view.isSelected = id == next
+            view.setTypeface(null, if (id == next) Typeface.BOLD else Typeface.NORMAL)
+            if (id == next) view.text = getString(R.string.setup_row_next, view.text)
+        }
     }
 
     private fun renderRow(
@@ -94,17 +111,21 @@ class SetupHubActivity : Activity() {
         status: CapabilityStatus?,
     ) {
         val state = status?.state ?: CapabilityState.NOT_STARTED
-        val text =
-            buildString {
-                append(getString(labelId))
-                append(" — ")
-                append(getString(stateLabel(state)))
-                status?.takeIf { it.detail.isNotBlank() }?.let { append("\n").append(it.detail) }
-                status?.takeIf { it.guidance.isNotBlank() && state != CapabilityState.READY }?.let {
-                    append("\n").append(it.guidance)
-                }
+        val hint = rowHint(status?.id ?: CapabilityId.MODEL_KEY, state)
+        val guidance =
+            if (status?.id == CapabilityId.CHROME_CONSENT && StudySetup.consent != ConsentDecision.UNANSWERED) {
+                getString(
+                    if (StudySetup.consent == ConsentDecision.DECLINED) {
+                        R.string.chrome_consent_declined
+                    } else {
+                        R.string.chrome_consent_accepted
+                    },
+                )
+            } else {
+                getString(hint)
             }
-        findViewById<TextView>(viewId).text = text
+        findViewById<TextView>(viewId).text =
+            getString(R.string.setup_row_format, getString(labelId), getString(stateLabel(state)), guidance)
     }
 
     /**
@@ -112,6 +133,44 @@ class SetupHubActivity : Activity() {
      * reads the binder state; it never derives it from another capability.
      */
     companion object {
+        val rowIds =
+            linkedMapOf(
+                CapabilityId.MODEL_KEY to R.id.row_model_key,
+                CapabilityId.ACCESSIBILITY to R.id.row_accessibility,
+                CapabilityId.WIRELESS_ADB to R.id.row_wireless_adb,
+                CapabilityId.HELPER to R.id.row_helper,
+                CapabilityId.CHROME_CONSENT to R.id.row_chrome_consent,
+            )
+
+        fun nextCapability(snapshot: ReadinessSnapshot): CapabilityId? {
+            val pending = rowIds.keys.filter { snapshot.rowFor(it)?.state != CapabilityState.READY }
+            return pending.firstOrNull {
+                snapshot.rowFor(it)?.state !in listOf(CapabilityState.GATED, CapabilityState.IN_PROGRESS)
+            } ?: pending.firstOrNull()
+        }
+
+        @StringRes
+        fun rowHint(
+            id: CapabilityId,
+            state: CapabilityState?,
+        ): Int =
+            when (state) {
+                CapabilityState.READY -> R.string.hint_ready
+                CapabilityState.IN_PROGRESS -> R.string.hint_wait
+                CapabilityState.GATED -> R.string.hint_blocked
+                else -> hintLabel(id)
+            }
+
+        @StringRes
+        fun hintLabel(id: CapabilityId): Int =
+            when (id) {
+                CapabilityId.MODEL_KEY -> R.string.hint_model
+                CapabilityId.ACCESSIBILITY -> R.string.hint_accessibility
+                CapabilityId.WIRELESS_ADB -> R.string.hint_wireless
+                CapabilityId.HELPER -> R.string.hint_helper
+                CapabilityId.CHROME_CONSENT -> R.string.hint_browser
+            }
+
         /** USER-FLOWS.md §16.2 row-state wording. */
         @StringRes
         fun stateLabel(state: CapabilityState): Int =

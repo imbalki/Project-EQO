@@ -14,6 +14,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/wireless_adb_title"
+            android:accessibilityHeading="true"
             android:textStyle="bold" />
 
         <TextView
@@ -33,7 +34,8 @@
             android:layout_height="wrap_content"
             android:hint="@string/wireless_adb_pairing_code_hint"
             android:importantForAutofill="no"
-            android:inputType="number" />
+            android:inputType="number"
+            android:minHeight="48dp" />
 
         <EditText
             android:id="@+id/pairing_port_input"
@@ -41,7 +43,8 @@
             android:layout_height="wrap_content"
             android:hint="@string/wireless_adb_pairing_port_hint"
             android:importantForAutofill="no"
-            android:inputType="number" />
+            android:inputType="number"
+            android:minHeight="48dp" />
 
         <EditText
             android:id="@+id/connection_port_input"
@@ -49,13 +52,15 @@
             android:layout_height="wrap_content"
             android:hint="@string/wireless_adb_connection_port_hint"
             android:importantForAutofill="no"
-            android:inputType="number" />
+            android:inputType="number"
+            android:minHeight="48dp" />
 
         <Button
             android:id="@+id/wireless_adb_run_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/wireless_adb_run_checks" />
+            android:text="@string/wireless_adb_run_checks"
+            android:minHeight="48dp" />
 
         <TextView
             android:id="@+id/check_pair_status"
@@ -91,5 +96,11 @@
             android:id="@+id/wireless_adb_guidance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+        <Button
+            android:id="@+id/setup_return_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/setup_return" />
     </LinearLayout>
 </ScrollView>

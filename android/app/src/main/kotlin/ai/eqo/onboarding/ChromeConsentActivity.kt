@@ -31,6 +31,7 @@ class ChromeConsentActivity : Activity() {
         findViewById<Button>(R.id.chrome_consent_decline_button).setOnClickListener {
             recordConsent(ConsentDecision.DECLINED)
         }
+        findViewById<Button>(R.id.setup_return_button).setOnClickListener { finish() }
         render()
     }
 
@@ -46,7 +47,7 @@ class ChromeConsentActivity : Activity() {
         val status = findViewById<TextView>(R.id.chrome_consent_status)
         status.text =
             when (StudySetup.consent) {
-                ConsentDecision.UNANSWERED -> ""
+                ConsentDecision.UNANSWERED -> getString(R.string.chrome_consent_unanswered)
                 ConsentDecision.ACCEPTED -> getString(R.string.chrome_consent_accepted)
                 ConsentDecision.DECLINED -> getString(R.string.chrome_consent_declined)
             }

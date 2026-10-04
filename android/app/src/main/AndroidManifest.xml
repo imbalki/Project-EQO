@@ -8,7 +8,8 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/eqo_label">
+        android:label="@string/eqo_label"
+        android:theme="@style/StudyTheme">
         <activity
             android:name=".MainActivity"
             android:exported="true">

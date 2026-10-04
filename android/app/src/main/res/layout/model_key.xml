@@ -14,6 +14,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/model_key_title"
+            android:accessibilityHeading="true"
             android:textStyle="bold" />
 
         <TextView
@@ -27,7 +28,8 @@
             android:layout_height="wrap_content"
             android:hint="@string/model_key_hint"
             android:importantForAutofill="no"
-            android:inputType="textPassword" />
+            android:inputType="textPassword"
+            android:minHeight="48dp" />
 
         <EditText
             android:id="@+id/model_model_input"
@@ -35,16 +37,19 @@
             android:layout_height="wrap_content"
             android:hint="@string/model_model_hint"
             android:importantForAutofill="no"
-            android:inputType="text" />
+            android:inputType="text"
+            android:minHeight="48dp" />
 
         <Button
             android:id="@+id/model_key_validate_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/model_key_validate" />
+            android:text="@string/model_key_validate"
+            android:minHeight="48dp" />
 
         <TextView
             android:id="@+id/model_key_status"
+            android:accessibilityLiveRegion="polite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/model_key_not_set" />
@@ -53,5 +58,11 @@
             android:id="@+id/model_key_guidance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+        <Button
+            android:id="@+id/setup_return_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/setup_return" />
     </LinearLayout>
 </ScrollView>

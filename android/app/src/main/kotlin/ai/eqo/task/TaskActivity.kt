@@ -18,14 +18,17 @@ import ai.eqo.core.agent.LoopStep
 import ai.eqo.core.agent.UserResumeConfirmation
 import ai.eqo.data.models.PlanStatus
 import ai.eqo.helper.client.HelperActivationState
+import ai.eqo.onboarding.SetupHubActivity
 import ai.eqo.onboarding.StudySetup
 import ai.eqo.study.ApprovalOutcome
 import ai.eqo.study.ApprovalRequest
+import ai.eqo.study.FailureClass
 import ai.eqo.study.RunReceipt
 import ai.eqo.study.StepProgress
 import ai.eqo.study.StepProgressState
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
@@ -60,7 +63,11 @@ class TaskActivity : Activity() {
         protectConfirmationTouches(resumeButton)
         resumeButton.setOnClickListener { confirmResume() }
         renderSteps(sampleSteps().map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
-        findViewById<TextView>(R.id.task_state).text = ""
+        renderPlanStatus(PlanStatus.PENDING)
+        findViewById<TextView>(R.id.task_state).setText(R.string.task_idle)
+        findViewById<Button>(R.id.task_setup_button).setOnClickListener {
+            startActivity(Intent(this, SetupHubActivity::class.java))
+        }
     }
 
     /**
@@ -81,6 +88,7 @@ class TaskActivity : Activity() {
     }
 
     private fun startRun() {
+        renderPlanStatus(PlanStatus.RUNNING)
         val steps = sampleSteps()
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
         val permissionCheck =
@@ -138,9 +146,18 @@ class TaskActivity : Activity() {
             mainHandler.post {
                 val message =
                     buildString {
-                        append("Action: ").append(request.action).append('\n')
-                        append("Target: ").append(request.target).append('\n')
-                        append("App: ").append(request.app).append("\n\n")
+                        append(
+                            getString(
+                                R.string.task_approval_context,
+                                actionLabel(request.action),
+                                approvalTarget(request.target),
+                                if (request.app == "the current app") {
+                                    getString(R.string.task_current_app)
+                                } else {
+                                    request.app
+                                },
+                            ),
+                        ).append("\n\n")
                         append(
                             approvalCountdown((request.timeoutMs / MS_PER_SECOND).toInt()),
                         )
@@ -159,7 +176,7 @@ class TaskActivity : Activity() {
                         }.setNegativeButton(R.string.task_approval_reject) { _, _ ->
                             if (settled.compareAndSet(false, true)) {
                                 countdown.removeCallbacksAndMessages(null)
-                                continuation.resume(ApprovalOutcome.Rejected("you rejected this step"))
+                                continuation.resume(ApprovalOutcome.Rejected(getString(R.string.task_rejected)))
                             }
                         }.setOnCancelListener {
                             if (settled.compareAndSet(false, true)) {
@@ -202,7 +219,14 @@ class TaskActivity : Activity() {
     private val countdown = Handler(Looper.getMainLooper())
 
     private fun renderPlanStatus(status: PlanStatus) {
-        findViewById<TextView>(R.id.task_state).text = status.name
+        findViewById<TextView>(R.id.task_state).text = planLabel(status.name)
+        val running = status == PlanStatus.RUNNING
+        val paused = status == PlanStatus.PAUSED
+        findViewById<Button>(R.id.task_start_button).isEnabled = !running && !paused
+        findViewById<Button>(R.id.task_pause_button).isEnabled = running
+        findViewById<Button>(R.id.task_stop_button).isEnabled = running || paused
+        findViewById<Button>(R.id.task_takeover_button).isEnabled = running
+        findViewById<Button>(R.id.task_resume_button).isEnabled = paused
     }
 
     private fun renderSteps(steps: List<StepProgress>) {
@@ -232,32 +256,83 @@ class TaskActivity : Activity() {
     private fun stepLabel(step: StepProgress): String {
         val state =
             when (step.state) {
-                StepProgressState.PENDING -> getString(R.string.state_not_set_up)
-                StepProgressState.RUNNING -> getString(R.string.state_checking)
-                StepProgressState.DONE -> getString(R.string.state_ready)
-                StepProgressState.FAILED -> getString(R.string.state_needs_attention)
+                StepProgressState.PENDING -> getString(R.string.task_pending)
+                StepProgressState.RUNNING -> getString(R.string.task_running)
+                StepProgressState.DONE -> getString(R.string.task_done)
+                StepProgressState.FAILED -> getString(R.string.task_failed)
                 StepProgressState.UNKNOWN -> getString(R.string.task_unknown_result)
             }
-        return "${step.name} — $state" + if (step.detail.isBlank()) "" else "\n${step.detail}"
+        return getString(R.string.setup_row_format, actionLabel(step.name), state, stepDetail(step))
     }
 
     /** The end-of-run receipt: what happened, what did not, what is unknown (REQ-TASK-06). */
     private fun renderReceipt(receipt: RunReceipt) {
         renderSteps(receipt.steps)
+
+        fun names(ids: List<String>): String =
+            ids
+                .joinToString(", ") { id -> actionLabel(receipt.steps.first { it.stepId == id }.name) }
+                .ifBlank { getString(R.string.task_none) }
         val text =
-            buildString {
-                append("Terminal: ").append(receipt.terminal).append('\n')
-                val executed = receipt.executedStepIds.joinToString(", ").ifBlank { "(none)" }
-                append("Executed: ").append(executed).append('\n')
-                val notExecuted = receipt.notExecutedStepIds.joinToString(", ").ifBlank { "(none)" }
-                append("Did not run: ").append(notExecuted).append('\n')
-                if (receipt.unknownResultStepIds.isNotEmpty()) {
-                    append("Unknown result — verify manually: ")
-                        .append(receipt.unknownResultStepIds.joinToString(", "))
+            getString(
+                R.string.task_receipt_format,
+                planLabel(receipt.terminal),
+                names(receipt.executedStepIds),
+                names(receipt.notExecutedStepIds),
+            ) +
+                if (receipt.unknownResultStepIds.isEmpty()) {
+                    ""
+                } else {
+                    getString(R.string.task_receipt_unknown, names(receipt.unknownResultStepIds))
                 }
-            }
         findViewById<TextView>(R.id.task_receipt).text = text
     }
+
+    private fun approvalTarget(target: String): String =
+        if (target.startsWith("to=") && target.contains(", body=")) {
+            getString(
+                R.string.task_target_format,
+                target.removePrefix("to=").substringBefore(", body=").ifBlank { getString(R.string.task_no_recipient) },
+                target.substringAfter(", body="),
+            )
+        } else {
+            target
+        }
+
+    private fun actionLabel(action: String): String =
+        getString(
+            when (action) {
+                "observe" -> R.string.task_step_observe
+                "scroll" -> R.string.task_step_scroll
+                "compose_sms" -> R.string.task_step_compose
+                else -> R.string.task_step_other
+            },
+        )
+
+    private fun planLabel(status: String): String =
+        getString(
+            when (status) {
+                "PROPOSED", "PENDING", "NONE" -> R.string.task_pending
+                "RUNNING" -> R.string.task_running
+                "COMPLETED" -> R.string.task_completed
+                "FAILED" -> R.string.task_failed
+                "PAUSED" -> R.string.task_paused
+                "STOPPED", "CANCELLED" -> R.string.task_cancelled
+                else -> R.string.task_unknown_result
+            },
+        )
+
+    private fun stepDetail(step: StepProgress): String =
+        when {
+            step.detail == FailureClass.A11Y_LOST.repair -> getString(R.string.accessibility_disabled)
+            step.detail == FailureClass.BINDER_DEAD.repair -> getString(R.string.task_helper_lost)
+            step.detail.startsWith("Android permission ") -> getString(R.string.task_permission_missing)
+            step.state == StepProgressState.PENDING && step.detail.isNotBlank() -> getString(R.string.task_did_not_run)
+            step.state == StepProgressState.UNKNOWN -> getString(R.string.task_unknown_result)
+            step.state == StepProgressState.FAILED -> getString(R.string.task_step_failed)
+            step.state == StepProgressState.DONE && step.name == "compose_sms" -> getString(R.string.task_draft_opened)
+            else -> ""
+        }
 
     /**
      * The study sample plan: reversible automation verbs plus one outward step that is
@@ -279,7 +354,7 @@ class TaskActivity : Activity() {
                 action =
                     ExecutedAction(
                         name = "compose_sms",
-                        params = mapOf("to" to "", "body" to "EQO study draft — nothing is sent without you"),
+                        params = mapOf("to" to "", "body" to getString(R.string.task_draft_body)),
                         irreversible = false,
                         expectedPostconditions = listOf("messaging composer opened with the draft"),
                     ),

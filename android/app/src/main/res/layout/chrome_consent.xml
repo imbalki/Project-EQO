@@ -14,6 +14,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/chrome_consent_title"
+            android:accessibilityHeading="true"
             android:textStyle="bold" />
 
         <TextView
@@ -33,18 +34,21 @@
 
         <Button
             android:id="@+id/chrome_consent_accept_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/chrome_consent_accept" />
+            android:text="@string/chrome_consent_accept"
+            android:minHeight="48dp" />
 
         <Button
             android:id="@+id/chrome_consent_decline_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/chrome_consent_decline" />
+            android:text="@string/chrome_consent_decline"
+            android:minHeight="48dp" />
 
         <TextView
             android:id="@+id/chrome_consent_status"
+            android:accessibilityLiveRegion="polite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
@@ -53,5 +57,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/chrome_consent_gated_notice" />
+        <Button
+            android:id="@+id/setup_return_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/setup_return" />
     </LinearLayout>
 </ScrollView>
