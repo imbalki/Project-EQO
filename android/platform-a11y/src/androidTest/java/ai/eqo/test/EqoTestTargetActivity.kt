@@ -7,6 +7,7 @@
  */
 package ai.eqo.test
 
+import ai.eqo.platform.test.R
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.graphics.Color

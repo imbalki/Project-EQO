@@ -65,6 +65,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
+    testImplementation(libs.work.testing)
     testImplementation(platform(libs.okhttp.bom))
     testImplementation(libs.mockwebserver3)
     // F4 (TASK-006 security pass): a real TLS MockWebServer for the https

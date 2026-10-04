@@ -9,7 +9,7 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import java.util.concurrent.TimeUnit
 
-/** Schedules each model transfer with the constraints needed for safe resumable downloads. */
+/** Legacy request shape only; the study app never schedules it and its worker fails closed (D-009). */
 internal object ModelDownloadWorkRequest {
     internal const val RETRY_BACKOFF_SECONDS = 30L
 

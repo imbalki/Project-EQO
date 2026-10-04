@@ -213,15 +213,7 @@ class ModelDownloadSchedulingTest {
                 ComponentName(context, SystemForegroundService::class.java),
                 PackageManager.GET_META_DATA,
             )
-        // TASK-004 Phase 2 triage: upstream's app manifest overrides WorkManager's
-        // SystemForegroundService (foregroundServiceType=dataSync + the
-        // FOREGROUND_SERVICE_DATA_SYNC permission); EQO's skeleton :app carries no
-        // such override yet, so the unchanged assertions are gated on it existing.
-        org.junit.Assume.assumeTrue(
-            "EQO :app skeleton declares no WorkManager foreground service override yet (TASK-004 evidence triage)",
-            serviceInfo.foregroundServiceType and ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC != 0,
-        )
-
+        // The manifest override landed in TASK-004. Missing it is a failure, not a skip.
         assertTrue(
             serviceInfo.foregroundServiceType and ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC != 0,
         )
