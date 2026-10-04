@@ -284,6 +284,76 @@ resume guard was additionally forced to execute after the edit:
 -> TakeoverResumeUserOnlyTest: 4 tests, 0 failures/errors/skips
 ```
 
+## TASK-062: production accessibility startup repair (Refs #20)
+
+The owner's actual `ai.eqo.app` failed in `Hilt_EQOAccessibilityService.onCreate`: the default Application did not implement Hilt. A registration-only fix exposed 28 missing donor bindings; the lead explicitly approved the safety-preserving explicit runtime instead. `EqoApplication` is now a plain registered Application, not `@HiltAndroidApp`; the service is a plain AccessibilityService. No fake production bindings were introduced.
+
+| Former service injection | Consumer / Phase-One need | Disposition |
+|---|---|---|
+| `AgentLoop` (donor) | Floating-widget state collector; not the study `ActionLoop` | Remove collector and entire donor widget. No donor loop constructed or started. |
+| `SettingsRepository` | Floating-button visibility preference; not study wiring | Remove observer with widget. No automatic work on service bind. |
+| `AccessibilityNodeTraversal` | Raw gated find/click, submit fallback and password-filtered screen text; needed | Direct dependency-free constructor retained. No Hilt required. |
+| `Lazy<HabitRoutineTracker>` | Window-change app-open recording; not study wiring | Remove recording path. No habit routines reachable from this service. |
+| `ServiceBridge` | Widget long-press recording; not study wiring | Remove widget and bridge trigger. Python/recording is not reachable (D-005). |
+| `NotificationTapTarget` | Widget click navigation; not study wiring | Remove widget navigation path; study activities keep existing UI navigation. |
+
+`EqoServiceRuntime` supplies the service automation and the existing `TakeoverDetector.shared` latch. The app already obtains exactly this automation via `getInstance().automation`; no parallel or test graph exists. Runtime callbacks explicitly supply bound-service and secure-window state. The existing gated-actions facade, touch/self-gesture attribution, password filter, secure-window filter and untrusted-text fencing remain intact. No automatic resume, permission/approval defaults or transport-gate changes were made.
+
+`EqoServiceRuntimeTest` constructs the holder without Android/Hilt, checks unbound typed refusal and the shared study latch, and source-scans the service/app to reject unsupported injected seams. `RealAccessibilityServiceSmokeTest` checks the real target package/Application and OS-bound component; owner must enable the service in Android Settings first. Starting/binding the protected component programmatically is not a legitimate substitute. The instrumentation test was not run; no phone use by this worker.
+
+Source audit across all modules (`@AndroidEntryPoint`, `@HiltViewModel`, `EntryPoint`, `@InstallIn`, Application assumptions, providers and WorkManager):
+
+- No production `@AndroidEntryPoint` or `@HiltViewModel` remains. `:app` has no `@Inject` entries. `:platform-a11y` retains four constructor annotations: `AccessibilityNodeTraversal` (dependency-free, directly constructed by the service), `AndroidCallFlowVerifier` (dependency-free donor call helper, not the compose-only study path), donor `AgentLoop` (classifier/factory/plan/action/store/settings/lazy re-evaluation dependencies; deliberately not constructed by Phase One), and `VisionEngine` (`LLMProviderFactory`; donor vision path not constructed by the study app). An annotation is not proof that a production graph exists: the donor graph is not enabled.
+- `:core-llm/ModelDownloadWorker.WorkerEntryPoint` remains `@EntryPoint` / `@InstallIn(SingletonComponent::class)` and calls `EntryPointAccessors.fromApplication` in its constructor. It needs `ModelDao`, `OkHttpClient`, `ProviderCredentialStore`, `NotificationTapTarget`. This is an unsupported dormant legacy path, NOT repaired by this task. `ModelDownloadWorkRequest.create` has only test callers; the study app has no worker/request/WorkManager reference. Local Gemma is parked (D-009). Do not expose/enqueue the worker before explicitly supplying its dependencies. It is not an app-startup initializer.
+- The other `@InstallIn` is `EqoTestBindings` in platform androidTest, never copied into production. The instrumentation test harness still has its own Hilt Application; it no longer injects the real accessibility service.
+- Merged debug providers are `androidx.core.content.FileProvider`, `moe.shizuku.manager.ShizukuManagerProvider`, `com.google.mlkit.common.internal.MlKitInitProvider`, and `androidx.startup.InitializationProvider`. The custom helper provider has no Hilt access. AndroidX Startup initializes WorkManager, EmojiCompat, ProcessLifecycle, OkHttp Platform, ProfileInstaller with library defaults; there is no app `Configuration.Provider` or `HiltWorkerFactory`. None supplies the missing donor worker bindings or starts that worker.
+
+The audit also found the study port's inherited raw `performGlobalAction` for back/home. These now use `service.gatedActions.pressBack/pressHome`, and the new source guard rejects reintroducing that takeover bypass. Unknown global verbs return false. Existing action-gate tests exercise typed takeover rejection for the facade.
+
+`ProductionServiceStartupTest` additionally runs the actual service `onCreate` under the plain production `EqoApplication` using Robolectric, not a Hilt test application. The source guard checks the declared app manifest and, when present, the actual merged debug manifest.
+
+### TASK-062 host verification (no device claim)
+
+Toolchain observed with `java -version`, `./gradlew --version`, version catalog and actual `:app:dependencyInsight --configuration debugRuntimeClasspath --dependency hilt-android`: Temurin JDK **21.0.12.1+1-LTS**, Gradle **9.7.0**, AGP attribute **9.3.1**, Kotlin **2.4.0**, resolved Hilt **2.60.1** (transitive module dependency; no app Hilt plugin/root). App Hilt/KSP plugins and app Hilt compiler were removed as part of replacing the donor graph, not replaced with fake bindings.
+
+Exact serialized requested gate from `android/`:
+```
+./gradlew assembleDebug assembleRelease testDebugUnitTest lintDebug ktlintCheck detekt --max-workers=2 -Dorg.gradle.jvmargs=-Xmx1536m -Pkotlin.daemon.jvmargs=-Xmx1024m
+-> BUILD SUCCESSFUL in 17s; 897 actionable tasks: 26 executed, 871 up-to-date; exit 0
+../scripts/check-branding.sh
+-> BRANDING GATE PASSED; 316 tracked Kotlin files / 316 provenance rows; exit 0
+../scripts/check.sh
+-> secret scan, shell syntax and branding/provenance passed; OK; exit 0
+```
+
+XML aggregate: **608 tests, 0 failures, 0 errors, 1 existing skipped**, **97 suites**. New regression tests: `ProductionServiceStartupTest` **1**, `EqoServiceRuntimeTest` **4**, all passing. Existing `StudyLoopWiringTest` **11**, `GatedActionsGateTest` **4**, `TakeoverResumeUserOnlyTest` **4** pass. Per-module totals: adb-pairing 82, app 54, browser-cdp 35, core-agent 62, core-llm 261 (1 skipped), core-security 47, helper-server 3, platform-a11y 64.
+
+Merged debug manifest (`app/build/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml`) shows:
+```xml
+<application android:name="ai.eqo.EqoApplication" ...>
+    <service android:name="ai.eqo.accessibility.EQOAccessibilityService"
+        android:description="@string/eqo_accessibility_service_description"
+        android:exported="false"
+        android:label="@string/eqo_accessibility_service_label"
+        android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+        <intent-filter>
+            <action android:name="android.accessibilityservice.AccessibilityService" />
+        </intent-filter>
+        <meta-data android:name="android.accessibilityservice"
+            android:resource="@xml/accessibility_service_config" />
+    </service>
+</application>
+```
+The entire merged service declaration was compared recursively (all attributes and children) with the original declared service: identical. `javap` of built debug/release classes, including ASM-transformed/runtime classes, confirms direct `extends android.accessibilityservice.AccessibilityService`, not `Hilt_EQOAccessibilityService`. Secure-window detection, touch attribution and the entire node/gesture/screenshot methods block were compared against `origin/main`: unchanged.
+
+Earlier verification attempts are not hidden: the registration-only commit failed Hilt compilation; the plain-runtime first build needed its retained Context import; the subsequent complete build/test/lint run failed on one extra blank line at ktlint (after 41m05s on the resource-constrained host); scoped Detekt found three overlong new test-source lines. All corrected without new suppressions or relaxed checks. One compile-only retry observed the in-progress instrumentation edit before its constants were present; the final app instrumentation compilation passed.
+
+Extra verification compiled, but did NOT run, the new `:app:compileDebugAndroidTestKotlin`: passed. Extra existing `:platform-a11y:compileDebugAndroidTestKotlin` failed on eight unresolved `R` references in `EqoTestTargetActivity.kt`; no platform androidTest code was changed by this task. This pre-existing harness namespace regression is triage follow-up **t_e2fcbc7c**; the exact requested main gate above passes independently. Dormant worker dependency triage is **t_e6c24cd3**. No phone use, instrumentation execution or successful real-device startup claim.
+
+Built artifacts: `app/build/outputs/apk/debug/app-debug.apk` and `app/build/outputs/apk/release/app-release-unsigned.apk`. The lead should install the debug artifact; release is unsigned and is not claimed installable. Full logs are retained with the task handoff.
+
+Required device step: enable accessibility on the REAL `ai.eqo.app` and confirm the service stays bound (`adb shell dumpsys accessibility`) and no application `FATAL EXCEPTION` appears in captured logcat. Repeat after toggling off/on. This must precede claiming the study APK works; `ai.eqo.test` Hilt success is not production-app evidence.
+
 ## 5. Device evidence and test plan — PENDING owner presence
 
 The owner is away and cannot touch the phone (lead note). **No device step was run.** The

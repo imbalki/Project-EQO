@@ -13,7 +13,7 @@ import javax.inject.Inject
  * service's root or a root obtained straight from `UiAutomation` - same behavior,
  * no service required. See #66 (prototype) / #105 (this extraction).
  *
- * Stateless and dependency-free: production wires it in through Hilt, tests can
+ * Stateless and dependency-free: production and tests can
  * just `AccessibilityNodeTraversal()` it directly.
  *
  * Callers remain responsible for recycling the root node they obtained; this class

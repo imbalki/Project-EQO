@@ -72,6 +72,13 @@ Caveat (real): the task's own install command names `app-release.apk`, but the r
 ```
 Expected: every screen reachable without outside instructions. Honest state: the wireless-ADB and browser rows show "did not run — not available in the study build" (the study-flow gates are off pending the TASK-008 / TASK-010 SF-1 work). Acceptance criterion 2 ("a person who has not seen the project completes setup using only the app") therefore cannot be claimed until that pinning/socket work lands.
 
+**1b.1. Real-app accessibility smoke test (BOTH, required before declaring the APK usable):** enable accessibility on the REAL `ai.eqo.app`, not the `ai.eqo.test` harness, in Android Settings. Confirm the service stays bound and no `FATAL EXCEPTION` for `ai.eqo.app` appears in logcat. Capture both records:
+```
+"$ADB" shell dumpsys accessibility > task-015-real-app-accessibility.txt
+"$ADB" logcat -d > task-015-real-app-logcat.txt
+```
+Inspect the bound-service list for `ai.eqo.app/ai.eqo.accessibility.EQOAccessibilityService` (not merely the enabled list). Toggle off/on, return to EQO and repeat; the process must survive. `RealAccessibilityServiceSmokeTest` is owner-pending and requires this manual OS grant; it must never self-enable accessibility. Test-app Hilt success is not production-app evidence.
+
 **1c. Per-capability readiness (BOTH):** every row shows its own state. Kill the helper / toggle accessibility off mid-run and confirm only the affected row and its dependents change. Nothing may flip a row it does not own.
 
 **1d. Approvals, pause, stop, takeover (OWNER):** run the sample task; the compose step shows the approval card with a 60s countdown; let it expire once (must cancel, not run), approve once (composer opens, nothing sent), pause mid-run, take over, stop (run ends, receipts shown), resume (dialog -> explicit confirmation required).

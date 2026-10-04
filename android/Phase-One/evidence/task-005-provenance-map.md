@@ -10,6 +10,14 @@ minimal interface standing in for quarantined upstream code; **EQO-NEW** (26) = 
 app skeleton and guard tests (3 at TASK-005, 6 added by TASK-014 issue #19, 17 added by
 TASK-006 issue #11).
 
+## TASK-062 additions (issue #20)
+
+| :app | `android/app/src/test/kotlin/ai/eqo/ProductionServiceStartupTest.kt` | EQO-NEW | `ai.eqo` | imbalki/project-eqo (EQO-authored, TASK-062 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/EqoApplication.kt` | EQO-NEW | `ai.eqo` | imbalki/project-eqo (EQO-authored, TASK-062 issue #20) |
+| :app | `android/app/src/androidTest/kotlin/ai/eqo/RealAccessibilityServiceSmokeTest.kt` | EQO-NEW | `ai.eqo` | imbalki/project-eqo (EQO-authored, TASK-062 issue #20) |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/EqoServiceRuntime.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-062 issue #20) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/EqoServiceRuntimeTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-062 issue #20) |
+
 ## TASK-014 additions (issue #19, rebase onto TASK-005)
 
 The six TASK-014 SMS guard files (SmsComposePolicy + five guard tests) are EQO-authored,

@@ -54,7 +54,11 @@ class EqoAutomationPort(
 
     private fun globalAction(action: Int): Boolean {
         val service = EQOAccessibilityService.getInstance() ?: return false
-        return service.performGlobalAction(action)
+        return when (action) {
+            AccessibilityService.GLOBAL_ACTION_BACK -> service.gatedActions.pressBack().isSuccess
+            AccessibilityService.GLOBAL_ACTION_HOME -> service.gatedActions.pressHome().isSuccess
+            else -> false
+        }
     }
 }
 
