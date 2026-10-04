@@ -19,6 +19,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
+import androidx.annotation.StringRes
 
 class SetupHubActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +43,10 @@ class SetupHubActivity : Activity() {
         findViewById<TextView>(R.id.row_chrome_consent).setOnClickListener {
             startActivity(Intent(this, ChromeConsentActivity::class.java))
         }
-        findViewById<Button>(R.id.setup_recheck_button).setOnClickListener { render() }
+        findViewById<Button>(R.id.setup_recheck_button).setOnClickListener {
+            render()
+            Toast.makeText(this, R.string.setup_hub_recheck_complete, Toast.LENGTH_SHORT).show()
+        }
         findViewById<Button>(R.id.setup_task_button).setOnClickListener {
             startActivity(Intent(this, TaskActivity::class.java))
         }
@@ -93,7 +98,7 @@ class SetupHubActivity : Activity() {
             buildString {
                 append(getString(labelId))
                 append(" — ")
-                append(stateLabel(state))
+                append(getString(stateLabel(state)))
                 status?.takeIf { it.detail.isNotBlank() }?.let { append("\n").append(it.detail) }
                 status?.takeIf { it.guidance.isNotBlank() && state != CapabilityState.READY }?.let {
                     append("\n").append(it.guidance)
@@ -108,6 +113,7 @@ class SetupHubActivity : Activity() {
      */
     companion object {
         /** USER-FLOWS.md §16.2 row-state wording. */
+        @StringRes
         fun stateLabel(state: CapabilityState): Int =
             when (state) {
                 CapabilityState.NOT_STARTED -> R.string.state_not_set_up

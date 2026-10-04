@@ -10,6 +10,10 @@ minimal interface standing in for quarantined upstream code; **EQO-NEW** (26) = 
 app skeleton and guard tests (3 at TASK-005, 6 added by TASK-014 issue #19, 17 added by
 TASK-006 issue #11).
 
+## TASK-063 additions (issue #20)
+
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/SetupHubActivityTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-063 issue #20) |
+
 ## TASK-062 additions (issue #20)
 
 | :app | `android/app/src/test/kotlin/ai/eqo/ProductionServiceStartupTest.kt` | EQO-NEW | `ai.eqo` | imbalki/project-eqo (EQO-authored, TASK-062 issue #20) |

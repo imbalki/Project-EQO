@@ -33,6 +33,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="setup_hub_row_chrome_consent">Browser consent</string>
     <string name="setup_hub_open_task">Open the task screen</string>
     <string name="setup_hub_recheck">Re-check everything</string>
+    <string name="setup_hub_recheck_complete">Re-check complete. Results updated below.</string>
 
     <!-- TASK-015: model key setup (UF-02, S-04/S-05). -->
     <string name="model_key_title">Model key</string>
