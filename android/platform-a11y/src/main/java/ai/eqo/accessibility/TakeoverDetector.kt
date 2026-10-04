@@ -51,6 +51,19 @@ class TakeoverDetector {
 
     private var actionDepth = 0
 
+    @Volatile
+    private var controlTouchExclusion: ((Int, Int) -> Boolean)? = null
+
+    /** Only explicit visible control hitboxes are excluded, never a whole window. */
+    fun setControlTouchExclusion(exclusion: ((Int, Int) -> Boolean)?) {
+        controlTouchExclusion = exclusion
+    }
+
+    fun isControlTouch(
+        x: Int,
+        y: Int,
+    ): Boolean = controlTouchExclusion?.invoke(x, y) == true
+
     private var lastSelfGestureFinishedAtMs: Long = NO_TIME
 
     private var lastResumeConfirmation: UserResumeConfirmation? = null
@@ -97,7 +110,10 @@ class TakeoverDetector {
         nowMs: Long = 0L,
     ): Boolean =
         synchronized(lock) {
-            val isUserTakeover = !isPaused && source == TouchSource.USER && actionDepth > 0
+            val isUserTakeover =
+                !isPaused &&
+                    source == TouchSource.USER &&
+                    actionDepth > 0
             if (isUserTakeover) {
                 isPaused = true
                 takeoverCount++

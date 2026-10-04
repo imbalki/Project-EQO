@@ -1,8 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- TASK-015 (issue #20): the task screen (UF-09/UF-10, REQ-TASK-01..07). -->
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <!-- Feedback stays on screen even when the controls/receipt are scrolled. -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:text="@string/task_practice_title"
+        android:accessibilityHeading="true" />
+    <TextView
+        android:id="@+id/task_practice_countdown"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:accessibilityLiveRegion="polite" />
+    <TextView
+        android:id="@+id/task_control_feedback"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:accessibilityLiveRegion="polite" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -39,6 +63,7 @@
             android:layout_height="wrap_content"
             android:text="@string/task_start"
             android:minHeight="48dp" />
+
 
         <!-- One row per step: name, live state, elapsed time (REQ-TASK-01). -->
         <LinearLayout
@@ -81,4 +106,5 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</LinearLayout>

@@ -55,6 +55,9 @@ class ActionLoop(
     private val appBlockPolicy: AppBlockPolicy = AppBlockPolicy.ALLOW_ALL,
     private val onPlanStatus: (PlanStatus) -> Unit = {},
     private val config: Config = Config(),
+    private val onInterStepWait: (nextStep: Int, total: Int, remainingMs: Long) -> Unit = { _, _, _ -> },
+    private val externalTakeoverReason: () -> PauseReason? = { null },
+    private val onResumeConfirmed: (UserResumeConfirmation) -> Unit = {},
 ) {
     data class Config(
         /** Command-poll granularity; every transition is bounded in these. */
@@ -63,6 +66,7 @@ class ActionLoop(
         val actionTimeoutMs: Long = 5_000,
         /** Settle wait between steps (commands are honoured here). */
         val interStepDelayMs: Long = 250,
+        val delayAfterLastStep: Boolean = true,
         val maxAttemptsReversible: Int = 2,
         val maxAttemptsIrreversible: Int = 1,
     )
@@ -128,9 +132,11 @@ class ActionLoop(
     fun resume(confirmation: UserResumeConfirmation): Boolean {
         synchronized(lock) {
             if (terminal.get() != null || state.get() != LoopState.PAUSED) return false
+            onResumeConfirmed(confirmation)
             lastResumeConfirmation = confirmation
             pauseReason.set(null)
             state.set(LoopState.RUNNING)
+            emitPlanStatus(PlanStatus.RUNNING)
             return true
         }
     }
@@ -156,7 +162,7 @@ class ActionLoop(
         check(started.compareAndSet(false, true)) { "ActionLoop.run() may only be called once" }
         emitPlanStatus(PlanStatus.RUNNING)
         val records = mutableListOf<StepRecord>()
-        for (step in steps) {
+        for ((index, step) in steps.withIndex()) {
             if (!settleBeforeStep()) {
                 records += StepRecord(step.stepId, StepOutcome.NotExecuted("loop settled before dispatch"), 0)
                 records += remainingNotExecuted(step)
@@ -179,12 +185,12 @@ class ActionLoop(
                 records += remainingNotExecuted(step)
                 break
             }
-            if (!delayBetweenSteps()) {
+            if (!delayBetweenSteps(index + 2)) {
                 records += remainingNotExecuted(step)
                 break
             }
         }
-        if (terminal.get() == null) {
+        if (terminal.get() == null && awaitDispatchReady()) {
             terminalize(PlanTerminal.COMPLETED)
         }
         return report(records)
@@ -363,15 +369,23 @@ class ActionLoop(
             val command = pollCommand() ?: break
             applyCommand(command)
         }
+        if (terminal.get() == null && state.get() == LoopState.RUNNING) {
+            externalTakeoverReason()?.let { applyCommand(CmdTakeover(it)) }
+        }
         return terminal.get() == null
     }
 
     @Suppress("ReturnCount") // false returns are settle points, not style
-    private suspend fun delayBetweenSteps(): Boolean {
+    private suspend fun delayBetweenSteps(nextStep: Int): Boolean {
+        // Keep the optional last-step wait policy here, with the pacing itself.
+        if (nextStep > steps.size && !config.delayAfterLastStep) return true
         var waitedMs = 0L
         while (waitedMs < config.interStepDelayMs) {
             if (!settleBeforeStep()) return false
             if (state.get() == LoopState.PAUSED && !awaitResume()) return false
+            if (nextStep <= steps.size) {
+                onInterStepWait(nextStep, steps.size, config.interStepDelayMs - waitedMs)
+            }
             delay(config.tickMs)
             waitedMs += config.tickMs
         }
@@ -395,11 +409,13 @@ class ActionLoop(
                 if (terminal.get() == null && state.get() == LoopState.RUNNING) {
                     pauseReason.set(PauseReason.USER_PAUSE)
                     state.set(LoopState.PAUSED)
+                    emitPlanStatus(PlanStatus.PAUSED)
                 }
             is CmdTakeover ->
                 if (terminal.get() == null && state.get() == LoopState.RUNNING) {
                     pauseReason.set(command.reason)
                     state.set(LoopState.PAUSED)
+                    emitPlanStatus(PlanStatus.PAUSED)
                 }
         }
     }

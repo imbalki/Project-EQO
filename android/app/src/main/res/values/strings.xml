@@ -160,4 +160,15 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_target_format">Recipient: %1$s; Message: %2$s</string>
     <string name="task_no_recipient">No recipient selected</string>
     <string name="task_did_not_run">This step did not run. It was skipped or cancelled before completion; check the task result above.</string>
+    <string name="task_practice_title">Practice run</string>
+    <string name="task_practice_countdown">Step %1$d/%2$d: starting in %3$d s. Try Pause now</string>
+    <string name="task_pause_requested">Pause requested: it will pause after the current step</string>
+    <string name="task_stop_requested">Stopping after the current step</string>
+    <string name="task_stopped">Stopped</string>
+    <string name="task_took_over">You took over; nothing more runs</string>
+    <string name="task_resumed">Resumed</string>
+    <string name="task_nothing_running">Nothing is running</string>
+    <string name="task_not_paused">Not paused</string>
+    <string name="task_already_paused">Already paused</string>
+    <string name="task_no_sms_app">No default SMS app is available. Install or enable an SMS app and set it as default to open a draft. Nothing was sent.</string>
 </resources>

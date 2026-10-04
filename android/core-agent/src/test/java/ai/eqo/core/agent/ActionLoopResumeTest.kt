@@ -95,7 +95,10 @@ class ActionLoopResumeTest {
             assertEquals(LoopState.PAUSED, loop.currentState())
             assertEquals(PauseReason.SELF_GESTURE_TAKEOVER_SUSPECTED, loop.currentPauseReason())
             // Not terminal: the task is paused, not dead.
-            assertTrue("no terminal plan status while paused", events.none { it.name != "RUNNING" })
+            assertEquals(
+                listOf(ai.eqo.data.models.PlanStatus.RUNNING, ai.eqo.data.models.PlanStatus.PAUSED),
+                events,
+            )
 
             assertTrue(loop.resume(UserResumeConfirmation.forExplicitUserConfirmation(7L)))
             advanceUntilIdle()

@@ -13,7 +13,9 @@
 package ai.eqo.task
 
 import ai.eqo.R
+import ai.eqo.accessibility.TakeoverDetector
 import ai.eqo.core.agent.ExecutedAction
+import ai.eqo.core.agent.LoopState
 import ai.eqo.core.agent.LoopStep
 import ai.eqo.core.agent.UserResumeConfirmation
 import ai.eqo.data.models.PlanStatus
@@ -28,12 +30,18 @@ import ai.eqo.study.StepProgress
 import ai.eqo.study.StepProgressState
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.provider.Telephony
+import android.view.MotionEvent
+import android.view.View
+import android.view.Window
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -56,9 +64,9 @@ class TaskActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.task_screen)
         findViewById<Button>(R.id.task_start_button).setOnClickListener { startRun() }
-        findViewById<Button>(R.id.task_pause_button).setOnClickListener { controller?.pause() }
-        findViewById<Button>(R.id.task_stop_button).setOnClickListener { controller?.stop() }
-        findViewById<Button>(R.id.task_takeover_button).setOnClickListener { controller?.takeover() }
+        findViewById<Button>(R.id.task_pause_button).setOnClickListener { control { it.pause() } }
+        findViewById<Button>(R.id.task_stop_button).setOnClickListener { control { it.stop() } }
+        findViewById<Button>(R.id.task_takeover_button).setOnClickListener { control { it.takeover() } }
         val resumeButton = findViewById<Button>(R.id.task_resume_button)
         protectConfirmationTouches(resumeButton)
         resumeButton.setOnClickListener { confirmResume() }
@@ -66,7 +74,101 @@ class TaskActivity : Activity() {
         renderPlanStatus(PlanStatus.PENDING)
         findViewById<TextView>(R.id.task_state).setText(R.string.task_idle)
         findViewById<Button>(R.id.task_setup_button).setOnClickListener {
+            controller?.takeover()
             startActivity(Intent(this, SetupHubActivity::class.java))
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        TakeoverDetector.shared.setControlTouchExclusion(
+            if (hasFocus) ({ x, y -> touchesControl(x, y) }) else null,
+        )
+    }
+
+    override fun onPause() {
+        TakeoverDetector.shared.setControlTouchExclusion(null)
+        super.onPause()
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN && !touchesControl(event.rawX.toInt(), event.rawY.toInt())) {
+            reportBackgroundTouch()
+        }
+        return super.dispatchTouchEvent(event)
+    }
+
+    private fun reportBackgroundTouch() {
+        val service =
+            ai.eqo.accessibility.EQOAccessibilityService
+                .getInstance()
+        if (service != null) {
+            service.reportControlSurfaceTouch()
+        } else {
+            TakeoverDetector.shared.onTouch(TakeoverDetector.TouchSource.USER, SystemClock.elapsedRealtime())
+        }
+    }
+
+    private fun touchesControl(
+        x: Int,
+        y: Int,
+    ): Boolean =
+        listOf(
+            R.id.task_start_button,
+            R.id.task_pause_button,
+            R.id.task_stop_button,
+            R.id.task_takeover_button,
+            R.id.task_resume_button,
+            R.id.task_setup_button,
+        ).any { id ->
+            containsTouch(findViewById(id), x, y)
+        }
+
+    private fun containsTouch(
+        view: View,
+        x: Int,
+        y: Int,
+    ): Boolean {
+        val bounds = Rect()
+        return view.getGlobalVisibleRect(bounds) && bounds.contains(x, y)
+    }
+
+    /** Exclude only the dialog's explicit confirmation buttons, retaining its touch guard. */
+    private fun prepareTaskDialog(dialog: AlertDialog) {
+        protectConfirmationDialog(dialog)
+        val window = dialog.window ?: return
+        val callback = window.callback
+
+        fun isDialogControl(
+            x: Int,
+            y: Int,
+        ): Boolean =
+            listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE).any {
+                containsTouch(dialog.getButton(it), x, y)
+            }
+
+        fun registerControls(focused: Boolean) {
+            TakeoverDetector.shared.setControlTouchExclusion(
+                if (focused) ({ x, y -> isDialogControl(x, y) }) else null,
+            )
+        }
+        registerControls(true)
+        window.decorView.viewTreeObserver.addOnWindowFocusChangeListener { registerControls(it) }
+        window.callback =
+            object : Window.Callback by callback {
+                override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+                    if (event.actionMasked == MotionEvent.ACTION_DOWN &&
+                        !isDialogControl(event.rawX.toInt(), event.rawY.toInt())
+                    ) {
+                        reportBackgroundTouch()
+                    }
+                    return callback.dispatchTouchEvent(event)
+                }
+            }
+        dialog.setOnDismissListener {
+            TakeoverDetector.shared.setControlTouchExclusion(
+                if (hasWindowFocus()) ({ x, y -> touchesControl(x, y) }) else null,
+            )
         }
     }
 
@@ -75,6 +177,10 @@ class TaskActivity : Activity() {
      * minted here — in the gesture handler — never in loop, recovery or agent code.
      */
     private fun confirmResume() {
+        if (controller?.currentState() != LoopState.PAUSED) {
+            renderControlFeedback(TaskControlFeedback.NOT_PAUSED)
+            return
+        }
         AlertDialog
             .Builder(this)
             .setTitle(R.string.task_resume_confirm_title)
@@ -84,10 +190,12 @@ class TaskActivity : Activity() {
                 controller?.resume(confirmation)
             }.setNegativeButton(android.R.string.cancel, null)
             .show()
-            .also { protectConfirmationDialog(it) }
+            .also { prepareTaskDialog(it) }
     }
 
     private fun startRun() {
+        findViewById<TextView>(R.id.task_control_feedback).text = ""
+        findViewById<TextView>(R.id.task_receipt).text = ""
         renderPlanStatus(PlanStatus.RUNNING)
         val steps = sampleSteps()
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
@@ -99,7 +207,11 @@ class TaskActivity : Activity() {
                 accessibilityServiceEnabled = { StudySetup.accessibilityServiceEnabled(applicationContext) },
                 helperBinderAlive = { StudySetup.helper.state == HelperActivationState.State.ACTIVE },
             )
-        val smsOpener = SmsDraftOpener { intent -> startActivity(intent) }
+        val smsOpener =
+            SmsDraftOpener(
+                defaultSmsPackage = { Telephony.Sms.getDefaultSmsPackage(this) ?: throw ActivityNotFoundException() },
+                onNoSmsApp = { mainHandler.post { renderControlFeedback(TaskControlFeedback.NO_SMS_APP) } },
+            ) { intent -> startActivity(intent) }
         val executor =
             StudyActionExecutor(
                 EqoAutomationPort(
@@ -119,6 +231,14 @@ class TaskActivity : Activity() {
                 },
                 onPlanStatus = { status -> mainHandler.post { renderPlanStatus(status) } },
                 onStepProgress = { progress -> mainHandler.post { renderStep(progress) } },
+                config = SamplePractice.config,
+                onControlFeedback = { feedback -> mainHandler.post { renderControlFeedback(feedback) } },
+                onInterStepWait = { next, total, remaining ->
+                    mainHandler.post {
+                        findViewById<TextView>(R.id.task_practice_countdown).text =
+                            getString(R.string.task_practice_countdown, next, total, SamplePractice.seconds(remaining))
+                    }
+                },
             )
         controller = newController
         scope.launch {
@@ -184,7 +304,7 @@ class TaskActivity : Activity() {
                                 continuation.resume(ApprovalOutcome.TimedOut)
                             }
                         }.show()
-                        .also { protectConfirmationDialog(it) }
+                        .also { prepareTaskDialog(it) }
                 val deadlineMs = request.requestedAtMs + request.timeoutMs
                 val tick =
                     object : Runnable {
@@ -223,10 +343,30 @@ class TaskActivity : Activity() {
         val running = status == PlanStatus.RUNNING
         val paused = status == PlanStatus.PAUSED
         findViewById<Button>(R.id.task_start_button).isEnabled = !running && !paused
-        findViewById<Button>(R.id.task_pause_button).isEnabled = running
-        findViewById<Button>(R.id.task_stop_button).isEnabled = running || paused
-        findViewById<Button>(R.id.task_takeover_button).isEnabled = running
-        findViewById<Button>(R.id.task_resume_button).isEnabled = paused
+        // Keep controls tappable: unavailable commands explain why rather than silently ignoring taps.
+        if (!running) findViewById<TextView>(R.id.task_practice_countdown).text = ""
+    }
+
+    private fun control(request: (StudyTaskController) -> Boolean) {
+        val active = controller
+        if (active == null) renderControlFeedback(TaskControlFeedback.NOTHING_RUNNING) else request(active)
+    }
+
+    private fun renderControlFeedback(feedback: TaskControlFeedback) {
+        val label =
+            when (feedback) {
+                TaskControlFeedback.PAUSE_REQUESTED -> R.string.task_pause_requested
+                TaskControlFeedback.PAUSED -> R.string.task_paused
+                TaskControlFeedback.STOP_REQUESTED -> R.string.task_stop_requested
+                TaskControlFeedback.STOPPED -> R.string.task_stopped
+                TaskControlFeedback.TAKEOVER -> R.string.task_took_over
+                TaskControlFeedback.RESUMED -> R.string.task_resumed
+                TaskControlFeedback.NOTHING_RUNNING -> R.string.task_nothing_running
+                TaskControlFeedback.NOT_PAUSED -> R.string.task_not_paused
+                TaskControlFeedback.ALREADY_PAUSED -> R.string.task_already_paused
+                TaskControlFeedback.NO_SMS_APP -> R.string.task_no_sms_app
+            }
+        findViewById<TextView>(R.id.task_control_feedback).setText(label)
     }
 
     private fun renderSteps(steps: List<StepProgress>) {
@@ -236,6 +376,9 @@ class TaskActivity : Activity() {
     }
 
     private fun renderStep(step: StepProgress) {
+        if (step.state == StepProgressState.RUNNING) {
+            findViewById<TextView>(R.id.task_practice_countdown).text = ""
+        }
         val container = findViewById<LinearLayout>(R.id.task_steps_container)
         for (index in 0 until container.childCount) {
             val view = container.getChildAt(index) as? TextView ?: continue
@@ -267,6 +410,7 @@ class TaskActivity : Activity() {
 
     /** The end-of-run receipt: what happened, what did not, what is unknown (REQ-TASK-06). */
     private fun renderReceipt(receipt: RunReceipt) {
+        findViewById<TextView>(R.id.task_state).text = planLabel(receipt.terminal)
         renderSteps(receipt.steps)
 
         fun names(ids: List<String>): String =
@@ -317,7 +461,8 @@ class TaskActivity : Activity() {
                 "COMPLETED" -> R.string.task_completed
                 "FAILED" -> R.string.task_failed
                 "PAUSED" -> R.string.task_paused
-                "STOPPED", "CANCELLED" -> R.string.task_cancelled
+                "STOPPED" -> R.string.task_stopped
+                "CANCELLED" -> R.string.task_cancelled
                 else -> R.string.task_unknown_result
             },
         )

@@ -103,7 +103,9 @@ class EQOAccessibilityService :
         // injected touch) starts on the screen. Combined with the overlay touch
         // probe below it feeds the takeover detector; the second source for the
         // same touch is a no-op because the detector latches.
-        if (event.eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START) {
+        // The coordinate-bearing probe owns touch reports when installed. Otherwise
+        // retain the conservative accessibility-event fallback (no touch is dropped).
+        if (event.eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START && touchProbeView == null) {
             reportTouchToTakeoverDetector()
         }
     }
@@ -114,6 +116,9 @@ class EQOAccessibilityService :
      * other touch is the user's. A user touch during an agent action latches the
      * takeover detector, which pauses the loop.
      */
+
+    fun reportControlSurfaceTouch() = reportTouchToTakeoverDetector()
+
     private fun reportTouchToTakeoverDetector() {
         val source =
             if (gestureInFlight.get() > 0) {
@@ -121,7 +126,8 @@ class EQOAccessibilityService :
             } else {
                 TakeoverDetector.TouchSource.USER
             }
-        val tookOver = takeoverDetector.onTouch(source, android.os.SystemClock.elapsedRealtime())
+        val tookOver =
+            takeoverDetector.onTouch(source, android.os.SystemClock.elapsedRealtime())
         if (tookOver) {
             android.util.Log.i("EQOAccessibilityService", "TASK-009: user takeover detected - loop paused")
         }
@@ -165,7 +171,9 @@ class EQOAccessibilityService :
                 }
         probe.setOnTouchListener(
             View.OnTouchListener { v, event ->
-                if (event.action == MotionEvent.ACTION_OUTSIDE) {
+                if (event.action == MotionEvent.ACTION_OUTSIDE &&
+                    !takeoverDetector.isControlTouch(event.rawX.toInt(), event.rawY.toInt())
+                ) {
                     reportTouchToTakeoverDetector()
                 }
                 if (event.action == MotionEvent.ACTION_UP) {

@@ -10,6 +10,15 @@ minimal interface standing in for quarantined upstream code; **EQO-NEW** (26) = 
 app skeleton and guard tests (3 at TASK-005, 6 added by TASK-014 issue #19, 17 added by
 TASK-006 issue #11).
 
+## TASK-066 additions (issue #20)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/SamplePractice.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskControlFeedback.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/SmsDraftOpenerTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/SamplePracticeTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/TaskControlPresentationTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopPracticeSafetyTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
+
 ## TASK-063 additions (issue #20)
 
 | :app | `android/app/src/test/kotlin/ai/eqo/onboarding/SetupHubActivityTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-063 issue #20) |

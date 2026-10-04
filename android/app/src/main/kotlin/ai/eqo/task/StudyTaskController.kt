@@ -9,10 +9,13 @@
  */
 package ai.eqo.task
 
+import ai.eqo.accessibility.TakeoverDetector
 import ai.eqo.core.agent.ActionLoop
 import ai.eqo.core.agent.ExecuteResult
 import ai.eqo.core.agent.LoopReport
+import ai.eqo.core.agent.LoopState
 import ai.eqo.core.agent.LoopStep
+import ai.eqo.core.agent.PauseReason
 import ai.eqo.core.agent.StepOutcome
 import ai.eqo.core.agent.UserResumeConfirmation
 import ai.eqo.data.models.PlanStatus
@@ -38,10 +41,13 @@ class StudyTaskController(
     approvalGate: StudyApprovalGate,
     private val executor: StudyActionExecutor,
     observe: () -> String,
-    onPlanStatus: (PlanStatus) -> Unit = {},
+    private val onPlanStatus: (PlanStatus) -> Unit = {},
     /** Live per-step progress for the task screen (REQ-TASK-01). */
     private val onStepProgress: (StepProgress) -> Unit = {},
     config: ActionLoop.Config = ActionLoop.Config(),
+    private val onControlFeedback: (TaskControlFeedback) -> Unit = {},
+    onInterStepWait: (Int, Int, Long) -> Unit = { _, _, _ -> },
+    private val takeoverDetector: TakeoverDetector = TakeoverDetector.shared,
 ) {
     private val loop =
         ActionLoop(
@@ -54,8 +60,21 @@ class StudyTaskController(
             // default. D-010: the study build carries no hard-block list — this is the
             // explicit policy object that says so.
             appBlockPolicy = StudyAppBlockPolicy(),
-            onPlanStatus = onPlanStatus,
+            onPlanStatus = { status -> reportStatus(status) },
             config = config,
+            onInterStepWait = onInterStepWait,
+            onResumeConfirmed = { confirmation -> takeoverDetector.resume(confirmation) },
+            externalTakeoverReason = {
+                if (takeoverDetector.isPaused) {
+                    when (takeoverDetector.lastTakeoverCause) {
+                        TakeoverDetector.TakeoverCause.USER -> PauseReason.USER_TAKEOVER
+                        TakeoverDetector.TakeoverCause.SELF_GESTURE_SUSPECTED ->
+                            PauseReason.SELF_GESTURE_TAKEOVER_SUSPECTED
+                    }
+                } else {
+                    null
+                }
+            },
         )
 
     /** Executes one step and reports its live progress before and after the apply. */
@@ -84,13 +103,18 @@ class StudyTaskController(
     }
 
     /** User pause: takes effect after the current step finishes (REQ-TASK-03). */
-    fun pause(): Boolean = loop.pause()
+    fun pause(): Boolean = requestRunning(TaskControlFeedback.PAUSE_REQUESTED) { loop.pause() }
 
     /** User stop: the run ends after the current apply settles (REQ-TASK-03). */
-    fun stop(): Boolean = loop.stop()
+    fun stop(): Boolean {
+        onControlFeedback(TaskControlFeedback.STOP_REQUESTED)
+        val accepted = loop.stop()
+        if (!accepted) onControlFeedback(TaskControlFeedback.NOTHING_RUNNING)
+        return accepted
+    }
 
     /** User takeover from any screen during a run (REQ-TASK-05). */
-    fun takeover(): Boolean = loop.takeover()
+    fun takeover(): Boolean = requestRunning(TaskControlFeedback.TAKEOVER) { loop.takeover() }
 
     /** User cancel: in-flight reversible applies are interrupted (their result is unknown). */
     fun cancel(): Boolean = loop.cancel()
@@ -100,7 +124,41 @@ class StudyTaskController(
      * resume button's click handler — there is no parameterless resume anywhere in the
      * study app (SF-4).
      */
-    fun resume(confirmation: UserResumeConfirmation): Boolean = loop.resume(confirmation)
+    fun resume(confirmation: UserResumeConfirmation): Boolean {
+        if (loop.currentState() != LoopState.PAUSED) {
+            onControlFeedback(TaskControlFeedback.NOT_PAUSED)
+            return false
+        }
+        // The same explicit UI confirmation clears the service latch, never recovery.
+        val accepted = loop.resume(confirmation)
+        onControlFeedback(if (accepted) TaskControlFeedback.RESUMED else TaskControlFeedback.NOT_PAUSED)
+        return accepted
+    }
+
+    private fun requestRunning(
+        feedback: TaskControlFeedback,
+        request: () -> Boolean,
+    ): Boolean {
+        if (loop.currentState() != LoopState.RUNNING) {
+            onControlFeedback(
+                if (loop.currentState() == LoopState.PAUSED) {
+                    TaskControlFeedback.ALREADY_PAUSED
+                } else {
+                    TaskControlFeedback.NOTHING_RUNNING
+                },
+            )
+            return false
+        }
+        onControlFeedback(feedback)
+        val accepted = request()
+        if (!accepted) onControlFeedback(TaskControlFeedback.NOTHING_RUNNING)
+        return accepted
+    }
+
+    private fun reportStatus(status: PlanStatus) {
+        onPlanStatus(status)
+        settledControlFeedback(status, loop.currentPauseReason())?.let(onControlFeedback)
+    }
 
     fun isActionInFlight(): Boolean = loop.isActionInFlight()
 
@@ -109,7 +167,16 @@ class StudyTaskController(
     fun currentPauseReason() = loop.currentPauseReason()
 
     /** Runs the plan to a terminal state and returns the receipt view. */
-    suspend fun run(): RunReceipt = toReceipt(loop.run())
+    suspend fun run(): RunReceipt {
+        // Watch the entire active run, including paced waits; nested action brackets
+        // remain balanced. The service still attributes EQO gestures, not user fingers.
+        takeoverDetector.onAgentActionStarted()
+        return try {
+            toReceipt(loop.run())
+        } finally {
+            takeoverDetector.onAgentActionFinished()
+        }
+    }
 
     private fun toReceipt(report: LoopReport): RunReceipt {
         val progress =

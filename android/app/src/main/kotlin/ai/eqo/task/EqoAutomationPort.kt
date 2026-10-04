@@ -12,6 +12,7 @@ import ai.eqo.accessibility.A11yResult
 import ai.eqo.accessibility.EQOAccessibilityService
 import ai.eqo.accessibility.EqoAutomation
 import android.accessibilityservice.AccessibilityService
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.core.net.toUri
 
@@ -65,25 +66,35 @@ class EqoAutomationPort(
 /**
  * Compose-first SMS (UF-13, REQ-SMS-01): opens the messaging app with the recipient and
  * body filled in. This builds an ACTION_SENDTO intent and hands the final send to the
- * user — EQO never sends a message itself.
+ * user — EQO never sends a message itself. No chooser is introduced, even when
+ * the recipient is empty. A supplied default SMS package targets that app directly.
+ *
+ * @param defaultSmsPackage resolves the default messaging app, or null for implicit routing.
+ * @param onNoSmsApp reports that no activity handled the draft; other failures do not call it.
+ * @param startActivity launches the draft, kept last for existing trailing-lambda callers.
  */
 class SmsDraftOpener(
+    private val defaultSmsPackage: () -> String? = { null },
+    private val onNoSmsApp: () -> Unit = {},
     private val startActivity: (Intent) -> Unit,
 ) {
     fun open(
         recipient: String,
         body: String,
-    ): Boolean {
-        val intent =
-            Intent(Intent.ACTION_VIEW, "smsto:$recipient".toUri()).apply {
-                putExtra("sms_body", body)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        return try {
+    ): Boolean =
+        try {
+            val intent =
+                Intent(Intent.ACTION_SENDTO, "smsto:$recipient".toUri()).apply {
+                    putExtra("sms_body", body)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    defaultSmsPackage()?.let { setPackage(it) }
+                }
             startActivity(intent)
             true
+        } catch (_: ActivityNotFoundException) {
+            onNoSmsApp()
+            false
         } catch (_: Exception) {
             false
         }
-    }
 }

@@ -71,6 +71,7 @@ dependencies {
     // (authority ai.eqo.app.fileprovider); lint's MissingClass check flagged it (#10).
     implementation(libs.androidx.core.ktx)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     // TASK-007: device spike harness (android/Phase-One/evidence/task-007-helper-spike.md).
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.runner)

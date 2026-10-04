@@ -260,10 +260,7 @@ class StudyUxPresentationTest {
                 val text = activity.findViewById<TextView>(R.id.task_state).text.toString()
                 assertTrue(text.isNotBlank())
                 assertFalse(text == status.name)
-                assertEquals(
-                    status == PlanStatus.PAUSED,
-                    activity.findViewById<Button>(R.id.task_resume_button).isEnabled,
-                )
+                assertTrue(activity.findViewById<Button>(R.id.task_resume_button).isEnabled)
             }
             val renderReceipt = TaskActivity::class.java.getDeclaredMethod("renderReceipt", RunReceipt::class.java)
             renderReceipt.isAccessible = true
