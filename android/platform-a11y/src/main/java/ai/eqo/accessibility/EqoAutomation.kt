@@ -79,18 +79,8 @@ class EqoAutomation(
             typeTarget(viewId, content, byViewId = true)
         }
 
-    /** Scrolls the first scrollable node in the tree. */
-    fun scroll(forward: Boolean): A11yResult =
-        runAction {
-            val root = rootProvider()
-            val scrollable = root?.let { NodeTreeSearch.findFirst(it) { node -> node.isScrollable } }
-            when {
-                root == null -> A11yResult.failure(A11yError.NodeNotFound("active window"))
-                scrollable == null -> A11yResult.failure(A11yError.NodeNotFound("scrollable node"))
-                scrollable.scroll(forward) -> A11yResult.success("scrolled ${if (forward) "forward" else "backward"}")
-                else -> A11yResult.failure(A11yError.ActionRejected("scroll"))
-            }
-        }
+    /** Scrolls the first container that accepts the requested direction. */
+    fun scroll(forward: Boolean): A11yResult = runAction { NodeTreeSearch.scroll(rootProvider(), forward) }
 
     /**
      * THE single takeover-gated action path (TASK-012 SF-1). Every action EQO

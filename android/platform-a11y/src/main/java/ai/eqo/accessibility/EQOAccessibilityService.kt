@@ -328,30 +328,15 @@ class EQOAccessibilityService :
         return result
     }
 
-    override fun performScroll(forward: Boolean): Boolean {
-        val rootNode = rootInActiveWindow ?: return false
-        val action = if (forward) AccessibilityNodeInfo.ACTION_SCROLL_FORWARD else AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
-        val success = performScrollOnNode(rootNode, action)
-        rootNode.recycle()
-        return success
-    }
+    override fun performScroll(forward: Boolean): Boolean = performScrollResult(forward).isSuccess
 
-    private fun performScrollOnNode(
-        node: AccessibilityNodeInfo,
-        action: Int,
-    ): Boolean {
-        if (node.isScrollable) {
-            return node.performAction(action)
+    override fun performScrollResult(forward: Boolean): A11yResult {
+        val rootNode = rootInActiveWindow
+        return try {
+            NodeTreeSearch.scroll(rootNode?.let { AccessibilityNodeAdapter(it) }, forward)
+        } finally {
+            rootNode?.recycle()
         }
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i) ?: continue
-            if (performScrollOnNode(child, action)) {
-                child.recycle()
-                return true
-            }
-            child.recycle()
-        }
-        return false
     }
 
     // --- Gesture Automation Methods (Coordinate Taps) ---

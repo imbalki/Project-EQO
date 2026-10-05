@@ -18,8 +18,8 @@ class ConfirmationTouchGuardTest {
     }
 
     @Test
-    fun `partially obscured touches are rejected`() {
-        assertFalse(acceptsConfirmationTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED))
+    fun `partially obscured windows without touch-point obscuration are accepted`() {
+        assertTrue(acceptsConfirmationTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED))
     }
 
     @Test
@@ -45,8 +45,17 @@ class ConfirmationTouchGuardTest {
     fun `obscured move poisons even a clean down and up`() {
         val guard = ConfirmationTouchGuard()
         assertTrue(guard.accepts(0, isDown = true))
-        assertFalse(guard.accepts(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, isDown = false))
+        assertFalse(guard.accepts(MotionEvent.FLAG_WINDOW_IS_OBSCURED, isDown = false))
         assertFalse(guard.accepts(0, isDown = false))
+    }
+
+    @Test
+    fun `partial obscuration throughout a gesture does not poison confirmation`() {
+        val guard = ConfirmationTouchGuard()
+        val flags = MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED
+        assertTrue(guard.accepts(flags, isDown = true))
+        assertTrue(guard.accepts(flags, isDown = false))
+        assertTrue(guard.accepts(flags, isDown = false))
     }
 
     @Test

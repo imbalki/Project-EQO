@@ -51,10 +51,10 @@ class TakeoverResumeUserOnlyTest {
     @Test
     fun `no production code mints a user confirmation outside the user-facing UI`() {
         val mint = Regex("""\bforExplicitUserConfirmation\b""")
-        // TASK-015 (issue #20): the ONE mint site in app code is the resume button's click
-        // handler in the study task screen — a real user gesture, exactly the case this
-        // test's name describes. Loop, recovery, agent and service code stay banned.
+        // Only the new-Run click and resume-dialog confirmation may mint tokens.
+        // File-level exclusion below is tightened by exact handler/count checks.
         val userFacingMintSite = "app/src/main/kotlin/ai/eqo/task/TaskActivity.kt"
+        assertExactUserGestureHandlers(userFacingMintSite, mint)
         val offenders = mutableListOf<String>()
         listOf(
             "app/src/main",
@@ -88,6 +88,34 @@ class TakeoverResumeUserOnlyTest {
         assertTrue(
             "SF-4: the single allowlisted user-facing mint site must exist",
             File(androidRoot(), userFacingMintSite).isFile,
+        )
+    }
+
+    private fun assertExactUserGestureHandlers(
+        userFacingMintSite: String,
+        mint: Regex,
+    ) {
+        val uiCode =
+            File(androidRoot(), userFacingMintSite)
+                .readText()
+                .replace(Regex("""(?s)/\*.*?\*/|//[^\n]*"""), "")
+        val factoryCall = """UserResumeConfirmation\.forExplicitUserConfirmation\(SystemClock\.elapsedRealtime\(\)\)"""
+        val runHandler =
+            Regex(
+                """startButton\.setOnClickListener\s*\{\s*val confirmation = $factoryCall\s*""" +
+                    """TakeoverDetector\.shared\.resume\(confirmation\)\s*planRequest\(\)\s*\}""",
+            )
+        val resumeHandler =
+            Regex(
+                """\.setPositiveButton\(R\.string\.task_resume_confirm_yes\)\s*\{ _, _ ->\s*""" +
+                    """val confirmation = $factoryCall\s*controller\?\.resume\(confirmation\)\s*\}""",
+            )
+        assertEquals("SF-4: exactly two explicit user gesture mint handlers", 2, mint.findAll(uiCode).count())
+        assertEquals("SF-4: new Run must mint only inside its click handler", 1, runHandler.findAll(uiCode).count())
+        assertEquals(
+            "SF-4: resume must mint only inside its confirmation handler",
+            1,
+            resumeHandler.findAll(uiCode).count(),
         )
     }
 

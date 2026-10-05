@@ -1,0 +1,161 @@
+{
+  "source": "f22849be9a900a21099779178a448b968ada27bc",
+  "main": "821f75206f38e8d0f8c90390bca65063e3e6efaf",
+  "source_merge_base": "b5fe24c4c3b3c3480dd277749587bf3fae258a66",
+  "changed_lines": [
+    {
+      "path": "android/Phase-One/evidence/task-005-provenance-map.md",
+      "old_changed_lines": 5,
+      "rebased_changed_lines": 4,
+      "changed_lines_identical": false
+    },
+    {
+      "path": "android/Phase-One/evidence/task-071-run-latch.md",
+      "old_changed_lines": 25,
+      "rebased_changed_lines": 25,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/Phase-One/evidence/task-073-shared-scroll.md",
+      "old_changed_lines": 41,
+      "rebased_changed_lines": 41,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/app/src/main/kotlin/ai/eqo/task/ConfirmationTouchGuard.kt",
+      "old_changed_lines": 7,
+      "rebased_changed_lines": 7,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/app/src/main/kotlin/ai/eqo/task/EqoAutomationPort.kt",
+      "old_changed_lines": 91,
+      "rebased_changed_lines": 87,
+      "changed_lines_identical": false
+    },
+    {
+      "path": "android/app/src/main/kotlin/ai/eqo/task/ProtectedConfirmationTouches.kt",
+      "old_changed_lines": 2,
+      "rebased_changed_lines": 2,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/app/src/main/kotlin/ai/eqo/task/RunDiagnostics.kt",
+      "old_changed_lines": 40,
+      "rebased_changed_lines": 40,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/app/src/main/kotlin/ai/eqo/task/StudyLoopWiring.kt",
+      "old_changed_lines": 8,
+      "rebased_changed_lines": 11,
+      "changed_lines_identical": false
+    },
+    {
+      "path": "android/app/src/main/kotlin/ai/eqo/task/StudyTaskController.kt",
+      "old_changed_lines": 3,
+      "rebased_changed_lines": 3,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/app/src/main/kotlin/ai/eqo/task/TaskActivity.kt",
+      "old_changed_lines": 15,
+      "rebased_changed_lines": 15,
+      "changed_lines_identical": false
+    },
+    {
+      "path": "android/app/src/test/kotlin/ai/eqo/task/ConfirmationTouchGuardTest.kt",
+      "old_changed_lines": 15,
+      "rebased_changed_lines": 15,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/app/src/test/kotlin/ai/eqo/task/SamplePracticeTest.kt",
+      "old_changed_lines": 19,
+      "rebased_changed_lines": 19,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/app/src/test/kotlin/ai/eqo/task/SampleRunRegressionTest.kt",
+      "old_changed_lines": 280,
+      "rebased_changed_lines": 304,
+      "changed_lines_identical": false
+    },
+    {
+      "path": "android/app/src/test/kotlin/ai/eqo/task/StudyLoopWiringTest.kt",
+      "old_changed_lines": 39,
+      "rebased_changed_lines": 39,
+      "changed_lines_identical": false
+    },
+    {
+      "path": "android/core-agent/src/main/java/ai/eqo/core/agent/ActionLoop.kt",
+      "old_changed_lines": 63,
+      "rebased_changed_lines": 63,
+      "changed_lines_identical": false
+    },
+    {
+      "path": "android/platform-a11y/src/main/java/ai/eqo/accessibility/EQOAccessibilityService.kt",
+      "old_changed_lines": 31,
+      "rebased_changed_lines": 31,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/platform-a11y/src/main/java/ai/eqo/accessibility/EqoAutomation.kt",
+      "old_changed_lines": 14,
+      "rebased_changed_lines": 14,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/platform-a11y/src/main/java/ai/eqo/accessibility/GatedServiceActions.kt",
+      "old_changed_lines": 9,
+      "rebased_changed_lines": 9,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/platform-a11y/src/main/java/ai/eqo/accessibility/NodeTreeSearch.kt",
+      "old_changed_lines": 35,
+      "rebased_changed_lines": 35,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/platform-a11y/src/main/java/ai/eqo/accessibility/ServiceActionOps.kt",
+      "old_changed_lines": 8,
+      "rebased_changed_lines": 8,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/platform-a11y/src/test/java/ai/eqo/accessibility/AutomatorsUseGatedRouteTest.kt",
+      "old_changed_lines": 3,
+      "rebased_changed_lines": 3,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/platform-a11y/src/test/java/ai/eqo/accessibility/EqoAutomationFakeTreeTest.kt",
+      "old_changed_lines": 30,
+      "rebased_changed_lines": 30,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/platform-a11y/src/test/java/ai/eqo/accessibility/GatedActionsGateTest.kt",
+      "old_changed_lines": 13,
+      "rebased_changed_lines": 13,
+      "changed_lines_identical": true
+    },
+    {
+      "path": "android/platform-a11y/src/test/java/ai/eqo/core/agent/TakeoverResumeUserOnlyTest.kt",
+      "old_changed_lines": 34,
+      "rebased_changed_lines": 34,
+      "changed_lines_identical": false
+    }
+  ],
+  "mechanical_file_count": 16,
+  "compared_file_count": 24,
+  "serialization_equal_after_removing_only_diagnostic_lines": {
+    "fun resume(": true,
+    "private fun applyCommand(": true,
+    "private fun terminalize(": true,
+    "private fun emitPlanStatus(": true,
+    "private fun submit(": true
+  },
+  "ordered_stress_test_byte_identical_to_main": true
+}

@@ -35,14 +35,7 @@ class GatedServiceActions(
 
     fun pressHome(): A11yResult = globalAction("home") { ops.performGlobalHome() }
 
-    fun scroll(forward: Boolean): A11yResult =
-        automation.runAction {
-            if (ops.performScroll(forward)) {
-                A11yResult.success("scrolled ${if (forward) "forward" else "backward"}")
-            } else {
-                A11yResult.failure(A11yError.NodeNotFound("scrollable node"))
-            }
-        }
+    fun scroll(forward: Boolean): A11yResult = automation.runAction { ops.performScrollResult(forward) }
 
     fun clickCoordinates(
         x: Float,

@@ -64,6 +64,19 @@ class FakeServiceActionOps : ServiceActionOps {
 }
 
 class GatedActionsGateTest {
+    @Test
+    fun typedScrollFailureSurvivesTheGatedServiceRoute() {
+        val expected = A11yResult.failure(A11yError.ActionRejected("scroll"))
+        val ops =
+            object : ServiceActionOps by FakeServiceActionOps() {
+                override fun performScrollResult(forward: Boolean): A11yResult = expected
+            }
+        val detector = TakeoverDetector()
+        val automation = EqoAutomation({ null }, { EqoAutomation.ServiceState.AVAILABLE }, detector)
+        assertEquals(expected, GatedServiceActions(automation, ops).scroll(forward = true))
+        assertFalse(detector.isAgentActionInFlight())
+    }
+
     private fun fixture(presetPaused: Boolean = false): Fixture {
         val detector = TakeoverDetector()
         if (presetPaused) {

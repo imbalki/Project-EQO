@@ -63,6 +63,7 @@ class StudyTaskController(
             onPlanStatus = { status -> reportStatus(status) },
             config = config,
             onInterStepWait = onInterStepWait,
+            onDiagnostic = { android.util.Log.i("EqoRun", it) },
             onResumeConfirmed = { confirmation -> takeoverDetector.resume(confirmation) },
             externalTakeoverReason = {
                 if (takeoverDetector.isPaused) {
@@ -79,8 +80,10 @@ class StudyTaskController(
 
     /** Executes one step and reports its live progress before and after the apply. */
     private suspend fun dispatch(step: LoopStep): ExecuteResult {
+        android.util.Log.i("EqoRun", "step=${steps.indexOf(step) + 1} status=RUNNING")
         onStepProgress(StepProgress(step.stepId, step.action.name, StepProgressState.RUNNING))
         val result = executor.execute(step)
+        RunDiagnostics.result(steps.indexOf(step) + 1, result)
         onStepProgress(
             StepProgress(
                 stepId = step.stepId,

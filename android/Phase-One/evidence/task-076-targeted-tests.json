@@ -1,0 +1,184 @@
+{
+  "suites": [
+    {
+      "module": "app",
+      "name": "ai.eqo.task.ConfirmationTouchGuardTest",
+      "tests": "8",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:17:47.964Z",
+      "hostname": "<host>",
+      "time": "0.009"
+    },
+    {
+      "module": "app",
+      "name": "ai.eqo.task.NaturalTaskFlowTest",
+      "tests": "7",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:17:48.061Z",
+      "hostname": "<host>",
+      "time": "7.175"
+    },
+    {
+      "module": "app",
+      "name": "ai.eqo.task.SampleRunRegressionTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:17:27.531Z",
+      "hostname": "<host>",
+      "time": "20.059"
+    },
+    {
+      "module": "app",
+      "name": "ai.eqo.task.StudyLoopWiringTest",
+      "tests": "11",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:17:55.307Z",
+      "hostname": "<host>",
+      "time": "0.233"
+    },
+    {
+      "module": "app",
+      "name": "ai.eqo.task.TaskControlPresentationTest",
+      "tests": "3",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:17:55.582Z",
+      "hostname": "<host>",
+      "time": "10.008"
+    },
+    {
+      "module": "core-agent",
+      "name": "ai.eqo.core.agent.ActionLoopDispatchTraceTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:04.367Z",
+      "hostname": "<host>",
+      "time": "39.892"
+    },
+    {
+      "module": "core-agent",
+      "name": "ai.eqo.core.agent.ActionLoopPracticeSafetyTest",
+      "tests": "1",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:44.262Z",
+      "hostname": "<host>",
+      "time": "0.01"
+    },
+    {
+      "module": "core-agent",
+      "name": "ai.eqo.core.agent.ActionLoopRaceTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:44.275Z",
+      "hostname": "<host>",
+      "time": "0.289"
+    },
+    {
+      "module": "core-agent",
+      "name": "ai.eqo.core.agent.ActionLoopResumeTest",
+      "tests": "6",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:44.568Z",
+      "hostname": "<host>",
+      "time": "0.047"
+    },
+    {
+      "module": "core-agent",
+      "name": "ai.eqo.core.agent.ActionLoopSettleTest",
+      "tests": "5",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:44.618Z",
+      "hostname": "<host>",
+      "time": "0.029"
+    },
+    {
+      "module": "core-agent",
+      "name": "ai.eqo.core.agent.ActionLoopTransitionsTest",
+      "tests": "5",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:44.649Z",
+      "hostname": "<host>",
+      "time": "0.029"
+    },
+    {
+      "module": "platform-a11y",
+      "name": "ai.eqo.accessibility.AutomatorsUseGatedRouteTest",
+      "tests": "3",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:48.243Z",
+      "hostname": "<host>",
+      "time": "0.278"
+    },
+    {
+      "module": "platform-a11y",
+      "name": "ai.eqo.accessibility.EqoAutomationFakeTreeTest",
+      "tests": "20",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:48.557Z",
+      "hostname": "<host>",
+      "time": "0.104"
+    },
+    {
+      "module": "platform-a11y",
+      "name": "ai.eqo.accessibility.GatedActionsGateTest",
+      "tests": "5",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:48.728Z",
+      "hostname": "<host>",
+      "time": "0.044"
+    },
+    {
+      "module": "platform-a11y",
+      "name": "ai.eqo.accessibility.TakeoverDetectorTest",
+      "tests": "6",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:48.831Z",
+      "hostname": "<host>",
+      "time": "0.008"
+    },
+    {
+      "module": "platform-a11y",
+      "name": "ai.eqo.core.agent.TakeoverResumeUserOnlyTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-05T10:13:48.951Z",
+      "hostname": "<host>",
+      "time": "2.191"
+    }
+  ],
+  "tests": 94,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+}

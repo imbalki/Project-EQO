@@ -76,42 +76,85 @@ class EqoAutomationPort(
 private class EqoNavigationPort(
     private val automation: () -> EqoAutomation?,
 ) : StudyNavigationPort {
-    override fun observe(): String =
-        when (val result = automation()?.observe()) {
-            is A11yResult.Success -> result.detail
-            is A11yResult.Failure -> ""
-            null -> ""
+    private var failure: ai.eqo.core.agent.ExecuteResult.Failure? = null
+
+    override val lastFailure: ai.eqo.core.agent.ExecuteResult.Failure?
+        get() = failure
+
+    override fun observe(): String {
+        val result = automation()?.observe()
+        record(result)
+        val text = (result as? A11yResult.Success)?.detail.orEmpty()
+        if (result is A11yResult.Success && text.isBlank()) {
+            failure =
+                ai.eqo.core.agent.ExecuteResult
+                    .Failure("a11y_empty_observation", transient = false)
+            android.util.Log.i("EqoRun", "a11y=a11y_empty_observation")
         }
+        return text
+    }
 
-    override fun tap(text: String): Boolean = automation()?.tap(text)?.isSuccess == true
+    override fun tap(text: String): Boolean = record(automation()?.tap(text))
 
-    override fun tapById(viewId: String): Boolean = automation()?.tapById(viewId)?.isSuccess == true
+    override fun tapById(viewId: String): Boolean = record(automation()?.tapById(viewId))
 
-    override fun typeText(text: String): Boolean =
-        automation()
-            ?.type(searchText = text, content = text)
-            ?.isSuccess == true
+    override fun typeText(text: String): Boolean = record(automation()?.type(searchText = text, content = text))
 
-    override fun scroll(direction: String): Boolean =
-        automation()?.scroll(forward = !direction.equals("up", ignoreCase = true))?.isSuccess == true
+    override fun scroll(direction: String): Boolean {
+        val forward = !direction.equals("up", ignoreCase = true)
+        return record(automation()?.scroll(forward = forward))
+    }
 
-    override fun back(): Boolean = globalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+    /** Fixed codes only: target strings and screen contents never enter diagnostics. */
+    private fun record(result: A11yResult?): Boolean {
+        val error = (result as? A11yResult.Failure)?.error
+        val code =
+            when {
+                result == null -> "a11y_not_bound"
+                error == ai.eqo.accessibility.A11yError.AccessibilityDisabled -> "a11y_disabled"
+                error == ai.eqo.accessibility.A11yError.TakeoverDetected -> "a11y_takeover"
+                error == ai.eqo.accessibility.A11yError.SecureWindow -> "a11y_secure_window"
+                error is ai.eqo.accessibility.A11yError.NodeNotFound ->
+                    when (error.target) {
+                        "active window" -> "a11y_no_active_root"
+                        "scrollable node" -> "a11y_no_scrollable_node"
+                        else -> "a11y_node_not_found"
+                    }
+                error is ai.eqo.accessibility.A11yError.ActionRejected -> "a11y_action_rejected"
+                else -> null
+            }
+        failure =
+            code?.let {
+                ai.eqo.core.agent.ExecuteResult
+                    .Failure(it, transient = error is ai.eqo.accessibility.A11yError.NodeNotFound)
+            }
+        android.util.Log.i("EqoRun", "a11y=${code ?: "success"}")
+        return result is A11yResult.Success
+    }
 
-    override fun home(): Boolean = globalAction(AccessibilityService.GLOBAL_ACTION_HOME)
+    override fun back(): Boolean {
+        failure = null
+        return serviceGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+    }
 
-    private fun globalAction(action: Int): Boolean {
-        val service = EQOAccessibilityService.getInstance() ?: return false
-        return when (action) {
-            AccessibilityService.GLOBAL_ACTION_BACK -> service.gatedActions.pressBack().isSuccess
-            AccessibilityService.GLOBAL_ACTION_HOME -> service.gatedActions.pressHome().isSuccess
-            else -> false
-        }
+    override fun home(): Boolean {
+        failure = null
+        return serviceGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME)
     }
 
     override fun enter(): Boolean =
         ai.eqo.accessibility.GenericAppAutomator
             .pressEnter()
             .isSuccess
+}
+
+private fun serviceGlobalAction(action: Int): Boolean {
+    val service = EQOAccessibilityService.getInstance() ?: return false
+    return when (action) {
+        AccessibilityService.GLOBAL_ACTION_BACK -> service.gatedActions.pressBack().isSuccess
+        AccessibilityService.GLOBAL_ACTION_HOME -> service.gatedActions.pressHome().isSuccess
+        else -> false
+    }
 }
 
 /**

@@ -36,6 +36,9 @@ TASK-006 issue #11).
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/TaskDisplayText.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/TaskDisplayTextTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/StudyDispatchTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
+## TASK-073 additions (device sample follow-up)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/RunDiagnostics.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-073) |
 
 ## TASK-066 additions (issue #20)
 
@@ -43,6 +46,7 @@ TASK-006 issue #11).
 | :app | `android/app/src/main/kotlin/ai/eqo/task/TaskControlFeedback.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/SmsDraftOpenerTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/SamplePracticeTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/SampleRunRegressionTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066b issue #20) |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/TaskControlPresentationTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopPracticeSafetyTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |
 

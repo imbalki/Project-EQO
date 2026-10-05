@@ -198,17 +198,46 @@ class StudyLoopWiringTest {
     }
 
     @Test
-    fun `the resume confirmation is minted in exactly one user-gesture handler in the app`() {
+    fun `resume confirmations are minted only in the Run click and resume confirmation handlers`() {
         val mint = Regex("""\bforExplicitUserConfirmation\b""")
         val sites = mutableListOf<String>()
         File("src/main")
             .walkTopDown()
-            .filter { it.isFile && it.extension == "kt" }
+            .filter { it.isFile && it.extension in setOf("kt", "java") }
             .forEach { file ->
-                val matches = codeLines(file).count { mint.containsMatchIn(it) }
-                if (matches > 0) sites += "${file.name}=$matches"
+                val matches = mint.findAll(codeLines(file).joinToString("\n")).count()
+                if (matches > 0) sites += "${file.relativeTo(File("src/main")).invariantSeparatorsPath}=$matches"
             }
-        assertEquals("SF-4: exactly one mint site, in TaskActivity", listOf("TaskActivity.kt=1"), sites)
+        val activityPath = "kotlin/ai/eqo/task/TaskActivity.kt"
+        assertEquals("SF-4: exactly two UI mint sites", listOf("$activityPath=2"), sites)
+        val uiCode = codeLines(File("src/main/$activityPath")).joinToString("\n")
+        val factoryCall = """UserResumeConfirmation\.forExplicitUserConfirmation\(SystemClock\.elapsedRealtime\(\)\)"""
+        val runHandler =
+            Regex(
+                """val startButton = findViewById<Button>\(R\.id\.task_start_button\)\s*""" +
+                    """startButton\.setOnClickListener\s*\{\s*""" +
+                    """val confirmation = $factoryCall\s*""" +
+                    """TakeoverDetector\.shared\.resume\(confirmation\)\s*planRequest\(\)\s*\}""",
+            )
+        val resumeButton =
+            Regex(
+                """val resumeButton = findViewById<Button>\(R\.id\.task_resume_button\)\s*""" +
+                    """protectConfirmationTouches\(resumeButton\)\s*""" +
+                    """resumeButton\.setOnClickListener\s*\{ confirmResume\(\) \}""",
+            )
+        val resumeHandler =
+            Regex(
+                """private fun confirmResume\(\)\s*\{\s*""" +
+                    """if \(controller\?\.currentState\(\) != LoopState\.PAUSED\)\s*\{\s*""" +
+                    """renderControlFeedback\(TaskControlFeedback\.NOT_PAUSED\)\s*return\s*\}\s*""" +
+                    """AlertDialog\s*\.Builder\(this\)\s*\.setTitle\(R\.string\.task_resume_confirm_title\)\s*""" +
+                    """\.setMessage\(R\.string\.task_resume_confirm_message\)\s*""" +
+                    """\.setPositiveButton\(R\.string\.task_resume_confirm_yes\)\s*\{ _, _ ->\s*""" +
+                    """val confirmation = $factoryCall\s*controller\?\.resume\(confirmation\)\s*\}""",
+            )
+        assertEquals("SF-4: Run mint is inside the Run click", 1, runHandler.findAll(uiCode).count())
+        assertEquals("SF-4: protected Resume click opens the confirmation", 1, resumeButton.findAll(uiCode).count())
+        assertEquals("SF-4: Resume mint is inside its positive-button click", 1, resumeHandler.findAll(uiCode).count())
     }
 
     /** Non-comment source lines: guards check code, documentation may name things. */

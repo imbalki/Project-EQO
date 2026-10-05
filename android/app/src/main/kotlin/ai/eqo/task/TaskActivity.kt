@@ -6,9 +6,9 @@
  * core-agent's ActionLoop, wired with the REAL permission check and the REAL approval
  * path (see `StudyLoopWiring`).
  *
- * SF-4: `UserResumeConfirmation.forExplicitUserConfirmation` is minted in exactly ONE
- * place in this app — the resume button's click handler below — so a resume can only
- * follow an actual user gesture. The SF-4 guard test allowlists exactly this file.
+ * SF-4: resume confirmations are minted only by explicit user gesture handlers:
+ * the Run button (a new plan) and the resume dialog's positive button (a paused plan).
+ * The SF-4 guard test allowlists exactly these handlers, never agent/recovery code.
  */
 package ai.eqo.task
 
@@ -91,7 +91,14 @@ class TaskActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.task_screen)
-        findViewById<Button>(R.id.task_start_button).setOnClickListener { planRequest() }
+        val startButton = findViewById<Button>(R.id.task_start_button)
+
+        startButton.setOnClickListener {
+            // A NEW run is an explicit hand-back, not an agent/recovery reset.
+            val confirmation = UserResumeConfirmation.forExplicitUserConfirmation(SystemClock.elapsedRealtime())
+            TakeoverDetector.shared.resume(confirmation)
+            planRequest()
+        }
         findViewById<Button>(R.id.task_pause_button).setOnClickListener { control { it.pause() } }
         findViewById<Button>(R.id.task_stop_button).setOnClickListener { control { it.stop() } }
         findViewById<Button>(R.id.task_takeover_button).setOnClickListener { control { it.takeover() } }

@@ -24,6 +24,41 @@ internal object NodeTreeSearch {
         return found
     }
 
+    /** Tries later containers when an earlier scrollable node rejects this direction. */
+    fun scroll(
+        root: A11yNode?,
+        forward: Boolean,
+    ): A11yResult {
+        var foundScrollable = false
+        val applied =
+            root?.let {
+                findFirst(it) { node ->
+                    if (node.isScrollable) {
+                        foundScrollable = true
+                        node.scroll(forward)
+                    } else {
+                        false
+                    }
+                }
+            }
+        val result =
+            when {
+                root == null -> A11yResult.failure(A11yError.NodeNotFound("active window"))
+                applied != null -> A11yResult.success("scroll action accepted")
+                foundScrollable -> A11yResult.failure(A11yError.ActionRejected("scroll"))
+                else -> A11yResult.failure(A11yError.NodeNotFound("scrollable node"))
+            }
+        val code =
+            when {
+                root == null -> "no_active_root"
+                applied != null -> "action_accepted"
+                foundScrollable -> "action_rejected"
+                else -> "no_scrollable_node"
+            }
+        android.util.Log.i("EqoRun", "scroll=$code")
+        return result
+    }
+
     /** Text/contentDescription of every node in the tree, depth-first. */
     fun screenText(root: A11yNode): String {
         val sb = StringBuilder()

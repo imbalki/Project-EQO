@@ -58,6 +58,7 @@ class ActionLoop(
     private val onInterStepWait: (nextStep: Int, total: Int, remainingMs: Long) -> Unit = { _, _, _ -> },
     private val externalTakeoverReason: () -> PauseReason? = { null },
     private val onResumeConfirmed: (UserResumeConfirmation) -> Unit = {},
+    private val onDiagnostic: (String) -> Unit = {},
 ) {
     data class Config(
         /** Command-poll granularity; every transition is bounded in these. */
@@ -168,7 +169,9 @@ class ActionLoop(
                 records += remainingNotExecuted(step)
                 break
             }
+            onDiagnostic("step=${index + 1} phase=start")
             val record = runStep(step)
+            onDiagnostic("step=${index + 1} outcome=${record.outcome.diagnosticKind}")
             records += record
             // A typed partial-apply on an irreversible action stops the plan:
             // the effect is uncertain, so nothing else may run on top of it.
@@ -220,6 +223,7 @@ class ActionLoop(
                         StepOutcome.NotExecuted("loop settled before dispatch"),
                         attempts - 1,
                     )
+            onDiagnostic("step=${steps.indexOf(step) + 1} execute=${apply.diagnosticKind} code=${apply.diagnosticCode}")
             val observed =
                 try {
                     observe()
@@ -234,6 +238,7 @@ class ActionLoop(
                 } else {
                     verifier.verify(step.action, apply, observed)
                 }
+            onDiagnostic("step=${steps.indexOf(step) + 1} verification=${outcome.diagnosticCode(apply, step.action)}")
             // A pause/takeover that landed during this step takes effect now,
             // after the step finished — the loop must not start another action.
             val canContinue = settleBeforeStep()
@@ -276,10 +281,8 @@ class ActionLoop(
 
     @Suppress("ReturnCount") // each gate failure returns its typed outcome
     private suspend fun gateCheck(step: LoopStep): StepOutcome? {
-        val permission =
-            step.requiredPermission
-                ?.let { permissionCheck(step) }
-                ?: PermissionDecision.Granted
+        val permission = permissionCheck(step)
+        onDiagnostic("step=${steps.indexOf(step) + 1} permission=${permission.diagnosticKind}")
         if (permission is PermissionDecision.Denied) {
             return StepOutcome.Failed("permission denied: ${permission.reason}")
         }
@@ -381,6 +384,7 @@ class ActionLoop(
     private suspend fun delayBetweenSteps(nextStep: Int): Boolean {
         // Keep the optional last-step wait policy here, with the pacing itself.
         if (nextStep > steps.size && !config.delayAfterLastStep) return true
+        onDiagnostic("pacing=start next=$nextStep delay_ms=${config.interStepDelayMs}")
         var waitedMs = 0L
         while (waitedMs < config.interStepDelayMs) {
             if (!settleBeforeStep()) return false
@@ -391,6 +395,7 @@ class ActionLoop(
             delay(config.tickMs)
             waitedMs += config.tickMs
         }
+        onDiagnostic("pacing=end next=$nextStep")
         return settleBeforeStep()
     }
 
@@ -416,6 +421,7 @@ class ActionLoop(
                     }
                 is CmdTakeover ->
                     if (terminal.get() == null && state.get() == LoopState.RUNNING) {
+                        onDiagnostic("takeover=${command.reason.name}")
                         pauseReason.set(command.reason)
                         state.set(LoopState.PAUSED)
                         emitPlanStatus(PlanStatus.PAUSED)
@@ -438,6 +444,7 @@ class ActionLoop(
     private fun emitPlanStatus(status: PlanStatus) {
         synchronized(lock) {
             planStatusEvents += status
+            onDiagnostic("status=${status.name}")
             onPlanStatus(status)
         }
     }
@@ -467,3 +474,51 @@ class ActionLoop(
             )
         }
 }
+
+private val ExecuteResult.diagnosticKind: String
+    get() =
+        when (this) {
+            is ExecuteResult.Success -> "Success"
+            is ExecuteResult.Failure -> "Failure"
+            is ExecuteResult.Interrupted -> "Interrupted"
+        }
+
+private val StepOutcome.diagnosticKind: String
+    get() =
+        when (this) {
+            is StepOutcome.Completed -> "Completed"
+            is StepOutcome.PartialApply -> "PartialApply"
+            is StepOutcome.Failed -> "Failed"
+            is StepOutcome.NotExecuted -> "NotExecuted"
+        }
+
+private val ExecuteResult.diagnosticCode: String
+    get() =
+        when (this) {
+            is ExecuteResult.Success -> "executor_success"
+            is ExecuteResult.Failure -> "execution_failed"
+            is ExecuteResult.Interrupted -> "apply_interrupted_effect_unknown"
+        }
+
+private fun StepVerifier.Outcome.diagnosticCode(
+    apply: ExecuteResult,
+    action: ExecutedAction,
+): String =
+    when (this) {
+        is StepVerifier.Outcome.Confirmed ->
+            if (action.expectedPostconditions.isEmpty()) {
+                "executor_only_no_independent_postconditions"
+            } else {
+                "untrusted_screen_match"
+            }
+        is StepVerifier.Outcome.Partial ->
+            if (apply is ExecuteResult.Interrupted) "interrupted_effect_unknown" else "postconditions_unobserved"
+        is StepVerifier.Outcome.Failed -> "failed"
+    }
+
+private val PermissionDecision.diagnosticKind: String
+    get() =
+        when (this) {
+            PermissionDecision.Granted -> "Granted"
+            is PermissionDecision.Denied -> "Denied"
+        }

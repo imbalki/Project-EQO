@@ -169,6 +169,9 @@ interface StudyNavigationPort {
     /** Untrusted screen text (never treated as instructions). */
     fun observe(): String
 
+    /** Most recent typed accessibility failure, when the port supports it. */
+    val lastFailure: ExecuteResult.Failure? get() = null
+
     fun tap(text: String): Boolean
 
     fun tapById(viewId: String): Boolean
@@ -228,7 +231,7 @@ class StudyActionExecutor(
 ) {
     private val handlers: Map<String, suspend (Map<String, String>) -> Boolean> =
         mapOf(
-            "observe" to { true.also { port.observe() } },
+            "observe" to { port.observe().isNotBlank() },
             "tap" to { port.tap(it.value("text")) },
             "click_text" to { port.tap(it.value("text")) },
             "tap_text" to { port.tap(it.value("text")) },
@@ -263,7 +266,11 @@ class StudyActionExecutor(
         return if (handler(action.params)) {
             ExecuteResult.Success(successDetail(verb))
         } else {
-            ExecuteResult.Failure("'$verb' did not apply on the current screen", transient = !action.irreversible)
+            port.lastFailure
+                ?: ExecuteResult.Failure(
+                    "study_action_not_applied",
+                    transient = verb != "observe" && !action.irreversible,
+                )
         }
     }
 

@@ -39,7 +39,8 @@ class AutomatorsUseGatedRouteTest {
     private val rawCall =
         Regex(
             """\b([A-Za-z_]\w*)\s*\??\.\s*(findAndClick|findAndClickById|findAndType|findAndTypeById|""" +
-                """performImeEnter|performScroll|performGlobalAction|performGlobalBack|performGlobalHome|""" +
+                """performImeEnter|performScroll|performScrollResult|performGlobalAction|""" +
+                """performGlobalBack|performGlobalHome|""" +
                 """performAction|clickCoordinates)\s*\(""",
         )
 

@@ -176,6 +176,36 @@ class EqoAutomationFakeTreeTest {
         assertEquals(A11yError.NodeNotFound("scrollable node"), (result as A11yResult.Failure).error)
     }
 
+    @Test
+    fun scrollContinuesIntoARejectedScrollableAncestor() {
+        val child = FakeNode(isScrollable = true)
+        val root = FakeNode(isScrollable = true).apply { rejectActions = true }.child(child)
+        assertTrue(automation(root).scroll(forward = true).isSuccess)
+        assertEquals(0, root.scrollCount)
+        assertEquals(1, child.scrollCount)
+    }
+
+    @Test
+    fun scrollContinuesPastARejectedContainerToALaterSibling() {
+        val first = FakeNode(isScrollable = true).apply { rejectActions = true }
+        val second = FakeNode(isScrollable = true)
+        val third = FakeNode(isScrollable = true)
+        val root = FakeNode().child(first).child(second).child(third)
+        assertTrue(automation(root).scroll(forward = false).isSuccess)
+        assertEquals(0, first.scrollCount)
+        assertEquals(1, second.scrollCount)
+        assertEquals("must stop after the first accepted action", 0, third.scrollCount)
+    }
+
+    @Test
+    fun scrollDistinguishesMissingRootFromRejectedContainers() {
+        val missing = automation(null).scroll(forward = true) as A11yResult.Failure
+        assertEquals(A11yError.NodeNotFound("active window"), missing.error)
+        val rejected = FakeNode(isScrollable = true).apply { rejectActions = true }
+        val result = automation(rejected).scroll(forward = true) as A11yResult.Failure
+        assertEquals(A11yError.ActionRejected("scroll"), result.error)
+    }
+
     // ── takeover: user touch during an agent action pauses the loop ───────
 
     @Test

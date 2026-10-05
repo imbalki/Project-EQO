@@ -26,6 +26,14 @@ interface ServiceActionOps {
 
     fun performScroll(forward: Boolean): Boolean
 
+    /** Typed edge preserves diagnosis; legacy adapters retain their Boolean contract. */
+    fun performScrollResult(forward: Boolean): A11yResult =
+        if (performScroll(forward)) {
+            A11yResult.success("scroll action accepted")
+        } else {
+            A11yResult.failure(A11yError.NodeNotFound("scrollable node"))
+        }
+
     fun clickCoordinates(
         x: Float,
         y: Float,

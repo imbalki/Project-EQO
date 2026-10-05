@@ -13,7 +13,7 @@ internal fun protectConfirmationDialog(dialog: AlertDialog) {
     protectConfirmationTouches(dialog.findViewById(android.R.id.content))
 }
 
-/** Guard before child filtering/click dispatch, including partially obscured touches on API 30. */
+/** Reject touch-point obscuration before child dispatch; overlays elsewhere do not block. */
 internal fun protectConfirmationTouches(view: View) {
     view.filterTouchesWhenObscured = true
     val parent = view.parent as ViewGroup

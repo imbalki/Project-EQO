@@ -68,6 +68,25 @@ class SamplePracticeTest {
     }
 
     @Test
+    fun `a stale takeover blocks first dispatch until a new explicit user confirmation`() =
+        runTest {
+            val f = Fixture()
+            f.detector.onAgentActionStarted()
+            assertTrue(f.detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 10L))
+            f.detector.onAgentActionFinished()
+            val run = async { f.controller.run() }
+            runCurrent()
+            assertEquals(LoopState.PAUSED, f.controller.currentState())
+            assertTrue(f.executed.isEmpty())
+            // The observed Stopped receipt requires a Stop command; stale takeover alone pauses.
+            assertTrue(f.controller.stop())
+            advanceUntilIdle()
+            assertEquals("STOPPED", run.await().terminal)
+            assertTrue(f.executed.isEmpty())
+            assertTrue("run and Stop cannot clear takeover", f.detector.isPaused)
+        }
+
+    @Test
     fun `sample alone opts into eight second waits and countdown while running`() =
         runTest {
             assertEquals(250L, ActionLoop.Config().interStepDelayMs)

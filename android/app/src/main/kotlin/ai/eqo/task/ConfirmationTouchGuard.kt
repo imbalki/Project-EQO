@@ -15,7 +15,8 @@ internal class ConfirmationTouchGuard {
     }
 }
 
-internal fun acceptsConfirmationTouch(flags: Int): Boolean = flags and OBSCURATION_FLAGS == 0
+internal fun acceptsConfirmationTouch(flags: Int): Boolean = flags and TOUCH_POINT_OBSCURED == 0
 
-// MotionEvent.FLAG_WINDOW_IS_OBSCURED (1) | FLAG_WINDOW_IS_PARTIALLY_OBSCURED (2).
-private const val OBSCURATION_FLAGS = 0x1 or 0x2
+// Match filterTouchesWhenObscured: reject an overlay covering the touch point.
+// PARTIALLY_OBSCURED alone can be an OEM overlay elsewhere on the screen.
+private const val TOUCH_POINT_OBSCURED = 0x1
