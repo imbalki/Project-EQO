@@ -4,12 +4,42 @@
   <CurrentIssues>
     <ID>ComplexCondition:AdvancedControlActions.kt$AdvancedControlActions.ClickCoordinatesAction$!x.isFinite() || !y.isFinite() || x &lt; 0 || y &lt; 0</ID>
     <ID>ComplexCondition:CommunicationActions.kt$CommunicationActions.SendTelegramAction$trimmed.startsWith("@") || (trimmed.isNotEmpty() &amp;&amp; !trimmed.contains(" ") &amp;&amp; !trimmed.all { it.isDigit() })</ID>
+    <ID>CyclomaticComplexMethod:AndroidActionRegistry.kt$AndroidActionRegistry$private fun canonicalParams( name: String, params: Map&lt;String, String&gt;, ): Map&lt;String, String&gt;</ID>
     <ID>CyclomaticComplexMethod:CommunicationActions.kt$CommunicationActions.SendTelegramAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
     <ID>CyclomaticComplexMethod:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun resolveFile( context: Context, pathStr: String?, ): File</ID>
+    <ID>CyclomaticComplexMethod:SystemActions.kt$SystemActions.SetVolumeAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>CyclomaticComplexMethod:SystemActions.kt$SystemActions.ToggleDndAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>CyclomaticComplexMethod:SystemActions.kt$SystemActions.ToggleFlashlightAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.ClearBrowserDataAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.ClearBrowserDataAction$failure is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.ClearClipboardAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.CopyToClipboardAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.EnablePrivateModeAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.GetClipboardAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.InstallAppAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.OpenAppAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.OpenBrowserAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.OpenUrlAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.SetBrightnessAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.SetRingerModeAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.SetVolumeAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.SetWallpaperAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.ToggleDndAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.ToggleFlashlightAction$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>InstanceOfCheckForException:SystemActions.kt$SystemActions.ToggleFlashlightAction$failure is kotlinx.coroutines.CancellationException</ID>
     <ID>LargeClass:StorageWorkspaceProvider.kt$StorageWorkspaceProvider</ID>
     <ID>LongMethod:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun resolveFile( context: Context, pathStr: String?, ): File</ID>
-    <ID>LongParameterList:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$( context: Context, permissions: PermissionRequester, automation: () -&gt; EqoAutomation?, unknownActions: UnknownActionSink, store: SensitiveMemoryStore, callVerifier: CallFlowVerifier = AndroidCallFlowVerifier(), )</ID>
+    <ID>LongMethod:SystemActions.kt$SystemActions.ToggleFlashlightAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>LongParameterList:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$( context: Context, permissions: PermissionRequester, automation: () -&gt; EqoAutomation?, unknownActions: UnknownActionSink, store: SensitiveMemoryStore, callVerifier: CallFlowVerifier = AndroidCallFlowVerifier(), screenAnalyzer: ScreenAnalyzer? = null, )</ID>
     <ID>MagicNumber:AdvancedControlActions.kt$AdvancedControlActions.WaitAction$2000L</ID>
+    <ID>MagicNumber:SystemActions.kt$SystemActions.OpenAppAction$2000</ID>
+    <ID>MagicNumber:SystemActions.kt$SystemActions.PanelAction$30</ID>
+    <ID>MagicNumber:SystemActions.kt$SystemActions.SetBrightnessAction$100</ID>
+    <ID>MagicNumber:SystemActions.kt$SystemActions.SetBrightnessAction$255</ID>
+    <ID>MagicNumber:SystemActions.kt$SystemActions.SetBrightnessAction$50</ID>
+    <ID>MagicNumber:SystemActions.kt$SystemActions.SetVolumeAction$100</ID>
+    <ID>MagicNumber:SystemActions.kt$SystemActions.SetVolumeAction$50</ID>
+    <ID>MagicNumber:TextScreenAnalyzer.kt$TextScreenAnalyzer$30_000L</ID>
     <ID>MaxLineLength:AdvancedControlActions.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/AdvancedControlActions.kt</ID>
     <ID>MaxLineLength:AdvancedControlActions.kt$AdvancedControlActions.ClickCoordinatesAction$val x = params["x"]?.toFloatOrNull() ?: return ActionResult(false, null, "x coordinate is missing or invalid")</ID>
     <ID>MaxLineLength:AdvancedControlActions.kt$AdvancedControlActions.ClickCoordinatesAction$val y = params["y"]?.toFloatOrNull() ?: return ActionResult(false, null, "y coordinate is missing or invalid")</ID>
@@ -20,14 +50,15 @@
     <ID>MaxLineLength:AdvancedControlActions.kt$AdvancedControlActions.ZipFilesAction$val zipFilePath = params["zipFilePath"] ?: return ActionResult(false, null, "zipFilePath parameter is missing")</ID>
     <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$(contact.startsWith("@") || (contact.isNotEmpty() &amp;&amp; !contact.contains(" ") &amp;&amp; !contact.all { it.isDigit() }))</ID>
     <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$ActionPermission.Runtime(Manifest.permission.READ_PHONE_STATE, "Allow phone state access to verify that the call started.")</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$if</ID>
     <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$required += ActionPermission.Runtime(Manifest.permission.CALL_PHONE, "Allow phone access to place this call.")</ID>
     <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$required += ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Allow contacts access to find this person.")</ID>
     <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$return ActionResult.Failure("${permission.explanation} Permission was not granted; this step did not run.")</ID>
     <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$return ActionResult.Failure("Required parameters must not be empty: ${blankRequired.joinToString { it.name }}.")</ID>
     <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$val aliases = if (name == "MAKE_CALL") listOf("number", "phone", "phoneNumber") else listOf("to", "recipient", "username")</ID>
     <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$val blankRequired = ActionSchema.getAction(actionName)!!.params.filter { it.required &amp;&amp; ready[it.name].isNullOrBlank() }</ID>
-    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$)</ID>
     <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$private val CONTACT_ACTIONS = setOf("SEND_SMS", "SEND_WHATSAPP", "SEND_TELEGRAM", "MAKE_CALL", "MAKE_VIDEO_CALL")</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$setOf("READ_FILE", "LIST_FILES", "LIST_INSTALLED_APPS", "GET_CLIPBOARD", "GET_SYSTEM_INFO", "ANALYZE_SCREENSHOT")</ID>
     <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$unknownActions: UnknownActionSink = UnknownActionSink { android.util.Log.w("EqoActions", "Unsupported action requested") }</ID>
     <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$AndroidActionRegistry(context, listOf(listOf(action)), PermissionRequester { false }, UnknownActionSink { unknown += it })</ID>
     <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$assertFalse(registry.execute("UNZIP_FILE", mapOf("zipFilePath" to "evil.zip", "destDirPath" to "target")).success)</ID>
@@ -55,10 +86,38 @@
     <ID>MaxLineLength:SaveSensitiveInfoAction.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/CalendarActions.kt lines 582-602</ID>
     <ID>MaxLineLength:StorageWorkspaceProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt</ID>
     <ID>MaxLineLength:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$if</ID>
+    <ID>MaxLineLength:SystemActions.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/SystemActions.kt</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions$PanelAction("TOGGLE_MOBILE_DATA", Settings.Panel.ACTION_INTERNET_CONNECTIVITY, Settings.ACTION_DATA_ROAMING_SETTINGS)</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions$private val globalAction: (Int) -&gt; Boolean = { EQOAccessibilityService.getInstance()?.performGlobalAction(it) == true }</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.AnalyzeScreenshotAction$?:</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.AnalyzeScreenshotAction$return analyzer.analyze(params["question"] ?: "What do you see on this screen?", (observation as A11yResult.Success).detail)</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.ClearBrowserDataAction$ActionResult.UserActionRequired("App settings opened; find your browser and confirm clearing its data yourself.")</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.ClearBrowserDataAction$ActionResult.UserActionRequired("Chrome app settings opened; choose what data to clear and confirm yourself.")</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.ClearBrowserDataAction$ActionResult.UserActionRequired("Chrome clear-data page opened; select what to clear and confirm yourself.")</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.EnablePrivateModeAction$ActionResult.UserActionRequired("Browser opened; switch to private mode manually and verify it before browsing.")</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.GlobalAction$"CLOSE_APP" -&gt; ActionResult.Success(mapOf("message" to "Home screen requested; app was not force-stopped."))</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.InstallAppAction$ActionResult.UserActionRequired("Web store search opened; select an app and confirm installation yourself.")</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.InstallAppAction$Intent(Intent.ACTION_VIEW, "https://play.google.com/store/search?q=${Uri.encode(appName)}".toUri())</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.OpenAppAction$label.contains(appName, ignoreCase = true) || it.packageName.contains(appName, ignoreCase = true)</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.OpenUrlAction$if</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.PanelAction$return ActionResult.UserActionRequired("Settings opened; change the radio $description yourself. No state change was verified.")</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.SetBrightnessAction$check(Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, targetVal))</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.SetRingerModeAction$ActionResult(false, null, "I need Do Not Disturb access to change the ringer mode. Please grant it in Settings.")</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.SetRingerModeAction$if (!requestDndAccess(context)) return ActionResult.Failure("DND policy access was not granted; ringer mode did not change.")</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.SetVolumeAction$"I don't have permission to change the $streamLabel volume. Please check your Do Not Disturb settings."</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.SetVolumeAction$change { audioManager.setStreamVolume(streamType, targetVolume, AudioManager.FLAG_SHOW_UI) }?.let { return it }</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.SetVolumeAction$if</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.ToggleDndAction$if (!requestDndAccess(context)) return ActionResult.Failure("DND policy access was not granted; DND did not change.")</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.ToggleDndAction$val currentlyOn = notificationManager.currentInterruptionFilter != NotificationManager.INTERRUPTION_FILTER_ALL</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.ToggleDndAction$val filter = if (targetOn) NotificationManager.INTERRUPTION_FILTER_NONE else NotificationManager.INTERRUPTION_FILTER_ALL</ID>
+    <ID>MaxLineLength:SystemActions.kt$SystemActions.ToggleFlashlightAction$ActionPermission.Runtime(Manifest.permission.CAMERA, "Allow camera access to control the flashlight.")</ID>
+    <ID>MaxLineLength:TextScreenAnalyzer.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/VisionEngine.kt (text fallback).</ID>
+    <ID>MaxLineLength:TextScreenAnalyzer.kt$TextScreenAnalyzer$if (screenText.isBlank()) return ActionResult.Failure("No visible screen text could be read; no image was sent.")</ID>
     <ID>NestedBlockDepth:CommunicationActions.kt$CommunicationActions.MakeVideoCallAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
     <ID>NestedBlockDepth:CommunicationActions.kt$CommunicationActions.OpenTelegramAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
     <ID>NestedBlockDepth:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun unzipFile( context: Context, zipFilePath: String, destDirPath: String, ): ActionResult</ID>
     <ID>NestedBlockDepth:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun writeFile( context: Context, filePath: String, content: String, ): ActionResult</ID>
+    <ID>NestedBlockDepth:SystemActions.kt$SystemActions.ClearBrowserDataAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
     <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.ClickCoordinatesAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
     <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.ClickIdAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
     <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.ClickTextAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
@@ -97,9 +156,25 @@
     <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$private fun findOrCreateDocumentByPath( root: DocumentFile, path: String, isDirectory: Boolean = false, ): DocumentFile?</ID>
     <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$private fun listFilesLocal( context: Context, pathStr: String?, ): ActionResult</ID>
     <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$private fun readFileLocal( context: Context, filePath: String, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.AnalyzeScreenshotAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.ClearClipboardAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.CopyToClipboardAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.GlobalAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.InstallAppAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.OpenAppAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.OpenUrlAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.PanelAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.SetBrightnessAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.SetRingerModeAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.SetVolumeAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.ToggleDndAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SystemActions.kt$SystemActions.ToggleFlashlightAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
     <ID>SwallowedException:AdvancedControlActions.kt$AdvancedControlActions.ListInstalledAppsAction$e: Exception</ID>
     <ID>SwallowedException:CommunicationActions.kt$CommunicationActions$e: Exception</ID>
     <ID>SwallowedException:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$e: Exception</ID>
+    <ID>SwallowedException:SystemActions.kt$SystemActions.PanelAction$failure: Exception</ID>
+    <ID>SwallowedException:SystemActions.kt$SystemActions.SetRingerModeAction$e: SecurityException</ID>
+    <ID>SwallowedException:SystemActions.kt$SystemActions.SetVolumeAction$e: SecurityException</ID>
     <ID>ThrowsCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun resolveFile( context: Context, pathStr: String?, ): File</ID>
     <ID>TooGenericExceptionCaught:AdvancedControlActions.kt$AdvancedControlActions.ListInstalledAppsAction$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CommunicationActions.kt$CommunicationActions$e: Exception</ID>
@@ -110,6 +185,26 @@
     <ID>TooGenericExceptionCaught:CommunicationActions.kt$CommunicationActions.SendEmailAction$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CommunicationActions.kt$CommunicationActions.SendWhatsAppGroupAction$e: Exception</ID>
     <ID>TooGenericExceptionCaught:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.ClearBrowserDataAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.ClearBrowserDataAction$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.ClearClipboardAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.CopyToClipboardAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.EnablePrivateModeAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.GetClipboardAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.InstallAppAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.InstallAppAction$ex: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.OpenAppAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.OpenBrowserAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.OpenUrlAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.PanelAction$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.SetBrightnessAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.SetRingerModeAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.SetVolumeAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.SetWallpaperAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.ToggleDndAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.ToggleFlashlightAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SystemActions.kt$SystemActions.ToggleFlashlightAction$failure: Exception</ID>
+    <ID>TooGenericExceptionThrown:SystemActions.kt$SystemActions.ClearBrowserDataAction$throw Exception("Chrome settings not available")</ID>
     <ID>TooManyFunctions:StorageWorkspaceProvider.kt$StorageWorkspaceProvider</ID>
   </CurrentIssues>
 </SmellBaseline>

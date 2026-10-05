@@ -100,6 +100,27 @@ class AndroidActionRegistry internal constructor(
         params: Map<String, String>,
     ): Map<String, String> {
         val result = params.toMutableMap()
+        if (name == "SET_RINGER_MODE") {
+            result["mode"]?.lowercase()?.trim()?.let {
+                result["mode"] = mapOf("mute" to "silent", "vibration" to "vibrate")[it] ?: it
+            }
+        }
+        if (name == "SET_VOLUME") {
+            result["type"]?.lowercase()?.trim()?.let {
+                result["type"] = mapOf("ringtone" to "ring", "ringer" to "ring", "notif" to "notification")[it] ?: it
+            }
+        }
+        if (name in setOf("TOGGLE_FLASHLIGHT", "TOGGLE_WIFI", "TOGGLE_BLUETOOTH", "TOGGLE_MOBILE_DATA", "TOGGLE_HOTSPOT", "TOGGLE_DND")) {
+            val raw = (result["state"] ?: result["on"])?.lowercase()?.trim()
+            if (raw != null) {
+                result["state"] =
+                    when (raw) {
+                        "on", "true", "enable", "yes" -> "on"
+                        "off", "false", "disable", "no" -> "off"
+                        else -> "toggle"
+                    }
+            }
+        }
         if (name in CONTACT_ACTIONS && "contact" !in result) {
             val aliases = if (name == "MAKE_CALL") listOf("number", "phone", "phoneNumber") else listOf("to", "recipient", "username")
             aliases.firstNotNullOfOrNull { result[it] }?.let { result["contact"] = it }
@@ -112,14 +133,24 @@ class AndroidActionRegistry internal constructor(
 
     companion object {
         private val CONTACT_ACTIONS = setOf("SEND_SMS", "SEND_WHATSAPP", "SEND_TELEGRAM", "MAKE_CALL", "MAKE_VIDEO_CALL")
-        private val UNTRUSTED_OUTPUTS = setOf("READ_FILE", "LIST_FILES", "LIST_INSTALLED_APPS")
+        private val UNTRUSTED_OUTPUTS =
+            setOf("READ_FILE", "LIST_FILES", "LIST_INSTALLED_APPS", "GET_CLIPBOARD", "GET_SYSTEM_INFO", "ANALYZE_SCREENSHOT")
 
         fun create(
             context: Context,
             permissions: PermissionRequester,
             automation: () -> EqoAutomation? = { EQOAccessibilityService.getInstance()?.automation },
             unknownActions: UnknownActionSink = UnknownActionSink { android.util.Log.w("EqoActions", "Unsupported action requested") },
-        ): AndroidActionRegistry = createWithStore(context, permissions, automation, unknownActions, AndroidSensitiveMemoryStore(context))
+            screenAnalyzer: ScreenAnalyzer? = null,
+        ): AndroidActionRegistry =
+            createWithStore(
+                context,
+                permissions,
+                automation,
+                unknownActions,
+                AndroidSensitiveMemoryStore(context),
+                screenAnalyzer = screenAnalyzer,
+            )
 
         internal fun createWithStore(
             context: Context,
@@ -128,6 +159,7 @@ class AndroidActionRegistry internal constructor(
             unknownActions: UnknownActionSink,
             store: SensitiveMemoryStore,
             callVerifier: CallFlowVerifier = AndroidCallFlowVerifier(),
+            screenAnalyzer: ScreenAnalyzer? = null,
         ): AndroidActionRegistry {
             val launcher = GatedIntentLauncher(context, automation)
             val calls = CallFlowExecutor(callVerifier, launcher)
@@ -136,6 +168,7 @@ class AndroidActionRegistry internal constructor(
                 listOf(
                     CommunicationActions(ContactResolver(context), calls, launcher).getActions(),
                     AdvancedControlActions().getActions(),
+                    SystemActions(launcher, permissions, automation, screenAnalyzer).getActions(),
                     listOf(SaveSensitiveInfoAction(store)),
                 ),
                 permissions,
