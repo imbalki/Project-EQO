@@ -25,6 +25,25 @@ import java.util.Collections
 import java.util.Random
 
 class ActionLoopRaceTest {
+    private suspend fun executeRecorded(
+        step: LoopStep,
+        loop: ActionLoop,
+        executor: RecordingExecutor,
+        trace: DispatchTrace,
+        events: List<PlanStatus>,
+    ): ExecuteResult {
+        executor.dispatchStates += loop.currentState()
+        trace.start(step.stepId, loop.currentState())
+        if (synchronized(events) { events.any { it.isTerminalStatus() } }) {
+            executor.dispatchAfterTerminal.incrementAndGet()
+        }
+        return try {
+            executor.execute(step)
+        } finally {
+            trace.finish(step.stepId, loop.currentState())
+        }
+    }
+
     private fun assertInvariants(
         round: String,
         loop: ActionLoop,
@@ -72,6 +91,7 @@ class ActionLoopRaceTest {
         runTest {
             val random = Random(20261003L)
             for (round in 1..40) {
+                val trace = DispatchTrace()
                 val events = Collections.synchronizedList(mutableListOf<PlanStatus>())
                 val executor = RecordingExecutor(applyDelayMs = 40L + random.nextInt(60))
                 lateinit var loop: ActionLoop
@@ -84,15 +104,12 @@ class ActionLoopRaceTest {
                                 testStep("s3", action = "SCROLL"),
                             ),
                         approvalGate = { ApprovalDecision.Approved },
-                        execute = { step ->
-                            executor.dispatchStates += loop.currentState()
-                            if (events.any { it != PlanStatus.RUNNING }) {
-                                executor.dispatchAfterTerminal.incrementAndGet()
-                            }
-                            executor.execute(step)
-                        },
+                        execute = { step -> executeRecorded(step, loop, executor, trace, events) },
                         observe = { "" },
-                        onPlanStatus = { events += it },
+                        onPlanStatus = {
+                            trace.status(it, loop.currentState())
+                            events += it
+                        },
                         config = ActionLoop.Config(tickMs = 10, actionTimeoutMs = 5_000, interStepDelayMs = 20),
                     )
                 val run = async { loop.run() }
@@ -121,6 +138,7 @@ class ActionLoopRaceTest {
                 }
                 advanceUntilIdle()
                 val report = run.await()
+                println("virtual-round $round trace\n${trace.dump()}")
                 assertInvariants("virtual-round $round:", loop, executor, report, events)
             }
         }
@@ -130,6 +148,7 @@ class ActionLoopRaceTest {
         runBlocking {
             val random = Random(17L)
             repeat(10) { round ->
+                val trace = DispatchTrace()
                 val events = Collections.synchronizedList(mutableListOf<PlanStatus>())
                 val executor = RecordingExecutor(applyDelayMs = 5L + random.nextInt(10))
                 lateinit var loop: ActionLoop
@@ -141,15 +160,12 @@ class ActionLoopRaceTest {
                                 testStep("s2", action = "DELETE", irreversible = true),
                             ),
                         approvalGate = { ApprovalDecision.Approved },
-                        execute = { step ->
-                            executor.dispatchStates += loop.currentState()
-                            if (events.any { it != PlanStatus.RUNNING }) {
-                                executor.dispatchAfterTerminal.incrementAndGet()
-                            }
-                            executor.execute(step)
-                        },
+                        execute = { step -> executeRecorded(step, loop, executor, trace, events) },
                         observe = { "" },
-                        onPlanStatus = { events += it },
+                        onPlanStatus = {
+                            trace.status(it, loop.currentState())
+                            events += it
+                        },
                         config = ActionLoop.Config(tickMs = 2, actionTimeoutMs = 5_000, interStepDelayMs = 2),
                     )
                 val run = async(Dispatchers.Default) { loop.run() }
@@ -180,6 +196,7 @@ class ActionLoopRaceTest {
                     )
                 commandJobs.forEach { it.join() }
                 val report = withContext(Dispatchers.Default) { run.await() }
+                println("threaded-round ${round + 1} trace\n${trace.dump()}")
                 assertInvariants("threaded-round ${round + 1}:", loop, executor, report, events)
             }
         }

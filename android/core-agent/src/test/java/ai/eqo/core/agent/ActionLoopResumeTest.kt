@@ -4,6 +4,7 @@
  */
 package ai.eqo.core.agent
 
+import ai.eqo.data.models.PlanStatus
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -13,6 +14,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.FutureTask
+import java.util.concurrent.TimeUnit
 
 class ActionLoopResumeTest {
     private fun pausedLoop(): Pair<ActionLoop, RecordingExecutor> {
@@ -25,6 +29,91 @@ class ActionLoopResumeTest {
                 observe = { "" },
             )
         return loop to executor
+    }
+
+    @Test
+    fun `confirmed resume cannot overwrite stop`() = assertTerminalRace(PlanTerminal.STOPPED)
+
+    @Test
+    fun `confirmed resume cannot overwrite cancel`() = assertTerminalRace(PlanTerminal.CANCELLED)
+
+    private fun assertTerminalRace(terminal: PlanTerminal) =
+        runTest {
+            run {
+                val entered = CountDownLatch(1)
+                val release = CountDownLatch(1)
+                val events = mutableListOf<Pair<PlanStatus, LoopState>>()
+                lateinit var loop: ActionLoop
+                loop =
+                    ActionLoop(
+                        steps = listOf(testStep("s1")),
+                        approvalGate = { ApprovalDecision.Approved },
+                        execute = { error("paused/terminal loop must not dispatch") },
+                        observe = { "" },
+                        onPlanStatus = { events += it to loop.currentState() },
+                        onResumeConfirmed = {
+                            entered.countDown()
+                            check(release.await(10, TimeUnit.SECONDS))
+                        },
+                    )
+                loop.pause()
+                val run = async { loop.run() }
+                runCurrent()
+                assertEquals(LoopState.PAUSED, loop.currentState())
+                val resume = FutureTask { loop.resume(UserResumeConfirmation.forExplicitUserConfirmation(42L)) }
+                val resumeThread = Thread(resume, "confirmed-resume")
+                // Stage the runner's already-dequeued terminal transition directly, so
+                // pollCommand's queue lock cannot accidentally mask the state-write race.
+                // No production test hook or altered command semantics are required.
+                val settle =
+                    FutureTask {
+                        val method = ActionLoop::class.java.getDeclaredMethod("terminalize", PlanTerminal::class.java)
+                        method.isAccessible = true
+                        method.invoke(loop, terminal)
+                    }
+                val settleThread = Thread(settle, "dequeued-terminal")
+                resumeThread.start()
+                releaseAfterTerminalBlocked(entered, release, settleThread)
+                assertTrue(resume.get(10, TimeUnit.SECONDS))
+                settle.get(10, TimeUnit.SECONDS)
+                advanceUntilIdle()
+                val report = run.await()
+                val expected = if (terminal == PlanTerminal.CANCELLED) LoopState.CANCELLED else LoopState.STOPPED
+                assertEquals("resume must not resurrect $terminal", expected, report.loopState)
+                assertEquals(terminal, report.terminal)
+                assertEquals(expected, loop.currentState())
+                assertFalse(loop.isActionInFlight())
+                assertTrue(report.steps.all { it.outcome is StepOutcome.NotExecuted })
+                assertEquals(
+                    listOf(PlanStatus.RUNNING, PlanStatus.PAUSED, PlanStatus.RUNNING, PlanStatus.CANCELLED),
+                    events.map { it.first },
+                )
+                assertEquals(PlanStatus.CANCELLED to expected, events.last())
+                assertFalse(loop.resume(UserResumeConfirmation.forExplicitUserConfirmation(43L)))
+                println("terminal=$terminal report=${report.loopState} events=$events")
+            }
+        }
+
+    private fun releaseAfterTerminalBlocked(
+        entered: CountDownLatch,
+        release: CountDownLatch,
+        settleThread: Thread,
+    ) {
+        try {
+            assertTrue(entered.await(10, TimeUnit.SECONDS))
+            settleThread.start()
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+            while (settleThread.state != Thread.State.BLOCKED && System.nanoTime() < deadline) {
+                Thread.yield()
+            }
+            assertEquals(
+                "terminal transition reached the held resume monitor",
+                Thread.State.BLOCKED,
+                settleThread.state,
+            )
+        } finally {
+            release.countDown()
+        }
     }
 
     @Test

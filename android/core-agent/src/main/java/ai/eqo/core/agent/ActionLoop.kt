@@ -308,6 +308,8 @@ class ActionLoop(
             if (!awaitDispatchReady()) return@coroutineScope null
             inFlight.incrementAndGet()
             // Start inline: no scheduler suspension between command drain and execute.
+            // Only this run coroutine applies pause/terminal transitions; external
+            // commands enqueue and concurrent resume can only make PAUSED -> RUNNING.
             val job = async(start = CoroutineStart.UNDISPATCHED) { execute(step) }
             var timedOut = false
             var cancelledMidApply = false
@@ -402,34 +404,42 @@ class ActionLoop(
     }
 
     private fun applyCommand(command: Command) {
-        when (command) {
-            CmdStop -> terminalize(PlanTerminal.STOPPED)
-            CmdCancel -> terminalize(PlanTerminal.CANCELLED)
-            CmdPause ->
-                if (terminal.get() == null && state.get() == LoopState.RUNNING) {
-                    pauseReason.set(PauseReason.USER_PAUSE)
-                    state.set(LoopState.PAUSED)
-                    emitPlanStatus(PlanStatus.PAUSED)
-                }
-            is CmdTakeover ->
-                if (terminal.get() == null && state.get() == LoopState.RUNNING) {
-                    pauseReason.set(command.reason)
-                    state.set(LoopState.PAUSED)
-                    emitPlanStatus(PlanStatus.PAUSED)
-                }
+        synchronized(lock) {
+            when (command) {
+                CmdStop -> terminalize(PlanTerminal.STOPPED)
+                CmdCancel -> terminalize(PlanTerminal.CANCELLED)
+                CmdPause ->
+                    if (terminal.get() == null && state.get() == LoopState.RUNNING) {
+                        pauseReason.set(PauseReason.USER_PAUSE)
+                        state.set(LoopState.PAUSED)
+                        emitPlanStatus(PlanStatus.PAUSED)
+                    }
+                is CmdTakeover ->
+                    if (terminal.get() == null && state.get() == LoopState.RUNNING) {
+                        pauseReason.set(command.reason)
+                        state.set(LoopState.PAUSED)
+                        emitPlanStatus(PlanStatus.PAUSED)
+                    }
+            }
         }
     }
 
     private fun terminalize(status: PlanTerminal) {
-        if (terminal.compareAndSet(null, status)) {
-            state.set(if (status == PlanTerminal.CANCELLED) LoopState.CANCELLED else LoopState.STOPPED)
-            emitPlanStatus(status.toPlanStatus())
+        // CAS, state and notification are one transition relative to resume.
+        // Otherwise a confirmation callback can let resume overwrite terminal state.
+        synchronized(lock) {
+            if (terminal.compareAndSet(null, status)) {
+                state.set(if (status == PlanTerminal.CANCELLED) LoopState.CANCELLED else LoopState.STOPPED)
+                emitPlanStatus(status.toPlanStatus())
+            }
         }
     }
 
     private fun emitPlanStatus(status: PlanStatus) {
-        synchronized(lock) { planStatusEvents += status }
-        onPlanStatus(status)
+        synchronized(lock) {
+            planStatusEvents += status
+            onPlanStatus(status)
+        }
     }
 
     private fun submit(command: Command): Boolean {

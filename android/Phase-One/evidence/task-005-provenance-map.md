@@ -361,6 +361,8 @@ have no upstream counterpart, and are recorded as **EQO-NEW** rows.
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/SensitivityApprovalPolicy.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/StepVerifier.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/UserResumeConfirmation.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopDispatchTraceTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, race investigation #72) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/DispatchTrace.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, race investigation #72) |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopRaceTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopResumeTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopSettleTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
