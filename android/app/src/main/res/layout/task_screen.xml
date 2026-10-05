@@ -64,6 +64,24 @@
             android:text="@string/task_start"
             android:minHeight="48dp" />
 
+        <EditText
+            android:id="@+id/task_request"
+            android:importantForAutofill="no"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:hint="@string/task_request_hint"
+            android:inputType="textMultiLine|textCapSentences"
+            android:maxLength="8000" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/task_recipient_limit" />
+        <TextView
+            android:id="@+id/task_preview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite" />
 
         <!-- One row per step: name, live state, elapsed time (REQ-TASK-01). -->
         <LinearLayout

@@ -100,6 +100,8 @@ class ModelKeySetupActivity : Activity() {
     ) {
         when (state) {
             is ConnectionTestState.Connected -> {
+                ai.eqo.task.StudyModelChoice
+                    .save(applicationContext, state.model)
                 // REQ-BYOK-02: Keystore-backed storage only.
                 val stored = credentialStore.write(ProviderCredentialId.ApiKey("openrouter"), key)
                 StudySetup.modelKey =

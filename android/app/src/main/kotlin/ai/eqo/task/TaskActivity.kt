@@ -14,10 +14,12 @@ package ai.eqo.task
 
 import ai.eqo.R
 import ai.eqo.accessibility.TakeoverDetector
-import ai.eqo.core.agent.ExecutedAction
+import ai.eqo.accessibility.UntrustedScreenText
+import ai.eqo.core.agent.ApprovedTaskPlan
 import ai.eqo.core.agent.LoopState
-import ai.eqo.core.agent.LoopStep
+import ai.eqo.core.agent.TaskPlanPreview
 import ai.eqo.core.agent.UserResumeConfirmation
+import ai.eqo.core.llm.error.LLMException
 import ai.eqo.data.models.PlanStatus
 import ai.eqo.helper.client.HelperActivationState
 import ai.eqo.onboarding.SetupHubActivity
@@ -43,12 +45,16 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
@@ -57,20 +63,21 @@ import kotlin.coroutines.resume
 @Suppress("TooManyFunctions")
 class TaskActivity : Activity() {
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var controller: StudyTaskController? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.task_screen)
-        findViewById<Button>(R.id.task_start_button).setOnClickListener { startRun() }
+        findViewById<Button>(R.id.task_start_button).setOnClickListener { planRequest() }
         findViewById<Button>(R.id.task_pause_button).setOnClickListener { control { it.pause() } }
         findViewById<Button>(R.id.task_stop_button).setOnClickListener { control { it.stop() } }
         findViewById<Button>(R.id.task_takeover_button).setOnClickListener { control { it.takeover() } }
         val resumeButton = findViewById<Button>(R.id.task_resume_button)
         protectConfirmationTouches(resumeButton)
         resumeButton.setOnClickListener { confirmResume() }
-        renderSteps(sampleSteps().map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
+        renderSteps(emptyList())
+        protectConfirmationTouches(findViewById<Button>(R.id.task_start_button))
         renderPlanStatus(PlanStatus.PENDING)
         findViewById<TextView>(R.id.task_state).setText(R.string.task_idle)
         findViewById<Button>(R.id.task_setup_button).setOnClickListener {
@@ -193,11 +200,11 @@ class TaskActivity : Activity() {
             .also { prepareTaskDialog(it) }
     }
 
-    private fun startRun() {
+    private fun startRun(approved: ApprovedTaskPlan) {
         findViewById<TextView>(R.id.task_control_feedback).text = ""
         findViewById<TextView>(R.id.task_receipt).text = ""
         renderPlanStatus(PlanStatus.RUNNING)
-        val steps = sampleSteps()
+        val steps = approved.steps()
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
         val permissionCheck =
             StudyPermissionCheck(
@@ -207,23 +214,17 @@ class TaskActivity : Activity() {
                 accessibilityServiceEnabled = { StudySetup.accessibilityServiceEnabled(applicationContext) },
                 helperBinderAlive = { StudySetup.helper.state == HelperActivationState.State.ACTIVE },
             )
-        val smsOpener =
-            SmsDraftOpener(
-                defaultSmsPackage = { Telephony.Sms.getDefaultSmsPackage(this) ?: throw ActivityNotFoundException() },
-                onNoSmsApp = { mainHandler.post { renderControlFeedback(TaskControlFeedback.NO_SMS_APP) } },
-            ) { intent -> startActivity(intent) }
-        val executor =
-            StudyActionExecutor(
-                EqoAutomationPort(
-                    automation = { liveAutomation() },
-                    composeDraft = { recipient, body -> smsOpener.open(recipient, body) },
-                ),
-            )
+        val executor = actionExecutor(approved)
         val newController =
             StudyTaskController(
                 steps = steps,
                 permissionCheck = permissionCheck,
-                approvalGate = StudyApprovalGate(approvalSurface(), nowMs = { System.currentTimeMillis() }),
+                approvalGate =
+                    StudyApprovalGate(
+                        approvalSurface(),
+                        nowMs = { System.currentTimeMillis() },
+                        approvedPlan = approved,
+                    ),
                 executor = executor,
                 observe = {
                     val result = liveAutomation()?.observe()
@@ -243,8 +244,30 @@ class TaskActivity : Activity() {
         controller = newController
         scope.launch {
             val receipt = newController.run()
-            mainHandler.post { renderReceipt(receipt) }
+            mainHandler.post {
+                renderReceipt(receipt)
+                if (controller === newController) controller = null
+            }
         }
+    }
+
+    private fun actionExecutor(approved: ApprovedTaskPlan): StudyActionExecutor {
+        val smsOpener =
+            SmsDraftOpener(
+                defaultSmsPackage = { Telephony.Sms.getDefaultSmsPackage(this) ?: throw ActivityNotFoundException() },
+                onNoSmsApp = { mainHandler.post { renderControlFeedback(TaskControlFeedback.NO_SMS_APP) } },
+            ) { intent -> startActivity(intent) }
+        val emailOpener = EmailDraftOpener { intent -> startActivity(intent) }
+        val launcher = StudyAppLauncher(this)
+        return StudyActionExecutor(
+            EqoAutomationPort(
+                automation = { liveAutomation() },
+                composeDraft = { recipient, body -> smsOpener.open(recipient, body) },
+                composeEmail = { recipient, subject, body -> emailOpener.open(recipient, subject, body) },
+                launchApp = { name -> launcher.open(name) },
+            ),
+            approvedPlan = approved,
+        )
     }
 
     /** The live automation bridge, or null when the accessibility service is not bound. */
@@ -274,7 +297,8 @@ class TaskActivity : Activity() {
                                 if (request.app == "the current app") {
                                     getString(R.string.task_current_app)
                                 } else {
-                                    request.app
+                                    ai.eqo.core.agent.TaskDisplayText
+                                        .escape(request.app)
                                 },
                             ),
                         ).append("\n\n")
@@ -436,11 +460,18 @@ class TaskActivity : Activity() {
         if (target.startsWith("to=") && target.contains(", body=")) {
             getString(
                 R.string.task_target_format,
-                target.removePrefix("to=").substringBefore(", body=").ifBlank { getString(R.string.task_no_recipient) },
-                target.substringAfter(", body="),
+                ai.eqo.core.agent.TaskDisplayText.escape(
+                    target
+                        .removePrefix("to=")
+                        .substringBefore(", body=")
+                        .ifBlank { getString(R.string.task_no_recipient) },
+                ),
+                ai.eqo.core.agent.TaskDisplayText
+                    .escape(target.substringAfter(", body=")),
             )
         } else {
-            target
+            ai.eqo.core.agent.TaskDisplayText
+                .escape(target)
         }
 
     private fun actionLabel(action: String): String =
@@ -449,6 +480,14 @@ class TaskActivity : Activity() {
                 "observe" -> R.string.task_step_observe
                 "scroll" -> R.string.task_step_scroll
                 "compose_sms" -> R.string.task_step_compose
+                "compose_email" -> R.string.task_step_email
+                "open_app" -> R.string.task_step_open_app
+                "tap_text" -> R.string.task_step_tap
+                "type_text", "paste" -> R.string.task_step_type
+                "press_back" -> R.string.task_step_back
+                "press_home" -> R.string.task_step_home
+                "press_enter" -> R.string.task_step_enter
+                "send_whatsapp", "send_telegram" -> R.string.task_step_send_chat
                 else -> R.string.task_step_other
             },
         )
@@ -475,36 +514,95 @@ class TaskActivity : Activity() {
             step.state == StepProgressState.PENDING && step.detail.isNotBlank() -> getString(R.string.task_did_not_run)
             step.state == StepProgressState.UNKNOWN -> getString(R.string.task_unknown_result)
             step.state == StepProgressState.FAILED -> getString(R.string.task_step_failed)
-            step.state == StepProgressState.DONE && step.name == "compose_sms" -> getString(R.string.task_draft_opened)
+            step.state == StepProgressState.DONE &&
+                step.name in
+                setOf(
+                    "compose_sms",
+                    "compose_email",
+                )
+            -> getString(R.string.task_draft_opened)
             else -> ""
         }
 
-    /**
-     * The study sample plan: reversible automation verbs plus one outward step that is
-     * compose-only (REQ-SMS-01) and therefore always passes the approval card first
-     * (TASK-012 B2: outward/irreversible actions need approval).
-     */
-    private fun sampleSteps(): List<LoopStep> =
-        listOf(
-            LoopStep(
-                stepId = "1-observe",
-                action = ExecutedAction(name = "observe", expectedPostconditions = listOf("screen text captured")),
-            ),
-            LoopStep(
-                stepId = "2-scroll",
-                action = ExecutedAction(name = "scroll", params = mapOf("direction" to "down")),
-            ),
-            LoopStep(
-                stepId = "3-compose-draft",
-                action =
-                    ExecutedAction(
-                        name = "compose_sms",
-                        params = mapOf("to" to "", "body" to getString(R.string.task_draft_body)),
-                        irreversible = false,
-                        expectedPostconditions = listOf("messaging composer opened with the draft"),
-                    ),
-            ),
-        )
+    private var planning = false
+
+    private fun planRequest() {
+        val active = controller?.currentState() in setOf(LoopState.RUNNING, LoopState.PAUSED)
+        if (planning || active) return
+        val request = findViewById<EditText>(R.id.task_request).text.toString().trim()
+        if (request.isBlank()) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.task_request_empty)
+        } else {
+            planning = true
+            findViewById<Button>(R.id.task_start_button).isEnabled = false
+            findViewById<TextView>(R.id.task_state).setText(R.string.task_planning)
+            scope.launch { makePlan(request) }
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    private suspend fun makePlan(request: String) {
+        try {
+            val steps =
+                withContext(Dispatchers.IO) {
+                    val planner = TaskPlanningRuntime.planner(applicationContext) ?: throw MissingTaskKey()
+                    // Never capture EQO's key/setup/request UI; execution observations stay local.
+                    planner.plan(request, UntrustedScreenText.wrap(""))
+                }
+            if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(steps))
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: MissingTaskKey) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.task_key_needed)
+        } catch (failure: LLMException) {
+            findViewById<TextView>(R.id.task_state).setText(planningError(failure))
+        } catch (_: Exception) {
+            // No raw exception/model output/request is logged or displayed.
+            findViewById<TextView>(R.id.task_state).setText(R.string.task_plan_invalid)
+        } finally {
+            planning = false
+            findViewById<Button>(R.id.task_start_button).isEnabled = true
+        }
+    }
+
+    private fun showPlan(plan: ApprovedTaskPlan) {
+        val steps = plan.steps()
+        renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
+        val preview = TaskPlanPreview.describe(steps)
+        findViewById<TextView>(R.id.task_preview).text = preview
+        AlertDialog
+            .Builder(this)
+            .setTitle(R.string.task_plan_title)
+            .setMessage(preview)
+            .setPositiveButton(R.string.task_approval_approve) { _, _ ->
+                // Execute the same immutable snapshot described above, never a replan or display text.
+                startRun(plan)
+            }.setNegativeButton(R.string.task_approval_reject) { _, _ ->
+                findViewById<TextView>(R.id.task_state).setText(R.string.task_rejected)
+            }.show()
+            .also { prepareTaskDialog(it) }
+    }
+
+    private fun planningError(failure: LLMException): Int =
+        when (failure.error) {
+            ai.eqo.core.llm.error.LLMError.AuthMissing,
+            ai.eqo.core.llm.error.LLMError.AuthInvalid,
+            -> R.string.model_error_auth
+            ai.eqo.core.llm.error.LLMError.RateLimited -> R.string.model_error_rate
+            ai.eqo.core.llm.error.LLMError.QuotaExhausted -> R.string.model_error_credit
+            ai.eqo.core.llm.error.LLMError.ModelUnavailable -> R.string.model_error_model
+            else -> R.string.task_call_failed
+        }
+
+    override fun onDestroy() {
+        controller?.stop()
+        scope.cancel()
+        mainHandler.removeCallbacksAndMessages(null)
+        countdown.removeCallbacksAndMessages(null)
+        super.onDestroy()
+    }
+
+    private class MissingTaskKey : Exception()
 
     companion object {
         /** Sample-task intent extra: unused for now, reserved for user-submitted plans. */

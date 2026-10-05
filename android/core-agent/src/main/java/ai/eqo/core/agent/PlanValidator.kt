@@ -22,6 +22,70 @@ class PlanValidator
         private val unknownActionDao: dagger.Lazy<UnknownActionDao>,
     ) {
         companion object {
+            /** Closed study schema, independent of the broad donor action registry. */
+            val STUDY_PARAMS =
+                mapOf(
+                    "observe" to emptySet(),
+                    "scroll" to setOf("direction"),
+                    "open_app" to setOf("app"),
+                    "tap_text" to setOf("text"),
+                    "type_text" to setOf("target", "text"),
+                    "paste" to setOf("target", "text"),
+                    "press_back" to emptySet(),
+                    "press_home" to emptySet(),
+                    "press_enter" to emptySet(),
+                    "send_whatsapp" to setOf("body"),
+                    "send_telegram" to setOf("body"),
+                    "compose_sms" to setOf("to", "body"),
+                    "compose_email" to setOf("to", "subject", "body"),
+                )
+
+            private const val MAX_STUDY_STEPS = 20
+            private const val MAX_STUDY_TEXT = 8000
+
+            fun validateStudySteps(steps: List<LoopStep>): List<String> {
+                val errors = mutableListOf<String>()
+                if (steps.isEmpty() || steps.size > MAX_STUDY_STEPS) errors.add("Plan must have 1 to 20 steps")
+                if (steps.map { it.stepId }.distinct().size != steps.size) errors.add("Duplicate steps")
+                steps.forEach { errors.addAll(studyStepErrors(it)) }
+                return errors
+            }
+
+            private fun studyStepErrors(step: LoopStep): List<String> {
+                val errors = mutableListOf<String>()
+                val action = step.action
+                val keys = STUDY_PARAMS[action.name]
+                if (keys == null || action.params.keys != keys) errors.add("Unsupported action or parameters")
+                if (action.params.values.any { unsupportedStudyText(it) }) {
+                    errors.add("Unsupported text")
+                }
+                if (action.name == "scroll" && action.params["direction"] !in setOf("up", "down")) {
+                    errors.add("Invalid direction")
+                }
+                if (action.name == "compose_sms" && !action.params["to"].orEmpty().matches(Regex("[+0-9 ()-]*"))) {
+                    errors.add("Type a phone number, not a contact name")
+                }
+                if (action.name == "compose_email" &&
+                    !action.params["to"].orEmpty().matches(EMAIL_RECIPIENT)
+                ) {
+                    errors.add("Type an email address, not a contact name")
+                }
+                if (action.name in setOf("open_app", "tap_text", "type_text", "paste") &&
+                    action.params.values.any { it.isBlank() }
+                ) {
+                    errors.add("A target and text are required")
+                }
+                if (step.requiredPermission != null) errors.add("Model cannot select permissions")
+                return errors
+            }
+
+            private val EMAIL_RECIPIENT = Regex("|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}")
+
+            private fun unsupportedStudyText(value: String): Boolean =
+                value.length > MAX_STUDY_TEXT || value.any { unsupportedStudyControl(it) }
+
+            private fun unsupportedStudyControl(char: Char): Boolean = char.isISOControl() && char !in setOf('\n', '\t')
+
             private val DATA_PRODUCING_ACTIONS =
                 setOf(
                     "GET_DIRECTIONS",

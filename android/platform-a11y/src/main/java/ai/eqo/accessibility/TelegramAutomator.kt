@@ -60,7 +60,9 @@ object TelegramAutomator {
                 actions.findAndType("Write a message...", message).isSuccess
         }
 
+        if (!typed) return false
         delay(600)
+        if (service.rootInActiveWindow?.packageName?.toString() != "org.telegram.messenger") return false
 
         // Known Telegram send button view IDs
         val sendButtonIds =

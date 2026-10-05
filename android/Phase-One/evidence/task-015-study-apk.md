@@ -3,6 +3,67 @@
 Issue #20. Branch `agent/android/20-study-apk`, worktree `C:\Users\<user>\Claude\worktrees\task-015`.
 Base: `origin/main` = `5dc0a5d`.
 
+## TASK-068 — real requests and one whole-plan approval (Refs #20)
+
+Owner decision (2026-10-04, lead 21:12): approve the full preview once, not one dialog per step.
+This supersedes the fixed-sample/per-step descriptions below for the new task screen.
+
+- Type a request in “What should EQO do?”, tap Plan, then Approve or Reject the plain-language
+  preview. No action runs before Approve. The stored Keystore OpenRouter key and the model
+  from the successful connection test are reused, including after restart. Existing users
+  must re-check/save the model once because the old screen did not persist its model choice.
+- Reused OpenRouterProvider and WrappedLLMProvider provide typed errors, bounded retries and
+  secret registration/redaction; the client has no logging interceptors or redirects. Only
+  https://openrouter.ai is contacted. No request/response body or raw exception is logged.
+  The request is sent as quoted JSON data. Screen text remains untrusted/fenced; this build
+  sends no screen content to the planner (empty fence), preventing capture of EQO's key UI.
+  Observations during the run stay local. No replan, donor AgentLoop or Python bridge runs.
+- Closed PlanValidator study schema: observe, scroll, open_app, tap_text, type_text, paste,
+  press_back/home/enter, send_whatsapp, send_telegram, compose_sms, compose_email. Unknown
+  verbs/params, safety flags, macros, payment/call/direct-SMS-send and malformed JSON fail closed.
+- SensitivityApprovalPolicy is unchanged and still evaluates every action. Its sensitive-step
+  gate consumes the explicit whole-plan approval only when the full step (ID, verb, parameters,
+  execution flags) equals the approved snapshot. The executor checks membership again, including
+  nominally non-sensitive steps. Changed or injected steps cannot inherit approval.
+- Paste uses accessibility text insertion, not a clipboard export. App names resolve through
+  AliasResolver package hints or a unique exact launcher label; ambiguous/missing apps fail.
+  WhatsApp/Telegram reuse takeover-gated donor automators in the open chat; typing must succeed
+  and the expected package must remain foreground before Send. No contacts lookup. Receipt means
+  Send was pressed, NOT proof of delivery. UI automation remains app/version/language dependent.
+- SMS uses ACTION_SENDTO smsto:, email ACTION_SENDTO mailto: with URI-encoded subject/body;
+  Android resolves only corresponding scheme handlers, not a generic ACTION_SEND/share chooser.
+  EQO itself never sends SMS/email. Missing handlers fail. No extra permissions were introduced.
+- Taps, typing/paste, Enter and chat sends are marked irreversible for no automatic retry.
+  Pause/Stop/Take over/user-gesture Resume, obscured-touch protection and takeover latch remain.
+  Closing/recreating the task screen stops the task; it does not restore approval or auto-resume.
+
+### Owner phone steps — NOT RUN by this card
+
+1. Install the debug APK from this branch only when the lead schedules a phone session.
+   Release APK is unsigned and is not claimed installable. Open EQO → Set up EQO → model key.
+2. Owner enters the OpenRouter key and model; tap Check and save key. Enable EQO accessibility
+   yourself in Android Settings for screen automation. Neither contacts nor SMS permissions needed.
+3. Open the task screen. Type `send a text to <number> saying hello` using an actual test number.
+   Tap Plan. Verify the number/body and that the preview says draft/you send it. Reject first:
+   no messaging app opens. Plan again and Approve: a draft opens, no message is sent by EQO.
+4. Return to EQO. Type `draft an email to <address> with subject EQO test and body hello`,
+   substituting a test address. Plan → verify full address, subject and body → Approve.
+   A mail draft opens; the owner chooses whether to send or discard it. Missing mail app must fail.
+5. Try blank recipient: `draft an email with subject EQO test and body hello` → fill the address
+   in the mail app. Contact names alone are not resolved; type the number/address yourself.
+6. For WhatsApp/Telegram use only a test chat. Plan `open WhatsApp, tap <test chat label>, send hello`.
+   Review every step: these plans really press Send. Pause/Take over/Stop and explicit Resume
+   must retain the same approved steps. If the UI differs or a step fails, verify manually;
+   do not rerun a send without checking the chat first.
+7. Turn off internet and tap Plan: readable connection failure, no steps run. Remove/reject the
+   key: readable setup/auth guidance. Invalid model output: supported-plan failure, no steps run.
+   Check logcat for the key/request; this card did not use a live key or perform phone work.
+
+Honest limits: fixed approved sequential plan; no contact access, adaptive replanning, voice,
+research/web-search answers, macros or arbitrary donor actions; no delivery verification;
+wireless-ADB/CDP study gates remain off. The old 60s per-step approval tests remain for legacy
+callers, but this task screen uses a protected whole-plan dialog (cancel/back does not approve).
+
 ## 1. What shipped in this change
 
 One sideload APK (`:app`, application id `ai.eqo.app`) whose first-run experience is the

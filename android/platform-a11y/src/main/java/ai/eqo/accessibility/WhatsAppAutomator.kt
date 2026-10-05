@@ -54,10 +54,12 @@ object WhatsAppAutomator {
             }
         }
         if (!typed) {
-            actions.findAndType("Type a message", message).isSuccess
+            typed = actions.findAndType("Type a message", message).isSuccess
         }
 
+        if (!typed) return false
         delay(800)
+        if (service.rootInActiveWindow?.packageName?.toString() != "com.whatsapp") return false
 
         // WhatsApp send button IDs
         val sendButtonIds =
@@ -102,7 +104,7 @@ object WhatsAppAutomator {
                 node.recycle()
                 if (text.isNotBlank() && text != "Type a message" && text != "Message") {
                     // Input field still has text — message likely wasn't sent
-                    Log.w("WhatsAppAutomator", "Post-send check: input field still has text '$text', message may not have been sent")
+                    Log.w("WhatsAppAutomator", "Post-send check: input field is not empty; verify manually")
                     return false
                 }
             }

@@ -24,7 +24,58 @@ import androidx.core.net.toUri
 class EqoAutomationPort(
     private val automation: () -> EqoAutomation?,
     private val composeDraft: (recipient: String, body: String) -> Boolean,
-) : StudyAutomationPort {
+    private val launchApp: (String) -> Boolean = { false },
+    private val composeEmail: (String, String, String) -> Boolean = { _, _, _ -> false },
+) : StudyAutomationPort,
+    StudyNavigationPort by EqoNavigationPort(automation) {
+    override fun openApp(app: String): Boolean = launchApp(app)
+
+    override fun typeTarget(
+        target: String,
+        text: String,
+    ): Boolean = automation()?.type(target, text)?.isSuccess == true
+
+    override fun enter(): Boolean =
+        ai.eqo.accessibility.GenericAppAutomator
+            .pressEnter()
+            .isSuccess
+
+    override suspend fun sendChat(
+        app: String,
+        body: String,
+    ): Boolean {
+        val packageName =
+            EQOAccessibilityService
+                .getInstance()
+                ?.rootInActiveWindow
+                ?.packageName
+                ?.toString()
+        return when {
+            app == "whatsapp" && packageName == "com.whatsapp" ->
+                ai.eqo.accessibility.WhatsAppAutomator
+                    .automateSend(body)
+            app == "telegram" && packageName == "org.telegram.messenger" ->
+                ai.eqo.accessibility.TelegramAutomator
+                    .automateSend(body)
+            else -> false
+        }
+    }
+
+    override fun composeEmailDraft(
+        recipient: String,
+        subject: String,
+        body: String,
+    ): Boolean = composeEmail(recipient, subject, body)
+
+    override fun composeSmsDraft(
+        recipient: String,
+        body: String,
+    ): Boolean = composeDraft(recipient, body)
+}
+
+private class EqoNavigationPort(
+    private val automation: () -> EqoAutomation?,
+) : StudyNavigationPort {
     override fun observe(): String =
         when (val result = automation()?.observe()) {
             is A11yResult.Success -> result.detail
@@ -48,11 +99,6 @@ class EqoAutomationPort(
 
     override fun home(): Boolean = globalAction(AccessibilityService.GLOBAL_ACTION_HOME)
 
-    override fun composeSmsDraft(
-        recipient: String,
-        body: String,
-    ): Boolean = composeDraft(recipient, body)
-
     private fun globalAction(action: Int): Boolean {
         val service = EQOAccessibilityService.getInstance() ?: return false
         return when (action) {
@@ -61,6 +107,11 @@ class EqoAutomationPort(
             else -> false
         }
     }
+
+    override fun enter(): Boolean =
+        ai.eqo.accessibility.GenericAppAutomator
+            .pressEnter()
+            .isSuccess
 }
 
 /**
@@ -83,8 +134,9 @@ class SmsDraftOpener(
         body: String,
     ): Boolean =
         try {
+            val uri = "smsto:${android.net.Uri.encode(recipient, "+")}".toUri()
             val intent =
-                Intent(Intent.ACTION_SENDTO, "smsto:$recipient".toUri()).apply {
+                Intent(Intent.ACTION_SENDTO, uri).apply {
                     putExtra("sms_body", body)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     defaultSmsPackage()?.let { setPackage(it) }

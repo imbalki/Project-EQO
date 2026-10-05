@@ -173,6 +173,13 @@ Step list shown to user as a vertical checklist, each with its own spinner/pass/
 
 ## 10. UF-09 — Normal task run (progress, loop, minimal context)
 
+TASK-068 owner override (2026-10-04): the shipped task screen now accepts typed requests,
+requests a closed JSON plan from OpenRouter, shows every step/target in plain words, and
+requires one protected Approve/Reject gesture before execution. Approved steps are immutable;
+SensitivityApprovalPolicy consumes that exact-step approval instead of prompting again.
+SMS/email stay draft-only; WhatsApp/Telegram can press Send. The earlier per-step proposal below
+remains historical. See TASK-015 evidence §TASK-068 for the exact allowlist and owner steps.
+
 **Entry:** S-20 → task submitted. **Owner:** APP, with USER checkpoints.
 
 1. S-21 shows the plan: steps with names and live states `Pending / Running / Done / Failed` + elapsed time (REQ-TASK-01).

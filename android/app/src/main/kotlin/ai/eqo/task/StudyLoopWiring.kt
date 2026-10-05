@@ -46,6 +46,13 @@ object StudyPermission {
             "click_id",
             "back",
             "home",
+            "tap_text",
+            "paste",
+            "press_back",
+            "press_home",
+            "press_enter",
+            "send_whatsapp",
+            "send_telegram",
         )
 }
 
@@ -124,8 +131,16 @@ fun interface StudyApprovalSurface {
 class StudyApprovalGate(
     private val surface: StudyApprovalSurface,
     private val nowMs: () -> Long,
+    private val approvedPlan: ai.eqo.core.agent.ApprovedTaskPlan? = null,
 ) {
     suspend fun request(step: LoopStep): ApprovalDecision {
+        approvedPlan?.let { plan ->
+            return if (plan.permits(step)) {
+                ApprovalDecision.Approved
+            } else {
+                ApprovalDecision.Rejected("Step was not approved")
+            }
+        }
         val request =
             ApprovalRequest(
                 stepId = step.stepId,
@@ -150,7 +165,7 @@ class StudyApprovalGate(
  * TASK-009's `EqoAutomation`; faked in host tests. Every method is a typed, observable
  * action — no method reports success for something it did not do.
  */
-interface StudyAutomationPort {
+interface StudyNavigationPort {
     /** Untrusted screen text (never treated as instructions). */
     fun observe(): String
 
@@ -166,12 +181,38 @@ interface StudyAutomationPort {
 
     fun home(): Boolean
 
+    fun enter(): Boolean = false
+
+    fun openApp(app: String): Boolean = false
+
+    fun typeTarget(
+        target: String,
+        text: String,
+    ): Boolean = false
+}
+
+interface StudyMessagingPort {
+    suspend fun sendChat(
+        app: String,
+        body: String,
+    ): Boolean = false
+
+    fun composeEmailDraft(
+        recipient: String,
+        subject: String,
+        body: String,
+    ): Boolean = false
+
     /** Compose-only SMS: opens the messaging app with a filled draft and sends nothing (REQ-SMS-01). */
     fun composeSmsDraft(
         recipient: String,
         body: String,
     ): Boolean
 }
+
+interface StudyAutomationPort :
+    StudyNavigationPort,
+    StudyMessagingPort
 
 /**
  * The production `execute` seam handed to [ActionLoop].
@@ -183,34 +224,65 @@ interface StudyAutomationPort {
  */
 class StudyActionExecutor(
     private val port: StudyAutomationPort,
+    private val approvedPlan: ai.eqo.core.agent.ApprovedTaskPlan? = null,
 ) {
-    suspend fun execute(step: LoopStep): ExecuteResult {
-        val action = step.action
-        val verb = action.name.lowercase()
-        val param = { key: String -> action.params[key].orEmpty() }
-        val ok: Boolean =
-            when {
-                verb == "observe" -> true.also { port.observe() }
-                verb == "tap" || verb == "click_text" -> port.tap(param("text"))
-                verb == "click_id" -> port.tapById(param("view_id"))
-                verb == "type_text" -> port.typeText(param("text"))
-                verb == "scroll" -> port.scroll(param("direction").ifBlank { "down" })
-                verb == "back" -> port.back()
-                verb == "home" -> port.home()
-                verb.contains("sms") ->
-                    port.composeSmsDraft(recipient = param("to"), body = param("body"))
-                else -> return ExecuteResult.Failure("no study executor for action '${action.name}'")
-            }
-        return if (ok) {
-            val detail =
-                if (verb.contains("sms")) {
-                    "draft opened in the messaging app; nothing was sent (REQ-SMS-01)"
-                } else {
-                    "automation verb '$verb' applied through the accessibility plane"
-                }
-            ExecuteResult.Success(detail)
+    private val handlers: Map<String, suspend (Map<String, String>) -> Boolean> =
+        mapOf(
+            "observe" to { true.also { port.observe() } },
+            "tap" to { port.tap(it.value("text")) },
+            "click_text" to { port.tap(it.value("text")) },
+            "tap_text" to { port.tap(it.value("text")) },
+            "click_id" to { port.tapById(it.value("view_id")) },
+            "open_app" to { port.openApp(it.value("app")) },
+            "type_text" to { type(it) },
+            "paste" to { type(it) },
+            "press_back" to { port.back() },
+            "back" to { port.back() },
+            "press_home" to { port.home() },
+            "home" to { port.home() },
+            "press_enter" to { port.enter() },
+            "send_whatsapp" to { port.sendChat("whatsapp", it.value("body")) },
+            "send_telegram" to { port.sendChat("telegram", it.value("body")) },
+            "compose_email" to { port.composeEmailDraft(it.value("to"), it.value("subject"), it.value("body")) },
+            "compose_sms" to { port.composeSmsDraft(it.value("to"), it.value("body")) },
+            "scroll" to { port.scroll(it.value("direction").ifBlank { "down" }) },
+        )
+
+    suspend fun execute(step: LoopStep): ExecuteResult =
+        if (approvedPlan != null && !approvedPlan.permits(step)) {
+            ExecuteResult.Failure("Step was not approved")
         } else {
-            ExecuteResult.Failure("'$verb' did not apply on the current screen", transient = true)
+            dispatch(step.action)
+        }
+
+    private suspend fun dispatch(action: ExecutedAction): ExecuteResult {
+        val verb = action.name.lowercase()
+        val handler =
+            handlers[verb]
+                ?: return ExecuteResult.Failure("no study executor for action '${action.name}'")
+        return if (handler(action.params)) {
+            ExecuteResult.Success(successDetail(verb))
+        } else {
+            ExecuteResult.Failure("'$verb' did not apply on the current screen", transient = !action.irreversible)
         }
     }
+
+    private fun type(params: Map<String, String>): Boolean =
+        if (approvedPlan == null) {
+            port.typeText(params.value("text"))
+        } else {
+            port.typeTarget(
+                params.value("target"),
+                params.value("text"),
+            )
+        }
+
+    private fun successDetail(verb: String): String =
+        when (verb) {
+            "compose_sms", "compose_email" -> "draft opened; nothing was sent"
+            "send_whatsapp", "send_telegram" -> "Send was pressed in the open chat; delivery is not verified"
+            else -> "automation verb '$verb' applied through the accessibility plane"
+        }
+
+    private fun Map<String, String>.value(key: String): String = this[key].orEmpty()
 }

@@ -90,14 +90,14 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="legal_close">Close</string>
 
     <!-- TASK-015: task screen (UF-09/UF-10, REQ-TASK-01..07). -->
-    <string name="task_title">Sample task</string>
-    <string name="task_start">Run the sample task</string>
+    <string name="task_title">Your task</string>
+    <string name="task_start">Plan</string>
     <string name="task_pause">Pause after the current step</string>
     <string name="task_stop">Stop completely</string>
     <string name="task_takeover">Take over now</string>
     <string name="task_resume">Resume after my confirmation</string>
     <string name="task_resume_confirm_title">Resume the task?</string>
-    <string name="task_resume_confirm_message">EQO continues from where it paused and checks the screen again. Sensitive steps still need your approval. Cancel keeps the task paused.</string>
+    <string name="task_resume_confirm_message">EQO continues only the steps you approved and checks the screen again. Cancel keeps the task paused.</string>
     <string name="task_resume_confirm_yes">Yes, resume</string>
     <string name="task_approval_title">Approve this step?</string>
     <plurals name="task_approval_countdown">
@@ -109,12 +109,12 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_unknown_result">Unknown result — verify manually.</string>
 
     <!-- Owner-facing presentation; readiness and safety decisions stay in their own models. -->
-    <string name="home_explanation">Start with setup. The sample reads the screen, scrolls down and opens an SMS draft after approval; it never sends a message. This study build is not a general task assistant yet.</string>
+    <string name="home_explanation">Start with setup, then type a task. EQO makes a plan for you to approve before it runs. SMS and email open drafts; WhatsApp and Telegram can press Send.</string>
     <string name="setup_return">Return to setup</string>
     <string name="setup_next">Next: %1$s</string>
     <string name="setup_row_format">%1$s — %2$s\n%3$s</string>
     <string name="setup_row_next">Next: %1$s</string>
-    <string name="setup_all_ready">Ready — next: try the sample task.</string>
+    <string name="setup_all_ready">Ready — next: type a task.</string>
     <string name="hint_model">Tap to enter or check your provider key.</string>
     <string name="hint_accessibility">Tap to open Android settings and turn on screen control.</string>
     <string name="hint_wireless">Tap to read the guide. This connection is unavailable in the study build.</string>
@@ -133,10 +133,10 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="accessibility_steps_copy">1. Open Android Settings → Accessibility → Downloaded apps (the name may vary by phone).\n2. Select EQO and turn it on after reading Android’s warning.\n3. Come back here to see the check result.</string>
     <string name="accessibility_checked">Check complete. Screen control status updated.</string>
     <string name="chrome_consent_unanswered">Next: choose whether to allow browser control. No choice has been saved yet.</string>
-    <string name="task_idle">Not started. Next: review setup, then run the sample when ready.</string>
-    <string name="task_explanation">Sample only: read the current screen, scroll down, then open an SMS draft after approval. Nothing is sent. Pause waits for the current step; Stop ends the run; Take over returns control to you.</string>
+    <string name="task_idle">Not started. Type a request, then tap Plan.</string>
+    <string name="task_explanation">Type a request and review the whole plan. Nothing runs until you approve. Pause waits for the current step; Stop ends the run; Take over returns control to you.</string>
     <string name="task_step_observe">Read the current screen</string>
-    <string name="task_step_scroll">Scroll down</string>
+    <string name="task_step_scroll">Scroll the screen</string>
     <string name="task_step_compose">Open an SMS draft (does not send)</string>
     <string name="task_step_other">Task step</string>
     <string name="task_pending">Waiting</string>
@@ -150,7 +150,6 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_none">None</string>
     <string name="task_receipt_format">Result: %1$s\nDone: %2$s\nDid not run: %3$s</string>
     <string name="task_receipt_unknown">\nUnknown result — check on your phone: %1$s</string>
-    <string name="task_draft_body">EQO study draft — nothing is sent without you</string>
     <string name="task_rejected">You rejected this step.</string>
     <string name="task_current_app">The current app</string>
     <string name="task_helper_lost">The helper stopped responding. Return to setup to review its connection.</string>
@@ -160,6 +159,22 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_target_format">Recipient: %1$s; Message: %2$s</string>
     <string name="task_no_recipient">No recipient selected</string>
     <string name="task_did_not_run">This step did not run. It was skipped or cancelled before completion; check the task result above.</string>
+    <string name="task_request_hint">What should EQO do?</string>
+    <string name="task_recipient_limit">EQO cannot read contacts. Type the phone number or email here, or fill it in the draft app. SMS and email are drafts only. WhatsApp and Telegram steps press Send in the open chat. Review every step before approving.</string>
+    <string name="task_request_empty">Type a request first.</string>
+    <string name="task_planning">Making a plan — nothing is running yet.</string>
+    <string name="task_plan_title">Review the whole plan</string>
+    <string name="task_key_needed">Add your OpenRouter key and test your model in Set up EQO first.</string>
+    <string name="task_call_failed">Could not reach the model. Check your internet connection and try Plan again. Nothing ran.</string>
+    <string name="task_plan_invalid">The model did not return a supported plan. Try a simpler request. Nothing ran.</string>
+    <string name="task_step_email">Open an email draft</string>
+    <string name="task_step_open_app">Open the app</string>
+    <string name="task_step_tap">Tap the planned text</string>
+    <string name="task_step_type">Fill the planned text</string>
+    <string name="task_step_back">Go back</string>
+    <string name="task_step_home">Go home</string>
+    <string name="task_step_enter">Press Enter</string>
+    <string name="task_step_send_chat">Press Send in the open chat</string>
     <string name="task_practice_title">Practice run</string>
     <string name="task_practice_countdown">Step %1$d/%2$d: starting in %3$d s. Try Pause now</string>
     <string name="task_pause_requested">Pause requested: it will pause after the current step</string>

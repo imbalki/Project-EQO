@@ -10,6 +10,17 @@ minimal interface standing in for quarantined upstream code; **EQO-NEW** (26) = 
 app skeleton and guard tests (3 at TASK-005, 6 added by TASK-014 issue #19, 17 added by
 TASK-006 issue #11).
 
+## TASK-068 additions (issue #20)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/StudyAppIntents.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskPlanningRuntime.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/NaturalTaskFlowTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/TaskPlanner.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/TaskPlannerTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/TaskDisplayText.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/TaskDisplayTextTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/StudyDispatchTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |
+
 ## TASK-066 additions (issue #20)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/SamplePractice.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |

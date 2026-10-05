@@ -12,6 +12,16 @@ import ai.eqo.core.util.DurationParser
  * "flash", "torch", or "light" and the flashlight toggles immediately.
  */
 object AliasResolver {
+    /** Package hints only: never a fallback to a broad donor action or arbitrary intent. */
+    fun appPackage(name: String): String? =
+        when (name.lowercase().trim()) {
+            "whatsapp", "whats app" -> "com.whatsapp"
+            "telegram" -> "org.telegram.messenger"
+            "chrome", "google chrome" -> "com.android.chrome"
+            "gmail", "google mail" -> "com.google.android.gm"
+            else -> null
+        }
+
     data class ActionHint(
         val action: String,
         val baseParams: Map<String, String>,
