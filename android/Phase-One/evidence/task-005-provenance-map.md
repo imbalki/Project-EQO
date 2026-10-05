@@ -49,6 +49,7 @@ TASK-006 issue #11).
 ## TASK-063 additions (issue #20)
 
 | :app | `android/app/src/test/kotlin/ai/eqo/onboarding/SetupHubActivityTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-063 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/OpenRouterProbeEndpointTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, probe-endpoint fix issue #20) |
 
 ## TASK-062 additions (issue #20)
 

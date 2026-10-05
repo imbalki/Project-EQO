@@ -138,7 +138,7 @@ class ModelKeySetupActivity : Activity() {
     private var lastFailureGuidance: String = ""
 
     companion object {
-        /** The OpenRouter probe endpoint (same endpoint the provider layer calls). */
-        const val OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
+        /** OpenRouter API base; the probe appends /chat/completions itself. */
+        const val OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1"
     }
 }
