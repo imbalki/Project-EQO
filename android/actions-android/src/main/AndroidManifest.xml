@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TASK-069: READ_PHONE_STATE backs the call-verification read (TelecomManager.isInCall).
+     Requested at the moment of need; :app declares it with the user-facing reason.
+     The <queries> entries mirror :app's narrow package-visibility list so lint can
+     verify the ported intent resolution in this library module. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <queries>
+        <intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="smsto" /></intent>
+        <intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="mailto" /></intent>
+        <intent><action android:name="android.intent.action.DIAL" /><data android:scheme="tel" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="tg" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>
+        <package android:name="com.whatsapp" />
+        <package android:name="org.telegram.messenger" />
+        <package android:name="org.telegram.messenger.web" />
+        <package android:name="org.telegram.plus" />
+        <package android:name="nekox.messenger" />
+        <package android:name="com.google.android.apps.meetings" />
+        <package android:name="com.google.android.apps.tachyon" />
+        <package android:name="us.zoom.videomeetings" />
+    </queries>
+</manifest>

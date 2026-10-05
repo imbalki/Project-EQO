@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MaxLineLength:TaskPermissionRequester.kt$TaskPermissionRequester$is ActionPermission.Runtime -&gt; activity.checkSelfPermission(permission.name) == PackageManager.PERMISSION_GRANTED</ID>
+  </CurrentIssues>
+</SmellBaseline>

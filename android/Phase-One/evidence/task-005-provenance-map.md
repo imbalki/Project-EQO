@@ -10,6 +10,22 @@ minimal interface standing in for quarantined upstream code; **EQO-NEW** (26) = 
 app skeleton and guard tests (3 at TASK-005, 6 added by TASK-014 issue #19, 17 added by
 TASK-006 issue #11).
 
+## TASK-069 additions (issue #20)
+
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/ActionAdapters.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO TASK-069 gated facade adapters |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/PermissionRequester.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO TASK-069 permission and telemetry seams |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/AndroidActionRegistry.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO TASK-069 explicit registry |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/AdvancedControlActions.kt` | ADAPTER | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061, actions/AdvancedControlActions.kt selected families |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/CommunicationActions.kt` | ADAPTER | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061, actions/CommunicationActions.kt |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/CallFlowExecutor.kt` | ADAPTER | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061, actions/CallFlowExecutor.kt |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/CallFlowVerifier.kt` | ADAPTER | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061, accessibility/CallFlowVerifier.kt |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/StorageWorkspaceProvider.kt` | ADAPTER | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061, core/storage/StorageWorkspaceProvider.kt |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/SaveSensitiveInfoAction.kt` | ADAPTER | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061, actions/CalendarActions.kt 582-602 |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/AndroidActionRegistryTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO TASK-069 regressions |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/RegistryExecution.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO TASK-069 coroutine-scoped registry permit |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/CallFamilyTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO TASK-069 call regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/TaskPermissionRequesterTest.kt` | EQO-NEW | `ai.eqo.task` | EQO TASK-069 permission UI regressions |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskPermissionRequester.kt` | EQO-NEW | `ai.eqo.task` | EQO TASK-069 task permission adapter |
 ## TASK-068 additions (issue #20)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/StudyAppIntents.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-068 issue #20) |

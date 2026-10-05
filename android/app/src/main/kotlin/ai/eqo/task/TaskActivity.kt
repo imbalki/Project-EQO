@@ -65,6 +65,28 @@ class TaskActivity : Activity() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var controller: StudyTaskController? = null
+    private val actionPermissions by lazy { TaskPermissionRequester(this) }
+
+    // TASK-069: foundation entry point for ported steps. Typed-request flow remains
+    // unchanged; its later integration must call this registry after action approval.
+    internal val portedActions by lazy {
+        ai.eqo.actions.impl.AndroidActionRegistry
+            .create(this, actionPermissions, ::liveAutomation)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        actionPermissions.onRequestPermissionsResult(requestCode)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        actionPermissions.onResume()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,6 +116,7 @@ class TaskActivity : Activity() {
     }
 
     override fun onPause() {
+        actionPermissions.onPause()
         TakeoverDetector.shared.setControlTouchExclusion(null)
         super.onPause()
     }
@@ -597,6 +620,7 @@ class TaskActivity : Activity() {
     override fun onDestroy() {
         controller?.stop()
         scope.cancel()
+        actionPermissions.close()
         mainHandler.removeCallbacksAndMessages(null)
         countdown.removeCallbacksAndMessages(null)
         super.onDestroy()

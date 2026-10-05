@@ -63,6 +63,7 @@ dependencies {
     implementation(project(":core-llm"))
     implementation(project(":core-security"))
     implementation(project(":platform-a11y"))
+    implementation(project(":actions-android"))
     implementation(libs.kotlinx.coroutines.android)
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)

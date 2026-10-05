@@ -1,0 +1,115 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AdvancedControlActions.kt$AdvancedControlActions.ClickCoordinatesAction$!x.isFinite() || !y.isFinite() || x &lt; 0 || y &lt; 0</ID>
+    <ID>ComplexCondition:CommunicationActions.kt$CommunicationActions.SendTelegramAction$trimmed.startsWith("@") || (trimmed.isNotEmpty() &amp;&amp; !trimmed.contains(" ") &amp;&amp; !trimmed.all { it.isDigit() })</ID>
+    <ID>CyclomaticComplexMethod:CommunicationActions.kt$CommunicationActions.SendTelegramAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>CyclomaticComplexMethod:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun resolveFile( context: Context, pathStr: String?, ): File</ID>
+    <ID>LargeClass:StorageWorkspaceProvider.kt$StorageWorkspaceProvider</ID>
+    <ID>LongMethod:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun resolveFile( context: Context, pathStr: String?, ): File</ID>
+    <ID>LongParameterList:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$( context: Context, permissions: PermissionRequester, automation: () -&gt; EqoAutomation?, unknownActions: UnknownActionSink, store: SensitiveMemoryStore, callVerifier: CallFlowVerifier = AndroidCallFlowVerifier(), )</ID>
+    <ID>MagicNumber:AdvancedControlActions.kt$AdvancedControlActions.WaitAction$2000L</ID>
+    <ID>MaxLineLength:AdvancedControlActions.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/AdvancedControlActions.kt</ID>
+    <ID>MaxLineLength:AdvancedControlActions.kt$AdvancedControlActions.ClickCoordinatesAction$val x = params["x"]?.toFloatOrNull() ?: return ActionResult(false, null, "x coordinate is missing or invalid")</ID>
+    <ID>MaxLineLength:AdvancedControlActions.kt$AdvancedControlActions.ClickCoordinatesAction$val y = params["y"]?.toFloatOrNull() ?: return ActionResult(false, null, "y coordinate is missing or invalid")</ID>
+    <ID>MaxLineLength:AdvancedControlActions.kt$AdvancedControlActions.ClickTextAction$return ActionResult(success, if (success) "Tapped on '$text'!" else "Couldn't find '$text' to tap on.", null)</ID>
+    <ID>MaxLineLength:AdvancedControlActions.kt$AdvancedControlActions.PressEnterAction$return ActionResult(success, if (success) "Submitted!" else "Couldn't find a focused field to submit.", null)</ID>
+    <ID>MaxLineLength:AdvancedControlActions.kt$AdvancedControlActions.UnzipFileAction$val destDirPath = params["destDirPath"] ?: return ActionResult(false, null, "destDirPath parameter is missing")</ID>
+    <ID>MaxLineLength:AdvancedControlActions.kt$AdvancedControlActions.UnzipFileAction$val zipFilePath = params["zipFilePath"] ?: return ActionResult(false, null, "zipFilePath parameter is missing")</ID>
+    <ID>MaxLineLength:AdvancedControlActions.kt$AdvancedControlActions.ZipFilesAction$val zipFilePath = params["zipFilePath"] ?: return ActionResult(false, null, "zipFilePath parameter is missing")</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$(contact.startsWith("@") || (contact.isNotEmpty() &amp;&amp; !contact.contains(" ") &amp;&amp; !contact.all { it.isDigit() }))</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$ActionPermission.Runtime(Manifest.permission.READ_PHONE_STATE, "Allow phone state access to verify that the call started.")</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$required += ActionPermission.Runtime(Manifest.permission.CALL_PHONE, "Allow phone access to place this call.")</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$required += ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Allow contacts access to find this person.")</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$return ActionResult.Failure("${permission.explanation} Permission was not granted; this step did not run.")</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$return ActionResult.Failure("Required parameters must not be empty: ${blankRequired.joinToString { it.name }}.")</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$val aliases = if (name == "MAKE_CALL") listOf("number", "phone", "phoneNumber") else listOf("to", "recipient", "username")</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry$val blankRequired = ActionSchema.getAction(actionName)!!.params.filter { it.required &amp;&amp; ready[it.name].isNullOrBlank() }</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$)</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$private val CONTACT_ACTIONS = setOf("SEND_SMS", "SEND_WHATSAPP", "SEND_TELEGRAM", "MAKE_CALL", "MAKE_VIDEO_CALL")</ID>
+    <ID>MaxLineLength:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$unknownActions: UnknownActionSink = UnknownActionSink { android.util.Log.w("EqoActions", "Unsupported action requested") }</ID>
+    <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$AndroidActionRegistry(context, listOf(listOf(action)), PermissionRequester { false }, UnknownActionSink { unknown += it })</ID>
+    <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$assertFalse(registry.execute("UNZIP_FILE", mapOf("zipFilePath" to "evil.zip", "destDirPath" to "target")).success)</ID>
+    <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$assertFalse(registry.execute("WRITE_FILE", mapOf("filePath" to "../workspace-escape/x", "content" to "bad")).success)</ID>
+    <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$assertTrue(registry.execute("COPY_FILE", mapOf("sourcePath" to "docs/a.txt", "destPath" to "docs/b.txt")).success)</ID>
+    <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$assertTrue(registry.execute("MOVE_FILE", mapOf("sourcePath" to "docs/b.txt", "destPath" to "docs/c.txt")).success)</ID>
+    <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$assertTrue(registry.execute("UNZIP_FILE", mapOf("zipFilePath" to "docs.zip", "destDirPath" to "out")).success)</ID>
+    <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$assertTrue(registry.execute("WRITE_FILE", mapOf("filePath" to "large", "content" to "x".repeat(102401))).success)</ID>
+    <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$assertTrue(registry.execute("ZIP_FILES", mapOf("sourcePath" to "docs", "zipFilePath" to "docs.zip")).success)</ID>
+    <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$val result = registry.execute("SEND_EMAIL", mapOf("to" to "owner@example.invalid", "subject" to "test", "body" to "body"))</ID>
+    <ID>MaxLineLength:AndroidActionRegistryTest.kt$AndroidActionRegistryTest$val whatsapp = registry.execute("SEND_WHATSAPP", mapOf("contact" to "+15551234567", "message" to "hello world"))</ID>
+    <ID>MaxLineLength:CallFamilyTest.kt$CallFamilyTest$assertTrue(registry.execute("MAKE_CALL", mapOf("contact" to "+15551234567")) is ActionResult.PendingUserAction)</ID>
+    <ID>MaxLineLength:CallFlowExecutor.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/CallFlowExecutor.kt</ID>
+    <ID>MaxLineLength:CallFlowVerifier.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/accessibility/CallFlowVerifier.kt</ID>
+    <ID>MaxLineLength:CommunicationActions.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/CommunicationActions.kt</ID>
+    <ID>MaxLineLength:CommunicationActions.kt$CommunicationActions$"Telegram chat with $contactLabel opened with your message ready. Review it and tap Send; sending was not verified."</ID>
+    <ID>MaxLineLength:CommunicationActions.kt$CommunicationActions$"WhatsApp chat with $contactLabel opened with your message ready. Review it and tap Send; sending was not verified."</ID>
+    <ID>MaxLineLength:CommunicationActions.kt$CommunicationActions$ActionResult.UserActionRequired("Message draft for $contactLabel opened. Review it and tap Send; sending was not verified.")</ID>
+    <ID>MaxLineLength:CommunicationActions.kt$CommunicationActions$val tgPackages = listOf("org.telegram.messenger", "org.telegram.messenger.web", "org.telegram.plus", "nekox.messenger")</ID>
+    <ID>MaxLineLength:CommunicationActions.kt$CommunicationActions.MakeVideoCallAction$"No video call app is installed, and this device can't place phone calls. Try WhatsApp?"</ID>
+    <ID>MaxLineLength:CommunicationActions.kt$CommunicationActions.MakeVideoCallAction$ActionResult.UserActionRequired("Calling app opened. Start the video call yourself; a call was not verified.")</ID>
+    <ID>MaxLineLength:CommunicationActions.kt$CommunicationActions.SendTelegramAction$if</ID>
+    <ID>MaxLineLength:CommunicationActions.kt$CommunicationActions.SendTelegramAction$is ContactResolution.Found -&gt; executeTelegram(resolved.contact.phoneNumber, contact, message, context, isUsername = false)</ID>
+    <ID>MaxLineLength:CommunicationActions.kt$CommunicationActions.SendWhatsAppGroupAction$"WhatsApp is open. Find the '$groupName' group, enter the message and tap Send; sending was not verified."</ID>
+    <ID>MaxLineLength:SaveSensitiveInfoAction.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/CalendarActions.kt lines 582-602</ID>
+    <ID>MaxLineLength:StorageWorkspaceProvider.kt$// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/storage/StorageWorkspaceProvider.kt</ID>
+    <ID>MaxLineLength:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$if</ID>
+    <ID>NestedBlockDepth:CommunicationActions.kt$CommunicationActions.MakeVideoCallAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>NestedBlockDepth:CommunicationActions.kt$CommunicationActions.OpenTelegramAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>NestedBlockDepth:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun unzipFile( context: Context, zipFilePath: String, destDirPath: String, ): ActionResult</ID>
+    <ID>NestedBlockDepth:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun writeFile( context: Context, filePath: String, content: String, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.ClickCoordinatesAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.ClickIdAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.ClickTextAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.CopyFileAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.CreateDirectoryAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.DeleteFileAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.MoveFileAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.PressEnterAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.ReadFileAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.ScrollAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.TypeIdAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.TypeTextAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.UnzipFileAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.WriteFileAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AdvancedControlActions.kt$AdvancedControlActions.ZipFilesAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:AndroidActionRegistry.kt$AndroidActionRegistry$suspend fun execute( actionName: String, params: Map&lt;String, String&gt;, ): ActionResult</ID>
+    <ID>ReturnCount:CallFlowExecutor.kt$CallFlowExecutor$suspend fun execute( phone: String, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:CommunicationActions.kt$CommunicationActions.MakeCallAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:CommunicationActions.kt$CommunicationActions.MakeVideoCallAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:CommunicationActions.kt$CommunicationActions.OpenTelegramAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:CommunicationActions.kt$CommunicationActions.SendEmailAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:CommunicationActions.kt$CommunicationActions.SendSmsAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:CommunicationActions.kt$CommunicationActions.SendTelegramAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:CommunicationActions.kt$CommunicationActions.SendWhatsAppAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:CommunicationActions.kt$CommunicationActions.SendWhatsAppGroupAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:SaveSensitiveInfoAction.kt$SaveSensitiveInfoAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun copyFile( context: Context, srcPath: String, destPath: String, ): ActionResult</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun createDirectory( context: Context, pathStr: String, ): ActionResult</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun deleteFile( context: Context, filePath: String, ): ActionResult</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun listFiles( context: Context, pathStr: String?, ): ActionResult</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun moveFile( context: Context, srcPath: String, destPath: String, ): ActionResult</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun readFile( context: Context, filePath: String, ): ActionResult</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun shouldUseCustomFolder( context: Context, pathStr: String?, ): Boolean</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun writeFile( context: Context, filePath: String, content: String, ): ActionResult</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun zipFiles( context: Context, srcPath: String, zipFilePath: String, ): ActionResult</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$private fun findOrCreateDocumentByPath( root: DocumentFile, path: String, isDirectory: Boolean = false, ): DocumentFile?</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$private fun listFilesLocal( context: Context, pathStr: String?, ): ActionResult</ID>
+    <ID>ReturnCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$private fun readFileLocal( context: Context, filePath: String, ): ActionResult</ID>
+    <ID>SwallowedException:AdvancedControlActions.kt$AdvancedControlActions.ListInstalledAppsAction$e: Exception</ID>
+    <ID>SwallowedException:CommunicationActions.kt$CommunicationActions$e: Exception</ID>
+    <ID>SwallowedException:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$e: Exception</ID>
+    <ID>ThrowsCount:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun resolveFile( context: Context, pathStr: String?, ): File</ID>
+    <ID>TooGenericExceptionCaught:AdvancedControlActions.kt$AdvancedControlActions.ListInstalledAppsAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CommunicationActions.kt$CommunicationActions$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CommunicationActions.kt$CommunicationActions.MakeVideoCallAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CommunicationActions.kt$CommunicationActions.OpenTelegramAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CommunicationActions.kt$CommunicationActions.ReadEmailsAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CommunicationActions.kt$CommunicationActions.ReadMessagesAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CommunicationActions.kt$CommunicationActions.SendEmailAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CommunicationActions.kt$CommunicationActions.SendWhatsAppGroupAction$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$e: Exception</ID>
+    <ID>TooManyFunctions:StorageWorkspaceProvider.kt$StorageWorkspaceProvider</ID>
+  </CurrentIssues>
+</SmellBaseline>
