@@ -56,7 +56,7 @@ class AndroidActionRegistryTest {
                 },
                 { EqoAutomation({ null }, { EqoAutomation.ServiceState.AVAILABLE }, takeover) },
                 UnknownActionSink {},
-                store,
+                RegistryOptions().also { it.memoryStore = store },
             )
     }
 
@@ -78,7 +78,7 @@ class AndroidActionRegistryTest {
 
     @Test
     fun `enabled action names exist in the single schema and executor classes are internal`() {
-        assertEquals(56, registry.enabledActionNames.size)
+        assertEquals(83, registry.enabledActionNames.size)
         registry.enabledActionNames.forEach { assertNotNull(ActionSchema.getAction(it)) }
         // Public surface never exposes Action objects, constructors or family lists.
         assertFalse(AndroidActionRegistry::class.java.methods.any { it.returnType == Action::class.java })

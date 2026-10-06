@@ -30,7 +30,6 @@
     <ID>LargeClass:StorageWorkspaceProvider.kt$StorageWorkspaceProvider</ID>
     <ID>LongMethod:StorageWorkspaceProvider.kt$StorageWorkspaceProvider$fun resolveFile( context: Context, pathStr: String?, ): File</ID>
     <ID>LongMethod:SystemActions.kt$SystemActions.ToggleFlashlightAction$override suspend fun execute( params: Map&lt;String, String&gt;, context: Context, ): ActionResult</ID>
-    <ID>LongParameterList:AndroidActionRegistry.kt$AndroidActionRegistry.Companion$( context: Context, permissions: PermissionRequester, automation: () -&gt; EqoAutomation?, unknownActions: UnknownActionSink, store: SensitiveMemoryStore, callVerifier: CallFlowVerifier = AndroidCallFlowVerifier(), screenAnalyzer: ScreenAnalyzer? = null, )</ID>
     <ID>MagicNumber:AdvancedControlActions.kt$AdvancedControlActions.WaitAction$2000L</ID>
     <ID>MagicNumber:SystemActions.kt$SystemActions.OpenAppAction$2000</ID>
     <ID>MagicNumber:SystemActions.kt$SystemActions.PanelAction$30</ID>

@@ -4,7 +4,6 @@ package ai.eqo.actions.impl
 import ai.eqo.accessibility.EqoAutomation
 import ai.eqo.accessibility.TakeoverDetector
 import ai.eqo.actions.base.ActionResult
-import ai.eqo.core.security.AndroidSensitiveMemoryStore
 import android.Manifest
 import android.app.Application
 import android.content.Context
@@ -51,8 +50,7 @@ class CallFamilyTest {
             },
             { EqoAutomation({ null }, { EqoAutomation.ServiceState.AVAILABLE }, TakeoverDetector()) },
             UnknownActionSink {},
-            AndroidSensitiveMemoryStore(context),
-            verifier,
+            RegistryOptions().also { it.callVerifier = verifier },
         )
 
     @Test

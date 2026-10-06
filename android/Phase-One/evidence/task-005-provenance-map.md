@@ -523,3 +523,18 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :app | `android/app/src/test/kotlin/ai/eqo/study/TaskPresentationTest.kt` | EQO-NEW | `ai.eqo.study` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/StudyLoopWiringTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-015 issue #20) |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/TextScreenAnalyzerTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-073 issue #20) |
+
+
+
+## TASK-074 executor batch 3 additions (Refs #20)
+
+| Module | File | Kind | Package | Provenance |
+|---|---|---|---|---|
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/CalendarActions.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream actions/CalendarActions.kt / RoutineActions.kt; EQO TASK-074 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/ProductivityMemoryActions.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream actions/CalendarActions.kt / RoutineActions.kt; EQO TASK-074 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/InformationActions.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream actions/InformationActions.kt; EQO TASK-074 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/ConversationActions.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream actions/SystemActions.kt / ActionSchema.kt; EQO TASK-074 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/AlarmTimeParser.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream actions/CalendarActions.kt; EQO TASK-074 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/ProductivityDependencies.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-074 issue #20) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/InformationHttp.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-074 issue #20) |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/ProductivityInformationTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-074 issue #20) |

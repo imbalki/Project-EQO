@@ -121,6 +121,24 @@ class AndroidActionRegistry internal constructor(
                     }
             }
         }
+        if (name == "ADD_NOTE") {
+            if ("title" !in result) result["name"]?.let { result["title"] = it }
+            if ("content" !in result) (result["text"] ?: result["body"])?.let { result["content"] = it }
+        }
+        if (name in setOf("READ_NOTES", "RECALL_MEMORY") && "query" !in result) {
+            result["topic"]?.let { result["query"] = it }
+        }
+        if (name == "READ_AND_REMEMBER_SCREEN" && "topic" !in result) result["query"]?.let { result["topic"] = it }
+        if (name == "SET_REMINDER") {
+            if ("text" !in result) result["title"]?.let { result["text"] = it }
+            if ("datetime" !in result) result["time"]?.let { result["datetime"] = it }
+        }
+        if (name == "ASK_USER" && "question" !in result) result["message"]?.let { result["question"] = it }
+        if (name == "CHAT" &&
+            "response" !in result
+        ) {
+            (result["message"] ?: result["text"] ?: result["content"])?.let { result["response"] = it }
+        }
         if (name in CONTACT_ACTIONS && "contact" !in result) {
             val aliases = if (name == "MAKE_CALL") listOf("number", "phone", "phoneNumber") else listOf("to", "recipient", "username")
             aliases.firstNotNullOfOrNull { result[it] }?.let { result["contact"] = it }
@@ -141,39 +159,53 @@ class AndroidActionRegistry internal constructor(
             permissions: PermissionRequester,
             automation: () -> EqoAutomation? = { EQOAccessibilityService.getInstance()?.automation },
             unknownActions: UnknownActionSink = UnknownActionSink { android.util.Log.w("EqoActions", "Unsupported action requested") },
-            screenAnalyzer: ScreenAnalyzer? = null,
-        ): AndroidActionRegistry =
-            createWithStore(
-                context,
-                permissions,
-                automation,
-                unknownActions,
-                AndroidSensitiveMemoryStore(context),
-                screenAnalyzer = screenAnalyzer,
-            )
+            options: RegistryOptions = RegistryOptions(),
+        ): AndroidActionRegistry = createWithStore(context, permissions, automation, unknownActions, options)
 
         internal fun createWithStore(
             context: Context,
             permissions: PermissionRequester,
             automation: () -> EqoAutomation?,
             unknownActions: UnknownActionSink,
-            store: SensitiveMemoryStore,
-            callVerifier: CallFlowVerifier = AndroidCallFlowVerifier(),
-            screenAnalyzer: ScreenAnalyzer? = null,
+            options: RegistryOptions,
         ): AndroidActionRegistry {
             val launcher = GatedIntentLauncher(context, automation)
-            val calls = CallFlowExecutor(callVerifier, launcher)
+            val calls = CallFlowExecutor(options.callVerifier ?: AndroidCallFlowVerifier(), launcher)
+            val http = options.informationHttp ?: AndroidInformationHttp(context)
+            val memoryStore = options.memoryStore ?: AndroidSensitiveMemoryStore(context)
             return AndroidActionRegistry(
                 context,
                 listOf(
                     CommunicationActions(ContactResolver(context), calls, launcher).getActions(),
                     AdvancedControlActions().getActions(),
-                    SystemActions(launcher, permissions, automation, screenAnalyzer).getActions(),
-                    listOf(SaveSensitiveInfoAction(store)),
+                    SystemActions(launcher, permissions, automation, options.screenAnalyzer).getActions(),
+                    CalendarActions(launcher, permissions, automation).getActions(),
+                    ProductivityMemoryActions(
+                        automation,
+                        options.productivityStore,
+                        options.screenMemoryExtractor,
+                    ).getActions(),
+                    InformationActions(launcher, permissions, http, automation).getActions(),
+                    ConversationActions().getActions(),
+                    listOf(SaveSensitiveInfoAction(memoryStore)),
                 ),
                 permissions,
                 unknownActions,
             )
         }
     }
+}
+
+/**
+ * Optional collaborators for [AndroidActionRegistry.create]. Everything defaults to a fail-closed state:
+ * without a [ProductivityStore] the persistence-backed actions refuse with a typed "needs the database" failure.
+ */
+class RegistryOptions(
+    val screenAnalyzer: ScreenAnalyzer? = null,
+    val productivityStore: ProductivityStore = UnavailableProductivityStore,
+    val screenMemoryExtractor: ScreenMemoryExtractor? = null,
+) {
+    internal var callVerifier: CallFlowVerifier? = null
+    internal var informationHttp: InformationHttp? = null
+    internal var memoryStore: SensitiveMemoryStore? = null
 }
