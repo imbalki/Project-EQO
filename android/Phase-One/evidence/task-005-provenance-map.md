@@ -40,6 +40,13 @@ TASK-006 issue #11).
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/RunDiagnostics.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-073) |
 
+## TASK-070 additions (issue #20)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/ModelPicker.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-070 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/ModelPickerTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-070 issue #20) |
+| :core-llm | `android/core-llm/src/main/java/ai/eqo/core/llm/providers/OpenRouterModelCatalog.kt` | EQO-NEW | `ai.eqo.core.llm.providers` | imbalki/project-eqo (EQO-authored, TASK-070 issue #20) |
+| :core-llm | `android/core-llm/src/test/java/ai/eqo/core/llm/providers/OpenRouterModelCatalogTest.kt` | EQO-NEW | `ai.eqo.core.llm.providers` | imbalki/project-eqo (EQO-authored, TASK-070 issue #20) |
+
 ## TASK-066 additions (issue #20)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/SamplePractice.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, TASK-066 issue #20) |

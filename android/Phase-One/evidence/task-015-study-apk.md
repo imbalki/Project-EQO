@@ -477,8 +477,85 @@ criterion 4 (branding scan clean) is green in §4.
 2. Helper start/authorize/binder checks are wired to the readiness probe
    (`HelperActivationState`, TASK-007) and shown per-check on the wireless-ADB screen, but
    the live `HelperHooks` dispatch is device work (§5 step 4/5).
-3. Model-key validation probes one user-entered model id via `ConnectionTestRunner`
-   (live 200/401/429/credit/network classification). The "model list loaded" half of
-   REQ-BYOK-01 is not in this change.
+3. Original TASK-015 did not implement the model list. TASK-070 now supplies the live
+   searchable list and manual fallback; see the addendum below. Device walkthrough is pending.
 4. The sample plan on the task screen is a fixed 3-step demo (observe, scroll,
    compose-only SMS draft). User-submitted plans are the next task's scope.
+
+## TASK-070: live OpenRouter model picker (Refs #20)
+
+Branch `agent/android/70-model-picker`, based on current `origin/main` `b5fe24c`
+(not the unmerged typed-request branch). The setup screen's only production free-text
+model field is replaced by a selected-ID display and searchable list. Manual entry
+is an explicit fallback available while loading, offline and on error.
+
+The `:core-llm` catalog transport sends an unauthenticated GET only to
+`https://openrouter.ai/api/v1/models`, with a dedicated client, no interceptors,
+no credentials and no redirects. It bounds the response to 4 MB and the parsed list
+to 5,000 rows, ignores unknown fields, skips malformed/duplicate IDs and tolerates
+missing pricing/context. No response bodies or model data are logged. The public
+endpoint returned 466 rows during fixture capture; tests use two distinct actual
+paid/free response rows from `src/test/resources/openrouter-models.json`, not live HTTP.
+No dependency or toolchain changes.
+
+Rows show name, ID, provider (ID namespace), context tokens and separate input/output
+prices in USD per **million** tokens. Decimal multiplication avoids floating-point
+rounding; display uses six fractional places, HALF_UP, removes trailing zeros, says
+`free` for zero and `n/a` for absent/invalid/negative prices. Tiny positive prices say
+`<$0.000001` rather than falsely saying free. Last validated choice sorts first,
+then the short recommended list when present, then names; filtering is case-insensitive
+and matches all search terms against name/ID/provider.
+
+The app-private `openrouter_model_catalog` preferences retain JSON, fetched timestamp
+and last automatic attempt. Refresh attempts are at most daily (including failed
+attempts), or on demand. Offline/error retains the last list and its timestamp;
+no-list errors offer refresh/manual entry. Key storage is unchanged. Only a successful
+connection test and successful credential write commit the model to the exact
+`study_model_choice` / `openrouter_model` preference seam read by the typed-request
+branch. Browsing/manual entry alone does not alter the planner's validated model.
+That branch is untouched and not merged here; its save must be reconciled to one
+successful-validation save when integrating both branches.
+
+JVM tests cover fixture parsing, malformed/missing/duplicate/oversized data, decimal
+price conversion/rounding, sorting/filtering, daily cache/forced refresh/offline and
+storage failures, and fake HTTP checking the exact GET URL, no Authorization and
+redirect rejection. Robolectric tests cover private cache persistence, the exact
+planner preference seam, displayed costs/filter/selected ID, manual entry and
+empty-offline guidance. No test uses public-network HTTP.
+
+Owner-visible walkthrough is queued in `docs/agents/OWNER-RETURN-CHECKLIST.md` §1b.2;
+no phone or PR was used.
+
+### TASK-070 host verification
+
+Observed toolchain: Temurin JDK **21.0.12.1+1-LTS** (JDK 21), Gradle **9.7.0**,
+AGP **9.3.1**, Kotlin **2.4.0**. No version changes. New test result XMLs confirm
+`OpenRouterModelCatalogTest`: **9 tests, 0 failures/errors** and `ModelPickerTest`:
+**4 tests, 0 failures/errors**. Static `detekt` plus scoped `ktlintFormat` passed
+(`BUILD SUCCESSFUL in 33s`). Both repository scripts passed with exit 0.
+
+Exact full gate (serialized; no overlapping Gradle from this worker):
+
+```
+./gradlew assembleDebug assembleRelease testDebugUnitTest lintDebug ktlintCheck detekt --max-workers=2 -Dorg.gradle.jvmargs=-Xmx1536m -Pkotlin.daemon.jvmargs=-Xmx1024m
+../scripts/check-branding.sh
+../scripts/check.sh
+```
+
+Full-gate final status: **NOT COMPLETE within the two-hour cap**. The current retry
+reached debug lint. Aggregated unit-test XMLs: **652 tests, 0 failures, 0 errors,
+1 existing skipped**, across **108 suites**. This is not a full-gate success claim.
+Debug and unsigned release artifacts are under `android/app/build/outputs/apk/`.
+The lead must collect the active gate result or rerun it serially before acceptance.
+
+Earlier red runs: the initial fixture accidentally contained the same free model
+twice; deduplication correctly produced one row and failed three count assertions.
+The fixture was replaced by distinct paid/free actual response rows. One Robolectric
+manual-dialog assertion needed a main-looper drain to deliver Android's queued
+positive-button callback; assertion retained. Static checks drove helper extraction
+and line wrapping without suppressions/baselines. A later retry compiled both APKs
+but the app test executor exited with Gradle IPC `Connection reset by peer` (no
+assertion failure); the serialized retry used unchanged code. Kotlin daemon connection
+failures used Gradle's compile-without-daemon fallback. No shared daemon/build was stopped.
+
+

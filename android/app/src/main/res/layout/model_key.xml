@@ -31,14 +31,37 @@
             android:inputType="textPassword"
             android:minHeight="48dp" />
 
-        <EditText
+        <TextView
             android:id="@+id/model_model_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/model_model_hint"
-            android:importantForAutofill="no"
-            android:inputType="text"
+            android:freezesText="true"
             android:minHeight="48dp" />
+
+        <Button
+            android:id="@+id/model_picker_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/model_picker_title" />
+        <TextView
+            android:id="@+id/model_catalog_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite" />
+        <Button
+            android:id="@+id/model_picker_refresh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/model_picker_refresh" />
+        <Button
+            android:id="@+id/model_picker_manual"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/model_picker_manual" />
 
         <Button
             android:id="@+id/model_key_validate_button"

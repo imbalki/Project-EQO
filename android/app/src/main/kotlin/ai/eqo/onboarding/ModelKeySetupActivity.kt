@@ -25,10 +25,13 @@ import okhttp3.OkHttpClient
 
 class ModelKeySetupActivity : Activity() {
     private val credentialStore by lazy { AndroidProviderCredentialStore(applicationContext) }
+    private lateinit var modelPicker: ModelPicker
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.model_key)
+        modelPicker = ModelPicker(this)
+        modelPicker.start()
         findViewById<Button>(R.id.model_key_validate_button).setOnClickListener { validate() }
         findViewById<Button>(R.id.setup_return_button).setOnClickListener { finish() }
         render()
@@ -65,7 +68,7 @@ class ModelKeySetupActivity : Activity() {
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private fun validate() {
         val key = findViewById<EditText>(R.id.model_key_input).text.toString().trim()
-        val model = findViewById<EditText>(R.id.model_model_input).text.toString().trim()
+        val model = findViewById<TextView>(R.id.model_model_input).text.toString().trim()
         if (key.isBlank() || model.isBlank()) {
             lastFailureGuidance = getString(R.string.model_empty)
             StudySetup.modelKey = ModelKeyState.NOT_SET
@@ -105,9 +108,13 @@ class ModelKeySetupActivity : Activity() {
                 // REQ-BYOK-02: Keystore-backed storage only.
                 val stored = credentialStore.write(ProviderCredentialId.ApiKey("openrouter"), key)
                 StudySetup.modelKey =
-                    if (stored is CredentialStoreResult.Success) ModelKeyState.CONNECTED else ModelKeyState.FAILED
+                    if (stored is CredentialStoreResult.Success && ModelSelection.save(this, state.model)) {
+                        ModelKeyState.CONNECTED
+                    } else {
+                        ModelKeyState.FAILED
+                    }
                 lastFailureGuidance =
-                    if (stored is CredentialStoreResult.Success) {
+                    if (StudySetup.modelKey == ModelKeyState.CONNECTED) {
                         ""
                     } else {
                         getString(R.string.model_storage_failed)
@@ -136,6 +143,11 @@ class ModelKeySetupActivity : Activity() {
     }
 
     private var lastFailureGuidance: String = ""
+
+    override fun onDestroy() {
+        modelPicker.close()
+        super.onDestroy()
+    }
 
     companion object {
         /** OpenRouter API base; the probe appends /chat/completions itself. */
