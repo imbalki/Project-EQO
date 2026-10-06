@@ -56,6 +56,14 @@ jobs:
       - name: Static analysis (ktlint + detekt)
         if: steps.android_gate.outputs.present == 'true'
         run: ./gradlew ktlintCheck detekt test --console=plain
+      - name: Upload debug APK (install from CI instead of building locally)
+        if: success() && steps.android_gate.outputs.present == 'true'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: eqo-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
       - name: Upload Android Lint report
         if: always() && steps.android_gate.outputs.present == 'true'
         uses: actions/upload-artifact@v7.0.1
