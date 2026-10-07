@@ -379,6 +379,20 @@ internal class SystemActions(
             requireRegistryExecution()?.let { return it }
             val appName = params["appName"] ?: return ActionResult(false, null, "appName parameter missing")
             val pm = context.packageManager
+            if (appName.equals("settings", ignoreCase = true)) {
+                launcher.open(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                kotlinx.coroutines.delay(2000)
+                return ActionResult.Success(mapOf("message" to "Settings opened."))
+            }
+            val alias =
+                ai.eqo.core.agent.AliasResolver
+                    .appPackage(appName)
+            val aliasIntent = alias?.let(pm::getLaunchIntentForPackage)
+            if (aliasIntent != null) {
+                launcher.open(aliasIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                kotlinx.coroutines.delay(2000)
+                return ActionResult.Success(mapOf("message" to "Requested app launched."))
+            }
             val mainIntent =
                 Intent(Intent.ACTION_MAIN, null).apply {
                     addCategory(Intent.CATEGORY_LAUNCHER)

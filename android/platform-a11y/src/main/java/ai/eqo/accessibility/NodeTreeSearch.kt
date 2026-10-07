@@ -24,6 +24,23 @@ internal object NodeTreeSearch {
         return found
     }
 
+    /**
+     * The only text input on screen, or null when there are none or several. Used when the planner's
+     * hint text does not match the real field label: with exactly one input there is no ambiguity.
+     */
+    fun soleTextInput(root: A11yNode): A11yNode? {
+        var count = 0
+        var first: A11yNode? = null
+        findFirst(root) { node ->
+            if (isTextInput(node)) {
+                count++
+                if (first == null) first = node
+            }
+            false
+        }
+        return first.takeIf { count == 1 }
+    }
+
     /** Tries later containers when an earlier scrollable node rejects this direction. */
     fun scroll(
         root: A11yNode?,
@@ -94,9 +111,23 @@ internal object NodeTreeSearch {
         if (byViewId) {
             node.viewIdResourceName?.endsWith("/$target") == true || node.viewIdResourceName == target
         } else {
-            val label = node.text ?: node.contentDescription
-            label?.contains(target, ignoreCase = true) == true
+            listOf(node.text, node.contentDescription, node.hintText).any { label ->
+                label?.contains(target, ignoreCase = true) == true
+            }
         }
+
+    /** Some native app fields expose EditText class but omit the editable flag. Password fields are never inputs. */
+    fun isTextInput(node: A11yNode): Boolean =
+        !node.isPassword &&
+            (
+                node.isEditable ||
+                    node.className?.toString() in
+                    setOf(
+                        "android.widget.EditText",
+                        "android.widget.AutoCompleteTextView",
+                        "android.widget.MultiAutoCompleteTextView",
+                    )
+            )
 
     /**
      * The matched node itself if clickable, else its nearest clickable ancestor

@@ -145,6 +145,8 @@ class EqoAutomationFakeTreeTest {
     @Test
     fun typeWithoutAnEditableMatchIsTypedNodeNotFound() {
         val (root, screen) = probeScreen()
+        // A second input makes the unmatched hint ambiguous, so EQO must not guess.
+        root.child(FakeNode(text = "Subject", isEditable = true))
         val result = automation(root).type("Absent field", "hello")
         assertEquals(A11yError.NodeNotFound("Absent field"), (result as A11yResult.Failure).error)
         assertNull(screen.field.typedValue)

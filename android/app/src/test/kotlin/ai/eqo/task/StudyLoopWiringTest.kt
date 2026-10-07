@@ -198,6 +198,7 @@ class StudyLoopWiringTest {
     }
 
     @Test
+    @Suppress("MaxLineLength") // Exact source allowlist expressions must stay auditable.
     fun `resume confirmations are minted only in the Run click and resume confirmation handlers`() {
         val mint = Regex("""\bforExplicitUserConfirmation\b""")
         val sites = mutableListOf<String>()
@@ -228,12 +229,12 @@ class StudyLoopWiringTest {
         val resumeHandler =
             Regex(
                 """private fun confirmResume\(\)\s*\{\s*""" +
-                    """if \(controller\?\.currentState\(\) != LoopState\.PAUSED\)\s*\{\s*""" +
+                    """if \(\(TaskRunSession\.controller \?: controller\)\?\.currentState\(\) != LoopState\.PAUSED\)\s*\{\s*""" +
                     """renderControlFeedback\(TaskControlFeedback\.NOT_PAUSED\)\s*return\s*\}\s*""" +
                     """AlertDialog\s*\.Builder\(this\)\s*\.setTitle\(R\.string\.task_resume_confirm_title\)\s*""" +
                     """\.setMessage\(R\.string\.task_resume_confirm_message\)\s*""" +
                     """\.setPositiveButton\(R\.string\.task_resume_confirm_yes\)\s*\{ _, _ ->\s*""" +
-                    """val confirmation = $factoryCall\s*controller\?\.resume\(confirmation\)\s*\}""",
+                    """val confirmation = $factoryCall\s*\(TaskRunSession\.controller \?: controller\)\?\.resume\(confirmation\)\s*\}""",
             )
         assertEquals("SF-4: Run mint is inside the Run click", 1, runHandler.findAll(uiCode).count())
         assertEquals("SF-4: protected Resume click opens the confirmation", 1, resumeButton.findAll(uiCode).count())

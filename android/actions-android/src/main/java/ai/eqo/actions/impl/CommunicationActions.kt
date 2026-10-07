@@ -1,4 +1,7 @@
 // Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/actions/CommunicationActions.kt
+// Ported OpenDroid send flows keep their upstream step shape; cleanup tracked for a later pass.
+@file:Suppress("ReturnCount", "LongMethod", "CyclomaticComplexMethod", "MagicNumber", "UnusedParameter")
+
 package ai.eqo.actions.impl
 
 import ai.eqo.actions.base.Action
@@ -357,8 +360,13 @@ internal class CommunicationActions constructor(
                 }
             launcher.open(intent)
 
+            if (ai.eqo.accessibility.WhatsAppAutomator
+                    .automateSend(message)
+            ) {
+                return ActionResult.Success(mapOf("message" to "WhatsApp Send pressed; delivery is not verified."))
+            }
             return ActionResult.UserActionRequired(
-                "WhatsApp chat with $contactLabel opened with your message ready. Review it and tap Send; sending was not verified.",
+                "WhatsApp draft opened, but EQO could not press Send. Nothing was verified as sent.",
             )
         } catch (e: Exception) {
             Log.e("SendWhatsApp", "WhatsApp failed: ${e.localizedMessage}")
@@ -419,8 +427,22 @@ internal class CommunicationActions constructor(
                 launcher.open(webIntent)
             }
 
+            kotlinx.coroutines.delay(2000)
+            val currentPackage =
+                ai.eqo.accessibility.EQOAccessibilityService
+                    .getInstance()
+                    ?.rootInActiveWindow
+                    ?.packageName
+                    ?.toString()
+            if (intent.resolveActivity(pm) != null &&
+                currentPackage == installedTgPkg &&
+                ai.eqo.accessibility.TelegramAutomator
+                    .automateSend(message)
+            ) {
+                return ActionResult.Success(mapOf("message" to "Telegram Send pressed; delivery is not verified."))
+            }
             return ActionResult.UserActionRequired(
-                "Telegram chat with $contactLabel opened with your message ready. Review it and tap Send; sending was not verified.",
+                "Telegram draft opened, but EQO could not press Send. Nothing was verified as sent.",
             )
         } catch (e: Exception) {
             Log.e("SendTelegram", "Telegram failed: ${e.localizedMessage}")
@@ -444,7 +466,27 @@ internal class CommunicationActions constructor(
                 return ActionResult.Failure("No messaging app is available to compose a text message.")
             }
             launcher.open(intent)
-            ActionResult.UserActionRequired("Message draft for $contactLabel opened. Review it and tap Send; sending was not verified.")
+            kotlinx.coroutines.delay(1500)
+            val current =
+                ai.eqo.accessibility.EQOAccessibilityService
+                    .getInstance()
+                    ?.rootInActiveWindow
+                    ?.packageName
+                    ?.toString()
+            val expected =
+                android.provider.Telephony.Sms
+                    .getDefaultSmsPackage(launcher.context)
+            if (expected != null &&
+                current == expected &&
+                ai.eqo.accessibility.SmsAutomator
+                    .automateSend()
+            ) {
+                ActionResult.Success(mapOf("message" to "SMS Send pressed; delivery is not verified."))
+            } else {
+                ActionResult.UserActionRequired(
+                    "SMS draft opened, but EQO could not press Send. Nothing was verified as sent.",
+                )
+            }
         } catch (_: Exception) {
             ActionResult.Failure("Couldn't open the messaging app.")
         }
@@ -469,10 +511,20 @@ internal class CommunicationActions constructor(
                 when (emailComposer.open(context, to, subject, body)) {
                     EmailComposeOutcome.VERIFIED_SENT ->
                         ActionResult(true, "Email sent successfully.", null)
-                    EmailComposeOutcome.COMPOSED ->
-                        ActionResult.UserActionRequired(
-                            "Email draft opened. Review it and tap Send; sending was not verified.",
-                        )
+                    EmailComposeOutcome.COMPOSED -> {
+                        kotlinx.coroutines.delay(2000)
+                        val service =
+                            ai.eqo.accessibility.EQOAccessibilityService
+                                .getInstance()
+                        val inGmail = service?.rootInActiveWindow?.packageName?.toString() == "com.google.android.gm"
+                        if (inGmail && service?.gatedActions?.findAndClick("Send")?.isSuccess == true) {
+                            ActionResult.Success(mapOf("message" to "Gmail Send pressed; delivery is not verified."))
+                        } else {
+                            ActionResult.UserActionRequired(
+                                "Email draft opened, but EQO could not press Send. Nothing was verified as sent.",
+                            )
+                        }
+                    }
                     EmailComposeOutcome.UNAVAILABLE ->
                         ActionResult(false, null, "Couldn't open the email app. Is one installed?")
                 }
@@ -530,6 +582,17 @@ internal class CommunicationActions constructor(
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
                         launcher.open(intent)
+                        kotlinx.coroutines.delay(2000)
+                        val service =
+                            ai.eqo.accessibility.EQOAccessibilityService
+                                .getInstance()
+                        if (service?.rootInActiveWindow?.packageName?.toString() == "com.whatsapp" &&
+                            service.gatedActions.findAndClick("Video call").isSuccess
+                        ) {
+                            return ActionResult.Success(
+                                mapOf("message" to "WhatsApp video call button pressed; connection is not verified."),
+                            )
+                        }
                     }
                     else -> {
                         val pm = context.packageManager

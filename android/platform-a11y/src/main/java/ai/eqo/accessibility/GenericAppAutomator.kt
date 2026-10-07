@@ -5,34 +5,33 @@
 // service surfaces as a typed error, never a silent retry.
 package ai.eqo.accessibility
 
-import android.os.SystemClock
 import kotlinx.coroutines.delay
 
 object GenericAppAutomator {
-    private const val RETRY_TIMEOUT_MS = 5000L
+    private const val MAX_ATTEMPTS = 18
     private const val RETRY_INTERVAL_MS = 300L
+    private const val SETTLE_AFTER_TYPE_MS = 700L
 
     /**
      * Freshly launched apps (e.g. right after OPEN_APP or a self-contained action
      * like PLAY_YOUTUBE) are often still cold-starting when the next automation step
      * runs, so their UI elements aren't laid out yet. Polls [attempt] every
-     * [RETRY_INTERVAL_MS] until it succeeds or [RETRY_TIMEOUT_MS] elapses, instead of
+     * [RETRY_INTERVAL_MS] until it succeeds or the bounded attempt budget expires, instead of
      * giving up after a single immediate try.
      *
      * TASK-009: only [A11yError.NodeNotFound] is retried (the cold-start case).
      * Every other typed failure - notably [A11yError.AccessibilityDisabled] and
      * [A11yError.TakeoverDetected] - is returned on the first attempt.
      */
-    private suspend fun retryUntilSettled(attempt: () -> A11yResult): A11yResult {
-        val deadline = SystemClock.elapsedRealtime() + RETRY_TIMEOUT_MS
-        while (true) {
+    internal suspend fun retryUntilSettled(attempt: () -> A11yResult): A11yResult {
+        // A hard cap also bounds host-fake waits (no Android clock). Cancellation
+        // remains responsive, and rejected mutations are never repeated.
+        repeat(MAX_ATTEMPTS - 1) {
             val result = attempt()
-            val retryable = result is A11yResult.Failure && result.error is A11yError.NodeNotFound
-            if (!retryable || SystemClock.elapsedRealtime() >= deadline) {
-                return result
-            }
+            if (result !is A11yResult.Failure || result.error !is A11yError.NodeNotFound) return result
             delay(RETRY_INTERVAL_MS)
         }
+        return attempt()
     }
 
     private fun automationOrNull(): EqoAutomation? = EQOAccessibilityService.getInstance()?.automation
@@ -61,14 +60,62 @@ object GenericAppAutomator {
             automationOrNull()?.tapById(viewId) ?: A11yResult.failure(A11yError.AccessibilityDisabled)
         }
 
+    /**
+     * Types into the matched field and confirms the text landed. Many search bars are buttons or launcher
+     * fields that open a separate search screen whose own field is then focused and empty, so:
+     *  - typed but the focused field is empty (or the attempt was rejected): type once more into the focused field;
+     *  - no field matched: tap the matching label, wait for the new screen, then type into the focused field.
+     * Typing is never repeated when the text is already there.
+     */
     suspend fun typeText(
         searchText: String,
         content: String,
+    ): A11yResult {
+        if (searchText.lowercase() in setOf("focused", "current")) return typeOnce(searchText, content)
+        // One quick look first: the step has a short time budget, and a launcher-style search button
+        // (no input exists yet) must reach the tap fallback before the cold-start retries use it up.
+        val quick = automationOrNull()?.type(searchText, content) ?: A11yResult.failure(A11yError.AccessibilityDisabled)
+        val error = (quick as? A11yResult.Failure)?.error
+        return when {
+            error is A11yError.NodeNotFound -> {
+                val viaTap = tapThenTypeFocused(searchText, content, quick)
+                if (viaTap.isSuccess) viaTap else typeOnce(searchText, content)
+            }
+            quick.isSuccess || error is A11yError.ActionRejected -> confirmOrRetype(quick, content)
+            else -> quick
+        }
+    }
+
+    private suspend fun typeOnce(
+        target: String,
+        content: String,
     ): A11yResult =
         retryUntilSettled {
-            automationOrNull()?.type(searchText, content)
+            automationOrNull()?.type(target, content)
                 ?: A11yResult.failure(A11yError.AccessibilityDisabled)
         }
+
+    private suspend fun confirmOrRetype(
+        first: A11yResult,
+        content: String,
+    ): A11yResult {
+        val automation = automationOrNull() ?: return first
+        delay(SETTLE_AFTER_TYPE_MS)
+        val landed = automation.focusedInputHolds(content) || !automation.hasFocusedInput()
+        return if (landed) first else typeOnce("focused", content)
+    }
+
+    private suspend fun tapThenTypeFocused(
+        label: String,
+        content: String,
+        notFound: A11yResult,
+    ): A11yResult {
+        val tapped = automationOrNull()?.tap(label)
+        if (tapped?.isSuccess != true) return notFound
+        delay(SETTLE_AFTER_TYPE_MS)
+        val retyped = typeOnce("focused", content)
+        return if (retyped.isSuccess) retyped else notFound
+    }
 
     suspend fun typeId(
         viewId: String,

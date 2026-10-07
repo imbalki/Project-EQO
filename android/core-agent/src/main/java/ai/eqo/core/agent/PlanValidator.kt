@@ -43,6 +43,11 @@ class PlanValidator
             private const val MAX_STUDY_STEPS = 20
             private const val MAX_STUDY_TEXT = 8000
 
+            fun validateRegistrySteps(
+                steps: List<LoopStep>,
+                enabled: Set<String>,
+            ): List<String> = RegistryPlanVocabulary.errors(steps, enabled)
+
             fun validateStudySteps(steps: List<LoopStep>): List<String> {
                 val errors = mutableListOf<String>()
                 if (steps.isEmpty() || steps.size > MAX_STUDY_STEPS) errors.add("Plan must have 1 to 20 steps")

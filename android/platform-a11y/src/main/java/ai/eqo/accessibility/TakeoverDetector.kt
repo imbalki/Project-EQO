@@ -51,6 +51,10 @@ class TakeoverDetector {
 
     private var actionDepth = 0
 
+    private var lastAgentNodeActionFinishedAtMs: Long = NO_TIME
+
+    private var gracedTouches = 0
+
     @Volatile
     private var controlTouchExclusion: ((Int, Int) -> Boolean)? = null
 
@@ -110,10 +114,22 @@ class TakeoverDetector {
         nowMs: Long = 0L,
     ): Boolean =
         synchronized(lock) {
+            val withinAgentActionGrace =
+                source == TouchSource.USER &&
+                    gracedTouches < MAX_GRACED_TOUCHES_PER_RUN &&
+                    lastAgentNodeActionFinishedAtMs != NO_TIME &&
+                    nowMs - lastAgentNodeActionFinishedAtMs in 0..AGENT_ACTION_TOUCH_GRACE_MS
+            if (withinAgentActionGrace && !isPaused && actionDepth > 0) {
+                // Single use: the touch is attributed to EQO and the window is spent. A second touch needs a
+                // new node action, and the per-run cap bounds how many touches this can ever absorb.
+                gracedTouches++
+                lastAgentNodeActionFinishedAtMs = NO_TIME
+            }
             val isUserTakeover =
                 !isPaused &&
                     source == TouchSource.USER &&
-                    actionDepth > 0
+                    actionDepth > 0 &&
+                    !withinAgentActionGrace
             if (isUserTakeover) {
                 isPaused = true
                 takeoverCount++
@@ -130,6 +146,16 @@ class TakeoverDetector {
             isUserTakeover
         }
 
+    /**
+     * Records that one of EQO's own node actions (click, set text, paste) just finished. Android can
+     * report a touch-interaction event for the screen change such an action causes; a user-classified
+     * touch inside [AGENT_ACTION_TOUCH_GRACE_MS] of it is attributed to EQO, not the user. Any later
+     * touch still pauses the run.
+     */
+    fun onAgentNodeActionFinished(nowMs: Long) {
+        synchronized(lock) { lastAgentNodeActionFinishedAtMs = nowMs }
+    }
+
     /** Records the completion of one of EQO's own `dispatchGesture` strokes. */
     fun onSelfGestureFinished(nowMs: Long) {
         synchronized(lock) { lastSelfGestureFinishedAtMs = nowMs }
@@ -145,6 +171,7 @@ class TakeoverDetector {
     fun resume(confirmation: UserResumeConfirmation) {
         synchronized(lock) {
             lastResumeConfirmation = confirmation
+            gracedTouches = 0
             isPaused = false
         }
     }
@@ -161,6 +188,12 @@ class TakeoverDetector {
          * touch is treated as a suspected self-gesture mis-attribution (N-3).
          */
         const val SELF_GESTURE_ATTRIBUTION_WINDOW_MS: Long = 400L
+
+        /** Touch signals this soon after EQO's own node action are its own screen change, not the user. */
+        const val AGENT_ACTION_TOUCH_GRACE_MS: Long = 600L
+
+        /** At most this many touches per run can be attributed to EQO's own actions; the next one pauses. */
+        const val MAX_GRACED_TOUCHES_PER_RUN: Int = 8
 
         private const val NO_TIME = Long.MIN_VALUE
     }

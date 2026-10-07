@@ -10,6 +10,8 @@ import kotlinx.serialization.json.Json
 /** The donor provider is reused; no donor AgentLoop, dispatcher or model-selected code runs. */
 class TaskPlanner(
     private val provider: LLMProvider,
+    private val enabledActions: Set<String>? = null,
+    private val diagnostic: (String) -> Unit = {},
 ) {
     suspend fun plan(
         request: String,
@@ -17,15 +19,42 @@ class TaskPlanner(
     ): List<LoopStep> {
         require(request.isNotBlank() && request.length <= MAX_TEXT)
         val input = Json.encodeToString(PlannerInput(request, screenData.take(MAX_TEXT)))
+        val prompt = enabledActions?.let(RegistryPlanVocabulary::prompt) ?: PROMPT
         val response =
             provider.complete(
                 LLMRequest(
-                    systemPrompt = PROMPT,
+                    systemPrompt = prompt,
                     messages = listOf(ChatMessage("task-request", input, ChatMessage.Sender.USER)),
                     temperature = 0f,
                 ),
             )
-        return parse(response.content)
+        if (enabledActions == null) return parse(response.content)
+        return try {
+            RegistryPlanVocabulary.parse(response.content, enabledActions)
+        } catch (failure: IllegalArgumentException) {
+            repair(input, prompt, failure.message.orEmpty())
+        } catch (_: IllegalStateException) {
+            repair(input, prompt, "Plan JSON has an invalid structure")
+        }
+    }
+
+    private suspend fun repair(
+        input: String,
+        prompt: String,
+        errors: String,
+    ): List<LoopStep> {
+        diagnostic("planner validation failed: $errors; repair=1")
+        val repaired =
+            provider.complete(
+                LLMRequest(
+                    systemPrompt =
+                        prompt + "\nPrevious proposal rejected: " + errors +
+                            "\nReturn a corrected plan for the original request.",
+                    messages = listOf(ChatMessage("task-repair", input, ChatMessage.Sender.USER)),
+                    temperature = 0f,
+                ),
+            )
+        return RegistryPlanVocabulary.parse(repaired.content, requireNotNull(enabledActions))
     }
 
     companion object {
@@ -108,10 +137,47 @@ private data class PlannerStep(
 class ApprovedTaskPlan(
     steps: List<LoopStep>,
 ) {
-    private val approved = steps.map { it.copy(action = it.action.copy(params = it.action.params.toMap())) }
+    private val approved =
+        steps.map {
+            it.copy(
+                action =
+                    it.action.copy(
+                        params = it.action.params.toMap(),
+                        expectedPostconditions = it.action.expectedPostconditions.toList(),
+                    ),
+            )
+        }
+    private val approvedHash = hash(approved)
+
+    fun matches(steps: List<LoopStep>): Boolean = steps == approved && hash(steps).contentEquals(approvedHash)
+
+    private fun hash(steps: List<LoopStep>): ByteArray {
+        val canonical =
+            steps.map { step ->
+                listOf(
+                    step.stepId,
+                    step.requiredPermission,
+                    step.action.name,
+                    step.action.irreversible.toString(),
+                    step.action.plannerClaim,
+                ) +
+                    step.action.params
+                        .toSortedMap()
+                        .flatMap { listOf(it.key, it.value) } + step.action.expectedPostconditions
+            }
+        return java.security.MessageDigest
+            .getInstance("SHA-256")
+            .digest(Json.encodeToString(canonical).toByteArray(Charsets.UTF_8))
+    }
 
     init {
-        require(PlanValidator.validateStudySteps(approved).isEmpty())
+        val errors =
+            if (approved.all { it.action.name in PlanValidator.STUDY_PARAMS }) {
+                PlanValidator.validateStudySteps(approved)
+            } else {
+                PlanValidator.validateRegistrySteps(approved, ActionSchema.ALL_ACTIONS.map { it.name }.toSet())
+            }
+        require(errors.isEmpty()) { errors.joinToString("; ") }
     }
 
     fun permits(step: LoopStep): Boolean = approved.any { it == step }
@@ -148,7 +214,10 @@ object TaskPlanPreview {
             "compose_email" -> "open an email draft to $recipient, subject ${quote(
                 p["subject"].orEmpty(),
             )}, body ${quote(p["body"].orEmpty())}; you send it"
-            else -> error("Unsupported plan")
+            else -> {
+                val definition = requireNotNull(ActionSchema.getAction(step.action.name))
+                "${definition.name}: " + p.entries.joinToString(", ") { "${it.key}=${quote(it.value)}" }
+            }
         }
     }
 }

@@ -55,7 +55,9 @@ class AndroidActionRegistry internal constructor(
         }
         return try {
             for (permission in requiredPermissions(actionName, ready)) {
+                android.util.Log.i("EqoRun", "action=$actionName permission=${permission.name} check=request")
                 if (!permissions.request(permission)) {
+                    android.util.Log.w("EqoRun", "action=$actionName permission=${permission.name} denied")
                     return ActionResult.Failure("${permission.explanation} Permission was not granted; this step did not run.")
                 }
             }

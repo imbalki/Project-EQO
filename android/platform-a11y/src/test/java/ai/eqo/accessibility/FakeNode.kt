@@ -12,17 +12,22 @@ class FakeNode(
     override val viewIdResourceName: String? = null,
     override val isClickable: Boolean = false,
     override val isEditable: Boolean = false,
+    override val isFocused: Boolean = false,
     override val isScrollable: Boolean = false,
     override val isPassword: Boolean = false,
+    override val className: CharSequence = "android.widget.FrameLayout",
+    override val hintText: CharSequence? = null,
 ) : A11yNode {
-    override val className: CharSequence = "android.widget.FrameLayout"
-
     private val children = mutableListOf<A11yNode>()
 
     private var parentRef: FakeNode? = null
 
     /** Actions the platform would reject (performAction returns false). */
     var rejectActions: Boolean = false
+    var rejectSetText: Boolean = false
+    var rejectPaste: Boolean = false
+    val actions = mutableListOf<String>()
+    var onAction: (String) -> Unit = {}
 
     var clickCount: Int = 0
         private set
@@ -48,14 +53,38 @@ class FakeNode(
 
     override fun childAt(index: Int): A11yNode? = children.getOrNull(index)
 
+    private fun record(action: String) {
+        actions.add(action)
+        onAction(action)
+    }
+
+    override fun focus(): Boolean {
+        record("focus")
+        return !rejectActions
+    }
+
+    @Suppress("ReturnCount") // Test fake mirrors the framework paste outcomes.
+    override fun paste(
+        value: CharSequence,
+        canAct: () -> Boolean,
+    ): Boolean {
+        if (!canAct()) return false
+        record("paste")
+        if (!canAct() || rejectActions || rejectPaste) return false
+        typedValue = value.toString()
+        return true
+    }
+
     override fun click(): Boolean {
+        record("click")
         if (rejectActions) return false
         clickCount++
         return true
     }
 
     override fun setText(value: CharSequence): Boolean {
-        if (rejectActions) return false
+        record("setText")
+        if (rejectActions || rejectSetText) return false
         typedValue = value.toString()
         return true
     }

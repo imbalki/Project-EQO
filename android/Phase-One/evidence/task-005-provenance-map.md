@@ -1,5 +1,17 @@
 # TASK-005 per-file provenance map
 
+## TASK-077 additions (issue #20)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskRunService.kt` | EQO-NEW | `ai.eqo.task` | EQO foreground run owner and UI snapshot |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/DebugPlanReceiver.kt` | EQO-NEW | `ai.eqo.task` | EQO foreground run owner and UI snapshot |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/PlanApprovalSettings.kt` | EQO-NEW | `ai.eqo.task` | EQO plan approval preference |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/ForegroundPlanRunTest.kt` | EQO-NEW | `ai.eqo.task` | EQO lifecycle, executor and preference tests |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/RegistryPlanVocabulary.kt` | EQO-NEW | `ai.eqo.core.agent` | EQO registry planner contract |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/RegistryPlannerTest.kt` | EQO-NEW | `ai.eqo.core.agent` | EQO parser/repair/schema tests |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/EqoTypingFallbackTest.kt` | EQO-NEW | `ai.eqo.accessibility` | EQO native field/fallback fake-tree tests |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/NavigationRetryTest.kt` | EQO-NEW | `ai.eqo.accessibility` | EQO bounded navigation tests |
+
+
 Covers every Kotlin file in `android/` (`git ls-files android/` .kt = 183 files after the TASK-005 rename, the review round 1 test addition, the TASK-014 rebase additions, and the TASK-006 rebase additions), not only the 102 TASK-004 move files.
 Upstream facts come from the Origin headers and `task-004-tools/move-manifest.json`
 (origin commit `6ff5a061755b597b0558fed1f565587837ed4d51`); verify before editing.
@@ -390,6 +402,7 @@ have no upstream counterpart, and are recorded as **EQO-NEW** rows.
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/ScreenTextPrivacyTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/SmsAutomatorTakeoverGateTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/TakeoverSelfGestureTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/TakeoverAgentActionGraceTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/UntrustedScreenTextTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/core/agent/TakeoverResumeUserOnlyTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/androidTest/java/ai/eqo/test/EqoActionLoopScenarioDriver.kt` | EQO-NEW | `ai.eqo.test` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |

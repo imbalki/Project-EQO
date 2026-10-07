@@ -228,6 +228,7 @@ interface StudyAutomationPort :
 class StudyActionExecutor(
     private val port: StudyAutomationPort,
     private val approvedPlan: ai.eqo.core.agent.ApprovedTaskPlan? = null,
+    private val registryExecute: (suspend (String, Map<String, String>) -> ai.eqo.actions.base.ActionResult)? = null,
 ) {
     private val handlers: Map<String, suspend (Map<String, String>) -> Boolean> =
         mapOf(
@@ -258,7 +259,18 @@ class StudyActionExecutor(
             dispatch(step.action)
         }
 
+    @Suppress("ReturnCount") // One early return per gated action kind.
     private suspend fun dispatch(action: ExecutedAction): ExecuteResult {
+        if (action.name == action.name.uppercase()) {
+            val execute = registryExecute ?: return ExecuteResult.Failure("Registry executor unavailable")
+            val result = execute(action.name, action.params)
+            android.util.Log.i("EqoRun", "action=${action.name} result=${result.javaClass.simpleName}")
+            return if (result.success) {
+                ExecuteResult.Success(result.data.orEmpty())
+            } else {
+                ExecuteResult.Failure(result.error ?: "Action not completed")
+            }
+        }
         val verb = action.name.lowercase()
         val handler =
             handlers[verb]

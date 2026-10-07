@@ -7,7 +7,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Path
 import android.graphics.PixelFormat
-import android.os.Bundle
 import android.util.Base64
 import android.view.Gravity
 import android.view.MotionEvent
@@ -49,7 +48,7 @@ class EQOAccessibilityService :
      */
     private val runtime by lazy {
         EqoServiceRuntime(
-            rootProvider = { rootInActiveWindow?.let { AccessibilityNodeAdapter(it) } },
+            rootProvider = { rootInActiveWindow?.let { AccessibilityNodeAdapter(it, this) } },
             serviceState = {
                 if (instance === this) {
                     EqoAutomation.ServiceState.AVAILABLE
@@ -248,49 +247,17 @@ class EQOAccessibilityService :
         return false
     }
 
-    @Suppress("ReturnCount") // typed early-outs; a single exit would only obscure them
+    // Legacy donor entry points share the native-node typing implementation.
+    // The outer GatedServiceActions gate and inner typed gate are depth-counted.
     override fun findAndType(
         searchText: String,
         content: String,
-    ): Boolean {
-        val rootNode = rootInActiveWindow ?: return false
-        val nodes = rootNode.findAccessibilityNodeInfosByText(searchText)
-        for (node in nodes) {
-            if (node.isEditable) {
-                val arguments =
-                    Bundle().apply {
-                        putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, content)
-                    }
-                node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
-                node.recycle()
-                return true
-            }
-            node.recycle()
-        }
-        return false
-    }
+    ): Boolean = automation.type(searchText, content).isSuccess
 
-    @Suppress("ReturnCount") // typed early-outs; a single exit would only obscure them
     override fun findAndTypeById(
         viewId: String,
         content: String,
-    ): Boolean {
-        val rootNode = rootInActiveWindow ?: return false
-        val nodes = rootNode.findAccessibilityNodeInfosByViewId(viewId)
-        for (node in nodes) {
-            if (node.isEditable) {
-                val arguments =
-                    Bundle().apply {
-                        putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, content)
-                    }
-                node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
-                node.recycle()
-                return true
-            }
-            node.recycle()
-        }
-        return false
-    }
+    ): Boolean = automation.typeById(viewId, content).isSuccess
 
     /** TASK-012 (SF-1): raw global back, gated by [GatedServiceActions]. */
     override fun performGlobalBack(): Boolean = performGlobalAction(GLOBAL_ACTION_BACK)

@@ -13,6 +13,7 @@ object WhatsAppAutomator {
         // Wait for WhatsApp chat screen to fully load
         // WhatsApp can be slow to render especially on first launch or when opening via deep link
         delay(3000)
+        if (service.rootInActiveWindow?.packageName?.toString() != "com.whatsapp") return false
 
         // Verify we're actually on a WhatsApp chat screen by checking for the input field
         var inputFieldFound = false

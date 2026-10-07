@@ -28,6 +28,15 @@ class SetupHubActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.setup_hub)
+        findViewById<android.widget.CheckBox>(R.id.require_plan_approval).apply {
+            isChecked =
+                ai.eqo.task.PlanApprovalSettings
+                    .required(this@SetupHubActivity)
+            setOnCheckedChangeListener { _, checked ->
+                ai.eqo.task.PlanApprovalSettings
+                    .setRequired(this@SetupHubActivity, checked)
+            }
+        }
         // The consent answer persists across runs (UF-06); restore it before probing rows.
         StudySetup.consent = ChromeConsentActivity.restoreConsent(applicationContext)
         findViewById<TextView>(R.id.row_model_key).setOnClickListener {

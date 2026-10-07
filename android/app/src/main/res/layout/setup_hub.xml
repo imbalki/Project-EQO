@@ -104,5 +104,11 @@
             android:layout_height="wrap_content"
             android:text="@string/notices_button"
             android:minHeight="48dp" />
+        <CheckBox
+            android:id="@+id/require_plan_approval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/require_plan_approval" />
     </LinearLayout>
 </ScrollView>

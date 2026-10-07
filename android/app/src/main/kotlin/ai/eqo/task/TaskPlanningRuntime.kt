@@ -31,7 +31,10 @@ object StudyModelChoice {
 }
 
 object TaskPlanningRuntime {
-    fun planner(context: Context): TaskPlanner? {
+    fun planner(
+        context: Context,
+        enabledActions: Set<String>,
+    ): TaskPlanner? {
         val store = AndroidProviderCredentialStore(context.applicationContext)
         val key = (store.read(ProviderCredentialId.ApiKey("openrouter")) as? CredentialStoreResult.Success)?.value
         val model = StudyModelChoice.read(context)
@@ -52,6 +55,8 @@ object TaskPlanningRuntime {
                 apiKeys = mapOf("OpenRouter" to key),
             )
         // Reuse the donor's typed failure mapping, bounded retries and request-lifetime redaction.
-        return TaskPlanner(WrappedLLMProvider(provider, configProvider = { config }))
+        return TaskPlanner(WrappedLLMProvider(provider, configProvider = { config }), enabledActions) {
+            android.util.Log.i("EqoRun", it)
+        }
     }
 }

@@ -91,6 +91,7 @@ class TaskActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.task_screen)
+        registerDebugPlanReceiver()
         val startButton = findViewById<Button>(R.id.task_start_button)
 
         startButton.setOnClickListener {
@@ -105,13 +106,32 @@ class TaskActivity : Activity() {
         val resumeButton = findViewById<Button>(R.id.task_resume_button)
         protectConfirmationTouches(resumeButton)
         resumeButton.setOnClickListener { confirmResume() }
-        renderSteps(emptyList())
+        TaskRunSession.permissionRequester = actionPermissions
+        TaskRunSession.observer = {
+            mainHandler.post {
+                renderPlanStatus(TaskRunSession.status)
+                renderSteps(TaskRunSession.progress.values.toList())
+                TaskRunSession.receipt?.let(::renderReceipt)
+            }
+        }
+        renderSteps(TaskRunSession.progress.values.toList())
         protectConfirmationTouches(findViewById<Button>(R.id.task_start_button))
         renderPlanStatus(PlanStatus.PENDING)
-        findViewById<TextView>(R.id.task_state).setText(R.string.task_idle)
+        if (TaskRunSession.controller == null && TaskRunSession.pending == null && TaskRunSession.receipt == null) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.task_idle)
+        } else {
+            renderPlanStatus(TaskRunSession.status)
+            TaskRunSession.receipt?.let(::renderReceipt)
+        }
         findViewById<Button>(R.id.task_setup_button).setOnClickListener {
-            controller?.takeover()
-            startActivity(Intent(this, SetupHubActivity::class.java))
+            (TaskRunSession.controller ?: controller)?.takeover()
+            val destination =
+                if (liveAutomation() == null) {
+                    ai.eqo.onboarding.AccessibilitySetupActivity::class.java
+                } else {
+                    SetupHubActivity::class.java
+                }
+            startActivity(Intent(this, destination))
         }
     }
 
@@ -214,7 +234,7 @@ class TaskActivity : Activity() {
      * minted here — in the gesture handler — never in loop, recovery or agent code.
      */
     private fun confirmResume() {
-        if (controller?.currentState() != LoopState.PAUSED) {
+        if ((TaskRunSession.controller ?: controller)?.currentState() != LoopState.PAUSED) {
             renderControlFeedback(TaskControlFeedback.NOT_PAUSED)
             return
         }
@@ -224,13 +244,20 @@ class TaskActivity : Activity() {
             .setMessage(R.string.task_resume_confirm_message)
             .setPositiveButton(R.string.task_resume_confirm_yes) { _, _ ->
                 val confirmation = UserResumeConfirmation.forExplicitUserConfirmation(SystemClock.elapsedRealtime())
-                controller?.resume(confirmation)
+                (TaskRunSession.controller ?: controller)?.resume(confirmation)
             }.setNegativeButton(android.R.string.cancel, null)
             .show()
             .also { prepareTaskDialog(it) }
     }
 
     private fun startRun(approved: ApprovedTaskPlan) {
+        if (approved.steps().all { it.action.name == it.action.name.uppercase() }) {
+            TaskRunSession.pending = approved
+            TaskRunSession.status = PlanStatus.RUNNING
+            startForegroundService(Intent(this, TaskRunService::class.java))
+            renderPlanStatus(PlanStatus.RUNNING)
+            return
+        }
         findViewById<TextView>(R.id.task_control_feedback).text = ""
         findViewById<TextView>(R.id.task_receipt).text = ""
         renderPlanStatus(PlanStatus.RUNNING)
@@ -402,7 +429,7 @@ class TaskActivity : Activity() {
     }
 
     private fun control(request: (StudyTaskController) -> Boolean) {
-        val active = controller
+        val active = TaskRunSession.controller ?: controller
         if (active == null) renderControlFeedback(TaskControlFeedback.NOTHING_RUNNING) else request(active)
     }
 
@@ -504,8 +531,11 @@ class TaskActivity : Activity() {
                 .escape(target)
         }
 
-    private fun actionLabel(action: String): String =
-        getString(
+    private fun actionLabel(action: String): String {
+        ai.eqo.core.agent.ActionSchema
+            .getAction(action)
+            ?.let { return it.name.replace('_', ' ') }
+        return getString(
             when (action) {
                 "observe" -> R.string.task_step_observe
                 "scroll" -> R.string.task_step_scroll
@@ -521,6 +551,7 @@ class TaskActivity : Activity() {
                 else -> R.string.task_step_other
             },
         )
+    }
 
     private fun planLabel(status: String): String =
         getString(
@@ -543,7 +574,9 @@ class TaskActivity : Activity() {
             step.detail.startsWith("Android permission ") -> getString(R.string.task_permission_missing)
             step.state == StepProgressState.PENDING && step.detail.isNotBlank() -> getString(R.string.task_did_not_run)
             step.state == StepProgressState.UNKNOWN -> getString(R.string.task_unknown_result)
-            step.state == StepProgressState.FAILED -> getString(R.string.task_step_failed)
+            step.state == StepProgressState.FAILED ->
+                ai.eqo.core.agent.TaskDisplayText
+                    .escape(step.detail)
             step.state == StepProgressState.DONE &&
                 step.name in
                 setOf(
@@ -551,13 +584,37 @@ class TaskActivity : Activity() {
                     "compose_email",
                 )
             -> getString(R.string.task_draft_opened)
-            else -> ""
+            else ->
+                ai.eqo.core.agent.TaskDisplayText
+                    .escape(step.detail)
         }
+
+    private var debugPlanReceiver: DebugPlanReceiver? = null
+
+    // Debuggable builds only: lets a developer supply a finished plan (still validated and approved on screen).
+    private fun registerDebugPlanReceiver() {
+        val receiver =
+            DebugPlanReceiver { json ->
+                scope.launch {
+                    try {
+                        val steps =
+                            ai.eqo.core.agent.RegistryPlanVocabulary
+                                .parse(json, portedActions.enabledActionNames)
+                        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(steps))
+                    } catch (failure: IllegalArgumentException) {
+                        android.util.Log.w("EqoRun", "debug plan rejected: ${failure.message}")
+                    }
+                }
+            }
+        if (DebugPlanReceiver.register(this, mainHandler, receiver)) debugPlanReceiver = receiver
+    }
 
     private var planning = false
 
     private fun planRequest() {
-        val active = controller?.currentState() in setOf(LoopState.RUNNING, LoopState.PAUSED)
+        val active =
+            (TaskRunSession.controller ?: controller)?.currentState() in
+                setOf(LoopState.RUNNING, LoopState.PAUSED)
         if (planning || active) return
         val request = findViewById<EditText>(R.id.task_request).text.toString().trim()
         if (request.isBlank()) {
@@ -575,7 +632,9 @@ class TaskActivity : Activity() {
         try {
             val steps =
                 withContext(Dispatchers.IO) {
-                    val planner = TaskPlanningRuntime.planner(applicationContext) ?: throw MissingTaskKey()
+                    val planner =
+                        TaskPlanningRuntime.planner(applicationContext, portedActions.enabledActionNames)
+                            ?: throw MissingTaskKey()
                     // Never capture EQO's key/setup/request UI; execution observations stay local.
                     planner.plan(request, UntrustedScreenText.wrap(""))
                 }
@@ -583,15 +642,26 @@ class TaskActivity : Activity() {
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (_: MissingTaskKey) {
-            findViewById<TextView>(R.id.task_state).setText(R.string.task_key_needed)
+            findViewById<TextView>(R.id.task_state).apply {
+                setText(R.string.task_key_needed)
+                setOnClickListener {
+                    startActivity(Intent(this@TaskActivity, ai.eqo.onboarding.ModelKeySetupActivity::class.java))
+                }
+            }
         } catch (failure: LLMException) {
             findViewById<TextView>(R.id.task_state).setText(planningError(failure))
+        } catch (failure: IllegalArgumentException) {
+            android.util.Log.w("EqoRun", "planner rejected: ${failure.message}")
+            findViewById<TextView>(R.id.task_state).text =
+                getString(R.string.task_plan_rejected_detail, failure.message.orEmpty())
         } catch (_: Exception) {
             // No raw exception/model output/request is logged or displayed.
             findViewById<TextView>(R.id.task_state).setText(R.string.task_plan_invalid)
         } finally {
             planning = false
-            findViewById<Button>(R.id.task_start_button).isEnabled = true
+            findViewById<Button>(R.id.task_start_button).isEnabled =
+                TaskRunSession.pending == null &&
+                TaskRunSession.controller == null
         }
     }
 
@@ -600,6 +670,10 @@ class TaskActivity : Activity() {
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
         val preview = TaskPlanPreview.describe(steps)
         findViewById<TextView>(R.id.task_preview).text = preview
+        if (!PlanApprovalSettings.required(this)) {
+            startRun(plan)
+            return
+        }
         AlertDialog
             .Builder(this)
             .setTitle(R.string.task_plan_title)
@@ -625,6 +699,9 @@ class TaskActivity : Activity() {
         }
 
     override fun onDestroy() {
+        debugPlanReceiver?.let { unregisterReceiver(it) }
+        TaskRunSession.observer = null
+        TaskRunSession.permissionRequester = null
         controller?.stop()
         scope.cancel()
         actionPermissions.close()

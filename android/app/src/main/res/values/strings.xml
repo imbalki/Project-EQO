@@ -154,7 +154,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_current_app">The current app</string>
     <string name="task_helper_lost">The helper stopped responding. Return to setup to review its connection.</string>
     <string name="task_permission_missing">An Android permission is missing. Open Settings → Apps → EQO → Permissions to review it. EQO cannot grant it.</string>
-    <string name="task_step_failed">The step could not finish. Check the current screen and setup, then decide whether to try again.</string>
+    <string name="task_plan_rejected_detail">No supported plan: %1$s. Nothing ran.</string>
     <string name="task_draft_opened">Draft opened in the messaging app. Nothing was sent.</string>
     <string name="task_target_format">Recipient: %1$s; Message: %2$s</string>
     <string name="task_no_recipient">No recipient selected</string>
@@ -186,4 +186,5 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_not_paused">Not paused</string>
     <string name="task_already_paused">Already paused</string>
     <string name="task_no_sms_app">No default SMS app is available. Install or enable an SMS app and set it as default to open a draft. Nothing was sent.</string>
+    <string name="require_plan_approval">Require approval before EQO runs a plan</string>
 </resources>

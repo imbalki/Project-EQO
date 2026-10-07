@@ -37,6 +37,7 @@ internal class CallFlowExecutor constructor(
 
         return try {
             if (hasTelephony && canVerifyDirectCall(context)) {
+                android.util.Log.i("EqoRun", "action=MAKE_CALL route=ACTION_CALL permissions=granted")
                 val wasAlreadyInProgress = callFlowVerifier.isCallInProgress(context)
                 launcher.open(Intent(Intent.ACTION_CALL, callUri).withNewTask())
 
@@ -46,6 +47,10 @@ internal class CallFlowExecutor constructor(
                     ActionResult.Failure("The call could not be verified as started. No call was reported as active.")
                 }
             } else {
+                android.util.Log.i(
+                    "EqoRun",
+                    "action=MAKE_CALL route=ACTION_DIAL reason=capability_or_permission_missing",
+                )
                 launcher.open(dialIntent)
                 pendingDialerResult()
             }

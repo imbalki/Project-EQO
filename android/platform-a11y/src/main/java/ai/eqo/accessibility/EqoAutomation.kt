@@ -23,7 +23,10 @@ package ai.eqo.accessibility
  * @param takeover the shared takeover detector.
  * @param isSecureWindow reports whether the active window is secure
  *   (FLAG_SECURE). Screen text is never read from a secure window (SF-2).
+ *
+ * Kept together deliberately: the typed operation surface and its gated helpers.
  */
+@Suppress("TooManyFunctions")
 class EqoAutomation(
     private val rootProvider: () -> A11yNode?,
     private val serviceState: () -> ServiceState,
@@ -70,6 +73,26 @@ class EqoAutomation(
             typeTarget(searchText, content, byViewId = false)
         }
 
+    /**
+     * True when a focused, non-password text input currently holds [content]. Used to confirm typing landed,
+     * because tapping a search bar often opens a separate search screen whose field takes the text.
+     */
+    fun focusedInputHolds(content: String): Boolean =
+        rootProvider()?.let { root ->
+            NodeTreeSearch.findFirst(root) { node ->
+                NodeTreeSearch.isTextInput(node) &&
+                    node.isFocused &&
+                    !node.isPassword &&
+                    node.text?.toString()?.contains(content, ignoreCase = true) == true
+            }
+        } != null
+
+    /** True when some text input currently has focus. */
+    fun hasFocusedInput(): Boolean =
+        rootProvider()?.let { root ->
+            NodeTreeSearch.findFirst(root) { node -> NodeTreeSearch.isTextInput(node) && node.isFocused }
+        } != null
+
     /** Types [content] into the first editable node with the resource id [viewId]. */
     fun typeById(
         viewId: String,
@@ -100,6 +123,7 @@ class EqoAutomation(
                 try {
                     block()
                 } finally {
+                    takeover.onAgentNodeActionFinished(android.os.SystemClock.elapsedRealtime())
                     takeover.onAgentActionFinished()
                 }
             }
@@ -114,28 +138,98 @@ class EqoAutomation(
                 NodeTreeSearch.findFirst(root) { node -> NodeTreeSearch.matches(node, target, byViewId) }
             }
         val clickable = match?.let { NodeTreeSearch.clickableSelfOrAncestor(it) }
-        return when {
-            clickable == null -> A11yResult.failure(A11yError.NodeNotFound(target))
-            clickable.click() -> A11yResult.success("clicked $target")
-            else -> A11yResult.failure(A11yError.ActionRejected(target))
-        }
+        val result =
+            when {
+                clickable == null -> A11yResult.failure(A11yError.NodeNotFound(target))
+                clickable.click() -> A11yResult.success("clicked $target")
+                else -> A11yResult.failure(A11yError.ActionRejected(target))
+            }
+        return typingResult(clickable, result, if (byViewId) "CLICK_ID" else "CLICK_TEXT")
     }
 
+    private fun currentGateFailure(): A11yResult? =
+        when {
+            takeover.isPaused -> A11yResult.failure(A11yError.TakeoverDetected)
+            serviceState() == ServiceState.ACCESSIBILITY_DISABLED -> A11yResult.failure(A11yError.AccessibilityDisabled)
+            else -> null
+        }
+
+    private companion object {
+        private val VIEW_ID_LOG_SAFE = Regex("[A-Za-z0-9_.:/]{1,100}")
+    }
+
+    private fun typingResult(
+        node: A11yNode?,
+        result: A11yResult,
+        action: String = "TYPE_TEXT",
+    ): A11yResult {
+        val code =
+            when (result) {
+                is A11yResult.Success -> "action_accepted"
+                is A11yResult.Failure -> result.error.javaClass.simpleName
+            }
+        // Never log the target, field text, hints, clipboard or typed contents.
+        val nodeClass =
+            when (node?.className?.toString()) {
+                "android.widget.EditText" -> "EditText"
+                "android.widget.AutoCompleteTextView" -> "AutoCompleteTextView"
+                "android.widget.MultiAutoCompleteTextView" -> "MultiAutoCompleteTextView"
+                null -> "none"
+                else -> "other"
+            }
+        // Structural widget id only (it names the app and widget, never user content).
+        val viewId =
+            node
+                ?.viewIdResourceName
+                ?.takeIf { VIEW_ID_LOG_SAFE.matches(it) }
+                ?.let { " view=$it" }
+                .orEmpty()
+        val flags = node?.let { " clickable=${it.isClickable} editable=${it.isEditable}" }.orEmpty()
+        android.util.Log.i(
+            "EqoRun",
+            "action=$action node_found=${node != null} node_class=$nodeClass result=$code$viewId$flags",
+        )
+        return result
+    }
+
+    /** The input matching [target]; with an unmatched text hint, the only input on screen, never a guess. */
+    private fun resolveTypeTarget(
+        target: String,
+        byViewId: Boolean,
+    ): A11yNode? {
+        val root = rootProvider() ?: return null
+        val focusedOnly = !byViewId && target.lowercase() in setOf("focused", "current")
+        val matched =
+            NodeTreeSearch.findFirst(root) { node ->
+                NodeTreeSearch.isTextInput(node) &&
+                    if (focusedOnly) node.isFocused else NodeTreeSearch.matches(node, target, byViewId)
+            }
+        return matched ?: if (byViewId || focusedOnly) null else NodeTreeSearch.soleTextInput(root)
+    }
+
+    @Suppress("ReturnCount") // live takeover/service checks must stop between mutations
     private fun typeTarget(
         target: String,
         content: String,
         byViewId: Boolean,
     ): A11yResult {
-        val editable =
-            rootProvider()?.let { root ->
-                NodeTreeSearch.findFirst(root) { node ->
-                    node.isEditable && NodeTreeSearch.matches(node, target, byViewId)
-                }
+        val editable = resolveTypeTarget(target, byViewId)
+        if (editable == null) return typingResult(null, A11yResult.failure(A11yError.NodeNotFound(target)))
+        // A rejected focus/click does not imply SET_TEXT is unsupported. Try both
+        // preparation actions, but re-check the live gate before EVERY mutation.
+        currentGateFailure()?.let { return typingResult(editable, it) }
+        editable.focus()
+        currentGateFailure()?.let { return typingResult(editable, it) }
+        if (editable.isClickable) editable.click()
+        currentGateFailure()?.let { return typingResult(editable, it) }
+        if (editable.setText(content)) return typingResult(editable, A11yResult.success("typed into $target"))
+        currentGateFailure()?.let { return typingResult(editable, it) }
+        val result =
+            if (editable.paste(content) { currentGateFailure() == null }) {
+                A11yResult.success("typed into $target")
+            } else {
+                currentGateFailure() ?: A11yResult.failure(A11yError.ActionRejected(target))
             }
-        return when {
-            editable == null -> A11yResult.failure(A11yError.NodeNotFound(target))
-            editable.setText(content) -> A11yResult.success("typed into $target")
-            else -> A11yResult.failure(A11yError.ActionRejected(target))
-        }
+        return typingResult(editable, result)
     }
 }

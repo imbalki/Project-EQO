@@ -108,7 +108,8 @@ class TakeoverResumeUserOnlyTest {
         val resumeHandler =
             Regex(
                 """\.setPositiveButton\(R\.string\.task_resume_confirm_yes\)\s*\{ _, _ ->\s*""" +
-                    """val confirmation = $factoryCall\s*controller\?\.resume\(confirmation\)\s*\}""",
+                    """val confirmation = $factoryCall\s*""" +
+                    """\(TaskRunSession\.controller \?: controller\)\?\.resume\(confirmation\)\s*\}""",
             )
         assertEquals("SF-4: exactly two explicit user gesture mint handlers", 2, mint.findAll(uiCode).count())
         assertEquals("SF-4: new Run must mint only inside its click handler", 1, runHandler.findAll(uiCode).count())

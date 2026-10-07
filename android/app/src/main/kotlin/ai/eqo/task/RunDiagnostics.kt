@@ -19,6 +19,9 @@ internal object RunDiagnostics {
             "study_action_not_applied",
         )
 
+    // Only short identifier-like reasons are logged; free text could carry user content.
+    private val SAFE_REASON = Regex("[A-Za-z0-9_ .:'-]{1,80}")
+
     fun result(
         stepIndex: Int,
         result: ExecuteResult,
@@ -35,6 +38,12 @@ internal object RunDiagnostics {
                 is ExecuteResult.Failure -> "Failure"
                 is ExecuteResult.Interrupted -> "Interrupted"
             }
-        Log.i("EqoRun", "step=$stepIndex execute=$kind code=$code")
+        val detail =
+            (result as? ExecuteResult.Failure)
+                ?.reason
+                ?.takeIf { SAFE_REASON.matches(it) }
+                ?.let { " reason=$it" }
+                .orEmpty()
+        Log.i("EqoRun", "step=$stepIndex execute=$kind code=$code$detail")
     }
 }
