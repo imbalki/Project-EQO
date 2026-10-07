@@ -31,6 +31,37 @@ import org.robolectric.shadows.ShadowToast
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = EqoApplication::class)
 class SetupHubActivityTest {
+    @Test
+    fun wirelessFailureNamesTheFailedCheckOnTheHub() {
+        val controller = Robolectric.buildActivity(SetupHubActivity::class.java).setup()
+        try {
+            val activity = controller.get()
+            val render =
+                SetupHubActivity::class.java
+                    .getDeclaredMethod(
+                        "renderRow",
+                        Int::class.javaPrimitiveType,
+                        Int::class.javaPrimitiveType,
+                        CapabilityStatus::class.java,
+                    ).apply { isAccessible = true }
+            val status =
+                CapabilityStatus(
+                    id = CapabilityId.WIRELESS_ADB,
+                    state = CapabilityState.FAILED,
+                    probeName = CapabilityId.WIRELESS_ADB.probeName,
+                    detail = "AUTHORIZE: helper check did not pass",
+                    guidance = "internal diagnostic",
+                    checkedAtMs = 0L,
+                )
+            render.invoke(activity, R.id.row_wireless_adb, R.string.setup_hub_row_wireless_adb, status)
+            val text = activity.findViewById<TextView>(R.id.row_wireless_adb).text.toString()
+            assertTrue(text.contains("AUTHORIZE failed"))
+            assertFalse(text.contains("internal diagnostic"))
+        } finally {
+            controller.pause().stop().destroy()
+        }
+    }
+
     private val rows =
         listOf(
             R.id.row_model_key to R.string.setup_hub_row_model_key,

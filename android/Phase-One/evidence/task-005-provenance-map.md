@@ -589,3 +589,12 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ServerEnrollmentStore.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20) |
 | :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ConnectKeyEnrollment.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20, PR #77 CONNECT-plane correction) |
 | :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/ConnectKeyEnrollmentTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20, PR #77 CONNECT-plane correction) |
+
+## Helper authorization follow-up to PR #77 (Refs #20)
+
+| Module | File | Kind | Package | Provenance |
+|---|---|---|---|---|
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/HelperAuthorization.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, helper consent follow-up to PR #77) |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/HelperPermissionPrompt.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, helper consent follow-up to PR #77) |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/HelperAuthorizationTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, helper consent follow-up to PR #77) |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/HelperPermissionPromptTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, helper consent follow-up to PR #77) |

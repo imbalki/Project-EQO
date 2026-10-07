@@ -133,8 +133,16 @@ class SetupHubActivity : Activity() {
             } else {
                 getString(hint)
             }
+        val failedCheck =
+            status?.detail?.substringBefore(":")?.takeIf { name ->
+                status.id == CapabilityId.WIRELESS_ADB &&
+                    state == CapabilityState.FAILED &&
+                    ai.eqo.adb.pairing.ActivationCheck.entries
+                        .any { it.name == name }
+            }
+        val detail = failedCheck?.let { getString(R.string.setup_wireless_failed_check, it, guidance) } ?: guidance
         findViewById<TextView>(viewId).text =
-            getString(R.string.setup_row_format, getString(labelId), getString(stateLabel(state)), guidance)
+            getString(R.string.setup_row_format, getString(labelId), getString(stateLabel(state)), detail)
     }
 
     /**

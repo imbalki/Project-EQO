@@ -256,6 +256,7 @@ public abstract class Service<
         int callingUid = Binder.getCallingUid();
         int callingPid = Binder.getCallingPid();
         int userId = UserHandleCompat.getUserId(callingUid);
+        if (callingPid <= 0) throw new SecurityException("Consent requires synchronous Binder identity");
 
         if (callingUid == OsUtils.getUid() || callingPid == OsUtils.getPid()) {
             return;
@@ -265,12 +266,6 @@ public abstract class Service<
 
         if (clientRecord.allowed) {
             clientRecord.dispatchRequestPermissionResult(requestCode, true);
-            return;
-        }
-
-        ConfigPackageEntry entry = configManager.find(callingUid);
-        if (entry != null && entry.isDenied()) {
-            clientRecord.dispatchRequestPermissionResult(requestCode, false);
             return;
         }
 

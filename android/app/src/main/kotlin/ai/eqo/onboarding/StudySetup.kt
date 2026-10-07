@@ -152,7 +152,7 @@ object StudySetup {
         return status(
             CapabilityId.WIRELESS_ADB,
             CapabilityState.FAILED,
-            detail = detail,
+            detail = report.firstFailure?.let { "${it.check.name}: $detail" } ?: detail,
             guidance = report.firstFailure?.guidance ?: "Run the wireless steps again from Wireless debugging.",
         )
     }

@@ -66,13 +66,13 @@ public class ClientManager<ConfigMgr extends ConfigManager> {
     public ClientRecord addClient(int uid, int pid, IShizukuApplication client, String packageName, int apiVersion) {
         ClientRecord clientRecord = new ClientRecord(uid, pid, client, packageName, apiVersion);
 
-        ConfigPackageEntry entry = configManager.find(uid);
-        if (entry != null && entry.isAllowed()) {
-            clientRecord.allowed = true;
-        }
+        // EQO consent is process-scoped and must never be restored from upstream config.
 
         IBinder binder = client.asBinder();
-        IBinder.DeathRecipient deathRecipient = () -> clientRecords.remove(clientRecord);
+        IBinder.DeathRecipient deathRecipient = () -> {
+            clientRecords.remove(clientRecord);
+            onClientRemoved(clientRecord);
+        };
         try {
             binder.linkToDeath(deathRecipient, 0);
         } catch (RemoteException e) {
@@ -82,6 +82,9 @@ public class ClientManager<ConfigMgr extends ConfigManager> {
 
         clientRecords.add(clientRecord);
         return clientRecord;
+    }
+
+    protected void onClientRemoved(ClientRecord record) {
     }
 }
 

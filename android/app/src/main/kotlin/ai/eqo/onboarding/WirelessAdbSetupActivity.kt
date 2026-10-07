@@ -38,6 +38,7 @@ import java.util.concurrent.Executors
 
 class WirelessAdbSetupActivity : Activity() {
     private lateinit var worker: ExecutorService
+    private var permissionPrompt: HelperPermissionPrompt? = null
 
     @Volatile
     private var busy = false
@@ -56,7 +57,13 @@ class WirelessAdbSetupActivity : Activity() {
         render()
     }
 
+    override fun onStop() {
+        permissionPrompt?.close()
+        super.onStop()
+    }
+
     override fun onDestroy() {
+        permissionPrompt?.close()
         worker.shutdownNow()
         super.onDestroy()
     }
@@ -109,8 +116,10 @@ class WirelessAdbSetupActivity : Activity() {
             runCatching {
                 HelperStartCommand.build(applicationInfo.nativeLibraryDir, applicationInfo.sourceDir)
             }.getOrNull()
+        val prompt = HelperPermissionPrompt(this)
+        permissionPrompt = prompt
         worker.execute {
-            val runner = WirelessAdbActivationRunner(keys, StudyHelperHooks(), helperStartCommand = command)
+            val runner = WirelessAdbActivationRunner(keys, StudyHelperHooks(prompt), helperStartCommand = command)
             val report = block(ActivationSequence(runner, StudySetup.wirelessAdb))
             runOnUiThread {
                 busy = false

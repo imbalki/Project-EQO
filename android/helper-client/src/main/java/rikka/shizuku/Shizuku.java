@@ -39,14 +39,14 @@ public class Shizuku {
     private static IBinder binder;
     private static IShizukuService service;
 
-    private static int serverUid = -1;
+    private static volatile int serverUid = -1;
     private static int serverApiVersion = -1;
     private static int serverPatchVersion = -1;
     private static String serverContext = null;
-    private static boolean permissionGranted = false;
+    private static volatile boolean permissionGranted = false;
     private static boolean shouldShowRequestPermissionRationale = false;
     private static boolean preV11 = false;
-    private static boolean binderReady = false;
+    private static volatile boolean binderReady = false;
 
     private static final IShizukuApplication SHIZUKU_APPLICATION = new IShizukuApplication.Stub() {
 
@@ -64,15 +64,56 @@ public class Shizuku {
 
         @Override
         public void dispatchRequestPermissionResult(int requestCode, Bundle data) {
+            if (android.os.Binder.getCallingUid() != serverUid) return;
             boolean allowed = data.getBoolean(REQUEST_PERMISSION_REPLY_ALLOWED, false);
+            permissionGranted = allowed;
             scheduleRequestPermissionResultListener(requestCode, allowed ? PackageManager.PERMISSION_GRANTED : PackageManager.PERMISSION_DENIED);
         }
 
         @Override
         public void showPermissionConfirmation(int requestUid, int requestPid, String requestPackageName, int requestCode) {
-            // non-app
+            if (android.os.Binder.getCallingUid() != serverUid
+                    || requestUid != android.os.Process.myUid() || requestPid != android.os.Process.myPid()) return;
+            MAIN_HANDLER.post(() -> {
+                OnPermissionConfirmationListener listener = confirmationListener;
+                // An orphaned callback cannot grant. Its owner queues revocation on close;
+                // otherwise server expiry fails closed. Never make synchronous service calls here.
+                if (listener != null) listener.onConfirmationRequested(requestCode);
+            });
         }
     };
+
+    public interface OnPermissionConfirmationListener {
+        void onConfirmationRequested(int requestCode);
+    }
+
+    private static volatile OnPermissionConfirmationListener confirmationListener;
+
+    public static void setPermissionConfirmationListener(OnPermissionConfirmationListener listener) {
+        confirmationListener = listener;
+    }
+
+    /** Revoke this process only. The wire permission mask is FLAG_ALLOWED | FLAG_DENIED. */
+    public static void revokeOwnPermission() {
+        permissionGranted = false;
+        try {
+            requireService().updateFlagsForUid(android.os.Process.myUid(), 6, 0);
+        } catch (RemoteException e) {
+            throw rethrowAsRuntimeException(e);
+        }
+    }
+
+    /** Reply only for this process; the server validates a live pending request. */
+    public static void confirmPermission(int requestCode, boolean allowed) {
+        Bundle reply = new Bundle();
+        reply.putBoolean(REQUEST_PERMISSION_REPLY_ALLOWED, allowed);
+        try {
+            requireService().dispatchPermissionConfirmationResult(android.os.Process.myUid(),
+                    android.os.Process.myPid(), requestCode, reply);
+        } catch (RemoteException e) {
+            throw rethrowAsRuntimeException(e);
+        }
+    }
 
     private static final IBinder.DeathRecipient DEATH_RECIPIENT = () -> {
         binderReady = false;
@@ -129,6 +170,7 @@ public class Shizuku {
         if (newBinder == null) {
             binder = null;
             service = null;
+            permissionGranted = false;
             serverUid = -1;
             serverApiVersion = -1;
             serverContext = null;
@@ -454,6 +496,10 @@ public class Shizuku {
      */
     public static boolean pingBinder() {
         return binder != null && binder.pingBinder();
+    }
+
+    public static boolean isBinderReady() {
+        return binderReady && pingBinder();
     }
 
     private static RuntimeException rethrowAsRuntimeException(RemoteException e) {
@@ -864,13 +910,14 @@ public class Shizuku {
      * @since Added from version 11
      */
     public static int checkSelfPermission() {
-        if (permissionGranted) return PackageManager.PERMISSION_GRANTED;
+        // A queued result must not resurrect a permission revoked after timeout.
         try {
-            permissionGranted = requireService().checkSelfPermission();
+            boolean granted = requireService().checkSelfPermission();
+            permissionGranted = granted;
+            return granted ? PackageManager.PERMISSION_GRANTED : PackageManager.PERMISSION_DENIED;
         } catch (RemoteException e) {
             throw rethrowAsRuntimeException(e);
         }
-        return permissionGranted ? PackageManager.PERMISSION_GRANTED : PackageManager.PERMISSION_DENIED;
     }
 
     /**

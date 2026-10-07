@@ -10,7 +10,7 @@ import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_UID;
 import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_VERSION;
 import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
 import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
-import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
+
 import static rikka.shizuku.server.ServerConstants.MANAGER_APPLICATION_ID;
 import static rikka.shizuku.server.ServerConstants.PERMISSION;
 
@@ -20,7 +20,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.UserInfo;
+
 import android.ddm.DdmHandleAppName;
 import android.os.Binder;
 import android.os.Bundle;
@@ -41,7 +41,7 @@ import java.util.Objects;
 
 import kotlin.collections.ArraysKt;
 import moe.shizuku.api.BinderContainer;
-import moe.shizuku.common.util.BuildUtils;
+
 import moe.shizuku.common.util.OsUtils;
 import moe.shizuku.server.IShizukuApplication;
 import rikka.hidden.compat.ActivityManagerApis;
@@ -56,6 +56,8 @@ import rikka.shizuku.server.util.HandlerUtil;
 import rikka.shizuku.server.util.UserHandleCompat;
 
 public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuClientManager, ShizukuConfigManager> {
+
+    private final EqoPermissionRequests permissionRequests = new EqoPermissionRequests();
 
     public static void main(String[] args) {
         DdmHandleAppName.setAppName("eqo_helper_server", 0);
@@ -114,7 +116,15 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
     private final ShizukuConfigManager configManager;
 
     public ShizukuService() {
+        this(true);
+    }
+
+    // Host tests skip OS startup, but exercise the same production Binder handlers.
+    ShizukuService(boolean startSystemServices) {
         super();
+        configManager = getConfigManager();
+        clientManager = getClientManager();
+        if (!startSystemServices) return;
 
         HandlerUtil.setMainHandler(mainHandler);
 
@@ -134,9 +144,6 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
         }
 
         assert ai != null;
-
-        configManager = getConfigManager();
-        clientManager = getClientManager();
 
         ApkChangedObservers.start(ai.sourceDir, () -> {
             if (getManagerApplicationInfo() == null) {
@@ -160,7 +167,12 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
 
     @Override
     public ShizukuClientManager onCreateClientManager() {
-        return new ShizukuClientManager(getConfigManager());
+        return new ShizukuClientManager(getConfigManager()) {
+            @Override
+            protected void onClientRemoved(ClientRecord record) {
+                permissionRequests.cancel(record.uid, record.pid);
+            }
+        };
     }
 
     @Override
@@ -186,12 +198,7 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
 
     @Override
     public boolean checkCallerPermission(String func, int callingUid, int callingPid, @Nullable ClientRecord clientRecord) {
-        if (isManagerCaller(callingUid)) {
-            return true;
-        }
-        if (clientRecord == null && checkCallingPermission() == PackageManager.PERMISSION_GRANTED) {
-            return true;
-        }
+        // Being the manager is not execution consent. Service enforces record.allowed.
         return false;
     }
 
@@ -209,6 +216,10 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
         super.attachUserService(binder, options);
     }
 
+    protected List<String> consentPackages(int uid) {
+        return PackageManagerApis.getPackagesForUidNoThrow(uid);
+    }
+
     @Override
     public void attachApplication(IShizukuApplication application, Bundle args) {
         if (application == null || args == null) {
@@ -223,16 +234,15 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
 
         int callingPid = Binder.getCallingPid();
         int callingUid = Binder.getCallingUid();
-        boolean isManager;
+        if (callingPid <= 0) throw new SecurityException("Consent requires synchronous Binder identity");
         ClientRecord clientRecord = null;
 
-        List<String> packages = PackageManagerApis.getPackagesForUidNoThrow(callingUid);
+        List<String> packages = consentPackages(callingUid);
         if (!packages.contains(requestPackageName)) {
             LOGGER.w("Request package " + requestPackageName + "does not belong to uid " + callingUid);
             throw new SecurityException("Request package " + requestPackageName + "does not belong to uid " + callingUid);
         }
 
-        isManager = EqoManagerAllowlist.isManagerAppId(requestPackageName);
 
         if (clientManager.findClient(callingUid, callingPid) == null) {
             synchronized (this) {
@@ -260,10 +270,9 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
         reply.putInt(BIND_APPLICATION_SERVER_VERSION, replyServerVersion);
         reply.putString(BIND_APPLICATION_SERVER_SECONTEXT, OsUtils.getSELinuxContext());
         reply.putInt(BIND_APPLICATION_SERVER_PATCH_VERSION, ShizukuApiConstants.SERVER_PATCH_VERSION);
-        if (!isManager) {
-            reply.putBoolean(BIND_APPLICATION_PERMISSION_GRANTED, Objects.requireNonNull(clientRecord).allowed);
-            reply.putBoolean(BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, false);
-        }
+        ClientRecord attached = clientManager.requireClient(callingUid, callingPid);
+        reply.putBoolean(BIND_APPLICATION_PERMISSION_GRANTED, attached.allowed);
+        reply.putBoolean(BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, false);
         // TASK-007 SF-1: attach only exchanges binder metadata; no manager grants.
         try {
             application.bindApplication(reply);
@@ -274,91 +283,40 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
 
     @Override
     public void showPermissionConfirmation(int requestCode, @NonNull ClientRecord clientRecord, int callingUid, int callingPid, int userId) {
-        ApplicationInfo ai = PackageManagerApis.getApplicationInfoNoThrow(clientRecord.packageName, 0, userId);
-        if (ai == null) {
-            return;
-        }
-
-        // TASK-007 (issue #12): look the manager up in the EQO app-id allowlist (any of the
-        // allowlisted apps present in this user counts), not in one hard-coded package id.
-        PackageInfo pi = null;
-        for (String id : EqoManagerAllowlist.getAllowedManagerAppIds()) {
-            pi = PackageManagerApis.getPackageInfoNoThrow(id, 0, userId);
-            if (pi != null) {
-                break;
-            }
-        }
-        UserInfo userInfo = UserManagerApis.getUserInfo(userId);
-        boolean isWorkProfileUser = BuildUtils.atLeast30() ?
-                "android.os.usertype.profile.MANAGED".equals(userInfo.userType) :
-                (userInfo.flags & UserInfo.FLAG_MANAGED_PROFILE) != 0;
-        if (pi == null && !isWorkProfileUser) {
-            LOGGER.w("Manager not found in non work profile user %d. Revoke permission", userId);
+        // Only the attached EQO process may ask, and no other package may share its UID.
+        List<String> packages = consentPackages(callingUid);
+        if (callingPid <= 0 || !EqoManagerAllowlist.isManagerAppId(clientRecord.packageName)
+                || packages.size() != 1 || !packages.contains(clientRecord.packageName)
+                || !permissionRequests.begin(callingUid, callingPid, requestCode, android.os.SystemClock.elapsedRealtime())) {
             clientRecord.dispatchRequestPermissionResult(requestCode, false);
             return;
         }
-
-        Intent intent = new Intent(ServerConstants.REQUEST_PERMISSION_ACTION)
-                .setPackage(MANAGER_APPLICATION_ID)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
-                .putExtra("uid", callingUid)
-                .putExtra("pid", callingPid)
-                .putExtra("requestCode", requestCode)
-                .putExtra("applicationInfo", ai);
-        ActivityManagerApis.startActivityNoThrow(intent, null, isWorkProfileUser ? 0 : userId);
+        try {
+            clientRecord.client.showPermissionConfirmation(callingUid, callingPid, clientRecord.packageName, requestCode);
+        } catch (RemoteException e) {
+            permissionRequests.consume(callingUid, callingUid, callingPid, requestCode, android.os.SystemClock.elapsedRealtime());
+            clientRecord.dispatchRequestPermissionResult(requestCode, false);
+        }
     }
 
     @Override
-    public void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, Bundle data) throws RemoteException {
-        if (!isManagerCaller(Binder.getCallingUid())) {
-            LOGGER.w("dispatchPermissionConfirmationResult called not from the manager package");
-            return;
-        }
-
-        if (data == null) {
-            return;
-        }
-
-        boolean allowed = data.getBoolean(REQUEST_PERMISSION_REPLY_ALLOWED);
-        boolean onetime = data.getBoolean(REQUEST_PERMISSION_REPLY_IS_ONETIME);
-
-        LOGGER.i("dispatchPermissionConfirmationResult: uid=%d, pid=%d, requestCode=%d, allowed=%s, onetime=%s",
-                requestUid, requestPid, requestCode, Boolean.toString(allowed), Boolean.toString(onetime));
-
-        List<ClientRecord> records = clientManager.findClients(requestUid);
-        List<String> packages = new ArrayList<>();
-        if (records.isEmpty()) {
-            LOGGER.w("dispatchPermissionConfirmationResult: no client for uid %d was found", requestUid);
-        } else {
-            for (ClientRecord record : records) {
-                packages.add(record.packageName);
-                record.allowed = allowed;
-                if (record.pid == requestPid) {
-                    record.dispatchRequestPermissionResult(requestCode, allowed);
-                }
+    public void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, Bundle data) {
+        synchronized (permissionRequests) {
+            int callerUid = Binder.getCallingUid();
+            if (data == null || requestPid <= 0 || requestPid != Binder.getCallingPid()
+                    || !permissionRequests.consume(callerUid, requestUid, requestPid, requestCode,
+                    android.os.SystemClock.elapsedRealtime())) {
+                throw new SecurityException("No live EQO consent request for this process");
             }
-        }
-
-        if (!onetime) {
-            configManager.update(requestUid, packages, ConfigManager.MASK_PERMISSION, allowed ? ConfigManager.FLAG_ALLOWED : ConfigManager.FLAG_DENIED);
-        }
-
-        if (!onetime && allowed) {
-            int userId = UserHandleCompat.getUserId(requestUid);
-
-            for (String packageName : PackageManagerApis.getPackagesForUidNoThrow(requestUid)) {
-                PackageInfo pi = PackageManagerApis.getPackageInfoNoThrow(packageName, PackageManager.GET_PERMISSIONS, userId);
-                if (pi == null || pi.requestedPermissions == null || !ArraysKt.contains(pi.requestedPermissions, PERMISSION)) {
-                    continue;
-                }
-
-                int deviceId = 0;//Context.DEVICE_ID_DEFAULT
-                if (allowed) {
-                    PermissionManagerApis.grantRuntimePermission(packageName, PERMISSION, userId);
-                } else {
-                    PermissionManagerApis.revokeRuntimePermission(packageName, PERMISSION, userId);
-                }
+            List<String> packages = consentPackages(callerUid);
+            ClientRecord record = clientManager.findClient(callerUid, requestPid);
+            if (record == null || packages.size() != 1 || !packages.contains(record.packageName)
+                    || !EqoManagerAllowlist.isManagerAppId(record.packageName)) {
+                throw new SecurityException("Consent is restricted to EQO's own UID");
             }
+            // Session/process only: no runtime permission or persistent config grant.
+            record.allowed = data.getBoolean(REQUEST_PERMISSION_REPLY_ALLOWED, false);
+            record.dispatchRequestPermissionResult(requestCode, record.allowed);
         }
     }
 
@@ -399,46 +357,18 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
 
     @Override
     public void updateFlagsForUid(int uid, int mask, int value) throws RemoteException {
-        if (!isManagerCaller(Binder.getCallingUid())) {
-            LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
-            return;
+        // Cancellation may revoke this process only; flags can never grant any UID.
+        int callerUid = Binder.getCallingUid();
+        List<String> packages = consentPackages(callerUid);
+        if (Binder.getCallingPid() <= 0 || uid != callerUid || packages.size() != 1
+                || !EqoManagerAllowlist.isManagerAppId(packages.get(0))
+                || mask != ConfigManager.MASK_PERMISSION || value != 0) {
+            throw new SecurityException("EQO requires explicit helper consent");
         }
-
-        int userId = UserHandleCompat.getUserId(uid);
-
-        if ((mask & ConfigManager.MASK_PERMISSION) != 0) {
-            boolean allowed = (value & ConfigManager.FLAG_ALLOWED) != 0;
-            boolean denied = (value & ConfigManager.FLAG_DENIED) != 0;
-
-            List<ClientRecord> records = clientManager.findClients(uid);
-            for (ClientRecord record : records) {
-                if (allowed) {
-                    record.allowed = true;
-                } else {
-                    record.allowed = false;
-                    ActivityManagerApis.forceStopPackageNoThrow(record.packageName, UserHandleCompat.getUserId(record.uid));
-                    onPermissionRevoked(record.packageName);
-                }
-            }
-
-            for (String packageName : PackageManagerApis.getPackagesForUidNoThrow(uid)) {
-                PackageInfo pi = PackageManagerApis.getPackageInfoNoThrow(packageName, PackageManager.GET_PERMISSIONS, userId);
-                if (pi == null || pi.requestedPermissions == null || !ArraysKt.contains(pi.requestedPermissions, PERMISSION)) {
-                    continue;
-                }
-
-                int deviceId = 0;//Context.DEVICE_ID_DEFAULT
-                if (allowed) {
-                    PermissionManagerApis.grantRuntimePermission(packageName, PERMISSION, userId);
-                } else {
-                    PermissionManagerApis.revokeRuntimePermission(packageName, PERMISSION, userId);
-                }
-
-                // TODO kill user service using
-            }
+        synchronized (permissionRequests) {
+            permissionRequests.cancel(callerUid, Binder.getCallingPid());
+            clientManager.requireClient(callerUid, Binder.getCallingPid()).allowed = false;
         }
-
-        configManager.update(uid, null, mask, value);
     }
 
     private void onPermissionRevoked(String packageName) {
@@ -485,7 +415,10 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
 
     @Override
     public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
-        //LOGGER.d("transact: code=%d, calling uid=%d", code, Binder.getCallingUid());
+        // Reject legacy/malicious oneway consent calls before they can mutate any state.
+        if ((code == 15 || code == 105) && (flags & IBinder.FLAG_ONEWAY) != 0) {
+            throw new SecurityException("Consent requires synchronous Binder transactions");
+        }
         if (code == ServerConstants.BINDER_TRANSACTION_getApplications) {
             data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
             int userId = data.readInt();

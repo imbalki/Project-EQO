@@ -25,6 +25,7 @@ interface IShizukuService {
 
     int removeUserService(in IShizukuServiceConnection conn, in Bundle args) = 12;
 
+    // Consent uses synchronous transactions: remote oneway callers have no authenticated PID.
     void requestPermission(int requestCode) = 14;
 
     boolean checkSelfPermission() = 15;
@@ -41,7 +42,7 @@ interface IShizukuService {
 
     boolean isHidden(int uid) = 103;
 
-    oneway void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, in Bundle data) = 104;
+    void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, in Bundle data) = 104;
 
     int getFlagsForUid(int uid, int mask) = 105;
 

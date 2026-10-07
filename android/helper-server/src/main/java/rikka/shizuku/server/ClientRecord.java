@@ -17,7 +17,7 @@ public class ClientRecord {
     public final IShizukuApplication client;
     public final String packageName;
     public final int apiVersion;
-    public boolean allowed;
+    public volatile boolean allowed;
 
     public ClientRecord(int uid, int pid, IShizukuApplication client, String packageName, int apiVersion) {
         this.uid = uid;

@@ -56,7 +56,7 @@ class WirelessProbeTest {
                 .reconnect(WirelessAdbEndpoints.forReconnect(40_000), enrolled = true)
         val status = StudySetup.probeWirelessAdb()
         assertEquals(CapabilityState.FAILED, status.state)
-        assertEquals("needs re-pair", status.detail)
+        assertEquals("CONNECT: needs re-pair", status.detail)
         assertTrue(status.guidance.contains("Pair again"))
     }
 }

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="setup_wireless_failed_check">%1$s failed. %2$s</string>
+    <string name="helper_permission_title">Allow EQO to use its helper?</string>
+    <string name="helper_permission_allow">Allow</string>
+    <string name="helper_permission_deny">Don\'t allow</string>
     <string name="eqo_label">EQO</string>
     <string name="notices_button">Open-source notices</string>
     <string name="notices_title">Legal / open-source notices</string>
