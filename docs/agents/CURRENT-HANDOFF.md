@@ -12,16 +12,23 @@ EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-
 - No new features beyond porting OpenDroid executors the owner approved; free/open-source tools only.
 
 ## State of main and open PRs (check with `gh pr list`)
+Merged to main on 2026-10-07: #74 typed requests, #77 wireless pairing, #81 batch 2 (macros/routines/notifications), #84/#85 tap fixes, #82 docs.
+
 | PR | What | State |
 |---|---|---|
-| #74 | Typed requests, foreground runs, typing fixes | MERGED 65a884f |
-| #77 | Wireless pairing, enrolled connect-plane key pinning | MERGED 29bad15; hub row stays "Needs attention" until the helper authorization prompt lands (card t_91b2a02e) |
-| #78 | Chrome control, socket-owner verification | PARKED: Android 11 refuses an ordinary app's connection to Chrome's DevTools socket; needs the adb-forward route through the helper |
-| #81 | Batch 2: notifications, macros, routines + Room | Security PASS; main (#74, #77, #82) merged in, registry total 94, CI green on each merge. Evidence `android/Phase-One/evidence/task-078-port-actions-batch-2.md`, ADR-0005. Needs phone test |
-| #83 | UX styling pass | In progress on a Hermes worker (eqo-trial) |
+| #86 | UX visual pass (styling only, supersedes #83) | CI running; installed on the test phone; merge when green |
+| #87 | SMS send button id, longer model-call timeouts (OkHttp 10 s default was timing out), planner error class in log | CI running; verified on phone; merge when green |
+| #88 | Helper authorization prompt (fixes AUTHORIZE step, ADR 0006) | Draft; security review card t_1b5c2aa0 running; needs phone test on the pairing screen |
+| #78 | Chrome control | PARKED: Android 11 refuses an ordinary app's connection to Chrome's DevTools socket; needs the adb-forward route through the helper after #88 |
 | #79 | Throwaway combined test build | Do not merge |
 
-Debug builds only: broadcast `ai.eqo.debug.PLAN` with `--es plan_b64 <base64 plan json>` hands the task screen a finished plan (still validated and approved on screen) so executors can be tested without a model key. Scripts used: `runplan.sh`, `runreq.sh` in the worktrees folder.
+## Hermes workers (GitHub login is unreliable for dispatcher-started workers)
+Workers started by the Hermes gateway failed twice with "no GitHub login" (12:44, 15:36) although a worker started from a normal shell is logged in as imbalki. Do not copy tokens around. Pattern that works: create a git worktree under C:\Users\<user>\Claude\worktrees\ for each card from origin/main, tell the worker to COMMIT LOCALLY ONLY, then the lead pushes the branch and opens the PR. Security reviewers read a saved diff file plus the worktree. Fallback chain for every profile: DeepSeek v4.1 Flash then GLM 5.3 Flash. Dev profile eqo-trial = GPT 6.1 Sol.
+In flight (cards): contacts by name (t_212ea16c), WHATSAPP_CALL action (t_d3c58c41), plain run status (t_4fa4cbd6), exit review doc (t_e8434d96), security review of #88 (t_1b5c2aa0).
+
+## Phone testing without a model key
+Debug builds only: `adb shell am broadcast -a ai.eqo.debug.PLAN --es plan_b64 <base64 plan json>` hands the task screen a finished plan (validated, approved on screen). Scripts in C:\Users\<user>\Claude\worktrees: `runplan.sh` (plan JSON), `runreq2.sh` (typed request through the real model). Always start `adb logcat -s EqoRun EqoActions >> eqorun-live.log` first (the capture dies when the USB link resets; restart it) and record results in docs/agents/PHASE-ONE-TEST-LOG.md. Never type or read the owner's API key; the owner pastes it. Locally built debug APKs (laptop key) update in place and keep app data; CI-built APKs need uninstall (different key).
+Known behaviours: the Plan step could time out at 10 s (fixed in #87); WhatsApp reopens in the last chat so search-based plans for it are unreliable (card t_d3c58c41); a run is shown as FAILED when an action hands control back on purpose (card t_4fa4cbd6); contact names need Contacts permission and the screen copy saying EQO cannot read contacts is stale (card t_212ea16c).
 
 ## Verification model
 GitHub CI is the merge gate: jobs `android`, `android-branding`, `repo-checks`. CI uploads the debug APK as artifact `eqo-debug-apk` (`gh run download <run> -n eqo-debug-apk`). Local full builds are slow; use `./gradlew :app:assembleDebug` only for phone installs. CI-built and locally built debug APKs are signed with different keys: switching between them requires uninstall (owner must re-enter his key and re-enable accessibility).
