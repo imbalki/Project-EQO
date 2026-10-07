@@ -1,12 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Native widgets keep their text labels, focus order and scalable touch targets. -->
     <style name="StudyTheme" parent="android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">#FFFFFF</item>
-        <item name="android:colorBackground">#FFFFFF</item>
-        <item name="android:textColorPrimary">#1B1B1B</item>
-        <item name="android:textColorSecondary">#505050</item>
-        <item name="android:colorAccent">#005AC1</item>
+        <item name="android:windowBackground">@color/study_background</item>
+        <item name="android:colorBackground">@color/study_background</item>
+        <item name="android:textColorPrimary">@color/study_text_primary</item>
+        <item name="android:textColorSecondary">@color/study_text_secondary</item>
+        <item name="android:colorAccent">@color/study_accent</item>
+        <item name="android:statusBarColor">@color/study_background</item>
+        <item name="android:navigationBarColor">@color/study_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:textViewStyle">@style/StudyText</item>
+        <item name="android:buttonStyle">@style/StudyButton</item>
+        <item name="android:editTextStyle">@style/StudyInput</item>
+        <item name="android:alertDialogTheme">@style/StudyDialogTheme</item>
         <item name="android:forceDarkAllowed">false</item>
+    </style>
+    <style name="StudyDialogTheme" parent="android:style/Theme.Material.Light.Dialog.Alert">
+        <item name="android:colorAccent">@color/study_accent</item>
+        <item name="android:colorBackground">@color/study_surface</item>
+        <item name="android:textColorPrimary">@color/study_text_primary</item>
+        <item name="android:textColorSecondary">@color/study_text_secondary</item>
+        <item name="android:buttonBarButtonStyle">@style/StudyDialogButton</item>
+        <item name="android:textAppearanceMedium">@style/StudyDialogText</item>
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+    <style name="StudyText" parent="android:style/Widget.TextView">
+        <item name="android:textSize">@dimen/study_text_body</item>
+        <item name="android:textColor">@color/study_text_primary</item>
+    </style>
+    <style name="StudyTitle" parent="StudyText">
+        <item name="android:textSize">@dimen/study_text_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_marginBottom">@dimen/study_space_medium</item>
+    </style>
+    <style name="StudyBody" parent="StudyText">
+        <item name="android:textColor">@color/study_text_secondary</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="android:layout_marginBottom">@dimen/study_space_large</item>
+    </style>
+    <style name="StudyStatus" parent="StudyText">
+        <item name="android:background">@drawable/study_status_card</item>
+        <item name="android:padding">@dimen/study_card_padding</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="android:layout_marginBottom">@dimen/study_space_medium</item>
+    </style>
+    <style name="StudySetupRow" parent="StudyText">
+        <item name="android:background">@drawable/study_card_interactive</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:padding">@dimen/study_card_padding</item>
+        <item name="android:minHeight">@dimen/study_control_height</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="android:layout_marginBottom">@dimen/study_space_medium</item>
+    </style>
+    <style name="StudyButton" parent="android:style/Widget.Material.Button">
+        <item name="android:minHeight">@dimen/study_control_height</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:textSize">@dimen/study_text_body</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:backgroundTint">@color/study_button_tint</item>
+        <item name="android:textColor">@color/study_button_text</item>
+        <item name="android:paddingTop">@dimen/study_space_medium</item>
+        <item name="android:paddingBottom">@dimen/study_space_medium</item>
+        <item name="android:layout_marginBottom">@dimen/study_space_small</item>
+    </style>
+    <style name="StudySecondaryButton" parent="StudyButton">
+        <item name="android:backgroundTint">@color/study_secondary_tint</item>
+        <item name="android:textColor">@color/study_secondary_text</item>
+    </style>
+    <style name="StudyStopButton" parent="StudySecondaryButton">
+        <item name="android:textColor">@color/study_stop_text</item>
+    </style>
+    <style name="StudyInput" parent="android:style/Widget.Material.EditText">
+        <item name="android:minHeight">@dimen/study_control_height</item>
+        <item name="android:textSize">@dimen/study_text_body</item>
+        <item name="android:textColor">@color/study_text_primary</item>
+        <item name="android:textColorHint">@color/study_text_secondary</item>
+        <item name="android:paddingTop">@dimen/study_space_medium</item>
+        <item name="android:paddingBottom">@dimen/study_space_medium</item>
+        <item name="android:layout_marginBottom">@dimen/study_space_medium</item>
+    </style>
+    <style name="StudyDialogText" parent="android:style/TextAppearance.Material.Medium">
+        <item name="android:textSize">@dimen/study_text_body</item>
+        <item name="android:textColor">@color/study_text_primary</item>
+    </style>
+    <style name="StudyDialogButton" parent="android:style/Widget.Material.Button.Borderless">
+        <item name="android:minHeight">@dimen/study_control_height</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">@dimen/study_text_body</item>
+        <item name="android:textColor">@color/study_accent</item>
     </style>
 </resources>

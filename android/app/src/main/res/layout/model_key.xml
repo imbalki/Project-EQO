@@ -2,15 +2,17 @@
 <!-- TASK-015 (issue #20): model key setup (UF-02, S-04/S-05). -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/study_page_padding">
 
         <TextView
+            style="@style/StudyTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/model_key_title"
@@ -18,74 +20,85 @@
             android:textStyle="bold" />
 
         <TextView
+            style="@style/StudyBody"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/model_key_explanation" />
 
         <EditText
+            style="@style/StudyInput"
             android:id="@+id/model_key_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/model_key_hint"
             android:importantForAutofill="no"
             android:inputType="textPassword"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
 
         <TextView
+            style="@style/StudyStatus"
             android:id="@+id/model_model_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/model_model_hint"
             android:freezesText="true"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
 
         <Button
+            style="@style/StudyButton"
             android:id="@+id/model_picker_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:text="@string/model_picker_title" />
         <TextView
+            style="@style/StudyStatus"
             android:id="@+id/model_catalog_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:accessibilityLiveRegion="polite" />
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/model_picker_refresh"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:text="@string/model_picker_refresh" />
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/model_picker_manual"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:text="@string/model_picker_manual" />
 
         <Button
+            style="@style/StudyButton"
             android:id="@+id/model_key_validate_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/model_key_validate"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
 
         <TextView
+            style="@style/StudyStatus"
             android:id="@+id/model_key_status"
             android:accessibilityLiveRegion="polite"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/model_key_not_set" />
 
         <TextView
+            style="@style/StudyBody"
             android:id="@+id/model_key_guidance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/setup_return_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:text="@string/setup_return" />
     </LinearLayout>
 </ScrollView>

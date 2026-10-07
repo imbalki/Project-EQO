@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="study_page_padding">20dp</dimen>
+    <dimen name="study_space_small">8dp</dimen>
+    <dimen name="study_space_medium">12dp</dimen>
+    <dimen name="study_space_large">20dp</dimen>
+    <dimen name="study_card_padding">16dp</dimen>
+    <dimen name="study_corner_radius">20dp</dimen>
+    <dimen name="study_control_height">52dp</dimen>
+    <dimen name="study_text_body">16sp</dimen>
+    <dimen name="study_text_title">28sp</dimen>
+    <dimen name="study_text_heading">18sp</dimen>
+</resources>

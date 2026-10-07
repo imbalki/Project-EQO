@@ -8,20 +8,23 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="@dimen/study_page_padding"
+        android:paddingTop="@dimen/study_space_small"
+        android:textSize="@dimen/study_text_heading"
+        android:textStyle="bold"
         android:text="@string/task_practice_title"
         android:accessibilityHeading="true" />
     <TextView
         android:id="@+id/task_practice_countdown"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="@dimen/study_page_padding"
         android:accessibilityLiveRegion="polite" />
     <TextView
         android:id="@+id/task_control_feedback"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="@dimen/study_page_padding"
         android:accessibilityLiveRegion="polite" />
     <ScrollView
         android:layout_width="match_parent"
@@ -32,9 +35,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/study_page_padding">
 
         <TextView
+            style="@style/StudyTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/task_title"
@@ -42,42 +46,49 @@
             android:textStyle="bold" />
 
         <TextView
+            style="@style/StudyBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/task_explanation" />
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/task_setup_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:text="@string/setup_hub_title" />
         <TextView
+            style="@style/StudyStatus"
             android:id="@+id/task_state"
             android:accessibilityLiveRegion="polite"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
         <Button
+            style="@style/StudyButton"
             android:id="@+id/task_start_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/task_start"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
 
         <EditText
+            style="@style/StudyInput"
             android:id="@+id/task_request"
             android:importantForAutofill="no"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:hint="@string/task_request_hint"
             android:inputType="textMultiLine|textCapSentences"
             android:maxLength="8000" />
         <TextView
+            style="@style/StudyBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/task_recipient_limit" />
         <TextView
+            style="@style/StudyBody"
             android:id="@+id/task_preview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -86,42 +97,50 @@
         <!-- One row per step: name, live state, elapsed time (REQ-TASK-01). -->
         <LinearLayout
             android:id="@+id/task_steps_container"
+            android:background="@drawable/study_card"
+            android:padding="@dimen/study_card_padding"
+            android:layout_marginBottom="@dimen/study_space_medium"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />
 
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/task_pause_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/task_pause"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
 
         <Button
+            style="@style/StudyStopButton"
             android:id="@+id/task_stop_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/task_stop"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
 
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/task_takeover_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/task_takeover"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
 
         <Button
+            style="@style/StudyButton"
             android:id="@+id/task_resume_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/task_resume"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
 
         <TextView
+            style="@style/StudyBody"
             android:id="@+id/task_receipt"
             android:accessibilityLiveRegion="polite"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </LinearLayout>
     </ScrollView>

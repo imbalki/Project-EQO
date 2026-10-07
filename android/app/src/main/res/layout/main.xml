@@ -1,51 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/study_page_padding">
         <TextView
+            style="@style/StudyTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:accessibilityHeading="true"
             android:textStyle="bold"
             android:text="@string/eqo_label" />
         <TextView
+            style="@style/StudyBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/home_explanation" />
         <TextView
+            style="@style/StudyStatus"
             android:id="@+id/activation_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:accessibilityLiveRegion="polite"
             android:text="@string/activation_required" />
         <Button
+            style="@style/StudyButton"
             android:id="@+id/open_setup_hub_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:text="@string/setup_hub_title" />
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/open_task_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:text="@string/setup_hub_open_task" />
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/notices_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:text="@string/notices_button" />
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/privileged_action_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:text="@string/privileged_action_button" />
     </LinearLayout>
 </ScrollView>

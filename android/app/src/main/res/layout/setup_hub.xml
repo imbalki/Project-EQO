@@ -2,15 +2,17 @@
 <!-- TASK-015 (issue #20): capability readiness dashboard (UF-08, S-19). -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/study_page_padding">
 
         <TextView
+            style="@style/StudyTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/setup_hub_title"
@@ -18,11 +20,13 @@
             android:textStyle="bold" />
 
         <TextView
+            style="@style/StudyBody"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/setup_hub_subtitle" />
 
         <TextView
+            style="@style/StudyStatus"
             android:id="@+id/setup_next"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -30,85 +34,95 @@
             android:textStyle="bold" />
 
         <TextView
+            style="@style/StudySetupRow"
             android:id="@+id/row_model_key"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:minHeight="48dp"
+            android:padding="@dimen/study_card_padding"
+            android:minHeight="52dp"
             android:focusable="true"
             android:clickable="true"
-            android:background="?android:attr/selectableItemBackground"
+            android:background="@drawable/study_card_interactive"
             android:text="@string/setup_hub_row_model_key" />
 
         <TextView
+            style="@style/StudySetupRow"
             android:id="@+id/row_accessibility"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:minHeight="48dp"
+            android:padding="@dimen/study_card_padding"
+            android:minHeight="52dp"
             android:focusable="true"
             android:clickable="true"
-            android:background="?android:attr/selectableItemBackground"
+            android:background="@drawable/study_card_interactive"
             android:text="@string/setup_hub_row_accessibility" />
 
         <TextView
+            style="@style/StudySetupRow"
             android:id="@+id/row_wireless_adb"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:minHeight="48dp"
+            android:padding="@dimen/study_card_padding"
+            android:minHeight="52dp"
             android:focusable="true"
             android:clickable="true"
-            android:background="?android:attr/selectableItemBackground"
+            android:background="@drawable/study_card_interactive"
             android:text="@string/setup_hub_row_wireless_adb" />
 
         <TextView
+            style="@style/StudySetupRow"
             android:id="@+id/row_helper"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:minHeight="48dp"
+            android:padding="@dimen/study_card_padding"
+            android:minHeight="52dp"
             android:focusable="true"
             android:clickable="true"
-            android:background="?android:attr/selectableItemBackground"
+            android:background="@drawable/study_card_interactive"
             android:text="@string/setup_hub_row_helper" />
 
         <TextView
+            style="@style/StudySetupRow"
             android:id="@+id/row_chrome_consent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:minHeight="48dp"
+            android:padding="@dimen/study_card_padding"
+            android:minHeight="52dp"
             android:focusable="true"
             android:clickable="true"
-            android:background="?android:attr/selectableItemBackground"
+            android:background="@drawable/study_card_interactive"
             android:text="@string/setup_hub_row_chrome_consent" />
 
         <Button
+            style="@style/StudyButton"
             android:id="@+id/setup_recheck_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/setup_hub_recheck"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
 
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/setup_task_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/setup_hub_open_task"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
 
         <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/setup_legal_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/notices_button"
-            android:minHeight="48dp" />
+            android:minHeight="52dp" />
         <CheckBox
             android:id="@+id/require_plan_approval"
+            android:textSize="@dimen/study_text_body"
+            android:textColor="@color/study_text_primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:text="@string/require_plan_approval" />
     </LinearLayout>
 </ScrollView>

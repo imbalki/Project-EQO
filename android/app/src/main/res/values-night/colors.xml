@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="study_background">#121212</color>
+    <color name="study_surface">#2B241F</color>
+    <color name="study_text_primary">#FFFFFF</color>
+    <color name="study_text_secondary">#D5C6B8</color>
+    <color name="study_accent">#F4B698</color>
+    <color name="study_on_accent">#4E2312</color>
+    <color name="study_accent_soft">#4A3025</color>
+    <color name="study_outline">#9E8979</color>
+    <color name="study_disabled_surface">#463C34</color>
+    <color name="study_disabled_text">#D5C6B8</color>
+    <color name="study_danger">#FFB4A9</color>
+</resources>

@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Native widgets keep their text labels, focus order and scalable touch targets. -->
     <style name="StudyTheme" parent="android:style/Theme.Material.NoActionBar">
-        <item name="android:windowBackground">#121212</item>
-        <item name="android:colorBackground">#121212</item>
-        <item name="android:textColorPrimary">#FFFFFF</item>
-        <item name="android:textColorSecondary">#CCCCCC</item>
-        <item name="android:colorAccent">#AAC7FF</item>
+        <item name="android:windowBackground">@color/study_background</item>
+        <item name="android:colorBackground">@color/study_background</item>
+        <item name="android:textColorPrimary">@color/study_text_primary</item>
+        <item name="android:textColorSecondary">@color/study_text_secondary</item>
+        <item name="android:colorAccent">@color/study_accent</item>
+        <item name="android:statusBarColor">@color/study_background</item>
+        <item name="android:navigationBarColor">@color/study_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:textViewStyle">@style/StudyText</item>
+        <item name="android:buttonStyle">@style/StudyButton</item>
+        <item name="android:editTextStyle">@style/StudyInput</item>
+        <item name="android:alertDialogTheme">@style/StudyDialogTheme</item>
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+    <style name="StudyDialogTheme" parent="android:style/Theme.Material.Dialog.Alert">
+        <item name="android:colorAccent">@color/study_accent</item>
+        <item name="android:colorBackground">@color/study_surface</item>
+        <item name="android:textColorPrimary">@color/study_text_primary</item>
+        <item name="android:textColorSecondary">@color/study_text_secondary</item>
+        <item name="android:buttonBarButtonStyle">@style/StudyDialogButton</item>
+        <item name="android:textAppearanceMedium">@style/StudyDialogText</item>
         <item name="android:forceDarkAllowed">false</item>
     </style>
 </resources>
