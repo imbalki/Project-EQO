@@ -24,7 +24,7 @@ class GatedServiceActions(
 ) {
     fun pressEnter(): A11yResult =
         automation.runAction {
-            if (ops.performImeEnter()) {
+            automation.ownWindowBlocked("enter") ?: if (ops.performImeEnter()) {
                 A11yResult.success("ime enter")
             } else {
                 A11yResult.failure(A11yError.ActionRejected("enter"))
@@ -35,14 +35,15 @@ class GatedServiceActions(
 
     fun pressHome(): A11yResult = globalAction("home") { ops.performGlobalHome() }
 
-    fun scroll(forward: Boolean): A11yResult = automation.runAction { ops.performScrollResult(forward) }
+    fun scroll(forward: Boolean): A11yResult =
+        automation.runAction { automation.ownWindowBlocked("scroll") ?: ops.performScrollResult(forward) }
 
     fun clickCoordinates(
         x: Float,
         y: Float,
     ): A11yResult =
         automation.runAction {
-            if (ops.clickCoordinates(x, y)) {
+            automation.ownWindowBlocked("gesture") ?: if (ops.clickCoordinates(x, y)) {
                 A11yResult.success("gesture tap ($x,$y)")
             } else {
                 A11yResult.failure(A11yError.ActionRejected("gesture tap"))
@@ -51,7 +52,7 @@ class GatedServiceActions(
 
     fun findAndClick(text: String): A11yResult =
         automation.runAction {
-            if (ops.findAndClick(text)) {
+            automation.ownWindowBlocked(text) ?: if (ops.findAndClick(text)) {
                 A11yResult.success("clicked $text")
             } else {
                 A11yResult.failure(A11yError.NodeNotFound(text))
@@ -60,7 +61,7 @@ class GatedServiceActions(
 
     fun findAndClickById(viewId: String): A11yResult =
         automation.runAction {
-            if (ops.findAndClickById(viewId)) {
+            automation.ownWindowBlocked(viewId) ?: if (ops.findAndClickById(viewId)) {
                 A11yResult.success("clicked id $viewId")
             } else {
                 A11yResult.failure(A11yError.NodeNotFound(viewId))
@@ -72,7 +73,7 @@ class GatedServiceActions(
         content: String,
     ): A11yResult =
         automation.runAction {
-            if (ops.findAndType(searchText, content)) {
+            automation.ownWindowBlocked(searchText) ?: if (ops.findAndType(searchText, content)) {
                 A11yResult.success("typed into $searchText")
             } else {
                 A11yResult.failure(A11yError.NodeNotFound(searchText))
@@ -84,7 +85,7 @@ class GatedServiceActions(
         content: String,
     ): A11yResult =
         automation.runAction {
-            if (ops.findAndTypeById(viewId, content)) {
+            automation.ownWindowBlocked(viewId) ?: if (ops.findAndTypeById(viewId, content)) {
                 A11yResult.success("typed into id $viewId")
             } else {
                 A11yResult.failure(A11yError.NodeNotFound(viewId))

@@ -102,6 +102,8 @@ class TaskRunService : Service() {
     @Suppress("LongMethod") // Single start sequence; splitting would hide the ordering.
     private fun startPlan(plan: ApprovedTaskPlan) {
         check(plan.matches(plan.steps())) { "Approved plan hash mismatch" }
+        ai.eqo.accessibility.TakeoverDetector.shared
+            .startNewRun()
         val registry =
             AndroidActionRegistry.create(
                 applicationContext,

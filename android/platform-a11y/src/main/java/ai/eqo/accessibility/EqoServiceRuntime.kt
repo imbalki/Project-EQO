@@ -10,9 +10,10 @@ class EqoServiceRuntime(
     rootProvider: () -> A11yNode?,
     serviceState: () -> EqoAutomation.ServiceState,
     isSecureWindow: () -> Boolean,
+    ownPackage: String? = null,
     val takeover: TakeoverDetector = sharedTakeover,
 ) {
-    val automation = EqoAutomation(rootProvider, serviceState, takeover, isSecureWindow)
+    val automation = EqoAutomation(rootProvider, serviceState, takeover, isSecureWindow, ownPackage)
 
     companion object {
         val sharedTakeover: TakeoverDetector get() = TakeoverDetector.shared

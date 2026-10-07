@@ -56,4 +56,16 @@ class TakeoverAgentActionGraceTest {
         assertTrue(detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = now + 10))
         assertTrue(detector.isPaused)
     }
+
+    @Test
+    fun `a new run restarts only the grace budget and never clears a latched takeover`() {
+        val detector = detector()
+        detector.onAgentNodeActionFinished(1_000L)
+        assertFalse(detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 1_010L))
+        detector.onAgentNodeActionFinished(2_000L)
+        assertTrue(detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 2_700L))
+        assertTrue(detector.isPaused)
+        detector.startNewRun()
+        assertTrue("a latched takeover stays latched", detector.isPaused)
+    }
 }

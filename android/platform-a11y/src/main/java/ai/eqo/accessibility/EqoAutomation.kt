@@ -32,6 +32,8 @@ class EqoAutomation(
     private val serviceState: () -> ServiceState,
     private val takeover: TakeoverDetector,
     private val isSecureWindow: () -> Boolean = { false },
+    /** EQO's own package: its own windows (consent dialogs, approvals) are never automation targets. */
+    private val ownPackage: String? = null,
 ) {
     enum class ServiceState {
         AVAILABLE,
@@ -103,7 +105,10 @@ class EqoAutomation(
         }
 
     /** Scrolls the first container that accepts the requested direction. */
-    fun scroll(forward: Boolean): A11yResult = runAction { NodeTreeSearch.scroll(rootProvider(), forward) }
+    fun scroll(forward: Boolean): A11yResult =
+        runAction {
+            ownWindowBlocked("scroll") ?: NodeTreeSearch.scroll(rootProvider(), forward)
+        }
 
     /**
      * THE single takeover-gated action path (TASK-012 SF-1). Every action EQO
@@ -133,6 +138,7 @@ class EqoAutomation(
         target: String,
         byViewId: Boolean,
     ): A11yResult {
+        ownWindowBlocked(target)?.let { return it }
         // Best tappable match: an exact label beats a partial one ("Voice call" beats "Call" appearing in
         // "Video call"), and a button or result row beats a text field that merely contains the text.
         val clickable = rootProvider()?.let { root -> bestTappable(root, target, byViewId) }
@@ -144,6 +150,18 @@ class EqoAutomation(
             }
         return typingResult(clickable, result, if (byViewId) "CLICK_ID" else "CLICK_TEXT")
     }
+
+    /**
+     * EQO's own windows are never automation targets: the plan approval and the helper consent dialog must be
+     * answered by the owner's hand, never by a step the model planned. Reported as not-found so that cold-start
+     * retries keep waiting for the real target app to come to the front.
+     */
+    fun ownWindowBlocked(target: String): A11yResult? =
+        if (ownPackage != null && rootProvider()?.packageName?.toString() == ownPackage) {
+            A11yResult.failure(A11yError.NodeNotFound(target))
+        } else {
+            null
+        }
 
     private fun bestTappable(
         root: A11yNode,
@@ -237,6 +255,7 @@ class EqoAutomation(
         content: String,
         byViewId: Boolean,
     ): A11yResult {
+        ownWindowBlocked(target)?.let { return typingResult(null, it) }
         val editable = resolveTypeTarget(target, byViewId)
         if (editable == null) return typingResult(null, A11yResult.failure(A11yError.NodeNotFound(target)))
         // A rejected focus/click does not imply SET_TEXT is unsupported. Try both

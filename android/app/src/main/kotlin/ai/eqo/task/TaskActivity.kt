@@ -251,6 +251,7 @@ class TaskActivity : Activity() {
     }
 
     private fun startRun(approved: ApprovedTaskPlan) {
+        TakeoverDetector.shared.startNewRun()
         if (approved.steps().all { it.action.name == it.action.name.uppercase() }) {
             TaskRunSession.pending = approved
             TaskRunSession.status = PlanStatus.RUNNING

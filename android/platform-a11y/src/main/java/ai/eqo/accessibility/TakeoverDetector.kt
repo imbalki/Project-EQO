@@ -156,6 +156,17 @@ class TakeoverDetector {
         synchronized(lock) { lastAgentNodeActionFinishedAtMs = nowMs }
     }
 
+    /**
+     * A new approved plan starts: only the grace budget restarts. A latched takeover is never cleared here;
+     * that stays user-only through [resume].
+     */
+    fun startNewRun() {
+        synchronized(lock) {
+            gracedTouches = 0
+            lastAgentNodeActionFinishedAtMs = NO_TIME
+        }
+    }
+
     /** Records the completion of one of EQO's own `dispatchGesture` strokes. */
     fun onSelfGestureFinished(nowMs: Long) {
         synchronized(lock) { lastSelfGestureFinishedAtMs = nowMs }
@@ -193,7 +204,7 @@ class TakeoverDetector {
         const val AGENT_ACTION_TOUCH_GRACE_MS: Long = 600L
 
         /** At most this many touches per run can be attributed to EQO's own actions; the next one pauses. */
-        const val MAX_GRACED_TOUCHES_PER_RUN: Int = 8
+        const val MAX_GRACED_TOUCHES_PER_RUN: Int = 24
 
         private const val NO_TIME = Long.MIN_VALUE
     }

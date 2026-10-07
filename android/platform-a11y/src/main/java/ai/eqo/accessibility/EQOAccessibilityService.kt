@@ -49,6 +49,7 @@ class EQOAccessibilityService :
     private val runtime by lazy {
         EqoServiceRuntime(
             rootProvider = { rootInActiveWindow?.let { AccessibilityNodeAdapter(it, this) } },
+            ownPackage = packageName,
             serviceState = {
                 if (instance === this) {
                     EqoAutomation.ServiceState.AVAILABLE

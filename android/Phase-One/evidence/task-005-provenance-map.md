@@ -403,6 +403,7 @@ have no upstream counterpart, and are recorded as **EQO-NEW** rows.
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/SmsAutomatorTakeoverGateTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/TakeoverSelfGestureTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/TakeoverAgentActionGraceTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/OwnWindowGuardTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/UntrustedScreenTextTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/core/agent/TakeoverResumeUserOnlyTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/androidTest/java/ai/eqo/test/EqoActionLoopScenarioDriver.kt` | EQO-NEW | `ai.eqo.test` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |

@@ -15,6 +15,7 @@ class FakeNode(
     override val isFocused: Boolean = false,
     override val isScrollable: Boolean = false,
     override val isPassword: Boolean = false,
+    override val packageName: CharSequence? = null,
     override val className: CharSequence = "android.widget.FrameLayout",
     override val hintText: CharSequence? = null,
 ) : A11yNode {
