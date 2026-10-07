@@ -2,7 +2,8 @@
 //   path: app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbCryptoKeyStore.kt
 // TASK-008 (issue #13): extracted into :adb-pairing for the guided on-phone pairing flow.
 // Changes vs donor: package renamed to ai.eqo.adb.pairing; default peer label rebranded to
-// EQO. Provenance record: android/Phase-One/evidence/task-008-wireless-adb-pairing.md.
+// EQO. TASK-080 (issue #20): exposes [enrollment], the pinned-server record kept beside the keys.
+// Provenance record: android/Phase-One/evidence/task-008-wireless-adb-pairing.md.
 package ai.eqo.adb.pairing
 
 import org.bouncycastle.asn1.x509.BasicConstraints
@@ -44,6 +45,9 @@ class AdbCryptoKeyStore(
         val keyPair: KeyPair,
         val certificate: X509Certificate,
     )
+
+    /** TASK-080 (SF-1): the adbd this client paired with; erased together with the keys by [reset]. */
+    val enrollment: ServerEnrollmentStore = ServerEnrollmentStore(baseDir, this)
 
     @Synchronized
     fun loadOrCreate(): Material {

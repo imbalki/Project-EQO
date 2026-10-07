@@ -2,7 +2,8 @@
 //   path: app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbPairingClient.kt
 // TASK-008 (issue #13): extracted into :adb-pairing for the guided on-phone pairing flow.
 // Changes vs donor: package renamed to ai.eqo.adb.pairing; default peer label rebranded to
-// EQO. Provenance record: android/Phase-One/evidence/task-008-wireless-adb-pairing.md.
+// EQO. TASK-080 (issue #20): fresh pairing permits bounded CONNECT-key enrollment.
+// Provenance record: android/Phase-One/evidence/task-008-wireless-adb-pairing.md.
 
 /*
  * SPAKE2 + AES-GCM peer-info exchange structurally adapted from
@@ -30,6 +31,8 @@ import javax.crypto.spec.SecretKeySpec
 data class PairingResult(
     val authorizedPubkeyBase64: String,
     val peerGuid: String?,
+    /** Authenticated PAIR-plane key; not adbd's CONNECT key and never enrolled as that pin. */
+    val serverKey: ServerKeyFingerprint,
 )
 
 class AdbPairingClient(
@@ -45,6 +48,7 @@ class AdbPairingClient(
     ): PairingResult {
         LoopbackAdbHost.requireAddress(host)
         require(psk.isNotEmpty()) { "psk must not be empty" }
+        // Pairing authenticates the user-supplied code, not the distinct adbd CONNECT key.
         return runInterruptible(ioDispatcher) { runPair(host, port, psk, timeoutMs) }
     }
 
@@ -82,13 +86,24 @@ class AdbPairingClient(
                 val peerPlain = aesGcmDecrypt(secretKey, counterIv(0), peerInfoFrame.payload)
                 val peerGuid = parsePeerGuid(peerPlain)
 
-                return PairingResult(authorizedPubkeyBase64 = keyStore.androidPubkeyBase64(), peerGuid = peerGuid)
+                return PairingResult(
+                    authorizedPubkeyBase64 = keyStore.androidPubkeyBase64(),
+                    peerGuid = peerGuid,
+                    serverKey = serverKeyOf(socket),
+                )
             } finally {
                 runCatching { spake.destroy() }
             }
         } finally {
             runCatching { socket.close() }
         }
+    }
+
+    private fun serverKeyOf(socket: javax.net.ssl.SSLSocket): ServerKeyFingerprint {
+        val cert =
+            socket.session.peerCertificates.firstOrNull() as? java.security.cert.X509Certificate
+                ?: throw IOException("pairing server presented no X.509 certificate")
+        return ServerKeyFingerprint.of(cert)
     }
 
     private fun buildPeerInfoPlaintext(publicKey: RSAPublicKey): ByteArray {

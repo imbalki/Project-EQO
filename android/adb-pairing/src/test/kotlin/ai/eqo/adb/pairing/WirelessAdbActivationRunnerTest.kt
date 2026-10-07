@@ -83,8 +83,30 @@ class WirelessAdbActivationRunnerTest {
 
     @Test
     fun refusedConnectionPortIsReportedAsPortRefusedNotSuccess() {
+        // TASK-080: the connect plane only dials once a server is enrolled (fail closed), so
+        // enroll a stand-in server first; the refusal then comes from the dead port.
+        val keys = AdbCryptoKeyStore(File(tmp.root, "adb-keys"))
+        keys.enrollment.enroll(ServerKeyFingerprint.of(keys.loadOrCreate().certificate), "adb-test-guid")
         val signal = runCatching { runner().connect(endpoints) }.exceptionOrNull() as StepSignalException
         assertEquals(StepSignal.PORT_REFUSED, signal.signal)
+    }
+
+    @Test
+    fun connectWithoutEnrollmentIsRefusedAndAsksForRepair() {
+        val signal = runCatching { runner().connect(endpoints) }.exceptionOrNull() as StepSignalException
+        assertEquals(StepSignal.SERVER_NOT_ENROLLED, signal.signal)
+    }
+
+    @Test
+    fun transportMappingPinFailuresAreTypedSignals() {
+        assertEquals(
+            StepSignal.SERVER_KEY_MISMATCH,
+            runner().mapTransport(ServerKeyMismatchException(), StepSignal.PORT_REFUSED).signal,
+        )
+        assertEquals(
+            StepSignal.SERVER_NOT_ENROLLED,
+            runner().mapTransport(ServerNotEnrolledException(), StepSignal.PORT_REFUSED).signal,
+        )
     }
 
     @Test

@@ -1,33 +1,33 @@
 /*
  * EQO (TASK-015, issue #20): the two security gates of the shipped study flow.
  *
- * TASK-008 SF-1 (connect plane) and TASK-010 SF-1 (CDP socket check) both leave an
- * unverified transport behind: the wireless-ADB connect plane accepts any server
- * certificate, and the CDP endpoint check is name-only. Neither may get a production
- * caller until socket-owner verification / server-key pinning exists, so the study
- * flow ships with BOTH switched off here, in one named place, and every capability
- * screen says so out loud (nothing is hidden and nothing is inferred).
+ * TASK-008 SF-1 (connect plane) and TASK-010 SF-1 (CDP socket check) both left an
+ * unverified transport behind. TASK-080 closed SF-1 for wireless ADB: the connect plane
+ * now pins the server key enrolled at pairing time and fails closed (no enrollment, or a
+ * different key, means no connection), so that gate is open. The CDP endpoint check is
+ * still name-only, so CDP stays switched off here, in one named place, and its screens
+ * say so out loud (nothing is hidden and nothing is inferred).
  */
 package ai.eqo.study
 
 /**
- * Named switches for work that is deliberately NOT reachable from the shipped study flow.
+ * Named switches for transports in the shipped study flow.
  *
  * The values are compile-time constants (not user settings): a study build cannot turn
- * an unverified transport on by tapping. Flipping one of these is a code change that
- * must land together with the pinning/socket-owner work named in [reasonFor].
+ * a transport on by tapping. A transport may only be true while the safeguard named for
+ * it exists; one that is false needs the pending work named for it first.
  */
 object StudyFlowGate {
     /**
      * Wireless-ADB connect plane (`AdbTlsClient` / `connectWithStls`).
      *
-     * TASK-008 SF-1: the connect-plane TLS accepts any server certificate (AOSP parity,
-     * loopback-only). A production caller may only appear after post-pairing server-key
-     * pinning/enrollment exists. The study flow therefore never dispatches the CONNECT
-     * check; the pairing-side guidance (what the owner taps in Android's own settings)
-     * still ships, and the capability row reports [CapabilityState.GATED].
+     * TASK-080 closed TASK-008 SF-1: the connect plane no longer trusts any server
+     * certificate. It dials loopback only, requires a server key enrolled at pairing time
+     * ([WIRELESS_CONNECT_SAFEGUARD]) and refuses a different key or a missing enrollment
+     * with a typed error and a re-pair prompt. The capability is used only to start the
+     * privileged helper.
      */
-    const val WIRELESS_CONNECT_PLANE_IN_STUDY_FLOW: Boolean = false
+    const val WIRELESS_CONNECT_PLANE_IN_STUDY_FLOW: Boolean = true
 
     /**
      * Chrome DevTools (CDP) relay and everything behind it.
@@ -39,9 +39,9 @@ object StudyFlowGate {
      */
     const val CHROME_CDP_IN_STUDY_FLOW: Boolean = false
 
-    /** What must land before [WIRELESS_CONNECT_PLANE_IN_STUDY_FLOW] may become true. */
-    const val WIRELESS_CONNECT_PENDING_WORK: String =
-        "post-pairing server-key pinning / enrollment (TASK-008 SF-1)"
+    /** What keeps [WIRELESS_CONNECT_PLANE_IN_STUDY_FLOW] safe to leave true. Remove it and the gate must close. */
+    const val WIRELESS_CONNECT_SAFEGUARD: String =
+        "post-pairing server-key pinning / enrollment, fail closed (TASK-008 SF-1, closed by TASK-080)"
 
     /** What must land before [CHROME_CDP_IN_STUDY_FLOW] may become true. */
     const val CHROME_CDP_PENDING_WORK: String =

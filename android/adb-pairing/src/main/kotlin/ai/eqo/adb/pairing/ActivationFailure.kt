@@ -60,6 +60,28 @@ sealed class ActivationFailure {
                 "${AndroidSettingsNames.PAIR_DEVICE_WITH_PAIRING_CODE}."
     }
 
+    /**
+     * TASK-080 (SF-1): the connect plane refuses a server it did not pair with (or when nothing
+     * was enrolled). Never retried silently: the owner must pair again.
+     */
+    data class NeedsRepair(
+        override val check: ActivationCheck,
+        val mismatch: Boolean,
+    ) : ActivationFailure() {
+        override val guidance: String =
+            (
+                if (mismatch) {
+                    "The device answering on this port is not the one EQO paired with, so EQO refused to " +
+                        "connect. "
+                } else {
+                    "EQO has no record of a completed pairing, so it will not connect. "
+                }
+            ) + "Pair again: open ${AndroidSettingsNames.DEVELOPER_OPTIONS} > " +
+                "${AndroidSettingsNames.WIRELESS_DEBUGGING} > " +
+                "${AndroidSettingsNames.PAIR_DEVICE_WITH_PAIRING_CODE} and enter the new " +
+                "${AndroidSettingsNames.PAIRING_CODE}."
+    }
+
     /** Wireless debugging is off or the ports are stale after a reboot. */
     data class DeviceRebooted(
         override val check: ActivationCheck,

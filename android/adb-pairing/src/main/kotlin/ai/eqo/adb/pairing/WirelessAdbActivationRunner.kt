@@ -30,23 +30,37 @@ class WirelessAdbActivationRunner(
     private val keyStore: AdbCryptoKeyStore,
     private val helper: HelperHooks,
     private val handshakeTimeoutMs: Int = DEFAULT_HANDSHAKE_TIMEOUT_MS,
+    /**
+     * TASK-080: the [HelperStartCommand] to run over the pinned connection in [startHelper]. When
+     * null the start is delegated entirely to [HelperHooks] (host tests, or a build with no helper).
+     */
+    private val helperStartCommand: String? = null,
 ) : ActivationStepRunner {
     private val pairingClient = AdbPairingClient(keyStore, deviceLabel = PEER_LABEL)
+    private var pendingEnrollment: ConnectKeyEnrollment? = null
+
+    @Volatile
+    private var connectedPort: Int? = null
 
     @Suppress("TooGenericExceptionCaught") // every transport error must become a typed signal
     override fun pair(
         endpoints: WirelessAdbEndpoints,
         code: AdbPairingCode,
     ) {
+        pendingEnrollment = null
+        connectedPort = null
         try {
-            kotlinx.coroutines.runBlocking {
-                pairingClient.pair(
-                    host = LOCALHOST,
-                    port = endpoints.pairingPort,
-                    psk = code.digits.toByteArray(Charsets.UTF_8),
-                    timeoutMs = handshakeTimeoutMs,
-                )
-            }
+            pendingEnrollment =
+                kotlinx.coroutines.runBlocking {
+                    ConnectKeyEnrollment.afterPairing(LOCALHOST, endpoints.connectionPort) {
+                        pairingClient.pair(
+                            host = LOCALHOST,
+                            port = endpoints.pairingPort,
+                            psk = code.digits.toByteArray(Charsets.UTF_8),
+                            timeoutMs = handshakeTimeoutMs,
+                        )
+                    }
+                }
         } catch (e: Exception) {
             throw mapTransport(e, StepSignal.PAIRING_CODE_REJECTED)
         }
@@ -59,6 +73,9 @@ class WirelessAdbActivationRunner(
      */
     @Suppress("TooGenericExceptionCaught") // every transport error must become a typed signal
     override fun connect(endpoints: WirelessAdbEndpoints) {
+        connectedPort = null
+        val enrollment = pendingEnrollment
+        pendingEnrollment = null // consume even on failed dial; reconnect can never enroll
         try {
             val channel =
                 AdbTlsClient.connectWithStls(
@@ -66,6 +83,7 @@ class WirelessAdbActivationRunner(
                     port = endpoints.connectionPort,
                     keyStore = keyStore,
                     handshakeTimeoutMs = handshakeTimeoutMs,
+                    enrollment = enrollment,
                 )
             channel.use {
                 val msg = AdbProtocol.Message.read(it.inputStream)
@@ -83,6 +101,7 @@ class WirelessAdbActivationRunner(
                         )
                 }
             }
+            connectedPort = endpoints.connectionPort
         } catch (e: StepSignalException) {
             throw e
         } catch (e: Exception) {
@@ -90,7 +109,26 @@ class WirelessAdbActivationRunner(
         }
     }
 
-    override fun startHelper() = runHelper(StepSignal.HELPER_NOT_STARTED) { helper.startHelper() }
+    /**
+     * Starts the privileged helper: the validated [HelperStartCommand] runs over the pinned
+     * connection (the only use EQO makes of ADB), then [HelperHooks.startHelper] lets the app
+     * begin waiting for the helper binder.
+     */
+    override fun startHelper() =
+        runHelper(StepSignal.HELPER_NOT_STARTED) {
+            val command = helperStartCommand
+            if (command != null) {
+                val port =
+                    connectedPort
+                        ?: throw StepSignalException(StepSignal.HELPER_NOT_STARTED, "connect did not pass first")
+                try {
+                    AdbShellLauncher(keyStore).runHelperStart(LOCALHOST, port, command, handshakeTimeoutMs)
+                } catch (e: java.io.IOException) {
+                    throw mapTransport(e, StepSignal.HELPER_NOT_STARTED)
+                }
+            }
+            helper.startHelper()
+        }
 
     override fun authorizeHelper() = runHelper(StepSignal.HELPER_NOT_AUTHORIZED) { helper.authorizeHelper() }
 
@@ -125,6 +163,8 @@ class WirelessAdbActivationRunner(
         val signal =
             when (e) {
                 is StepSignalException -> return e
+                is ServerNotEnrolledException -> StepSignal.SERVER_NOT_ENROLLED
+                is ServerKeyMismatchException -> StepSignal.SERVER_KEY_MISMATCH
                 is ConnectException, is SocketTimeoutException -> StepSignal.PORT_REFUSED
                 is SSLException -> default
                 is IOException ->

@@ -2,7 +2,9 @@
 //   path: app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbPairingTls.kt
 // TASK-008 (issue #13): extracted into :adb-pairing for the guided on-phone pairing flow.
 // Changes vs donor: package renamed to ai.eqo.adb.pairing; default peer label rebranded to
-// EQO. Provenance record: android/Phase-One/evidence/task-008-wireless-adb-pairing.md.
+// EQO. TASK-080 (issue #20): trust manager renamed and documented as capture-only (the pairing
+// plane learns the key that AdbTlsClient later pins). Provenance record:
+// android/Phase-One/evidence/task-008-wireless-adb-pairing.md.
 package ai.eqo.adb.pairing
 
 import android.annotation.SuppressLint
@@ -46,7 +48,7 @@ internal object AdbPairingTls {
             SSLContext.getInstance("TLSv1.3", "Conscrypt").apply {
                 init(
                     arrayOf<KeyManager>(SingleCertKeyManager(ephemeral.first, ephemeral.second)),
-                    arrayOf<TrustManager>(TrustAllManager()),
+                    arrayOf<TrustManager>(PairingCaptureTrustManager()),
                     SecureRandom(),
                 )
             }
@@ -128,12 +130,15 @@ internal object AdbPairingTls {
         override fun getPrivateKey(alias: String?): PrivateKey = keyPair.private
     }
 
-    // Like AOSP pairing_connection.cpp: TLS accepts the certificate, then runPair
-    // authenticates the peer using the PSK + TLS exporter, SPAKE2 and AES-GCM peer info.
-    // Numeric-loopback-only dialing prevents use against LAN/public peers; it does not
-    // prove a local listener's identity. SECURITY PASS MUST DECIDE the remaining risk.
+    // The pairing plane cannot pin: it is where the server key is LEARNED. Like AOSP
+    // pairing_connection.cpp, TLS accepts the presented certificate and the peer is then
+    // authenticated by PSK + TLS exporter, SPAKE2 and authenticated AES-GCM peer info in
+    // AdbPairingClient.runPair. A man in the middle presents a different TLS session, so
+    // its exporter differs and SPAKE2 fails. This PAIR key is NOT the adbd CONNECT key.
+    // Fresh success permits one bounded CONNECT-key enrollment in the activation runner;
+    // this manager never gates a connection and is not used by AdbTlsClient.
     @SuppressLint("CustomX509TrustManager")
-    private class TrustAllManager : X509TrustManager {
+    private class PairingCaptureTrustManager : X509TrustManager {
         @SuppressLint("TrustAllX509TrustManager")
         override fun checkClientTrusted(
             chain: Array<out X509Certificate>?,

@@ -2,13 +2,15 @@
 //   path: app/src/main/kotlin/ai/closepaw/browser/cdp/wireless/AdbTlsClient.kt
 // TASK-008 (issue #13): extracted into :adb-pairing for the guided on-phone pairing flow.
 // Changes vs donor: package renamed to ai.eqo.adb.pairing; default peer label rebranded to
-// EQO. Provenance record: android/Phase-One/evidence/task-008-wireless-adb-pairing.md.
+// EQO. TASK-080 (issue #20): the trust-all manager is removed; the server key enrolled at
+// pairing time is pinned and a missing enrollment fails closed. Provenance record:
+// android/Phase-One/evidence/task-008-wireless-adb-pairing.md.
 package ai.eqo.adb.pairing
 
 import ai.eqo.adb.pairing.AdbProtocol.A_STLS
-import android.annotation.SuppressLint
 import android.util.Log
 import java.io.Closeable
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.InetSocketAddress
@@ -19,6 +21,7 @@ import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLEngine
+import javax.net.ssl.SSLException
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.X509ExtendedKeyManager
@@ -37,8 +40,11 @@ import javax.net.ssl.X509ExtendedKeyManager
  *     again, which calls `handle_offline()` (firing the disconnect callback) and emits a
  *     stray A_STLS over the encrypted channel.
  *
- * Server cert is not pinned: adbd authenticates US via our client cert against
- * `/data/misc/adb/adb_keys` (validated during the mTLS handshake).
+ * adbd authenticates US via our client cert against `/data/misc/adb/adb_keys`. TASK-080
+ * (closes TASK-008 SF-1): WE authenticate the SERVER by pinning. The key enrolled at pairing
+ * time via bounded CONNECT-plane enrollment is the only server key accepted. Without a
+ * fresh pairing capability or enrollment this refuses to dial; a different key fails the
+ * handshake ([ServerKeyMismatchException]). The loopback-only host guard stays in front.
  */
 internal object AdbTlsClient {
     /** Bidirectional byte-stream channel over the post-handshake mTLS connection. */
@@ -59,16 +65,45 @@ internal object AdbTlsClient {
         port: Int,
         keyStore: AdbCryptoKeyStore,
         handshakeTimeoutMs: Int,
+        enrollment: ConnectKeyEnrollment? = null,
     ): TlsChannel {
         val address = LoopbackAdbHost.requireAddress(host)
+        // Only a fresh pairing capability may bypass the existing-pin pre-dial requirement.
+        val pin =
+            if (enrollment != null) {
+                enrollment.claim(host, port)
+                PinnedServerTrustManager(enrollment)
+            } else {
+                val enrolled = keyStore.enrollment.current() ?: throw ServerNotEnrolledException()
+                PinnedServerTrustManager(enrolled.key)
+            }
         WirelessAdbProviders.ensure()
         val material = keyStore.loadOrCreate()
 
         val plain = Socket()
-        plain.tcpNoDelay = true
-        plain.connect(InetSocketAddress(address, port), handshakeTimeoutMs)
-        plain.soTimeout = handshakeTimeoutMs
+        var connected = false
+        try {
+            plain.tcpNoDelay = true
+            val target = InetSocketAddress(address, port)
+            enrollment?.beforeDial()
+            plain.connect(target, handshakeTimeoutMs)
+            plain.soTimeout = handshakeTimeoutMs
+            negotiateStls(plain)
+            val channel = pinnedHandshake(plain, target, material, pin, handshakeTimeoutMs)
+            try {
+                enrollment?.commit(keyStore.enrollment)
+            } catch (e: IOException) {
+                channel.close()
+                throw e
+            }
+            connected = true
+            return channel
+        } finally {
+            if (!connected) runCatching { plain.close() }
+        }
+    }
 
+    private fun negotiateStls(plain: Socket) {
         // Step 1: pre-TLS A_CNXN -> A_STLS handshake (plaintext). Banner advertises only the
         // features we actually implement on the wire. Notably we do NOT advertise `delayed_ack`:
         // with delayed_ack negotiated, every A_OKAY must carry a 4-byte `acked_bytes` payload
@@ -104,24 +139,58 @@ internal object AdbTlsClient {
             ByteArray(0),
         )
         plain.getOutputStream().flush()
+    }
 
-        // Step 2: mTLS handshake. Mirrors libadb-android's SslUtils — provider-qualified to the
+    private fun pinnedHandshake(
+        plain: Socket,
+        target: InetSocketAddress,
+        material: AdbCryptoKeyStore.Material,
+        pin: PinnedServerTrustManager,
+        handshakeTimeoutMs: Int,
+    ): TlsChannel {
+        // Step 2: mTLS handshake. Mirrors libadb-android's SslUtils - provider-qualified to the
         // bundled Conscrypt registered by [WirelessAdbProviders] (the platform's hidden Conscrypt
-        // can't export keying material on some vendor builds).
+        // can't export keying material on some vendor builds). Only the enrolled server key passes.
         val context = SSLContext.getInstance("TLSv1.3", "Conscrypt")
         context.init(
             arrayOf(SingleCertKeyManager(material.keyPair.private, material.certificate)),
-            arrayOf<javax.net.ssl.TrustManager>(TrustAllManager),
+            arrayOf<javax.net.ssl.TrustManager>(pin),
             SecureRandom(),
         )
         val factory: SSLSocketFactory = context.socketFactory
-        val tls = factory.createSocket(plain, host, port, true) as SSLSocket
+        val tls = factory.createSocket(plain, target.hostString, target.port, true) as SSLSocket
         tls.useClientMode = true
         tls.enabledProtocols = arrayOf("TLSv1.3")
         tls.soTimeout = handshakeTimeoutMs
-        tls.startHandshake()
-        Log.i(TAG, "TLS session: protocol=${tls.session.protocol} cipher=${tls.session.cipherSuite}")
+        try {
+            tls.startHandshake()
+        } catch (e: SSLException) {
+            throw when {
+                pin.enrollmentRefused -> ServerNotEnrolledException()
+                pin.mismatchSeen -> ServerKeyMismatchException()
+                else -> e
+            }
+        }
+        // Defence in depth: re-check the negotiated peer key before the channel is handed out.
+        requirePinned(pin, tls)
+        Log.i(TAG, "TLS session established with the paired device")
         return SocketChannel(tls)
+    }
+
+    private fun requirePinned(
+        pin: PinnedServerTrustManager,
+        tls: SSLSocket,
+    ) {
+        val peer =
+            tls.session.peerCertificates
+                .filterIsInstance<X509Certificate>()
+                .toTypedArray()
+        try {
+            pin.verify(peer)
+        } catch (e: java.security.cert.CertificateException) {
+            val refusal = if (pin.enrollmentRefused) ServerNotEnrolledException() else ServerKeyMismatchException()
+            throw refusal.apply { initCause(e) }
+        }
     }
 
     internal class SocketChannel(
@@ -189,56 +258,6 @@ internal object AdbTlsClient {
         companion object {
             private const val ALIAS = "adb"
         }
-    }
-
-    // AOSP transport.cpp's client verification callback accepts the server certificate.
-    // Pairing authenticates by PSK + TLS-exporter-bound SPAKE2; adbd then authorizes our
-    // client key. That does NOT pin/authenticate the server on subsequent connections.
-    // Restrict dialing to numeric loopback before any key/provider/socket work; a local
-    // impostor remains a risk. SECURITY PASS MUST DECIDE whether server pinning is needed.
-    @SuppressLint("CustomX509TrustManager")
-    private object TrustAllManager : javax.net.ssl.X509ExtendedTrustManager() {
-        @SuppressLint("TrustAllX509TrustManager")
-        override fun checkClientTrusted(
-            chain: Array<out X509Certificate>?,
-            authType: String?,
-        ) = Unit
-
-        @SuppressLint("TrustAllX509TrustManager")
-        override fun checkServerTrusted(
-            chain: Array<out X509Certificate>?,
-            authType: String?,
-        ) = Unit
-
-        @SuppressLint("TrustAllX509TrustManager")
-        override fun checkClientTrusted(
-            chain: Array<out X509Certificate>?,
-            authType: String?,
-            socket: java.net.Socket?,
-        ) = Unit
-
-        @SuppressLint("TrustAllX509TrustManager")
-        override fun checkServerTrusted(
-            chain: Array<out X509Certificate>?,
-            authType: String?,
-            socket: java.net.Socket?,
-        ) = Unit
-
-        @SuppressLint("TrustAllX509TrustManager")
-        override fun checkClientTrusted(
-            chain: Array<out X509Certificate>?,
-            authType: String?,
-            engine: SSLEngine?,
-        ) = Unit
-
-        @SuppressLint("TrustAllX509TrustManager")
-        override fun checkServerTrusted(
-            chain: Array<out X509Certificate>?,
-            authType: String?,
-            engine: SSLEngine?,
-        ) = Unit
-
-        override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
     }
 
     private const val TAG = "AdbTlsClient"

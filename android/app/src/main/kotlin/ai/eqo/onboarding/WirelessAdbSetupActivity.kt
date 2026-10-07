@@ -1,99 +1,184 @@
 /*
- * EQO (TASK-015, issue #20): guided wireless ADB (UF-04/UF-05, screens S-08..S-11).
+ * EQO (TASK-015, issue #20; enabled by TASK-080): guided wireless ADB (UF-04/UF-05, S-08..S-11).
  *
  * Two ports, two names (REQ-ADB-05): the PAIRING port is the one inside the "Pair device
  * with pairing code" dialog; the CONNECTION port is the "IP address & port" value on the
  * wireless debugging screen. Each of the five activation checks reports its own state
  * (REQ-ADB-07/08/09) and every failure carries its own recovery guidance (REQ-ADB-12).
  *
- * Study-flow gate (TASK-008 SF-1): the shipped study build does NOT dispatch the
- * trust-all connect plane. `StudyFlowGate.WIRELESS_CONNECT_PLANE_IN_STUDY_FLOW` is
- * false, so the checks are shown as "did not run" with the pending-work reason instead
- * of running `WirelessAdbActivationRunner` (the AdbTlsClient connect path). Flipping the
- * gate is a code change that must land together with server-key pinning.
+ * TASK-080 closed TASK-008 SF-1: pairing enrolls the server key and the connect plane pins
+ * it, failing closed (see android/Phase-One/evidence/task-080-wireless-pairing.md). The
+ * owner sees one of four plain-language states: not paired, paired and connected,
+ * connection lost, needs re-pair. ADB is used only to start the privileged helper.
+ *
+ * Everything here runs from a button the owner taps; nothing starts at launch.
  */
 package ai.eqo.onboarding
 
 import ai.eqo.R
 import ai.eqo.adb.pairing.ActivationCheck
+import ai.eqo.adb.pairing.ActivationReport
+import ai.eqo.adb.pairing.ActivationSequence
+import ai.eqo.adb.pairing.AdbPairingCode
+import ai.eqo.adb.pairing.CheckOutcome
+import ai.eqo.adb.pairing.HelperStartCommand
+import ai.eqo.adb.pairing.PairingInput
+import ai.eqo.adb.pairing.WirelessAdbActivationRunner
+import ai.eqo.adb.pairing.WirelessAdbEndpoints
+import ai.eqo.adb.pairing.WirelessLink
+import ai.eqo.adb.pairing.WirelessLinkState
 import ai.eqo.study.StudyFlowGate
 import android.app.Activity
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class WirelessAdbSetupActivity : Activity() {
+    private lateinit var worker: ExecutorService
+
+    @Volatile
+    private var busy = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.wireless_adb)
-        findViewById<Button>(R.id.wireless_adb_run_button).setOnClickListener { runChecks() }
+        worker = Executors.newSingleThreadExecutor()
+        findViewById<Button>(R.id.wireless_adb_run_button).setOnClickListener { pairAndConnect() }
+        findViewById<Button>(R.id.wireless_adb_reconnect_button).setOnClickListener { reconnect() }
+        findViewById<Button>(R.id.wireless_adb_forget_button).setOnClickListener { forget() }
         findViewById<Button>(R.id.setup_return_button).setOnClickListener { finish() }
+        listOf(R.id.pairing_code_input, R.id.pairing_port_input, R.id.connection_port_input).forEach {
+            findViewById<EditText>(it).isEnabled = isPermitted
+        }
         render()
     }
 
+    override fun onDestroy() {
+        worker.shutdownNow()
+        super.onDestroy()
+    }
+
+    private val isPermitted: Boolean get() = StudyFlowGate.permits(StudyFlowGate.StudyTransport.WIRELESS_CONNECT_PLANE)
+
+    private fun keyStore() = StudySetup.keyStore(applicationContext)
+
+    private fun pairAndConnect() {
+        if (!isPermitted || busy) return
+        val code = (AdbPairingCode.parse(rawCode()) as? AdbPairingCode.ParseResult.Ok)?.code
+        val pairingPort = portOf(R.id.pairing_port_input)
+        val connectionPort = portOf(R.id.connection_port_input)
+        if (code == null || pairingPort == null || connectionPort == null) {
+            showMessage(getString(R.string.wireless_adb_bad_input))
+            return
+        }
+        val endpoints = WirelessAdbEndpoints(pairingPort, connectionPort)
+        // The code is single-use: do not keep it on screen or in the view state.
+        findViewById<EditText>(R.id.pairing_code_input).setText("")
+        runInBackground { sequence -> sequence.run(PairingInput(endpoints, code)) }
+    }
+
+    private fun reconnect() {
+        if (!isPermitted || busy) return
+        val connectionPort = portOf(R.id.connection_port_input)
+        if (connectionPort == null) {
+            showMessage(getString(R.string.wireless_adb_bad_port))
+            return
+        }
+        val enrolled = keyStore().enrollment.current() != null
+        runInBackground { sequence ->
+            sequence.reconnect(WirelessAdbEndpoints.forReconnect(connectionPort), enrolled)
+        }
+    }
+
+    private fun forget() {
+        if (busy) return
+        keyStore().enrollment.clear()
+        StudySetup.wirelessReport = null
+        showMessage(getString(R.string.wireless_adb_forgotten))
+        render()
+    }
+
+    private fun runInBackground(block: (ActivationSequence) -> ActivationReport) {
+        busy = true
+        showMessage(getString(R.string.wireless_adb_working))
+        val keys = keyStore()
+        val command =
+            runCatching {
+                HelperStartCommand.build(applicationInfo.nativeLibraryDir, applicationInfo.sourceDir)
+            }.getOrNull()
+        worker.execute {
+            val runner = WirelessAdbActivationRunner(keys, StudyHelperHooks(), helperStartCommand = command)
+            val report = block(ActivationSequence(runner, StudySetup.wirelessAdb))
+            runOnUiThread {
+                busy = false
+                StudySetup.wirelessReport = report
+                render()
+            }
+        }
+    }
+
     private fun render() {
-        runChecks()
-        findViewById<TextView>(R.id.wireless_adb_guidance).text = ""
-        val gateNotice = findViewById<TextView>(R.id.wireless_adb_gate_notice)
-        gateNotice.text =
-            if (StudyFlowGate.permits(StudyFlowGate.StudyTransport.WIRELESS_CONNECT_PLANE)) {
-                ""
-            } else {
-                getString(R.string.wireless_adb_gated_notice)
-            }
-    }
-
-    /**
-     * Runs the five activation checks in order. In the shipped study flow the connect
-     * plane is gated off (SF-1), so every check reports "did not run" with the reason —
-     * never a fake pass and never silence.
-     */
-    private fun runChecks() {
-        val permitted = StudyFlowGate.permits(StudyFlowGate.StudyTransport.WIRELESS_CONNECT_PLANE)
+        val report = StudySetup.wirelessReport
+        val enrolled = keyStore().enrollment.current() != null
+        val state = WirelessLink.stateOf(enrolled, report)
+        val stateText =
+            getString(
+                when (state) {
+                    WirelessLinkState.NOT_PAIRED -> R.string.wireless_link_not_paired
+                    WirelessLinkState.PAIRED_AND_CONNECTED -> R.string.wireless_link_connected
+                    WirelessLinkState.CONNECTION_LOST -> R.string.wireless_link_lost
+                    WirelessLinkState.NEEDS_REPAIR -> R.string.wireless_link_repair
+                },
+            )
+        val labelled = getString(R.string.wireless_adb_state_label, stateText)
+        findViewById<TextView>(R.id.wireless_adb_link_state).text = labelled
         ActivationCheck.entries.forEach { check ->
-            val label =
-                when (check) {
-                    ActivationCheck.PAIR -> R.string.wireless_adb_check_pair
-                    ActivationCheck.CONNECT -> R.string.wireless_adb_check_connect
-                    ActivationCheck.HELPER_START -> R.string.wireless_adb_check_helper_start
-                    ActivationCheck.AUTHORIZE -> R.string.wireless_adb_check_authorize
-                    ActivationCheck.BINDER_HEALTH -> R.string.wireless_adb_check_binder
+            val outcome = report?.outcomeOf(check)
+            val line =
+                when (outcome) {
+                    null -> getString(R.string.state_not_set_up)
+                    is CheckOutcome.Passed -> getString(R.string.wireless_adb_check_passed)
+                    is CheckOutcome.NotRun -> getString(R.string.wireless_adb_check_not_run)
+                    is CheckOutcome.Failed -> outcome.failure.guidance
                 }
-            val state =
-                if (permitted) {
-                    // Future wiring: ActivationSequence(WirelessAdbActivationRunner(...)) once
-                    // StudyFlowGate.WIRELESS_CONNECT_PLANE_IN_STUDY_FLOW is true (server-key
-                    // pinning landed). Not reachable in this build by design.
-                    getString(R.string.wireless_adb_check_not_run)
-                } else {
-                    "${getString(R.string.state_gated)} — ${getString(R.string.wireless_adb_check_not_run)}"
-                }
-            renderCheck(check, "${getString(label)}: $state")
+            val name = getString(checkLabel(check))
+            findViewById<TextView>(statusViewId(check)).text = getString(R.string.wireless_adb_check_line, name, line)
         }
-        val guidance =
-            if (permitted) {
-                ""
-            } else {
-                getString(R.string.wireless_adb_gated_notice)
-            }
-        findViewById<TextView>(R.id.wireless_adb_guidance).text = guidance
-        listOf(R.id.pairing_code_input, R.id.pairing_port_input, R.id.connection_port_input).forEach {
-            findViewById<android.widget.EditText>(it).isEnabled = permitted
-        }
+        findViewById<TextView>(R.id.wireless_adb_guidance).text = report?.firstFailure?.guidance.orEmpty()
     }
 
-    private fun renderCheck(
-        check: ActivationCheck,
-        text: String,
-    ) {
-        val viewId =
-            when (check) {
-                ActivationCheck.PAIR -> R.id.check_pair_status
-                ActivationCheck.CONNECT -> R.id.check_connect_status
-                ActivationCheck.HELPER_START -> R.id.check_helper_start_status
-                ActivationCheck.AUTHORIZE -> R.id.check_authorize_status
-                ActivationCheck.BINDER_HEALTH -> R.id.check_binder_status
-            }
-        findViewById<TextView>(viewId).text = text
+    private fun showMessage(message: String) {
+        findViewById<TextView>(R.id.wireless_adb_guidance).text = message
     }
 }
+
+private fun parsePort(raw: String): Int? =
+    raw
+        .trim()
+        .toIntOrNull()
+        ?.takeIf { it in WirelessAdbEndpoints.PORT_MIN..WirelessAdbEndpoints.PORT_MAX }
+
+private fun checkLabel(check: ActivationCheck): Int =
+    when (check) {
+        ActivationCheck.PAIR -> R.string.wireless_adb_check_pair
+        ActivationCheck.CONNECT -> R.string.wireless_adb_check_connect
+        ActivationCheck.HELPER_START -> R.string.wireless_adb_check_helper_start
+        ActivationCheck.AUTHORIZE -> R.string.wireless_adb_check_authorize
+        ActivationCheck.BINDER_HEALTH -> R.string.wireless_adb_check_binder
+    }
+
+private fun statusViewId(check: ActivationCheck): Int =
+    when (check) {
+        ActivationCheck.PAIR -> R.id.check_pair_status
+        ActivationCheck.CONNECT -> R.id.check_connect_status
+        ActivationCheck.HELPER_START -> R.id.check_helper_start_status
+        ActivationCheck.AUTHORIZE -> R.id.check_authorize_status
+        ActivationCheck.BINDER_HEALTH -> R.id.check_binder_status
+    }
+
+private fun Activity.portOf(id: Int): Int? = parsePort(findViewById<EditText>(id).text.toString())
+
+private fun Activity.rawCode(): String = findViewById<EditText>(R.id.pairing_code_input).text.toString()

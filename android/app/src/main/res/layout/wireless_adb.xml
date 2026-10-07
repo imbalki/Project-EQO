@@ -23,10 +23,11 @@
             android:text="@string/wireless_adb_explanation" />
 
         <TextView
-            android:id="@+id/wireless_adb_gate_notice"
+            android:id="@+id/wireless_adb_link_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/wireless_adb_gated_notice" />
+            android:accessibilityLiveRegion="polite"
+            android:textStyle="bold" />
 
         <EditText
             android:id="@+id/pairing_code_input"
@@ -34,7 +35,7 @@
             android:layout_height="wrap_content"
             android:hint="@string/wireless_adb_pairing_code_hint"
             android:importantForAutofill="no"
-            android:inputType="number"
+            android:inputType="numberPassword"
             android:minHeight="48dp" />
 
         <EditText
@@ -60,6 +61,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/wireless_adb_run_checks"
+            android:minHeight="48dp" />
+
+        <Button
+            android:id="@+id/wireless_adb_reconnect_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/wireless_adb_reconnect"
+            android:minHeight="48dp" />
+
+        <Button
+            android:id="@+id/wireless_adb_forget_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/wireless_adb_forget"
             android:minHeight="48dp" />
 
         <TextView

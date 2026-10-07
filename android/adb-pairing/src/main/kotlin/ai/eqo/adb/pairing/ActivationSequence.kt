@@ -66,8 +66,33 @@ class ActivationSequence(
     private val runner: ActivationStepRunner,
     private val activation: WirelessAdbActivation = WirelessAdbActivation(),
 ) {
+    fun run(input: PairingInput): ActivationReport =
+        runAll(input.endpoints) {
+            if (input.endpoints.isPortConfusion) {
+                throw StepSignalException(StepSignal.PORT_REFUSED, "pairing port equals connection port")
+            }
+            runner.pair(input.endpoints, input.code)
+        }
+
+    /**
+     * TASK-080: connect again after an earlier successful pairing, without a new code. The PAIR
+     * check passes only if [enrolled] says an enrollment exists; otherwise it fails with
+     * [StepSignal.SERVER_NOT_ENROLLED] and nothing else runs (fail closed). The connect step
+     * still pins the server key, so this path cannot reach a device that was not paired.
+     */
+    fun reconnect(
+        endpoints: WirelessAdbEndpoints,
+        enrolled: Boolean,
+    ): ActivationReport =
+        runAll(endpoints) {
+            if (!enrolled) throw StepSignalException(StepSignal.SERVER_NOT_ENROLLED, "no enrollment")
+        }
+
     @Suppress("TooGenericExceptionCaught") // unexpected failures surface as StepFailed, never crash
-    fun run(input: PairingInput): ActivationReport {
+    private fun runAll(
+        endpoints: WirelessAdbEndpoints,
+        pairStep: () -> Unit,
+    ): ActivationReport {
         val records = mutableListOf<CheckRecord>()
         var failed: ActivationCheck? = null
 
@@ -79,11 +104,11 @@ class ActivationSequence(
             }
             val outcome =
                 try {
-                    runCheck(check, input)
+                    runCheck(check, endpoints, pairStep)
                     CheckOutcome.Passed
                 } catch (e: StepSignalException) {
                     CheckOutcome.Failed(
-                        FailureClassifier.classify(check, e.signal, input.endpoints, e.detail),
+                        FailureClassifier.classify(check, e.signal, endpoints, e.detail),
                     )
                 } catch (t: Throwable) {
                     // Deliberate: an unexpected failure must surface as a visible step
@@ -103,16 +128,12 @@ class ActivationSequence(
 
     private fun runCheck(
         check: ActivationCheck,
-        input: PairingInput,
+        endpoints: WirelessAdbEndpoints,
+        pairStep: () -> Unit,
     ) {
         when (check) {
-            ActivationCheck.PAIR -> {
-                if (input.endpoints.isPortConfusion) {
-                    throw StepSignalException(StepSignal.PORT_REFUSED, "pairing port equals connection port")
-                }
-                runner.pair(input.endpoints, input.code)
-            }
-            ActivationCheck.CONNECT -> runner.connect(input.endpoints)
+            ActivationCheck.PAIR -> pairStep()
+            ActivationCheck.CONNECT -> runner.connect(endpoints)
             ActivationCheck.HELPER_START -> runner.startHelper()
             ActivationCheck.AUTHORIZE -> runner.authorizeHelper()
             ActivationCheck.BINDER_HEALTH -> runner.checkBinder()

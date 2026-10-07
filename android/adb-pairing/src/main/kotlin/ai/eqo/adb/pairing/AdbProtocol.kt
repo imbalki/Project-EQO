@@ -121,6 +121,12 @@ internal object AdbProtocol {
         name: String,
     ): Message = Message(A_OPEN, localId, 0, "localabstract:$name".toNulTerminatedBytes())
 
+    /** TASK-080: legacy `shell:` service. Only [AdbShellLauncher] builds this, from a validated command. */
+    fun openShell(
+        localId: Int,
+        command: String,
+    ): Message = Message(A_OPEN, localId, 0, "shell:$command".toNulTerminatedBytes())
+
     fun okay(
         localId: Int,
         remoteId: Int,

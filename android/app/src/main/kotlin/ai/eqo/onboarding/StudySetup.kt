@@ -7,8 +7,12 @@
  */
 package ai.eqo.onboarding
 
+import ai.eqo.adb.pairing.ActivationReport
 import ai.eqo.adb.pairing.ActivationStatus
+import ai.eqo.adb.pairing.AdbCryptoKeyStore
 import ai.eqo.adb.pairing.WirelessAdbActivation
+import ai.eqo.adb.pairing.WirelessLink
+import ai.eqo.adb.pairing.WirelessLinkState
 import ai.eqo.helper.client.HelperActivationState
 import ai.eqo.study.CapabilityId
 import ai.eqo.study.CapabilityState
@@ -17,6 +21,7 @@ import ai.eqo.study.ReadinessSnapshot
 import ai.eqo.study.StudyFlowGate
 import android.content.Context
 import android.provider.Settings
+import java.io.File
 
 /** The user's browser-consent answer (UF-06). */
 enum class ConsentDecision {
@@ -41,6 +46,19 @@ enum class ModelKeyState {
 object StudySetup {
     /** Install-scoped wireless-ADB activation gate (fresh install = ACTIVATION_REQUIRED). */
     val wirelessAdb: WirelessAdbActivation = WirelessAdbActivation()
+
+    /** Latest wireless-ADB activation report of this process (null until the owner ran it). */
+    @Volatile
+    var wirelessReport: ActivationReport? = null
+
+    /**
+     * App-private, non-backed-up key store holding the client key and the server enrollment
+     * (TASK-080). The same directory is used by every caller so pairing and connect agree.
+     */
+    fun keyStore(context: Context): AdbCryptoKeyStore {
+        val dir = File(context.applicationContext.noBackupFilesDir, "adb-keys")
+        return AdbCryptoKeyStore(dir)
+    }
 
     /** Helper binder state (TASK-007). Attached by the screens that display it. */
     val helper: HelperActivationState = HelperActivationState()
@@ -96,24 +114,48 @@ object StudySetup {
             )
         }
 
-    fun probeWirelessAdb(): CapabilityStatus =
-        if (!StudyFlowGate.permits(StudyFlowGate.StudyTransport.WIRELESS_CONNECT_PLANE)) {
-            status(
-                CapabilityId.WIRELESS_ADB,
-                CapabilityState.GATED,
-                detail = "live connect step is switched off in this study build",
-                guidance =
-                    "Pending ${StudyFlowGate.WIRELESS_CONNECT_PENDING_WORK}. The guided steps still show " +
-                        "exactly what to tap in Android's own settings.",
-            )
-        } else {
-            when (wirelessAdb.status) {
-                ActivationStatus.ACTIVATION_REQUIRED ->
-                    status(CapabilityId.WIRELESS_ADB, CapabilityState.NOT_STARTED, detail = "activation required")
-                ActivationStatus.ACTIVE ->
-                    status(CapabilityId.WIRELESS_ADB, CapabilityState.READY, detail = "all activation checks passed")
-            }
+    fun probeWirelessAdb(context: Context? = null): CapabilityStatus {
+        val enrolled = context?.let { keyStore(it).enrollment.current() != null } ?: false
+        val report = wirelessReport
+        return when {
+            !StudyFlowGate.permits(StudyFlowGate.StudyTransport.WIRELESS_CONNECT_PLANE) ->
+                status(
+                    CapabilityId.WIRELESS_ADB,
+                    CapabilityState.GATED,
+                    detail = "the wireless connect step is switched off in this build",
+                    guidance = "Pending ${StudyFlowGate.WIRELESS_CONNECT_SAFEGUARD}.",
+                )
+            report == null ->
+                status(
+                    CapabilityId.WIRELESS_ADB,
+                    CapabilityState.NOT_STARTED,
+                    detail = if (enrolled) "paired earlier; not connected yet" else "not paired",
+                )
+            else -> wirelessLinkStatus(WirelessLink.stateOf(enrolled, report), report)
         }
+    }
+
+    private fun wirelessLinkStatus(
+        link: WirelessLinkState,
+        report: ActivationReport,
+    ): CapabilityStatus {
+        if (link == WirelessLinkState.PAIRED_AND_CONNECTED && wirelessAdb.status == ActivationStatus.ACTIVE) {
+            return status(CapabilityId.WIRELESS_ADB, CapabilityState.READY, detail = "all activation checks passed")
+        }
+        val detail =
+            when (link) {
+                WirelessLinkState.NOT_PAIRED -> "not paired"
+                WirelessLinkState.NEEDS_REPAIR -> "needs re-pair"
+                WirelessLinkState.CONNECTION_LOST -> "connection lost"
+                WirelessLinkState.PAIRED_AND_CONNECTED -> "paired and connected, but a helper check did not pass"
+            }
+        return status(
+            CapabilityId.WIRELESS_ADB,
+            CapabilityState.FAILED,
+            detail = detail,
+            guidance = report.firstFailure?.guidance ?: "Run the wireless steps again from Wireless debugging.",
+        )
+    }
 
     /** Helper readiness comes from the helper binder itself (TASK-007), never from the ADB row. */
     fun probeHelper(helperState: HelperActivationState.State): CapabilityStatus =
@@ -163,7 +205,7 @@ object StudySetup {
         ReadinessSnapshot()
             .record(probeModelKey())
             .record(probeAccessibility(context))
-            .record(probeWirelessAdb())
+            .record(probeWirelessAdb(context))
             .record(probeHelper(helperState))
             .record(probeChromeConsent())
 

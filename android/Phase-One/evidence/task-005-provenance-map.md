@@ -551,3 +551,19 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/ProductivityDependencies.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-074 issue #20) |
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/InformationHttp.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-074 issue #20) |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/ProductivityInformationTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-074 issue #20) |
+
+
+## TASK-080 additions (Refs #20)
+
+| Module | File | Kind | Package | Provenance |
+|---|---|---|---|---|
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ServerPin.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/AdbShellLauncher.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/WirelessLinkState.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/ServerPinTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/WirelessReconnectTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20) |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/StudyHelperHooks.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20) |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/WirelessProbeTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ServerEnrollmentStore.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20) |
+| :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ConnectKeyEnrollment.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20, PR #77 CONNECT-plane correction) |
+| :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/ConnectKeyEnrollmentTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20, PR #77 CONNECT-plane correction) |

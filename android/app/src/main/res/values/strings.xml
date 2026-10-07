@@ -57,18 +57,30 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
 
     <!-- TASK-015: guided wireless ADB (UF-04/UF-05, S-08..S-11). Two ports, two names (REQ-ADB-05). -->
     <string name="wireless_adb_title">Wireless debugging</string>
-    <string name="wireless_adb_explanation">Reference guide only: Settings → About phone → Build number (tap seven times) → Developer options → Wireless debugging → Pair device with pairing code. You do not need to do this for the unavailable feature in this build. Android\'s wireless debugging uses two different ports. The pairing port is shown inside the "Pair device with pairing code" dialog, next to the pairing code. The connection port is the "IP address &amp; port" value on the wireless debugging screen itself.</string>
+    <string name="wireless_adb_explanation">EQO pairs through Android\'s own Wireless debugging screen: Settings → About phone → Build number (tap seven times) → Developer options → Wireless debugging → Pair device with pairing code. Android\'s wireless debugging uses two different ports with two different names. The pairing port is shown inside the "Pair device with pairing code" dialog, next to the pairing code. The connection port is the "IP address &amp; port" value on the wireless debugging screen itself. EQO uses this connection only to start its own helper.</string>
     <string name="wireless_adb_pairing_code_hint">Pairing code (six digits)</string>
     <string name="wireless_adb_pairing_port_hint">Pairing port</string>
     <string name="wireless_adb_connection_port_hint">Connection port</string>
-    <string name="wireless_adb_run_checks">Check feature availability</string>
+    <string name="wireless_adb_run_checks">Pair and connect</string>
+    <string name="wireless_adb_reconnect">Connect again (already paired)</string>
+    <string name="wireless_adb_forget">Forget this pairing</string>
+    <string name="wireless_adb_state_label">Status: %1$s</string>
+    <string name="wireless_link_not_paired">Not paired. Enter the pairing code and both ports from the Wireless debugging screen, then tap Pair and connect.</string>
+    <string name="wireless_link_connected">Paired and connected.</string>
+    <string name="wireless_link_lost">Paired, but not connected right now. Check that Wireless debugging is on, enter the connection port, then tap Connect again.</string>
+    <string name="wireless_link_repair">Needs re-pair. This phone no longer matches the pairing EQO recorded. Open Wireless debugging, tap Pair device with pairing code, and pair again.</string>
+    <string name="wireless_adb_working">Working… keep the pairing dialog open.</string>
+    <string name="wireless_adb_bad_input">Enter the six-digit pairing code and a port number between 1 and 65535 in each port box.</string>
+    <string name="wireless_adb_bad_port">Enter the connection port (the IP address and port value on the Wireless debugging screen).</string>
+    <string name="wireless_adb_forgotten">Pairing forgotten. Pair again to connect.</string>
+    <string name="wireless_adb_check_passed">Passed</string>
+    <string name="wireless_adb_check_line">%1$s: %2$s</string>
     <string name="wireless_adb_check_pair">Pair</string>
     <string name="wireless_adb_check_connect">Connect</string>
     <string name="wireless_adb_check_helper_start">Helper start</string>
     <string name="wireless_adb_check_authorize">Helper authorization</string>
     <string name="wireless_adb_check_binder">Helper connection health</string>
-    <string name="wireless_adb_check_not_run">Not checked — no connection was attempted.</string>
-    <string name="wireless_adb_gated_notice">Not available in this study build. The secure connection is not finished, so EQO cannot pair, connect or start the helper here. Next: return to setup. You do not need to change Android settings for this unavailable feature.</string>
+    <string name="wireless_adb_check_not_run">Not checked — an earlier step did not pass.</string>
 
     <!-- TASK-015: helper (UF-05, S-10/S-11). Its own capability, its own state. -->
 
@@ -117,8 +129,8 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="setup_all_ready">Ready — next: type a task.</string>
     <string name="hint_model">Tap to enter or check your provider key.</string>
     <string name="hint_accessibility">Tap to open Android settings and turn on screen control.</string>
-    <string name="hint_wireless">Tap to read the guide. This connection is unavailable in the study build.</string>
-    <string name="hint_helper">Tap to review the helper guide. This build cannot start the helper here; it must report its own healthy connection.</string>
+    <string name="hint_wireless">Tap to pair through Android\'s Wireless debugging screen and connect.</string>
+    <string name="hint_helper">Tap to open the wireless debugging steps. The helper must report its own healthy connection.</string>
     <string name="hint_browser">Tap to choose whether browser control may be used. It is optional and unavailable in this build.</string>
     <string name="hint_ready">Ready. Tap to review or change this item.</string>
     <string name="hint_wait">Checking — wait for the result before checking again.</string>

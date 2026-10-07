@@ -31,6 +31,16 @@ data class WirelessAdbEndpoints(
     val isPortConfusion: Boolean get() = pairingPort == connectionPort
 
     companion object {
+        /**
+         * Endpoints for a reconnect that does not pair again (TASK-080). The pairing port is
+         * unused on that path; it only has to differ from the connection port.
+         */
+        fun forReconnect(connectionPort: Int): WirelessAdbEndpoints =
+            WirelessAdbEndpoints(
+                pairingPort = if (connectionPort == PORT_MIN) PORT_MIN + 1 else PORT_MIN,
+                connectionPort = connectionPort,
+            )
+
         const val PORT_MIN = 1
         const val PORT_MAX = 65_535
     }

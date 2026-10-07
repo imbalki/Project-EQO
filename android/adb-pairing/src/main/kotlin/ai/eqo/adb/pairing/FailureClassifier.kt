@@ -27,6 +27,12 @@ enum class StepSignal {
     /** The phone is on a different Wi-Fi network than at pairing time. */
     NETWORK_CHANGED,
 
+    /** TASK-080: nothing was enrolled at pairing time, so the connect plane refused to dial. */
+    SERVER_NOT_ENROLLED,
+
+    /** TASK-080: the server's key is not the enrolled one (impostor, or the phone was reset). */
+    SERVER_KEY_MISMATCH,
+
     /** The privileged helper process did not start. */
     HELPER_NOT_STARTED,
 
@@ -56,6 +62,8 @@ object FailureClassifier {
             StepSignal.MALFORMED_CODE -> ActivationFailure.MalformedCode(detail)
             StepSignal.PORT_REFUSED -> ActivationFailure.PortConfusion(endpoints ?: UNKNOWN_ENDPOINTS)
             StepSignal.AUTH_REJECTED -> ActivationFailure.PairingRevoked(check)
+            StepSignal.SERVER_NOT_ENROLLED -> ActivationFailure.NeedsRepair(check, mismatch = false)
+            StepSignal.SERVER_KEY_MISMATCH -> ActivationFailure.NeedsRepair(check, mismatch = true)
             StepSignal.WIRELESS_DEBUGGING_OFF -> ActivationFailure.DeviceRebooted(check)
             StepSignal.NETWORK_CHANGED -> ActivationFailure.WifiChanged(check)
             StepSignal.HELPER_NOT_STARTED,
