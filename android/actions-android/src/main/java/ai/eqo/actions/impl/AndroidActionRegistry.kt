@@ -154,7 +154,17 @@ class AndroidActionRegistry internal constructor(
     companion object {
         private val CONTACT_ACTIONS = setOf("SEND_SMS", "SEND_WHATSAPP", "SEND_TELEGRAM", "MAKE_CALL", "MAKE_VIDEO_CALL")
         private val UNTRUSTED_OUTPUTS =
-            setOf("READ_FILE", "LIST_FILES", "LIST_INSTALLED_APPS", "GET_CLIPBOARD", "GET_SYSTEM_INFO", "ANALYZE_SCREENSHOT")
+            setOf(
+                "READ_FILE",
+                "LIST_FILES",
+                "LIST_INSTALLED_APPS",
+                "GET_CLIPBOARD",
+                "GET_SYSTEM_INFO",
+                "ANALYZE_SCREENSHOT",
+                "READ_NOTIFICATIONS",
+                "LIST_MACROS",
+                "DETECT_ROUTINES",
+            )
 
         fun create(
             context: Context,
@@ -175,6 +185,11 @@ class AndroidActionRegistry internal constructor(
             val calls = CallFlowExecutor(options.callVerifier ?: AndroidCallFlowVerifier(), launcher)
             val http = options.informationHttp ?: AndroidInformationHttp(context)
             val memoryStore = options.memoryStore ?: AndroidSensitiveMemoryStore(context)
+            val daos = options.automationDaos ?: RoomAutomationDaos.forContext(context)
+            val autoReply = options.autoReplyConfig ?: SettingsAutoReplyConfigStore(context)
+            // The registry does not exist yet while its macro/routine executors are built; they reach it through here.
+            var registry: AndroidActionRegistry? = null
+            val nested = NestedActionRunner { registry }
             return AndroidActionRegistry(
                 context,
                 listOf(
@@ -190,10 +205,13 @@ class AndroidActionRegistry internal constructor(
                     InformationActions(launcher, permissions, http, automation).getActions(),
                     ConversationActions().getActions(),
                     listOf(SaveSensitiveInfoAction(memoryStore)),
+                    NotificationActions(daos, autoReply).getActions(),
+                    MacroActions(daos, nested).getActions(),
+                    RoutineActions(daos, HabitRoutineEngine(daos, nested)).getActions(),
                 ),
                 permissions,
                 unknownActions,
-            )
+            ).also { registry = it }
         }
     }
 }
@@ -210,4 +228,6 @@ class RegistryOptions(
     internal var callVerifier: CallFlowVerifier? = null
     internal var informationHttp: InformationHttp? = null
     internal var memoryStore: SensitiveMemoryStore? = null
+    internal var automationDaos: AutomationDaos? = null
+    internal var autoReplyConfig: AutoReplyConfigStore? = null
 }

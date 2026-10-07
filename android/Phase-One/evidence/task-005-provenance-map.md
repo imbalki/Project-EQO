@@ -552,6 +552,27 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/InformationHttp.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-074 issue #20) |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/ProductivityInformationTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-074 issue #20) |
 
+## TASK-078 executor batch 2 additions (Refs #20)
+
+| Module | File | Kind | Package | Provenance |
+|---|---|---|---|---|
+| :core-llm | `android/core-llm/src/main/java/ai/eqo/data/db/entities/MacroEntity.kt` | EXTRACT | `ai.eqo.data.db.entities` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (data/db/entities/MacroEntity.kt; EQO TASK-078 port) |
+| :core-llm | `android/core-llm/src/main/java/ai/eqo/data/db/entities/HabitEventEntity.kt` | EXTRACT | `ai.eqo.data.db.entities` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (data/db/entities/HabitEventEntity.kt; EQO TASK-078 port) |
+| :core-llm | `android/core-llm/src/main/java/ai/eqo/data/db/entities/HabitRoutineEntity.kt` | EXTRACT | `ai.eqo.data.db.entities` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (data/db/entities/HabitRoutineEntity.kt; EQO TASK-078 port) |
+| :core-llm | `android/core-llm/src/main/java/ai/eqo/data/db/dao/MacroDao.kt` | EXTRACT | `ai.eqo.data.db.dao` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (data/db/dao/MacroDao.kt; EQO TASK-078 port) |
+| :core-llm | `android/core-llm/src/main/java/ai/eqo/data/db/dao/HabitDao.kt` | EXTRACT | `ai.eqo.data.db.dao` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (data/db/dao/HabitDao.kt; EQO TASK-078 port) |
+| :core-llm | `android/core-llm/src/main/java/ai/eqo/data/db/EqoDatabase.kt` | EXTRACT | `ai.eqo.data.db` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (data/db/OpenDroidDatabase.kt; four tables only, version 1; EQO TASK-078 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/NotificationActions.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (actions/NotificationActions.kt; EQO TASK-078 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/MacroActions.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (actions/MacroActions.kt; EQO TASK-078 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/RoutineActions.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (actions/RoutineActions.kt; EQO TASK-078 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/HabitRoutineEngine.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (core/routine/HabitRoutineEngine.kt; EQO TASK-078 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/RoutineDetection.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (core/routine/HabitRoutineEngine.kt, pattern detection; EQO TASK-078 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/RoutineTemplates.kt` | EXTRACT | `ai.eqo.actions.impl` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (core/routine/HabitRoutineEngine.kt, step templates; EQO TASK-078 adaptation) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/AutomationData.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-078 issue #20) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/NestedActionRunner.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-078 issue #20) |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/AutomationExecutorsTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-078 issue #20) |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/RoutineDetectionTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, TASK-078 issue #20) |
+
 
 ## TASK-080 additions (Refs #20)
 

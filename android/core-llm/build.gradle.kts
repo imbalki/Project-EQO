@@ -53,6 +53,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.room.runtime)
+    // TASK-078: EqoDatabase (macros, notifications, habit events/routines) is generated here.
+    ksp(libs.room.compiler)
     implementation(libs.work.runtime.ktx)
 
     implementation(platform(libs.okhttp.bom))

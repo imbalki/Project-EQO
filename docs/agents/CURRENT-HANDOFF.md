@@ -1,6 +1,6 @@
 # Current handoff (any agent can take over from this page)
 
-Last updated: 2026-10-06. Update this file in the same PR as every merge to `main`.
+Last updated: 2026-10-07. Update this file in the same PR as every merge to `main`.
 
 ## Goal
 EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-key, accessibility automation, wireless-ADB helper, Chrome control, guided setup, approvals, Pause/Stop/takeover). Owner is non-technical: plain language, real command output, say what was not tested.
@@ -17,7 +17,7 @@ EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-
 | #74 | Typed requests, foreground runs, typing fixes | MERGED 65a884f |
 | #77 | Wireless pairing, enrolled connect-plane key pinning | MERGED 29bad15; hub row stays "Needs attention" until the helper authorization prompt lands (card t_91b2a02e) |
 | #78 | Chrome control, socket-owner verification | PARKED: Android 11 refuses an ordinary app's connection to Chrome's DevTools socket; needs the adb-forward route through the helper |
-| #81 | Batch 2: notifications, macros, routines + Room | Security PASS; awaiting rebase onto main, then merge |
+| #81 | Batch 2: notifications, macros, routines + Room | Security PASS; main (#74, #77, #82) merged in, registry total 94, CI green on each merge. Evidence `android/Phase-One/evidence/task-078-port-actions-batch-2.md`, ADR-0005. Needs phone test |
 | #83 | UX styling pass | In progress on a Hermes worker (eqo-trial) |
 | #79 | Throwaway combined test build | Do not merge |
 
@@ -32,7 +32,7 @@ Realme RM10, Android 11, serial `<DEVICE_SERIAL>`, over USB. Wake it with `KEYCO
 ## Work left (priority order)
 1. Typed requests working across apps on the phone (fix `OPEN_APP` refusal; contact search inside apps; WhatsApp voice calls and call permission).
 2. Merge #77 and #78 after phone tests.
-3. Batch 2 ports: notifications, macros, routines (needs the Room database brought back). Batch 3 (transport, shopping, social) is skipped by the owner.
+3. Batch 2 ports: notifications, macros, routines with the Room database — PR open on `feat/batch2-notifications-macros-routines` (evidence `android/Phase-One/evidence/task-078-port-actions-batch-2.md`, ADR-0005); needs owner review and a phone test. Batch 3 (transport, shopping, social) is skipped by the owner.
 4. UX/visual pass: styling only (theme, spacing, buttons, home/setup/plan-approval screens), no behaviour changes. Start after #74 merges to avoid conflicts.
 5. Android 12/13 emulator checks (AVDs `eqo-api31`, `eqo-api33`), exit review (TASK-016), voice input and web-search research, release items (signing key, weather privacy note).
 

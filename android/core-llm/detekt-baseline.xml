@@ -396,6 +396,7 @@
     <ID>TooManyFunctions:AliasResolver.kt$AliasResolver</ID>
     <ID>TooManyFunctions:DeviceStateProvider.kt$DeviceStateProvider</ID>
     <ID>TooManyFunctions:GemmaProvider.kt$GemmaProvider : LLMProvider</ID>
+    <ID>TooManyFunctions:HabitDao.kt$HabitDao</ID>
     <ID>TooManyFunctions:LLMError.kt$LLMErrorMapper</ID>
     <ID>TooManyFunctions:LiteRTLMProvider.kt$LiteRTLMProvider : LLMProvider</ID>
     <ID>TooManyFunctions:ModelArtifactIntegrity.kt$ModelArtifactVerifier</ID>
