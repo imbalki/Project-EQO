@@ -609,6 +609,17 @@ class TaskActivity : Activity() {
         if (DebugPlanReceiver.register(this, mainHandler, receiver)) debugPlanReceiver = receiver
     }
 
+    // A stale pooled connection makes the first model call after a quiet spell fail with a Network error;
+    // one immediate retry on a fresh connection is enough. Every other error is reported as-is.
+    private suspend fun <T> planWithOneNetworkRetry(call: suspend () -> T): T =
+        try {
+            call()
+        } catch (failure: LLMException) {
+            if (failure.error != ai.eqo.core.llm.error.LLMError.Network) throw failure
+            android.util.Log.i("EqoRun", "planner network error, retrying once")
+            call()
+        }
+
     private var planning = false
 
     private fun planRequest() {
@@ -636,7 +647,7 @@ class TaskActivity : Activity() {
                         TaskPlanningRuntime.planner(applicationContext, portedActions.enabledActionNames)
                             ?: throw MissingTaskKey()
                     // Never capture EQO's key/setup/request UI; execution observations stay local.
-                    planner.plan(request, UntrustedScreenText.wrap(""))
+                    planWithOneNetworkRetry { planner.plan(request, UntrustedScreenText.wrap("")) }
                 }
             if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(steps))
         } catch (cancelled: kotlinx.coroutines.CancellationException) {

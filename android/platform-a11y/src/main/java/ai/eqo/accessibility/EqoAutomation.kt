@@ -133,16 +133,9 @@ class EqoAutomation(
         target: String,
         byViewId: Boolean,
     ): A11yResult {
-        // The first match that can actually be tapped: a label or a previous result shown earlier on the
-        // screen (for example "12x3" before the "1" key) must not hide the real button.
-        val clickable =
-            rootProvider()?.let { root ->
-                NodeTreeSearch
-                    .findFirst(root) { node ->
-                        NodeTreeSearch.matches(node, target, byViewId) &&
-                            NodeTreeSearch.clickableSelfOrAncestor(node) != null
-                    }?.let { NodeTreeSearch.clickableSelfOrAncestor(it) }
-            }
+        // Best tappable match: an exact label beats a partial one ("Voice call" beats "Call" appearing in
+        // "Video call"), and a button or result row beats a text field that merely contains the text.
+        val clickable = rootProvider()?.let { root -> bestTappable(root, target, byViewId) }
         val result =
             when {
                 clickable == null -> A11yResult.failure(A11yError.NodeNotFound(target))
@@ -150,6 +143,32 @@ class EqoAutomation(
                 else -> A11yResult.failure(A11yError.ActionRejected(target))
             }
         return typingResult(clickable, result, if (byViewId) "CLICK_ID" else "CLICK_TEXT")
+    }
+
+    private fun bestTappable(
+        root: A11yNode,
+        target: String,
+        byViewId: Boolean,
+    ): A11yNode? {
+        val passes: List<(A11yNode) -> Boolean> =
+            if (byViewId) {
+                listOf { node -> NodeTreeSearch.matches(node, target, true) }
+            } else {
+                listOf(
+                    { node -> NodeTreeSearch.matchesExactly(node, target) && !NodeTreeSearch.isTextInput(node) },
+                    { node -> NodeTreeSearch.matchesExactly(node, target) },
+                    { node -> NodeTreeSearch.matches(node, target, false) && !NodeTreeSearch.isTextInput(node) },
+                    { node -> NodeTreeSearch.matches(node, target, false) },
+                )
+            }
+        for (accepts in passes) {
+            val hit =
+                NodeTreeSearch.findFirst(root) { node ->
+                    accepts(node) && NodeTreeSearch.clickableSelfOrAncestor(node) != null
+                }
+            if (hit != null) return NodeTreeSearch.clickableSelfOrAncestor(hit)
+        }
+        return null
     }
 
     private fun currentGateFailure(): A11yResult? =

@@ -48,6 +48,28 @@ class EqoTypingFallbackTest {
     }
 
     @Test
+    fun tapPrefersTheExactLabelOverAPartialOne() {
+        val video = FakeNode(contentDescription = "Video call", isClickable = true)
+        val voice = FakeNode(contentDescription = "Call", isClickable = true)
+        val root = FakeNode().child(video).child(voice)
+        val auto = EqoAutomation({ root }, { state }, takeover)
+        assertTrue(auto.tap("Call").isSuccess)
+        assertTrue(voice.actions.contains("click"))
+        assertTrue(video.actions.isEmpty())
+    }
+
+    @Test
+    fun tapPrefersAButtonOverATextFieldContainingTheText() {
+        val field = FakeNode(className = "android.widget.EditText", text = "+91XXXXXXXXXX", isClickable = true)
+        val row = FakeNode(text = "+91XXXXXXXXXX", isClickable = true)
+        val root = FakeNode().child(field).child(row)
+        val auto = EqoAutomation({ root }, { state }, takeover)
+        assertTrue(auto.tap("+91XXXXXXXXXX").isSuccess)
+        assertTrue(row.actions.contains("click"))
+        assertTrue(field.actions.isEmpty())
+    }
+
+    @Test
     fun passwordFieldsAreNeverTypedInto() {
         val secret = FakeNode(className = "android.widget.EditText", isPassword = true)
         assertTrue(automation(secret).type("Password", "hello") is A11yResult.Failure)

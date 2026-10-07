@@ -38,6 +38,7 @@ object RegistryPlanVocabulary {
             appendLine("Calculator app: OPEN_APP calculator, WAIT 3000, CLICK_TEXT Clear, then one CLICK_TEXT per key.")
             appendLine("Digits use their number; operators use Add, Subtract, Multiply, Divide, Point, Equals.")
             appendLine("To only get an answer, use CALCULATE instead of the Calculator app.")
+            appendLine("WhatsApp call: open the chat with the person, then CLICK_TEXT Call.")
             enabled.sorted().forEach { name ->
                 val action = requireNotNull(ActionSchema.getAction(name))
                 appendLine("${action.name}: ${action.description.replace(Regex("\\s+"), " ")}")

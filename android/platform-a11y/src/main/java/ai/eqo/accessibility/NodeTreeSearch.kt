@@ -116,6 +116,15 @@ internal object NodeTreeSearch {
             }
         }
 
+    /** A label that equals [target] exactly (ignoring case), so "Call" does not also pick "Video call". */
+    fun matchesExactly(
+        node: A11yNode,
+        target: String,
+    ): Boolean =
+        listOf(node.text, node.contentDescription, node.hintText).any { label ->
+            label?.toString()?.trim().equals(target.trim(), ignoreCase = true)
+        }
+
     /** Some native app fields expose EditText class but omit the editable flag. Password fields are never inputs. */
     fun isTextInput(node: A11yNode): Boolean =
         !node.isPassword &&

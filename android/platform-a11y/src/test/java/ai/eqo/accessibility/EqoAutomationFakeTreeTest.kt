@@ -78,17 +78,14 @@ class EqoAutomationFakeTreeTest {
     // ── tap ───────────────────────────────────────────────────────────────
 
     @Test
-    fun tapMatchesSubstringsInTreeOrderWithNoExactMatchPreference() {
-        // Contract inherited from AccessibilityNodeTraversal.findAndClick:
-        // findAccessibilityNodeInfosByText is a case-insensitive SUBSTRING match
-        // and the first result in tree order wins. "Send later" sits before the
-        // exact "Send" here, so it is the one tapped.
+    fun tapPrefersAnExactLabelOverAnEarlierPartialMatch() {
+        // Changed on purpose (2026-10-07): the inherited "first substring match wins" rule tapped "Video call"
+        // when the plan said "Call". An exact label now wins; "Send later" is only a fallback for "Send".
         val (root, screen) = probeScreen()
         val result = automation(root).tap("Send")
         assertTrue(result.isSuccess)
-        assertEquals(1, screen.decoy.clickCount)
-        assertEquals(0, screen.target.clickCount)
-        assertEquals(0, screen.row.clickCount)
+        assertEquals(0, screen.decoy.clickCount)
+        assertEquals(1, screen.row.clickCount)
     }
 
     @Test
@@ -247,7 +244,7 @@ class EqoAutomationFakeTreeTest {
         assertFalse(triggered)
         assertFalse(takeover.isPaused)
         assertTrue(automation(root).tap("Send").isSuccess)
-        assertEquals(1, screen.decoy.clickCount)
+        assertEquals(1, screen.row.clickCount)
     }
 
     @Test
@@ -263,7 +260,7 @@ class EqoAutomationFakeTreeTest {
         )
         assertFalse(takeover.isPaused)
         assertTrue(automation(root).tap("Send").isSuccess)
-        assertEquals(1, screen.decoy.clickCount)
+        assertEquals(1, screen.row.clickCount)
     }
 
     // ── accessibility disabled mid-task: typed error, no silent retry ─────
