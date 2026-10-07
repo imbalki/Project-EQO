@@ -38,6 +38,16 @@ class EqoTypingFallbackTest {
     }
 
     @Test
+    fun tapSkipsAnEarlierNonTappableMatchAndPressesTheRealButton() {
+        val display = FakeNode(text = "12x3")
+        val key = FakeNode(text = "1", isClickable = true)
+        val root = FakeNode().child(display).child(key)
+        val auto = EqoAutomation({ root }, { state }, takeover)
+        assertTrue(auto.tap("1").isSuccess)
+        assertTrue(key.actions.contains("click"))
+    }
+
+    @Test
     fun passwordFieldsAreNeverTypedInto() {
         val secret = FakeNode(className = "android.widget.EditText", isPassword = true)
         assertTrue(automation(secret).type("Password", "hello") is A11yResult.Failure)

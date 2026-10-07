@@ -649,6 +649,8 @@ class TaskActivity : Activity() {
                 }
             }
         } catch (failure: LLMException) {
+            // Error category only (never the message, request or key).
+            android.util.Log.w("EqoRun", "planner llm error=${failure.error}")
             findViewById<TextView>(R.id.task_state).setText(planningError(failure))
         } catch (failure: IllegalArgumentException) {
             android.util.Log.w("EqoRun", "planner rejected: ${failure.message}")
@@ -669,6 +671,10 @@ class TaskActivity : Activity() {
         val steps = plan.steps()
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
         val preview = TaskPlanPreview.describe(steps)
+        // Debug builds only: plan text can contain message bodies, so a release build never logs it.
+        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            android.util.Log.i("EqoRun", "plan: " + preview.lines().joinToString(" "))
+        }
         findViewById<TextView>(R.id.task_preview).text = preview
         if (!PlanApprovalSettings.required(this)) {
             startRun(plan)

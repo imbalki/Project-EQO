@@ -133,11 +133,16 @@ class EqoAutomation(
         target: String,
         byViewId: Boolean,
     ): A11yResult {
-        val match =
+        // The first match that can actually be tapped: a label or a previous result shown earlier on the
+        // screen (for example "12x3" before the "1" key) must not hide the real button.
+        val clickable =
             rootProvider()?.let { root ->
-                NodeTreeSearch.findFirst(root) { node -> NodeTreeSearch.matches(node, target, byViewId) }
+                NodeTreeSearch
+                    .findFirst(root) { node ->
+                        NodeTreeSearch.matches(node, target, byViewId) &&
+                            NodeTreeSearch.clickableSelfOrAncestor(node) != null
+                    }?.let { NodeTreeSearch.clickableSelfOrAncestor(it) }
             }
-        val clickable = match?.let { NodeTreeSearch.clickableSelfOrAncestor(it) }
         val result =
             when {
                 clickable == null -> A11yResult.failure(A11yError.NodeNotFound(target))
