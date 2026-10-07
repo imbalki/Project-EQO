@@ -14,10 +14,14 @@ EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-
 ## State of main and open PRs (check with `gh pr list`)
 | PR | What | State |
 |---|---|---|
-| #74 | Integration: typed requests drive ported actions, foreground-owned runs, preserved approved plans (draft) | CI green; phone test: plan works, `OPEN_APP` step is refused, reason being diagnosed (EqoRun log now prints a short reason) |
-| #77 | Wireless pairing; connect-plane key enrollment after SPAKE2 | CI green; security re-review running; needs Realme test |
-| #78 | Chrome control with socket-owner verification, consent-gated | CI green; security pass (0 blocking); needs Realme test (can an ordinary app reach Chrome's DevTools socket on Android 11?) |
-| #79 | Throwaway: #74 + #78 merged for a phone test build | Do not merge |
+| #74 | Typed requests, foreground runs, typing fixes | MERGED 65a884f |
+| #77 | Wireless pairing, enrolled connect-plane key pinning | MERGED 29bad15; hub row stays "Needs attention" until the helper authorization prompt lands (card t_91b2a02e) |
+| #78 | Chrome control, socket-owner verification | PARKED: Android 11 refuses an ordinary app's connection to Chrome's DevTools socket; needs the adb-forward route through the helper |
+| #81 | Batch 2: notifications, macros, routines + Room | Security PASS; awaiting rebase onto main, then merge |
+| #83 | UX styling pass | In progress on a Hermes worker (eqo-trial) |
+| #79 | Throwaway combined test build | Do not merge |
+
+Debug builds only: broadcast `ai.eqo.debug.PLAN` with `--es plan_b64 <base64 plan json>` hands the task screen a finished plan (still validated and approved on screen) so executors can be tested without a model key. Scripts used: `runplan.sh`, `runreq.sh` in the worktrees folder.
 
 ## Verification model
 GitHub CI is the merge gate: jobs `android`, `android-branding`, `repo-checks`. CI uploads the debug APK as artifact `eqo-debug-apk` (`gh run download <run> -n eqo-debug-apk`). Local full builds are slow; use `./gradlew :app:assembleDebug` only for phone installs. CI-built and locally built debug APKs are signed with different keys: switching between them requires uninstall (owner must re-enter his key and re-enable accessibility).

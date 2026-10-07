@@ -49,3 +49,7 @@ change is made for work already in flight.
 - `deepseek-v4.1-flash` needs the OpenCode Go workspace region set to Global (Privacy
   settings); otherwise the API returns HTTP 400 "requires Global regions". Owner action;
   record the date it was enabled here.
+
+
+## Fallback rule (2026-10-07, owner)
+Every Hermes profile falls back first to DeepSeek v4.1 Flash, then to GLM 5.3 Flash (both via opencode-go). MiMo is not a fallback.
