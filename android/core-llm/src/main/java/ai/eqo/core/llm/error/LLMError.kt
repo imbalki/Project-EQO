@@ -64,6 +64,7 @@ class RedactedDetail private constructor(
     }
 }
 
+@Suppress("LongParameterList") // typed error carrier; each field is a distinct diagnostic dimension
 class LLMException internal constructor(
     val error: LLMError,
     provider: String,
@@ -73,6 +74,8 @@ class LLMException internal constructor(
     val retryAfterMillis: Long? = null,
     val detail: RedactedDetail? = null,
     internal val transientMalformedResponse: Boolean = false,
+    /** Simple class name of the underlying failure (never its message), for diagnostics only. */
+    val causeClass: String? = null,
 ) : IOException(safeMessage(error, provider, status)) {
     val provider: String =
         provider
@@ -239,6 +242,7 @@ object LLMErrorMapper {
             provider = provider,
             model = model,
             retryable = error == LLMError.Network && isConnectFailure,
+            causeClass = throwable.javaClass.simpleName,
         )
     }
 

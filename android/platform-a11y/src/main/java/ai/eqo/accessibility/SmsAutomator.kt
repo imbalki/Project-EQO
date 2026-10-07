@@ -22,6 +22,8 @@ object SmsAutomator {
         // Common SMS app send button IDs
         val sendButtonIds =
             listOf(
+                // Current Google Messages (Compose UI): the send control has no package-qualified id.
+                "Compose:Draft:Send",
                 "com.google.android.apps.messaging:id/send_message_button",
                 "com.google.android.apps.messaging:id/send_message_button_icon",
                 "com.samsung.android.messaging:id/send_button",

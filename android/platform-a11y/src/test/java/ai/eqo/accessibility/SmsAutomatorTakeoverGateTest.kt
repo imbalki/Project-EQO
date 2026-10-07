@@ -61,7 +61,7 @@ class SmsAutomatorTakeoverGateTest {
                 // Fake ops answer true on the first send-button id: flow succeeds via the gate.
                 assertEquals(true, sent)
                 assertEquals(
-                    listOf("findAndClickById:com.google.android.apps.messaging:id/send_message_button"),
+                    listOf("findAndClickById:Compose:Draft:Send"),
                     ops.calls,
                 )
             } finally {

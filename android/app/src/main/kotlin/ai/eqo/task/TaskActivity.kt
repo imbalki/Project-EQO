@@ -661,7 +661,7 @@ class TaskActivity : Activity() {
             }
         } catch (failure: LLMException) {
             // Error category only (never the message, request or key).
-            android.util.Log.w("EqoRun", "planner llm error=${failure.error}")
+            android.util.Log.w("EqoRun", "planner llm error=${failure.error} cause=${failure.causeClass}")
             findViewById<TextView>(R.id.task_state).setText(planningError(failure))
         } catch (failure: IllegalArgumentException) {
             android.util.Log.w("EqoRun", "planner rejected: ${failure.message}")

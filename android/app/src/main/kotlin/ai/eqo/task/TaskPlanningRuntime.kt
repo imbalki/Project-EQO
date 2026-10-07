@@ -31,6 +31,10 @@ object StudyModelChoice {
 }
 
 object TaskPlanningRuntime {
+    private const val CONNECT_TIMEOUT_SECONDS = 20L
+    private const val READ_TIMEOUT_SECONDS = 60L
+    private const val CALL_TIMEOUT_SECONDS = 90L
+
     fun planner(
         context: Context,
         enabledActions: Set<String>,
@@ -45,6 +49,11 @@ object TaskPlanningRuntime {
                 .Builder()
                 .followRedirects(false)
                 .followSslRedirects(false)
+                // Planning waits for a whole model answer; OkHttp's 10 s default timed out on slower replies
+                // (SocketTimeoutException, captured 2026-10-07). A bounded, longer budget instead.
+                .connectTimeout(CONNECT_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(READ_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
+                .callTimeout(CALL_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
                 .build()
         val provider = OpenRouterProvider(client, SettingsRepository(context.applicationContext, store))
         val config =
