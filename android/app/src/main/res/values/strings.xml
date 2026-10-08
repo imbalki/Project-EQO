@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="vision_locate_setting">Let EQO look at the screen when it cannot find a button</string>
-    <string name="vision_locate_explanation">Off by default. Only after you approve the plan, if screen control cannot find the approved button or text field, a screenshot of that one screen is sent to your configured AI provider. EQO never sends protected or secure screens or screens with visible password fields. EQO does not save the screenshot or the AI reply. Your provider handles the image under its own privacy policy. At most six screen lookups per run; the AI can only locate an already-approved control, not change your plan.</string>
+    <string name="vision_locate_explanation">Off by default. Only after you approve the plan, if screen control cannot find the approved button or text field, a screenshot of that one screen is sent to your configured AI provider. EQO never sends protected or secure screens or screens with visible password fields. If EQO cannot confirm a screen is safe to send, it sends nothing. EQO does not save the screenshot or the AI reply. Your provider handles the image under its own privacy policy. At most six screen lookups per run; the AI can only locate an already-approved control, not change your plan.</string>
     <string name="setup_wireless_failed_check">%1$s failed. %2$s</string>
     <string name="helper_permission_title">Allow EQO to use its helper?</string>
     <string name="helper_permission_allow">Allow</string>

@@ -37,6 +37,9 @@ class AndroidVisionLocateScreen : VisionLocateScreen {
         val display = service.getSystemService(WindowManager::class.java).maximumWindowMetrics.bounds
         val windows = service.windows.sortedBy { it.id }
         val target = windows.firstOrNull { it.isActive } ?: return refused("EQO cannot check the active window.")
+        // t_cfbe3719 fail-closed: never inspect or send a window whose secure status
+        // cannot be positively verified non-secure. Unknown == refuse, never "probably safe".
+        VisionUploadGate.refusal(service.visionSecureStatuses())?.let { return refused(it) }
         val scan = WindowScan(app, target.id)
         var refusal: String? = null
         for (window in windows) {
@@ -108,7 +111,7 @@ class AndroidVisionLocateScreen : VisionLocateScreen {
         service: EQOAccessibilityService,
         scan: WindowScan,
     ): String? {
-        if (service.isSecureWindow(window)) return "This is a protected screen. Nothing will be sent."
+        // Security is enforced fail-closed before this walk (VisionUploadGate in [state]).
         val root = window.root
         var refusal: String? = null
         if (root == null) {

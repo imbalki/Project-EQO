@@ -238,4 +238,48 @@ class VisionLocateRunTest {
             assertTrue(run.locateAndTap("Label") is ExecuteResult.Failure)
             assertEquals(0, screen.taps)
         }
+
+    @Test
+    fun unverifiableSecureMetadataRefusesBeforeAnyImageOrModelRequest() =
+        runTest {
+            // The platform could not verify the screen is not protected (hidden/blocked
+            // FLAG_SECURE probe). The platform layer reports this as a refusal; no image
+            // may be produced and the model must never be asked.
+            val reason = "EQO cannot verify that this screen is not protected, so nothing will be sent."
+            val screen = Screen(initial.copy(refusal = reason))
+            var modelCalls = 0
+            val run =
+                VisionLocateRun({ true }, {
+                    ControlLocator { _, _, _, _ ->
+                        modelCalls++
+                        box
+                    }
+                }, screen)
+            val result = run.locateAndTap("Label") as ExecuteResult.Failure
+            assertEquals(reason, result.reason)
+            assertEquals(0, screen.captures)
+            assertEquals(0, screen.taps)
+            assertEquals(0, modelCalls)
+        }
+
+    @Test
+    fun successfulButRedactedCaptureIsDiscardedWithoutAskingTheModel() =
+        runTest {
+            // The display screenshot call succeeds, but the fail-closed platform path
+            // rejects the frame (secure layers omitted / screen not verifiable) and
+            // returns no image. The run must discard it: no image, no model, no tap.
+            val screen = Screen(initial).apply { allowCapture = false }
+            var modelCalls = 0
+            val run =
+                VisionLocateRun({ true }, {
+                    ControlLocator { _, _, _, _ ->
+                        modelCalls++
+                        box
+                    }
+                }, screen)
+            assertTrue(run.locateAndTap("Label") is ExecuteResult.Failure)
+            assertEquals(1, screen.captures)
+            assertEquals(0, modelCalls)
+            assertEquals(0, screen.taps)
+        }
 }

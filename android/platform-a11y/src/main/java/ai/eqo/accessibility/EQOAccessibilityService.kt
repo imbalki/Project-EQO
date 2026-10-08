@@ -77,18 +77,32 @@ class EQOAccessibilityService :
      * with `javap -classpath android-36/android.jar android.view.accessibility.
      * AccessibilityWindowInfo` -> only `isActive()` etc., no `isSecure`), so it
      * is probed reflectively where the platform exposes it. When the platform
-     * hides it we cannot tell and report false — the residual exposure is
-     * recorded in android/Phase-One/evidence/task-012-action-loop.md.
+     * hides it this legacy check reports false; the fail-closed vision path
+     * below uses [WindowSecurity.UNVERIFIABLE] instead. The residual exposure of
+     * this legacy screen-text check is recorded in
+     * android/Phase-One/evidence/task-012-action-loop.md.
      */
     fun isSecureWindowActive(): Boolean = windows.any { it.isActive && isSecureWindow(it) }
 
+    /** Throws (hidden/blocked API) rather than guessing; the caller maps that to unknown. */
+    private fun probeIsSecure(window: android.view.accessibility.AccessibilityWindowInfo): Boolean {
+        val isSecure = android.view.accessibility.AccessibilityWindowInfo::class.java.getMethod("isSecure")
+        return isSecure.invoke(window) == true
+    }
+
+    /**
+     * t_cfbe3719 fail-closed: a window whose secure status cannot be positively
+     * verified is [WindowSecurity.UNVERIFIABLE], never treated as non-secure, so
+     * the vision upload path refuses instead of sending an unverifiable screen.
+     */
+    internal fun visionSecureStatus(window: android.view.accessibility.AccessibilityWindowInfo): WindowSecurity =
+        VisionUploadGate.classify { probeIsSecure(window) }
+
+    /** Fail-closed status of every visible window; an empty list also means "cannot verify". */
+    internal fun visionSecureStatuses(): List<WindowSecurity> = windows.map(::visionSecureStatus)
+
     internal fun isSecureWindow(window: android.view.accessibility.AccessibilityWindowInfo): Boolean =
-        try {
-            val isSecure = android.view.accessibility.AccessibilityWindowInfo::class.java.getMethod("isSecure")
-            isSecure.invoke(window) == true
-        } catch (_: Exception) {
-            false
-        }
+        visionSecureStatus(window) == WindowSecurity.SECURE
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -409,10 +423,10 @@ class EQOAccessibilityService :
     /** Same Android capture/refusal path as saved screenshots, but never creates a file or history entry. */
     @Suppress("ReturnCount") // Privacy gate before and after the asynchronous capture.
     suspend fun captureVisionFrame(stillAllowed: () -> Boolean): ai.eqo.core.agent.VisionFrame? {
-        if (!automation.screenCaptureGate().isSuccess || !stillAllowed()) return null
+        if (!visionUploadAllowed() || !stillAllowed()) return null
         val bitmap = captureBitmap() ?: return null
         return try {
-            if (!automation.screenCaptureGate().isSuccess || !stillAllowed()) {
+            if (!visionUploadAllowed() || !stillAllowed()) {
                 null
             } else {
                 val output = ByteArrayOutputStream()
@@ -427,6 +441,15 @@ class EQOAccessibilityService :
             bitmap.recycle()
         }
     }
+
+    /**
+     * t_cfbe3719 fail-closed: a display image may be produced for upload only when
+     * the ordinary capture gate passes AND every visible window is positively
+     * verified non-secure. Unknown/unavailable secure metadata (the stock-Android
+     * case) refuses here, before any image exists to send.
+     */
+    private fun visionUploadAllowed(): Boolean =
+        VisionUploadGate.refusal(visionSecureStatuses()) == null && automation.screenCaptureGate().isSuccess
 
     suspend fun takeScreenshotAndEncode(): String? {
         return suspendCoroutine { continuation ->

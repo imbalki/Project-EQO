@@ -7,6 +7,8 @@
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/VisionLocateRun.kt` | EQO-NEW | `ai.eqo.core.agent` | Per-run six-attempt memory-only locate policy and live geometry checks |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/VisionLocateRunTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Fake screen/model privacy, cap, geometry and unchanged-screen regressions |
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/AndroidVisionLocateScreen.kt` | EQO-NEW | `ai.eqo.accessibility` | Visible-window/password inspection and takeover-gated gesture reuse |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/VisionUploadGate.kt` | EQO-NEW | `ai.eqo.accessibility` | Fail-closed SECURE/NOT_SECURE/UNVERIFIABLE decision for the outbound image path |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/VisionUploadGateTest.kt` | EQO-NEW | `ai.eqo.accessibility` | Offline fail-closed gate regressions (throwing/unavailable/secure/empty sets) |
 | :app | `android/app/src/main/kotlin/ai/eqo/task/VisionLocateRuntime.kt` | EQO-NEW | `ai.eqo.task` | Default-off settings and immutable approved-plan provider/Android wiring |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/VisionLocateRuntimeTest.kt` | EQO-NEW | `ai.eqo.task` | Offline approval, accessibility-first, unchanged text and settings regressions |
 
