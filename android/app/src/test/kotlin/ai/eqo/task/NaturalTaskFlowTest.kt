@@ -94,9 +94,15 @@ class NaturalTaskFlowTest {
         val raw = "hello\u202E\u2066\u200F\uFEFF"
         val action = ExecutedAction("compose_sms", mapOf("to" to "", "body" to raw))
         val plan = ApprovedTaskPlan(listOf(LoopStep("1", action)))
-        val show = TaskActivity::class.java.getDeclaredMethod("showPlan", ApprovedTaskPlan::class.java, Map::class.java)
+        val show =
+            TaskActivity::class.java.getDeclaredMethod(
+                "showPlan",
+                ApprovedTaskPlan::class.java,
+                Map::class.java,
+                List::class.java,
+            )
         show.isAccessible = true
-        show.invoke(activity, plan, emptyMap<String, String>())
+        show.invoke(activity, plan, emptyMap<String, String>(), emptyList<String>())
         val preview = activity.findViewById<android.widget.TextView>(R.id.task_preview).text.toString()
         val dialog =
             org.robolectric.shadows.ShadowAlertDialog
@@ -132,18 +138,24 @@ class NaturalTaskFlowTest {
             )
         activity.applicationInfo.flags =
             activity.applicationInfo.flags or android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE
-        val show = TaskActivity::class.java.getDeclaredMethod("showPlan", ApprovedTaskPlan::class.java, Map::class.java)
+        val show =
+            TaskActivity::class.java.getDeclaredMethod(
+                "showPlan",
+                ApprovedTaskPlan::class.java,
+                Map::class.java,
+                List::class.java,
+            )
         show.isAccessible = true
-        show.invoke(activity, plan, mapOf("sms" to "Balan Kumar"))
+        show.invoke(activity, plan, mapOf("sms" to "Contact Name"), emptyList<String>())
         val preview = activity.findViewById<android.widget.TextView>(R.id.task_preview).text.toString()
         val dialog =
             org.robolectric.shadows.ShadowAlertDialog
                 .getLatestAlertDialog()
-        assertTrue(preview.contains("Balan Kumar"))
+        assertTrue(preview.contains("Contact Name"))
         assertTrue(preview.contains(phone))
         assertEquals(preview, dialog.findViewById<android.widget.TextView>(android.R.id.message).text.toString())
         org.robolectric.shadows.ShadowLog.getLogs().forEach {
-            assertFalse(it.msg.contains("Balan"))
+            assertFalse(it.msg.contains("Alice"))
             assertFalse(it.msg.contains(phone))
         }
         dialog.dismiss()

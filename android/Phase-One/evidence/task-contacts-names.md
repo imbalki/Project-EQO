@@ -5,7 +5,7 @@ Task: t_212ea16c. Branch: w-contacts-local, base main 667f0bb.
 ## Behavior
 
 - SEND_SMS, SEND_WHATSAPP, SEND_TELEGRAM and MAKE_CALL resolve a saved name to a phone destination. SEND_EMAIL resolves the `to` name against Contacts' Email rows, not Phone rows.
-- Telegram handles are explicit (`@name`). A single word such as Balan is a contact name, and a missing contact is never converted to a guessed Telegram handle.
+- Telegram handles are explicit (`@name`). A single word such as Alice is a contact name, and a missing contact is never converted to a guessed Telegram handle.
 - Multiple matching names or multiple destinations under one name stop with a plain names-only clarification message. No first-row/exact-match preference, contact-memory preference, number-bearing picker metadata, or five-match truncation remains. Duplicate identical name/destination rows are harmless.
 - Contacts permission denial, including a SecurityException if Android revokes permission during a query, is a distinct result: Contacts permission is needed and nothing was done. Literal phone numbers/email addresses and explicit Telegram handles do not request Contacts permission.
 - The typed-request and debug-plan paths resolve recipients locally before showing the plan. The owner sees the resolved name and actual destination. The immutable ApprovedTaskPlan receives the literal destination, so a later Contacts change cannot silently change the approved recipient. Resolved names are display-only local labels, not extra planner parameters, and never get sent back to the model.
@@ -43,7 +43,7 @@ Local command transcripts: `android/contacts-gates-final.log` (app tests/lint), 
 
 No phone was accessed, installed, called or messaged by this worker. On Realme RM10 / Android 11, verify:
 
-1. With Contacts permission absent, plan `text Balan`, allow permission, check the full resolved name and number in the preview, then explicitly approve. Verify the actual SMS app recipient and send/draft outcome.
+1. With Contacts permission absent, plan `text Alice`, allow permission, check the full resolved name and number in the preview, then explicitly approve. Verify the actual SMS app recipient and send/draft outcome.
 2. Repeat saved-name requests for WhatsApp, Telegram, MAKE_CALL, and SEND_EMAIL (a contact with an email address). Verify each app/call recipient and actual outcome; intent launch is not a delivery receipt.
 3. Deny Contacts permission and confirm the plain failure and no app launch/call/send. Literal phone/email plans must still work without Contacts access.
 4. Use two matching contacts and a same-name contact with two numbers/emails. Confirm names-only clarification, no preview approval/run, and no side effect. Retry with a full name or literal destination.

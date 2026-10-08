@@ -144,12 +144,13 @@ class MissingAppFallbackTest {
     private fun show(activity: TaskActivity) {
         val method =
             TaskActivity::class.java.getDeclaredMethod(
-                "showPreparedPlan",
+                "showPlan",
                 ApprovedTaskPlan::class.java,
+                Map::class.java,
                 List::class.java,
             )
         method.isAccessible = true
-        method.invoke(activity, ApprovedTaskPlan(web()), listOf("Flipkart"))
+        method.invoke(activity, ApprovedTaskPlan(web()), emptyMap<String, String>(), listOf("Flipkart"))
     }
 
     @Test fun approvalDialogShowsNoticeAndInstallChoiceDoesNotStartTask() {
