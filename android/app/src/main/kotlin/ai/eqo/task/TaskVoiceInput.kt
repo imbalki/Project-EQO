@@ -22,6 +22,8 @@ internal class TaskVoiceInput(private val activity: Activity) {
     private val status = activity.findViewById<TextView>(R.id.task_voice_state)
     private var recognizer: SpeechRecognizer? = null
     private var rationale: AlertDialog? = null
+    private var resumed = true
+    private var pendingGrant: Boolean? = null
     private val presenter =
         VoiceInputPresenter(
             render = ::render,
@@ -44,19 +46,27 @@ internal class TaskVoiceInput(private val activity: Activity) {
 
     fun onPermissionResult(requestCode: Int) {
         if (requestCode == REQUEST_CODE) {
-            presenter.permissionResult(
-                activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED,
-            )
+            val granted = activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+            if (resumed) presenter.permissionResult(granted) else pendingGrant = granted
         }
     }
 
+    fun resume() {
+        resumed = true
+        pendingGrant?.let { presenter.permissionResult(it) }
+        pendingGrant = null
+    }
+
     fun pause() {
+        resumed = false
         presenter.cancel()
         releaseRecognizer()
     }
 
     fun close() {
         pause()
+        pendingGrant = null
+        presenter.permissionResult(false)
         rationale?.dismiss()
         rationale = null
     }

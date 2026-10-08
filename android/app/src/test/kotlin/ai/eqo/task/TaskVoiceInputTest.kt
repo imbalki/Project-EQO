@@ -4,7 +4,14 @@ package ai.eqo.task
 import ai.eqo.R
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
+import android.content.pm.ServiceInfo
+import android.os.Bundle
+import android.os.Looper
+import android.speech.RecognitionService
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.widget.Button
@@ -20,11 +27,72 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowAlertDialog
+import org.robolectric.shadows.ShadowSpeechRecognizer
 import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
 class TaskVoiceInputTest {
+    private fun installRecognizer(activity: Activity) {
+        val service = ServiceInfo().apply {
+            packageName = "test.speech"
+            name = "test.speech.RecognitionService"
+        }
+        shadowOf(activity.packageManager).addResolveInfoForIntent(
+            Intent(RecognitionService.SERVICE_INTERFACE),
+            ResolveInfo().apply { serviceInfo = service },
+        )
+    }
+
+    @Test
+    fun micShowsRationaleBeforePermissionAndDenialKeepsTypingWorking() {
+        val controller = Robolectric.buildActivity(Activity::class.java).setup()
+        val activity = controller.get()
+        activity.setContentView(R.layout.task_screen)
+        installRecognizer(activity)
+        val voice = TaskVoiceInput(activity)
+        assertNull(shadowOf(activity).lastRequestedPermission)
+        activity.findViewById<Button>(R.id.task_voice_button).performClick()
+        assertNull(shadowOf(activity).lastRequestedPermission)
+        ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(TaskVoiceInput.REQUEST_CODE, shadowOf(activity).lastRequestedPermission.requestCode)
+        voice.onPermissionResult(TaskVoiceInput.REQUEST_CODE)
+        assertEquals(activity.getString(R.string.voice_not_allowed), activity.findViewById<TextView>(R.id.task_voice_state).text)
+        assertTrue(activity.findViewById<EditText>(R.id.task_request).isEnabled)
+        voice.close()
+        controller.pause().stop().destroy()
+    }
+
+    @Test
+    fun speechResultFillsEditableBoxWithoutClickingTaskButtonAndCleansUp() {
+        val controller = Robolectric.buildActivity(Activity::class.java).setup()
+        val activity = controller.get()
+        activity.setContentView(R.layout.task_screen)
+        installRecognizer(activity)
+        shadowOf(activity.application).grantPermissions(Manifest.permission.RECORD_AUDIO)
+        var submitted = false
+        activity.findViewById<Button>(R.id.task_start_button).setOnClickListener { submitted = true }
+        val voice = TaskVoiceInput(activity)
+        activity.findViewById<Button>(R.id.task_voice_button).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        val speech = shadowOf(ShadowSpeechRecognizer.getLatestSpeechRecognizer())
+        speech.triggerOnResults(
+            Bundle().apply { putStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION, arrayListOf("Open notes")) },
+        )
+        assertEquals("Open notes", activity.findViewById<EditText>(R.id.task_request).text.toString())
+        assertFalse(submitted)
+        assertTrue(speech.isDestroyed)
+        activity.findViewById<EditText>(R.id.task_request).setText("Edited request")
+        speech.triggerOnResults(
+            Bundle().apply { putStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION, arrayListOf("late text")) },
+        )
+        assertEquals("Edited request", activity.findViewById<EditText>(R.id.task_request).text.toString())
+        voice.close()
+        controller.pause().stop().destroy()
+    }
+
     @Test
     fun intentUsesDeviceLanguageAndDoesNotRequestAudioOutput() {
         val intent = TaskVoiceInput.recognitionIntent()

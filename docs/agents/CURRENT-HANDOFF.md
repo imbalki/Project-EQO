@@ -5,6 +5,13 @@ Last updated: 2026-10-07. Update this file in the same PR as every merge to `mai
 ## Goal
 EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-key, accessibility automation, wireless-ADB helper, Chrome control, guided setup, approvals, Pause/Stop/takeover). Owner is non-technical: plain language, real command output, say what was not tested.
 
+## Voice input (t_e9ef0f95, local branch `feat/voice-input`)
+- Implemented: Mic beside the request box; Android speech recognition in the device language fills only the editable draft. It never submits a task or invokes the planner. The normal task button, preview and approval paths are unchanged. Accessibility, takeover and own-window guards are not changed.
+- Microphone permission is requested only after Mic and a plain-language rationale. Denial and missing recognizer leave typing working. Listening/no-match/permission/error states have plain copy. EQO does not save audio or log words; logs contain only start/stop/error class. The rationale discloses that the phone's speech provider may process audio remotely. Recognition is cancelled/destroyed when leaving the screen, and stale callbacks are ignored.
+- Verified without Gradle: compiled the actual presenter and its tests with cached Kotlin 2.4.0 and ran JUnit 4.13.2: `OK (6 tests)`, exit 0. Added Android/Robolectric tests for the speech intent, rationale-before-permission, denial, unavailable recognizer, draft-only results and cleanup; these have NOT run yet.
+- Verification blocked: other worktrees have running Gradle wrappers. Two five-minute waits both exited 1 (still busy); no concurrent Gradle was started and no other worker process was stopped. Required next check from `android/`: `./gradlew ktlintCheck detekt testDebugUnitTest assembleDebug --max-workers=2` (or module-scoped checks if slow). A standalone ktlint CLI attempt also exited 1 because the cached CLI lacks its Clikt dependency; it is NOT a passing lint result.
+- NOT TESTED ON PHONE: permission prompts, actual speech accuracy/device language, service absence, provider network failures and lifecycle/background cancellation. Local commits only; lead owns push/PR. Card is not complete until Android checks and review are finished.
+
 ## Owner rules (do not break)
 - Never commit to `main`; branch + PR; merge only when CI is green and review + security passed; show repo, branch, exact commit, base `main`, versions before merging (`gh pr merge --match-head-commit`).
 - Never type, read or ask for API keys. The owner pastes his OpenRouter key into the app himself. Do not read app shared_prefs.
