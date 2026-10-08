@@ -96,6 +96,8 @@ object RegistryPlanVocabulary {
                             !validType(definition, value)
                         ) {
                             add("${action.name}: invalid ${definition.name} (${definition.type})")
+                        } else if (definition.name == AttachmentSpec.PARAM) {
+                            AttachmentSpec.errors(value).forEach { add("${action.name}: $it") }
                         }
                     }
                 }
