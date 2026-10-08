@@ -194,4 +194,17 @@ class ActionSchemaTest {
         assertEquals("wifi_password", params["key"])
         assertEquals("secret123", params["secret"])
     }
+
+    @Test
+    fun `share actions are registered as sensitive communication with a closed via choice`() {
+        listOf("SHARE_CONTACT", "SHARE_LOCATION").forEach { name ->
+            val action = ActionSchema.getAction(name)!!
+            assertEquals(ActionRisk.SENSITIVE, ActionSchema.riskForAction(name))
+            assertFalse(ActionSchema.isNeverAutoApprove(name))
+            assertEquals(listOf("whatsapp", "sms", "email"), action.params.first { it.name == "via" }.enumValues)
+            assertTrue(action.params.filter { it.name != "via" }.all { it.required })
+        }
+        val (missing, _) = ActionSchema.validateParams("SHARE_LOCATION", mapOf("to" to "Sam", "via" to "pigeon"))
+        assertTrue(missing is ActionSchema.ValidationResult.MissingParams)
+    }
 }
