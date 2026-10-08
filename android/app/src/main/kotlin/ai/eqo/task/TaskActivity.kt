@@ -601,9 +601,11 @@ class TaskActivity : Activity() {
                         val steps =
                             ai.eqo.core.agent.RegistryPlanVocabulary
                                 .parse(json, portedActions.enabledActionNames)
-                        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(steps))
-                    } catch (failure: IllegalArgumentException) {
-                        android.util.Log.w("EqoRun", "debug plan rejected: ${failure.message}")
+                        if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
+                    } catch (failure: ai.eqo.actions.impl.RecipientPreparationException) {
+                        findViewById<TextView>(R.id.task_state).text = failure.message
+                    } catch (_: IllegalArgumentException) {
+                        android.util.Log.w("EqoRun", "debug plan rejected")
                     }
                 }
             }
@@ -659,8 +661,7 @@ class TaskActivity : Activity() {
                 }
             if (!isFinishing && !isDestroyed) {
                 when (result) {
-                    is MissingAppFallback.Result.Ready ->
-                        showPreparedPlan(ApprovedTaskPlan(result.steps), result.missing)
+                    is MissingAppFallback.Result.Ready -> prepareAndShowPlan(result.steps, result.missing)
                     is MissingAppFallback.Result.Stopped ->
                         findViewById<TextView>(R.id.task_state).text = result.message
                 }
@@ -678,8 +679,10 @@ class TaskActivity : Activity() {
             // Error category only (never the message, request or key).
             android.util.Log.w("EqoRun", "planner llm error=${failure.error} cause=${failure.causeClass}")
             findViewById<TextView>(R.id.task_state).setText(planningError(failure))
+        } catch (failure: ai.eqo.actions.impl.RecipientPreparationException) {
+            findViewById<TextView>(R.id.task_state).text = failure.message
         } catch (failure: IllegalArgumentException) {
-            android.util.Log.w("EqoRun", "planner_rejected")
+            android.util.Log.w("EqoRun", "planner rejected")
             findViewById<TextView>(R.id.task_state).text =
                 getString(R.string.task_plan_rejected_detail, failure.message.orEmpty())
         } catch (_: Exception) {
@@ -693,11 +696,18 @@ class TaskActivity : Activity() {
         }
     }
 
-    private fun showPlan(plan: ApprovedTaskPlan) = showPreparedPlan(plan, emptyList())
+    private suspend fun prepareAndShowPlan(
+        steps: List<ai.eqo.core.agent.LoopStep>,
+        missing: List<String> = emptyList(),
+    ) {
+        val prepared = portedActions.prepareRecipients(steps)
+        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing)
+    }
 
-    private fun showPreparedPlan(
+    private fun showPlan(
         plan: ApprovedTaskPlan,
-        missing: List<String>,
+        recipientNames: Map<String, String> = emptyMap(),
+        missing: List<String> = emptyList(),
     ) {
         val steps = plan.steps()
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
@@ -709,7 +719,8 @@ class TaskActivity : Activity() {
                     .escape(missing.joinToString(", ")) +
                     " is not installed on this phone, so this plan uses Chrome instead.\n\n"
             }
-        val preview = notice + TaskPlanPreview.describe(steps)
+        val preview = notice + TaskPlanPreview.describe(steps, recipientNames)
+        // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
         if (!PlanApprovalSettings.required(this)) {
             startRun(plan)

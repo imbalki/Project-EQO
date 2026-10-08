@@ -186,11 +186,15 @@ class ApprovedTaskPlan(
 }
 
 object TaskPlanPreview {
-    fun describe(steps: List<LoopStep>): String =
+    fun describe(
+        steps: List<LoopStep>,
+        recipientNames: Map<String, String> = emptyMap(),
+    ): String =
         "EQO will:\n" +
             steps
                 .mapIndexed { index, step ->
-                    "${index + 1}. ${describe(step)}"
+                    "${index + 1}. ${describe(step)}" +
+                        recipientNames[step.stepId]?.let { " (contact: ${TaskDisplayText.escape(it)})" }.orEmpty()
                 }.joinToString("\n")
 
     private fun quote(value: String): String = "\"" + TaskDisplayText.escape(value).replace("\"", "\\\"") + "\""

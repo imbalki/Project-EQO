@@ -26,7 +26,7 @@ class NaturalTaskFlowTest {
     @Test fun smsAndEmailUseOnlySendToWithEncodedRecipientsAndBody() {
         val intents = mutableListOf<Intent>()
         assertTrue(SmsDraftOpener { intents.add(it) }.open("+123", "hello"))
-        assertTrue(EmailDraftOpener { intents.add(it) }.open("owner@example.invalid", "A & B", "hello? & body"))
+        assertTrue(EmailDraftOpener { intents.add(it) }.open("a@example.com", "A & B", "hello? & body"))
         assertTrue(intents.all { it.action == Intent.ACTION_SENDTO })
         assertEquals("smsto", intents[0].data!!.scheme)
         assertEquals("+123", intents[0].data!!.schemeSpecificPart)
@@ -84,7 +84,7 @@ class NaturalTaskFlowTest {
         val activity = Robolectric.buildActivity(TaskActivity::class.java).setup().get()
         assertEquals("What should EQO do?", activity.findViewById<EditText>(R.id.task_request).hint.toString())
         assertEquals("Plan", activity.getString(R.string.task_start))
-        assertTrue(activity.getString(R.string.task_recipient_limit).contains("cannot read contacts"))
+        assertTrue(activity.getString(R.string.task_recipient_limit).contains("only when a plan uses a name"))
         assertEquals(0, activity.findViewById<android.widget.LinearLayout>(R.id.task_steps_container).childCount)
     }
 
@@ -94,9 +94,9 @@ class NaturalTaskFlowTest {
         val raw = "hello\u202E\u2066\u200F\uFEFF"
         val action = ExecutedAction("compose_sms", mapOf("to" to "", "body" to raw))
         val plan = ApprovedTaskPlan(listOf(LoopStep("1", action)))
-        val show = TaskActivity::class.java.getDeclaredMethod("showPlan", ApprovedTaskPlan::class.java)
+        val show = TaskActivity::class.java.getDeclaredMethod("showPlan", ApprovedTaskPlan::class.java, Map::class.java)
         show.isAccessible = true
-        show.invoke(activity, plan)
+        show.invoke(activity, plan, emptyMap<String, String>())
         val preview = activity.findViewById<android.widget.TextView>(R.id.task_preview).text.toString()
         val dialog =
             org.robolectric.shadows.ShadowAlertDialog
@@ -118,6 +118,34 @@ class NaturalTaskFlowTest {
                 .single()
                 .action.params["body"],
         )
+        dialog.dismiss()
+        lifecycle.pause().stop().destroy()
+    }
+
+    @Test fun resolvedContactIsVisibleInApprovalButNeverLoggedEvenInDebug() {
+        val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
+        val activity = lifecycle.get()
+        val phone = "+15551234567"
+        val plan =
+            ApprovedTaskPlan(
+                listOf(LoopStep("sms", ExecutedAction("SEND_SMS", mapOf("contact" to phone, "message" to "hello")))),
+            )
+        activity.applicationInfo.flags =
+            activity.applicationInfo.flags or android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE
+        val show = TaskActivity::class.java.getDeclaredMethod("showPlan", ApprovedTaskPlan::class.java, Map::class.java)
+        show.isAccessible = true
+        show.invoke(activity, plan, mapOf("sms" to "Balan Kumar"))
+        val preview = activity.findViewById<android.widget.TextView>(R.id.task_preview).text.toString()
+        val dialog =
+            org.robolectric.shadows.ShadowAlertDialog
+                .getLatestAlertDialog()
+        assertTrue(preview.contains("Balan Kumar"))
+        assertTrue(preview.contains(phone))
+        assertEquals(preview, dialog.findViewById<android.widget.TextView>(android.R.id.message).text.toString())
+        org.robolectric.shadows.ShadowLog.getLogs().forEach {
+            assertFalse(it.msg.contains("Balan"))
+            assertFalse(it.msg.contains(phone))
+        }
         dialog.dismiss()
         lifecycle.pause().stop().destroy()
     }
