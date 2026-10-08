@@ -82,7 +82,7 @@ class EQOAccessibilityService :
      */
     fun isSecureWindowActive(): Boolean = windows.any { it.isActive && isSecureWindow(it) }
 
-    private fun isSecureWindow(window: android.view.accessibility.AccessibilityWindowInfo): Boolean =
+    internal fun isSecureWindow(window: android.view.accessibility.AccessibilityWindowInfo): Boolean =
         try {
             val isSecure = android.view.accessibility.AccessibilityWindowInfo::class.java.getMethod("isSecure")
             isSecure.invoke(window) == true
@@ -405,6 +405,27 @@ class EQOAccessibilityService :
                 continuation.resume(null)
             }
         }
+
+    /** Same Android capture/refusal path as saved screenshots, but never creates a file or history entry. */
+    suspend fun captureVisionFrame(stillAllowed: () -> Boolean): ai.eqo.core.agent.VisionFrame? {
+        if (!automation.screenshotGate().isSuccess || !stillAllowed()) return null
+        val bitmap = captureBitmap() ?: return null
+        return try {
+            if (!automation.screenshotGate().isSuccess || !stillAllowed()) {
+                null
+            } else {
+                val output = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, output)
+                ai.eqo.core.agent.VisionFrame(
+                    Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP),
+                    bitmap.width,
+                    bitmap.height,
+                )
+            }
+        } finally {
+            bitmap.recycle()
+        }
+    }
 
     suspend fun takeScreenshotAndEncode(): String? {
         return suspendCoroutine { continuation ->

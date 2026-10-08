@@ -122,7 +122,8 @@ class TaskRunService : Service() {
             StudyActionExecutor(
                 EqoAutomationPort({ EQOAccessibilityService.getInstance()?.automation }, { _, _ -> false }),
                 plan,
-                registry::execute,
+                approvedTextExecute = VisionLocateRuntime(applicationContext, plan)::execute,
+                registryExecute = registry::execute,
             )
         TaskRunSession.receipt = null
         TaskRunSession.progress.clear()
@@ -158,7 +159,11 @@ class TaskRunService : Service() {
                     TaskRunSession.progress[it.stepId] = it
                     TaskRunSession.changed()
                 },
-                config = ActionLoop.Config(),
+                config =
+                    ActionLoop.Config(
+                        actionTimeoutOverridesMs =
+                            if (plan.visionAllowed) VisionLocateRuntime.VERBS.associateWith { 60_000L } else emptyMap(),
+                    ),
             )
         TaskRunSession.controller = controller
         launchRun(controller)

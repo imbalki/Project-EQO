@@ -58,6 +58,7 @@ data class OpenRouterModel(
     val contextLength: Long?,
     val inputPrice: String?,
     val outputPrice: String?,
+    val acceptsImages: Boolean = false,
 ) {
     val provider: String get() = id.substringBefore('/')
 }
@@ -94,6 +95,10 @@ object OpenRouterModelCatalog {
                     contextLength = text(obj, "context_length")?.toLongOrNull()?.takeIf { it > 0 },
                     inputPrice = pricing?.let { text(it, "prompt") },
                     outputPrice = pricing?.let { text(it, "completion") },
+                    acceptsImages =
+                        obj.get("architecture")?.takeIf { it.isJsonObject }?.asJsonObject
+                            ?.get("input_modalities")?.takeIf { it.isJsonArray }?.asJsonArray
+                            ?.any { it.isJsonPrimitive && it.asJsonPrimitive.isString && it.asString == "image" } == true,
                 )
             }.distinctBy { it.id }
             .toList()

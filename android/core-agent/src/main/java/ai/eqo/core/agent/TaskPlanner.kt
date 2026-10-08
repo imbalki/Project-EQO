@@ -136,6 +136,8 @@ private data class PlannerStep(
 /** Immutable preview snapshot, passed to execution only by UI approval. Equality includes verb, params and flags. */
 class ApprovedTaskPlan(
     steps: List<LoopStep>,
+    /** Captured at preview time; switching a setting later cannot grant screenshot consent to this run. */
+    val visionAllowed: Boolean = false,
 ) {
     private val approved =
         steps.map {
@@ -189,6 +191,7 @@ object TaskPlanPreview {
     fun describe(
         steps: List<LoopStep>,
         recipientNames: Map<String, String> = emptyMap(),
+        visionAllowed: Boolean = false,
     ): String =
         "EQO will:\n" +
             steps
@@ -200,7 +203,12 @@ object TaskPlanPreview {
                             describe(step)
                         }
                     "${index + 1}. $description" +
-                        recipientNames[step.stepId]?.let { " (contact: ${TaskDisplayText.escape(it)})" }.orEmpty()
+                        recipientNames[step.stepId]?.let { " (contact: ${TaskDisplayText.escape(it)})" }.orEmpty() +
+                        if (visionAllowed && step.action.name in setOf("tap_text", "type_text", "CLICK_TEXT", "TYPE_TEXT")) {
+                            "; if screen control cannot find this control, EQO may send one screen image to your AI provider to locate it"
+                        } else {
+                            ""
+                        }
                 }.joinToString("\n")
 
     private fun shareRoute(via: String?): String =

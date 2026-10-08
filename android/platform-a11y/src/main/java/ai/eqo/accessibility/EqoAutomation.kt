@@ -142,6 +142,8 @@ class EqoAutomation(
                 isSecureWindow() -> A11yResult.failure(A11yError.SecureWindow)
                 ownWindowBlocked("screenshot") != null ->
                     A11yResult.failure(A11yError.ActionRejected("screenshot of EQO's own window"))
+                rootProvider()?.let { NodeTreeSearch.findFirst(it) { node -> node.isPassword } } != null ->
+                    A11yResult.failure(A11yError.ActionRejected("screenshot with a password field"))
                 else -> A11yResult.success("A screenshot may be taken.")
             }
         }

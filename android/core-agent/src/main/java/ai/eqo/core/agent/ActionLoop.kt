@@ -70,6 +70,8 @@ class ActionLoop(
         val delayAfterLastStep: Boolean = true,
         val maxAttemptsReversible: Int = 2,
         val maxAttemptsIrreversible: Int = 1,
+        /** Only approved text locates need a provider wait; other actions retain their normal hard bound. */
+        val actionTimeoutOverridesMs: Map<String, Long> = emptyMap(),
     )
 
     private sealed interface Command
@@ -335,7 +337,7 @@ class ActionLoop(
                                 cancelledMidApply = true
                             }
                         command is CmdPause || command is CmdTakeover -> enqueue(command)
-                        waitedMs >= config.actionTimeoutMs -> {
+                        waitedMs >= (config.actionTimeoutOverridesMs[step.action.name] ?: config.actionTimeoutMs) -> {
                             job.cancel()
                             timedOut = true
                         }
@@ -346,7 +348,7 @@ class ActionLoop(
                 } catch (e: CancellationException) {
                     when {
                         timedOut ->
-                            ExecuteResult.Interrupted("apply timed out mid-apply after ${config.actionTimeoutMs}ms")
+                            ExecuteResult.Interrupted("apply timed out mid-apply")
                         cancelledMidApply ->
                             ExecuteResult.Interrupted("apply cancelled mid-apply by the user; effect unknown")
                         else -> throw e

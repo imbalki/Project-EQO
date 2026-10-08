@@ -228,6 +228,7 @@ interface StudyAutomationPort :
 class StudyActionExecutor(
     private val port: StudyAutomationPort,
     private val approvedPlan: ai.eqo.core.agent.ApprovedTaskPlan? = null,
+    private val approvedTextExecute: (suspend (LoopStep) -> ExecuteResult?)? = null,
     private val registryExecute: (suspend (String, Map<String, String>) -> ai.eqo.actions.base.ActionResult)? = null,
 ) {
     private val handlers: Map<String, suspend (Map<String, String>) -> Boolean> =
@@ -261,7 +262,8 @@ class StudyActionExecutor(
         return if (approvedPlan != null && !approvedPlan.permits(step)) {
             ExecuteResult.Failure("Step was not approved")
         } else {
-            dispatch(step.action, step.stepId)
+            val textResult = if (approvedPlan != null) approvedTextExecute?.invoke(step) else null
+            textResult ?: dispatch(step.action, step.stepId)
         }
     }
 

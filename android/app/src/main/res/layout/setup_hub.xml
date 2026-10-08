@@ -129,6 +129,19 @@
             android:text="@string/notices_button"
             android:minHeight="52dp" />
         <CheckBox
+            android:id="@+id/vision_locate"
+            android:textSize="@dimen/study_text_body"
+            android:textColor="@color/study_text_primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:text="@string/vision_locate_setting" />
+        <TextView
+            style="@style/StudyBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/vision_locate_explanation" />
+        <CheckBox
             android:id="@+id/require_plan_approval"
             android:textSize="@dimen/study_text_body"
             android:textColor="@color/study_text_primary"

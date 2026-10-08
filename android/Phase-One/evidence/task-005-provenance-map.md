@@ -1,5 +1,15 @@
 # TASK-005 per-file provenance map
 
+## Vision locate additions (t_cfbe3719)
+
+| :core-llm | `android/core-llm/src/main/java/ai/eqo/core/llm/VisionControlLocator.kt` | EQO-NEW | `ai.eqo.core.llm` | Single approved label/image request and strict bounding-box parser |
+| :core-llm | `android/core-llm/src/test/java/ai/eqo/core/llm/VisionControlLocatorTest.kt` | EQO-NEW | `ai.eqo.core.llm` | Offline request, prompt-injection and image-capability regressions |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/VisionLocateRun.kt` | EQO-NEW | `ai.eqo.core.agent` | Per-run six-attempt memory-only locate policy and live geometry checks |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/VisionLocateRunTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Fake screen/model privacy, cap, geometry and unchanged-screen regressions |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/AndroidVisionLocateScreen.kt` | EQO-NEW | `ai.eqo.accessibility` | Visible-window/password inspection and takeover-gated gesture reuse |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VisionLocateRuntime.kt` | EQO-NEW | `ai.eqo.task` | Default-off settings and immutable approved-plan provider/Android wiring |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VisionLocateRuntimeTest.kt` | EQO-NEW | `ai.eqo.task` | Offline approval, accessibility-first, unchanged text and settings regressions |
+
 ## One-step pairing additions (t_681e8ea6)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WirelessDiscoveryState.kt` | EQO-NEW | `ai.eqo.onboarding` | Local Wi-Fi endpoint eligibility and strict notification code parsing |

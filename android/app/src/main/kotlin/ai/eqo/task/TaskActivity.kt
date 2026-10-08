@@ -728,7 +728,9 @@ class TaskActivity : Activity() {
         missing: List<String> = emptyList(),
     ) {
         val prepared = portedActions.prepareRecipients(steps)
-        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing)
+        if (!isFinishing && !isDestroyed) {
+            showPlan(ApprovedTaskPlan(prepared.steps, visionAllowed = VisionLocateSettings.enabled(this)), prepared.names, missing)
+        }
     }
 
     private fun showPlan(
@@ -746,10 +748,10 @@ class TaskActivity : Activity() {
                     .escape(missing.joinToString(", ")) +
                     " is not installed on this phone, so this plan uses Chrome instead.\n\n"
             }
-        val preview = notice + TaskPlanPreview.describe(steps, recipientNames)
+        val preview = notice + TaskPlanPreview.describe(steps, recipientNames, visionAllowed = plan.visionAllowed)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
-        if (!PlanApprovalSettings.requiredFor(this, steps)) {
+        if (!plan.visionAllowed && !PlanApprovalSettings.requiredFor(this, steps)) {
             startRun(plan)
             return
         }
