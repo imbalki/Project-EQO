@@ -94,7 +94,7 @@ class TaskActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        voiceInput?.resume()
+        voiceInput?.refreshAvailability()
         actionPermissions.onResume()
     }
 

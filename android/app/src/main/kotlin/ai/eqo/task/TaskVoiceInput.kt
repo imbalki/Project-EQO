@@ -51,7 +51,7 @@ internal class TaskVoiceInput(private val activity: Activity) {
         }
     }
 
-    fun resume() {
+    fun refreshAvailability() {
         resumed = true
         pendingGrant?.let { presenter.permissionResult(it) }
         pendingGrant = null
