@@ -218,6 +218,7 @@ object TaskPlanPreview {
             quote(params["contact"].orEmpty()) +
             "; this rings a real person (no automatic retry)"
 
+    @Suppress("CyclomaticComplexMethod")
     private fun describe(step: LoopStep): String {
         val p = step.action.params
         val recipient = TaskDisplayText.escape(p["to"].orEmpty().ifBlank { "a recipient you fill in" })
