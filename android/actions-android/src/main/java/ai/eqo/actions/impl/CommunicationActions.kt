@@ -62,8 +62,6 @@ internal class CommunicationActions constructor(
     private val automation: () -> ai.eqo.accessibility.EqoAutomation? = { null },
     private val locationSource: LocationSource = AndroidLocationSource(),
 ) {
-    private val json = Json { ignoreUnknownKeys = true }
-
     /** SHARE_CONTACT / SHARE_LOCATION reuse the WhatsApp, SMS and email routes below unchanged. */
     private val shareRoutes =
         object : ShareRoutes {
