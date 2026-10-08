@@ -277,7 +277,7 @@ class AndroidActionRegistry internal constructor(
             return AndroidActionRegistry(
                 context,
                 listOf(
-                    CommunicationActions(contacts, calls, launcher, automation).getActions(),
+                    CommunicationActions(contacts, calls, launcher, automation = automation).getActions(),
                     AdvancedControlActions().getActions(),
                     SystemActions(launcher, permissions, automation, options.screenAnalyzer).getActions(),
                     CalendarActions(launcher, permissions, automation).getActions(),
