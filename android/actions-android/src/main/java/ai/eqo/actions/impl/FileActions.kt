@@ -4,6 +4,8 @@ package ai.eqo.actions.impl
 import ai.eqo.actions.base.Action
 import ai.eqo.actions.base.ActionResult
 import android.content.Context
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * LIST_FILES and FIND_FILES never change anything and never return file contents. A folder such as
@@ -14,6 +16,8 @@ internal class FileActions(
     private val browser: SharedFileBrowser,
 ) {
     fun getActions(): List<Action> = listOf(ListFilesAction(), FindFilesAction())
+
+    private suspend fun <T> onIo(block: () -> T): T = withContext(Dispatchers.IO) { block() }
 
     private fun show(result: BrowseResult): ActionResult =
         when (result) {
@@ -33,7 +37,7 @@ internal class FileActions(
             return if (usesWorkspace(folder)) {
                 StorageWorkspaceProvider.listFiles(context, folder)
             } else {
-                show(browser.list(folder))
+                show(onIo { browser.list(folder) })
             }
         }
     }
@@ -46,7 +50,7 @@ internal class FileActions(
             context: Context,
         ): ActionResult {
             requireRegistryExecution()?.let { return it }
-            return show(browser.find(params["query"].orEmpty(), params["folder"]))
+            return show(onIo { browser.find(params["query"].orEmpty(), params["folder"]) })
         }
     }
 
