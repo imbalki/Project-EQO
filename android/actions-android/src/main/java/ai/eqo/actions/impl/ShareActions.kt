@@ -159,9 +159,18 @@ internal class ShareActions(
         matches: List<Contact>,
     ): String = "More than one contact matches '${query.trim()}': ${names(matches)}. Nothing was sent."
 
-    private fun names(matches: List<Contact>): String = matches.map { it.name }.distinct().sorted().joinToString(", ")
+    private fun names(matches: List<Contact>): String =
+        matches
+            .map { it.name }
+            .distinct()
+            .sorted()
+            .joinToString(", ")
 
-    private fun viaOf(params: Map<String, String>): String? = params["via"]?.trim()?.lowercase(Locale.ROOT)?.takeIf { it in VIAS }
+    private fun viaOf(params: Map<String, String>): String? =
+        params["via"]
+            ?.trim()
+            ?.lowercase(Locale.ROOT)
+            ?.takeIf { it in VIAS }
 
     private inner class ShareContactAction : Action {
         override val name: String = "SHARE_CONTACT"
