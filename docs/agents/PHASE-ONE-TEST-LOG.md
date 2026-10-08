@@ -37,3 +37,12 @@ Merged to main 2026-10-07: #74 (65a884f), #77 (29bad15). Open: #78 parked, #81 a
 
 ## Not tested on a phone yet
 - Wireless pairing (#77), Chrome control (#78), notifications/macros/routines (#81), voice input.
+
+## One-step wireless pairing — t_681e8ea6
+
+NOT TESTED ON PHONE. Local-only branch `feat/one-step-pairing`; lead/owner owns device testing and publication.
+
+- Implemented: own-Wi-Fi/own-phone mDNS port discovery; 10-second manual fallback; bounded foreground discovery; EQO RemoteInput pairing-code reply; short numbered guidance and Developer options button.
+- Security: existing pinned connect/enrollment path retained. Reply runs only PAIR + CONNECT, never helper start/AUTHORIZE/BINDER_HEALTH or activation completion. Return to EQO and tap Connect again, then a human must tap Allow in EQO's existing protected consent dialog. No accessibility interaction with Settings or reading of its code.
+- Host verification is in progress; final command output and commit will be recorded here before review. Initial detekt found style issues; the initial unit run exposed the source guard that previously allowed only the activity to construct the pinned runner. The guard is being extended only for the isolated notification pairing service, with assertions that it cannot construct helper hooks or mark activation active.
+- Required phone checks: Android 11 and 13+ local mDNS announcements, reply with leading-zero code while the pairing dialog remains open, success followed by human helper authorization, wrong/expired code, revocation/key mismatch, notification permission denied/channel blocked, wireless debugging off, ten-second discovery timeout with manual ports, service lost/new dialog, Wi-Fi disconnected/switched, screen rotation and five-minute discovery expiry. No real codes, ports or device identifiers belong in this log.

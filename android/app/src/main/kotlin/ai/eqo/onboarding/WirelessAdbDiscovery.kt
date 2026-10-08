@@ -27,6 +27,7 @@ internal class WirelessAdbDiscovery(
     private var generation = 0
     private var closed = false
     private var wifi: Network? = null
+    private var defaultRoute: Network? = null
     private val timeout =
         Runnable {
             state.timeout()
@@ -43,12 +44,24 @@ internal class WirelessAdbDiscovery(
                 properties: android.net.LinkProperties,
             ) = refresh()
         }
+    private val defaultCallback =
+        object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) = refresh()
+
+            override fun onLost(network: Network) = refresh()
+
+            override fun onCapabilitiesChanged(
+                network: Network,
+                capabilities: NetworkCapabilities,
+            ) = refresh()
+        }
 
     fun start() {
         connectivity.registerNetworkCallback(
             NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(),
             callback,
         )
+        connectivity.registerDefaultNetworkCallback(defaultCallback)
         refresh()
     }
 
@@ -63,6 +76,10 @@ internal class WirelessAdbDiscovery(
                 }
             // Ambiguous simultaneous Wi-Fi networks fail closed to manual loopback ports.
             val network = candidates.singleOrNull()
+            // The old public NSD API cannot select a Network. Only start it when Wi-Fi
+            // is also the default route; never discover through cellular or a VPN.
+            val canScope = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+            val route = connectivity.activeNetwork
             val addresses =
                 network
                     ?.let { connectivity.getLinkProperties(it) }
@@ -70,16 +87,20 @@ internal class WirelessAdbDiscovery(
                     ?.mapNotNull { it.address.hostAddress }
                     ?.toSet()
                     .orEmpty()
-            if (wifi == network && state.networkId == network?.toString() && addresses == currentAddresses) return@post
+            val unchanged = wifi == network && addresses == currentAddresses && defaultRoute == route
+            if (unchanged && state.networkId == network?.toString()) return@post
             stopDiscovery()
             generation++
             wifi = network
+            defaultRoute = route
             currentAddresses = addresses
-            state.networkChanged(network?.toString(), addresses)
+            state.networkChanged(network?.toString(), addresses, force = true)
             changed()
             if (network != null) {
-                discover(WirelessDiscoveryState.PAIRING, network)
-                discover(WirelessDiscoveryState.CONNECT, network)
+                if (canScope || network == route) {
+                    discover(WirelessDiscoveryState.PAIRING, network)
+                    discover(WirelessDiscoveryState.CONNECT, network)
+                }
                 main.postDelayed(timeout, WirelessDiscoveryState.TIMEOUT_MS)
             }
         }
@@ -120,7 +141,9 @@ internal class WirelessAdbDiscovery(
                 override fun onServiceLost(info: NsdServiceInfo) {
                     main.post {
                         if (!closed && epoch == generation) {
-                            pending.removeAll { it.first.serviceName == info.serviceName && it.first.serviceType == info.serviceType }
+                            pending.removeAll {
+                                it.first.serviceName == info.serviceName && it.first.serviceType == info.serviceType
+                            }
                             state.lost(info.serviceType + info.serviceName)
                             lostServices.add(info.serviceType + info.serviceName)
                             changed()
@@ -159,8 +182,10 @@ internal class WirelessAdbDiscovery(
                 private fun finished(resolved: NsdServiceInfo?) {
                     main.post {
                         resolving = false
-                        if (!closed && epoch == generation && key !in lostServices && resolved != null) {
-                            val scopedNetwork = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) resolved.network else wifi
+                        val eligible = !closed && epoch == generation && key !in lostServices
+                        if (eligible && resolved != null) {
+                            val scopedNetwork =
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) resolved.network else wifi
                             state.found(
                                 key,
                                 resolved.serviceType,
@@ -193,6 +218,7 @@ internal class WirelessAdbDiscovery(
         generation++
         stopDiscovery()
         runCatching { connectivity.unregisterNetworkCallback(callback) }
+        runCatching { connectivity.unregisterNetworkCallback(defaultCallback) }
         state.networkChanged(null, emptySet())
         changed()
     }

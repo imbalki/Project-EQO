@@ -75,7 +75,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="wireless_link_repair">Needs re-pair. This phone no longer matches the pairing EQO recorded. Open Wireless debugging, tap Pair device with pairing code, and pair again.</string>
     <string name="wireless_adb_working">Working… keep the pairing dialog open.</string>
     <string name="wireless_adb_bad_input">Enter the six-digit code. Wait for EQO to find both ports, or fill in the fallback port boxes.</string>
-    <string name="wireless_wifi_needed">Wi-Fi needed. Connect this phone to Wi-Fi before pairing.</string>
+    <string name="wireless_wifi_needed">Wi-Fi needed. Connect this phone to Wi-Fi before pairing. On Android 11–12, turn off a VPN while finding ports.</string>
     <string name="wireless_developer_options">Open Developer options</string>
     <string name="wireless_discovery_start">Find ports / enable code notification</string>
     <string name="wireless_discovery_stop">Stop finding ports</string>

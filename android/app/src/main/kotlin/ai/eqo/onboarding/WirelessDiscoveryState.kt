@@ -1,12 +1,22 @@
 package ai.eqo.onboarding
 
+import ai.eqo.adb.pairing.ActivationCheck
+import ai.eqo.adb.pairing.ActivationReport
+import ai.eqo.adb.pairing.ActivationStepRunner
 import ai.eqo.adb.pairing.AdbPairingCode
+import ai.eqo.adb.pairing.CheckOutcome
+import ai.eqo.adb.pairing.CheckRecord
+import ai.eqo.adb.pairing.PairingInput
 import ai.eqo.adb.pairing.WirelessAdbEndpoints
 
 /** In-memory only. A service is eligible only when its address belongs to this phone's Wi-Fi. */
 internal class WirelessDiscoveryState {
     @Volatile
     var networkId: String? = null
+        private set
+
+    @Volatile
+    var revision = 0L
         private set
     private var localAddresses = emptySet<String>()
     private val services = linkedMapOf<String, Pair<String, Int>>()
@@ -15,17 +25,20 @@ internal class WirelessDiscoveryState {
 
     val pairingPort: Int? get() = uniquePort(PAIRING)
     val connectionPort: Int? get() = uniquePort(CONNECT)
-    val manualFallback: Boolean get() = timedOut && (pairingPort == null || connectionPort == null)
+    val manualFallback: Boolean get() = timedOut && endpoints() == null
 
     fun networkChanged(
         id: String?,
         addresses: Set<String>,
+        force: Boolean = false,
     ) {
-        if (networkId == id && localAddresses == addresses) return
+        val unchanged = networkId == id && localAddresses == addresses
+        if (!force && unchanged) return
         networkId = id
         localAddresses = addresses
         services.clear()
         timedOut = false
+        revision++
     }
 
     fun found(
@@ -35,10 +48,12 @@ internal class WirelessDiscoveryState {
         port: Int,
         network: String?,
     ): Boolean {
-        if (networkId == null || network != networkId || address !in localAddresses) return false
-        if (type != PAIRING && type != CONNECT) return false
-        if (port !in WirelessAdbEndpoints.PORT_MIN..WirelessAdbEndpoints.PORT_MAX) return false
-        services[name] = type to port
+        val local = networkId != null && network == networkId && address in localAddresses
+        val normalizedType = type.trimEnd('.') + "."
+        val adbType = normalizedType == PAIRING || normalizedType == CONNECT
+        val validPort = port in WirelessAdbEndpoints.PORT_MIN..WirelessAdbEndpoints.PORT_MAX
+        if (!local || !adbType || !validPort) return false
+        services[name] = normalizedType to port
         return true
     }
 
@@ -51,8 +66,9 @@ internal class WirelessDiscoveryState {
     }
 
     fun endpoints(): WirelessAdbEndpoints? {
-        val pair = pairingPort ?: return null
-        val connect = connectionPort ?: return null
+        val pair = pairingPort
+        val connect = connectionPort
+        if (pair == null || connect == null) return null
         return WirelessAdbEndpoints(pair, connect).takeUnless { it.isPortConfusion }
     }
 
@@ -73,6 +89,25 @@ internal class WirelessDiscoveryState {
 /** Strict six ASCII digits, including leading zeroes; no code is retained in a failed result. */
 internal fun notificationPairingCode(raw: CharSequence?): AdbPairingCode? =
     (AdbPairingCode.parse(raw?.toString().orEmpty()) as? AdbPairingCode.ParseResult.Ok)?.code
+
+/** Never invokes helper start or authorization, even on success. Uses one enrollment-owning runner. */
+internal fun pairNotificationReply(
+    runner: ActivationStepRunner,
+    input: PairingInput,
+    networkStillValid: () -> Boolean,
+): ActivationReport {
+    check(networkStillValid()) { "Wi-Fi changed" }
+    runner.pair(input.endpoints, input.code)
+    check(networkStillValid()) { "Wi-Fi changed" }
+    runner.connect(input.endpoints)
+    check(networkStillValid()) { "Wi-Fi changed" }
+    return ActivationReport(
+        listOf(
+            CheckRecord(ActivationCheck.PAIR, CheckOutcome.Passed),
+            CheckRecord(ActivationCheck.CONNECT, CheckOutcome.Passed),
+        ),
+    )
+}
 
 internal object WirelessPairingSession {
     var state = WirelessDiscoveryState()

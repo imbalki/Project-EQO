@@ -6,6 +6,7 @@
 | :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WirelessAdbDiscovery.kt` | EQO-NEW | `ai.eqo.onboarding` | NsdManager local-phone discovery and timeout fallback |
 | :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WirelessPairingService.kt` | EQO-NEW | `ai.eqo.onboarding` | Bounded foreground discovery and user notification reply; no helper consent |
 | :app | `android/app/src/test/kotlin/ai/eqo/onboarding/WirelessDiscoveryStateTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Synthetic discovery and notification code regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/WirelessPairingNotificationTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Android RemoteInput envelope consumption and explicit notification routing regressions |
 
 ## Missing-app preflight additions
 

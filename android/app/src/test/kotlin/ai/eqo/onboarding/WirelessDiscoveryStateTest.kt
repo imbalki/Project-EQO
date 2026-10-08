@@ -1,12 +1,41 @@
 package ai.eqo.onboarding
 
+import ai.eqo.adb.pairing.ActivationStepRunner
+import ai.eqo.adb.pairing.AdbPairingCode
+import ai.eqo.adb.pairing.PairingInput
+import ai.eqo.adb.pairing.WirelessAdbEndpoints
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WirelessDiscoveryStateTest {
+    private class FakeRunner(
+        private val afterPair: () -> Unit = {},
+    ) : ActivationStepRunner {
+        val calls = mutableListOf<String>()
+
+        override fun pair(
+            endpoints: WirelessAdbEndpoints,
+            code: AdbPairingCode,
+        ) {
+            calls.add("pair")
+            afterPair()
+        }
+
+        override fun connect(endpoints: WirelessAdbEndpoints) {
+            calls.add("connect")
+        }
+
+        override fun startHelper(): Unit = error("Notification must not start helper")
+
+        override fun authorizeHelper(): Unit = error("Notification must not approve consent")
+
+        override fun checkBinder(): Unit = error("Notification must not bypass activity")
+    }
+
     private val address = "192.0.2.1"
     private val network = "test-wifi"
 
@@ -93,4 +122,37 @@ class WirelessDiscoveryStateTest {
             assertNull(notificationPairingCode(it))
         }
     }
+
+    @Test
+    fun notificationPairsAndConnectsWithSameRunnerButNeverAuthorizesHelper() {
+        val runner = FakeRunner()
+        val report = pairNotificationReply(runner, input()) { true }
+        assertFalse(report.allPassed)
+        assertEquals(2, report.records.size)
+        assertEquals(listOf("pair", "connect"), runner.calls)
+    }
+
+    @Test
+    fun notificationRejectsWifiLossBeforePairAndBeforeConnect() {
+        val noWifi = FakeRunner()
+        assertThrows(IllegalStateException::class.java) { pairNotificationReply(noWifi, input()) { false } }
+        assertTrue(noWifi.calls.isEmpty())
+        var wifi = true
+        val changedWifi = FakeRunner { wifi = false }
+        assertThrows(IllegalStateException::class.java) { pairNotificationReply(changedWifi, input()) { wifi } }
+        assertEquals(listOf("pair"), changedWifi.calls)
+    }
+
+    @Test
+    fun serviceTypeWithoutTrailingDotAndAddressRotationAreHandled() {
+        val state = state()
+        assertTrue(found(state, WirelessDiscoveryState.PAIRING.trimEnd('.'), 30_001))
+        assertEquals(30_001, state.pairingPort)
+        val revision = state.revision
+        state.networkChanged(network, setOf("192.0.2.3"))
+        assertTrue(state.revision > revision)
+        assertNull(state.pairingPort)
+    }
+
+    private fun input() = PairingInput(WirelessAdbEndpoints(30_001, 30_002), notificationPairingCode("001234")!!)
 }
