@@ -105,8 +105,10 @@ class RegistryPlannerTest {
                 """{"action":"SHARE_LOCATION","params":{"to":"Sam","via":"sms"}}]}"""
         val steps = RegistryPlanVocabulary.parse(plan, shared)
         val preview = TaskPlanPreview.describe(steps)
-        assertTrue(preview, preview.contains("send the saved phone number of \"Alex\" to \"Sam\" in a WhatsApp message (EQO presses Send)"))
-        assertTrue(preview, preview.contains("send your current location (a Google Maps link) to \"Sam\" in a text-message draft; you send it"))
+        val contactLine = "send the saved phone number of \"Alex\" to \"Sam\" in a WhatsApp message (EQO presses Send)"
+        val locationLine = "send your current location (a Google Maps link) to \"Sam\" in a text-message draft; you send it"
+        assertTrue(preview, preview.contains(contactLine))
+        assertTrue(preview, preview.contains(locationLine))
         assertThrows(IllegalArgumentException::class.java) {
             RegistryPlanVocabulary.parse(plan.replace("\"via\":\"sms\"", "\"via\":\"fax\""), shared)
         }
