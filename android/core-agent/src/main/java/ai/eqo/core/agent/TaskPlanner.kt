@@ -218,7 +218,22 @@ object TaskPlanPreview {
             quote(params["contact"].orEmpty()) +
             "; this rings a real person (no automatic retry)"
 
-    private fun describe(step: LoopStep): String {
+    private fun describe(step: LoopStep): String = describeShare(step) ?: describeStep(step)
+
+    /** Plain words for what a share step sends and to whom, shown before approval. */
+    private fun describeShare(step: LoopStep): String? {
+        val p = step.action.params
+        return when (step.action.name) {
+            "SHARE_CONTACT" ->
+                "send the saved phone number of ${quote(p["contact"].orEmpty())} " +
+                    "to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
+            "SHARE_LOCATION" ->
+                "send your current location (a Google Maps link) to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
+            else -> null
+        }
+    }
+
+    private fun describeStep(step: LoopStep): String {
         val p = step.action.params
         val recipient = TaskDisplayText.escape(p["to"].orEmpty().ifBlank { "a recipient you fill in" })
         return when (step.action.name) {
@@ -237,11 +252,6 @@ object TaskPlanPreview {
             "compose_email" -> "open an email draft to $recipient, subject ${quote(
                 p["subject"].orEmpty(),
             )}, body ${quote(p["body"].orEmpty())}; you send it"
-            "SHARE_CONTACT" ->
-                "send the saved phone number of ${quote(p["contact"].orEmpty())} " +
-                    "to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
-            "SHARE_LOCATION" ->
-                "send your current location (a Google Maps link) to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
             else -> {
                 val definition = requireNotNull(ActionSchema.getAction(step.action.name))
                 "${definition.name}: " + p.entries.joinToString(", ") { "${it.key}=${quote(it.value)}" }
