@@ -60,6 +60,33 @@ class EqoAutomation(
             tapTarget(text, byViewId = false)
         }
 
+    /** Exact content-description only, scoped to the active app. No substring or text-field fallback. */
+    fun tapContentDescription(
+        description: String,
+        packageName: String,
+    ): A11yResult =
+        runAction {
+            val root = rootProvider()
+            val target =
+                root?.takeIf { it.packageName?.toString() == packageName && !isSecureWindow() }?.let {
+                    NodeTreeSearch
+                        .findFirst(it) { node ->
+                            !node.isPassword &&
+                                node.contentDescription
+                                    ?.toString()
+                                    ?.trim()
+                                    .equals(description, ignoreCase = true) &&
+                                NodeTreeSearch.clickableSelfOrAncestor(node) != null
+                        }?.let(NodeTreeSearch::clickableSelfOrAncestor)
+                }
+            when {
+                isSecureWindow() -> A11yResult.failure(A11yError.SecureWindow)
+                target == null -> A11yResult.failure(A11yError.NodeNotFound(description))
+                target.click() -> A11yResult.success("clicked $description")
+                else -> A11yResult.failure(A11yError.ActionRejected(description))
+            }
+        }
+
     /** Taps the first clickable node with the resource id [viewId]. */
     fun tapById(viewId: String): A11yResult =
         runAction {

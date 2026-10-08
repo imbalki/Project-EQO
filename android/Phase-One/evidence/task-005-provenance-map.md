@@ -1,5 +1,10 @@
 # TASK-005 per-file provenance map
 
+## WhatsApp call additions (t_d3c58c41)
+
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/WhatsAppCallFlow.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO targeted WhatsApp chat deep link and single-attempt gated call |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/WhatsAppCallTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO registry and fake-tree call regressions; no real calls |
+
 ## TASK-077 additions (issue #20)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/TaskRunService.kt` | EQO-NEW | `ai.eqo.task` | EQO foreground run owner and UI snapshot |

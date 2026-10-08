@@ -81,6 +81,16 @@ class ForegroundPlanRunTest {
         assertFalse(PlanApprovalSettings.required(ApplicationProvider.getApplicationContext()))
     }
 
+    @Test fun whatsappCallRequiresPlanApprovalEvenWhenPreferenceIsOff() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        PlanApprovalSettings.setRequired(context, false)
+        val call = LoopStep("1", ExecutedAction("WHATSAPP_CALL", mapOf("contact" to "Alice"), irreversible = true))
+        val open = LoopStep("2", ExecutedAction("OPEN_APP", mapOf("appName" to "gmail")))
+        assertTrue(PlanApprovalSettings.requiredFor(context, listOf(call)))
+        assertTrue(PlanApprovalSettings.requiredFor(context, listOf(open, call)))
+        assertFalse(PlanApprovalSettings.requiredFor(context, listOf(open)))
+    }
+
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Test
     fun destroyRecreateKeepsControllerAndRegistryRunNeedsNoStepApproval() =

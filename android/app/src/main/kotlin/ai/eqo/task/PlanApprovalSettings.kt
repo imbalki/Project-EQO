@@ -8,6 +8,11 @@ object PlanApprovalSettings {
     fun required(context: Context): Boolean =
         context.getSharedPreferences("eqo_plan_settings", Context.MODE_PRIVATE).getBoolean("require_approval", true)
 
+    fun requiredFor(
+        context: Context,
+        steps: List<ai.eqo.core.agent.LoopStep>,
+    ): Boolean = required(context) || steps.any { it.action.name == "WHATSAPP_CALL" }
+
     fun setRequired(
         context: Context,
         required: Boolean,

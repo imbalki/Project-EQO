@@ -378,8 +378,28 @@ object ActionSchema {
                 name = "MAKE_CALL",
                 description = "Makes a phone call to a contact or number",
                 params = listOf(ParamDefinition("contact", ParamType.STRING, true, "Contact name or phone number")),
-                examples = listOf("call dad", "call mom", "call XXXXXXXXXX", "phone John"),
+                examples = listOf("call dad", "call mom", "call 9876543210", "phone John"),
                 category = ActionCategory.COMMUNICATION,
+            ),
+            ActionDefinition(
+                name = "WHATSAPP_CALL",
+                description =
+                    "Opens the requested WhatsApp chat and presses its call control, " +
+                        "without sending a message. Never retry.",
+                params =
+                    listOf(
+                        ParamDefinition("contact", ParamType.STRING, true, "Contact name or phone number"),
+                        ParamDefinition(
+                            "video",
+                            ParamType.BOOLEAN,
+                            false,
+                            "Video call instead of voice (default false)",
+                            defaultValue = false,
+                        ),
+                    ),
+                examples = listOf("call dad on WhatsApp", "video call mom on WhatsApp"),
+                category = ActionCategory.COMMUNICATION,
+                neverAutoApprove = true,
             ),
             ActionDefinition(
                 name = "SEND_WHATSAPP",
