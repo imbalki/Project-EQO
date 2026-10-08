@@ -1,5 +1,12 @@
 # TASK-005 per-file provenance map
 
+## Voice-input additions (t_e9ef0f95)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceInputPresenter.kt` | EQO-NEW | `ai.eqo.task` | Draft-only speech presentation, no submission capability |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskVoiceInput.kt` | EQO-NEW | `ai.eqo.task` | Just-in-time microphone permission and Android speech adapter |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceInputPresenterTest.kt` | EQO-NEW | `ai.eqo.task` | Fake voice result, permission, error and stale callback regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/TaskVoiceInputTest.kt` | EQO-NEW | `ai.eqo.task` | Android speech intent and error mapping regressions |
+
 ## Missing-app preflight additions
 
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/LaunchableAppResolver.kt` | EQO-NEW | `ai.eqo.actions.impl` | Local shared launchable-app resolution |

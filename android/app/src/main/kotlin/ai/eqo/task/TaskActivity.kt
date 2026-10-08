@@ -65,6 +65,7 @@ class TaskActivity : Activity() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var controller: StudyTaskController? = null
+    private var voiceInput: TaskVoiceInput? = null
     private var waitingPermission: String? = null
     private var displayedStatus = PlanStatus.PENDING
     private val actionPermissions by lazy {
@@ -87,6 +88,7 @@ class TaskActivity : Activity() {
         grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        voiceInput?.onPermissionResult(requestCode)
         actionPermissions.onRequestPermissionsResult(requestCode)
     }
 
@@ -98,6 +100,7 @@ class TaskActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.task_screen)
+        voiceInput = TaskVoiceInput(this)
         registerDebugPlanReceiver()
         val startButton = findViewById<Button>(R.id.task_start_button)
 
@@ -150,6 +153,7 @@ class TaskActivity : Activity() {
     }
 
     override fun onPause() {
+        voiceInput?.pause()
         actionPermissions.onPause()
         TakeoverDetector.shared.setControlTouchExclusion(null)
         super.onPause()
@@ -759,6 +763,7 @@ class TaskActivity : Activity() {
     private fun planningError(failure: LLMException): Int = RunStatusMapping.planning(failure.error, failure.timedOut)
 
     override fun onDestroy() {
+        voiceInput?.close()
         debugPlanReceiver?.let { unregisterReceiver(it) }
         TaskRunSession.observer = null
         TaskRunSession.permissionRequester = null
