@@ -59,8 +59,8 @@ internal class CommunicationActions constructor(
     private val contactResolver: ContactResolver,
     private val callFlowExecutor: CallFlowExecutor,
     private val launcher: GatedIntentLauncher,
-    private val automation: () -> ai.eqo.accessibility.EqoAutomation? = { null },
     private val locationSource: LocationSource = AndroidLocationSource(),
+    private val automation: () -> ai.eqo.accessibility.EqoAutomation? = { null },
 ) {
     /** SHARE_CONTACT / SHARE_LOCATION reuse the WhatsApp, SMS and email routes below unchanged. */
     private val shareRoutes =
