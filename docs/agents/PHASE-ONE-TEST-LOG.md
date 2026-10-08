@@ -3,6 +3,32 @@
 Device: Realme RM10, Android 11, serial <DEVICE_SERIAL>. Owner pastes his own OpenRouter key; it is never read or recorded here.
 Rule: start `adb logcat -s EqoRun EqoActions` into a file before the owner tests; record each test below with the build commit.
 
+## Vision locate — t_cfbe3719
+
+NOT TESTED ON PHONE. Local-only `feat/vision-locate`: implementation checkpoint `bc823fe` plus the branch tip named in the card handoff (base `5bc461e`, merge of main into files/attachments); the lead rebases onto `main` after the files/attachments branch merges. No real provider call, phone install, API key access, push or PR by this worker.
+
+Local verification (module-scoped, one module at a time, `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`, from `android/`):
+- `:core-llm:ktlintCheck :core-llm:detekt :core-llm:testDebugUnitTest` — exit 0.
+- `:core-agent:ktlintFormat :core-agent:ktlintCheck :core-agent:detekt :core-agent:testDebugUnitTest` — exit 0.
+- `:platform-a11y:ktlintCheck :platform-a11y:detekt :platform-a11y:testDebugUnitTest` — exit 0.
+- `:app:ktlintCheck :app:detekt :app:testDebugUnitTest :app:lintDebug` — exit 0 (`BUILD SUCCESSFUL in 9m 42s`, 343 tasks).
+- JUnit XML totals across the four touched modules: 680 tests, 0 failures, 0 errors, 1 skipped (core-llm 275/1 skipped existing, core-agent 117, platform-a11y 103, app 185). The skip is the pre-existing `ModelDownloadSchedulingTest` case recorded above.
+- Repo gate `bash scripts/check.sh` — exit 0 (`BRANDING GATE PASSED`, `kt files: 448; provenance rows: 448`); `git diff --check` exit 0.
+- Not run: any whole-repo `./gradlew` gate, `assembleDebug`, `connectedAndroidTest`, real device/provider tests, `hermes`/CI pipeline. Full CI remains the gate; this worker committed locally only, no push/PR.
+
+Two self-review tightening passes landed after the first checkpoint: (1) boxes overlapping another app's or a system window (keyboard/overlay) are now rejected, and an unidentified/missing window root or active-app mismatch fails closed; (2) a blank approved label is refused before any model/capture, and the entire provider wait runs inside the takeover-observed agent-action window while read-only privacy checks mint no touch grace.
+
+Phone checklist (owner/lead must record actual outcomes, not infer these from fakes):
+- Fresh install/update: setting is off. Confirm the explanation says one full-screen image goes to the configured provider and EQO saves neither it nor the reply; provider retention policy is separate. A text-only/unknown-metadata model must explain why vision is unavailable and send no image.
+- Zepto: test an ordinary labelled accessible control first (no vision request); then an approved search/button control absent from accessibility (one screenshot only after retries). For type_text, enter only the approved query into the actually focused field, not newly invented text. Failed or unchanged UI must stop, never tap again.
+- Flipkart in Chrome: approve the exact label and verify the preview line discloses possible vision. Test found and NOT_FOUND, page navigation during the model wait, orientation change, and an on-screen “ignore the task” instruction. No different label, app, new step or altered typed text is allowed.
+- App with unlabelled icons: ask for an exact approved label and observe a safe NOT_FOUND when the icon cannot be identified with confidence. Never substitute a neighbouring icon. Verify bounds are screenshot pixels at current display size, not guessed scaled coordinates.
+- Protected/banking-style screen and a screen with a visible password node (including another split-screen window or keyboard): capture refused, no request/image saved. Confirm Pictures/EQO, share staging and last_screenshot are unchanged by vision. Verify EQO/helper-approval windows cannot be tapped or uploaded, including split screen.
+- Turn the setting on after plan preview: the already-previewed run must not gain permission. Turn it off during metadata/provider wait: no not-yet-dispatched upload/tap. A vision-enabled plan always requires explicit plan approval even if normal approval is off.
+- Physical touch while AI is waiting: takeover latches; no stale tap. Pause/Stop follow existing current-step semantics. An EQO-dispatched gesture uses the existing self-touch grace without accidentally clearing takeover. Delayed callbacks/cancellation cannot launch another gesture.
+- Six requested locates across a run exhaust the cap, including refused ones. A seventh must capture/send/tap nothing. Check only fixed `vision locate: attempt N, result found/not-found/refused` diagnostics; never labels, image bytes, raw image replies or tree digests.
+
+
 ## 2026-10-06
 
 | Time (IST) | Build | Request / action | Result | Evidence | Follow-up |

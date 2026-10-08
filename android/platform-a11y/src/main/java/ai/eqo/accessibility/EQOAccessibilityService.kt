@@ -407,15 +407,16 @@ class EQOAccessibilityService :
         }
 
     /** Same Android capture/refusal path as saved screenshots, but never creates a file or history entry. */
+    @Suppress("ReturnCount") // Privacy gate before and after the asynchronous capture.
     suspend fun captureVisionFrame(stillAllowed: () -> Boolean): ai.eqo.core.agent.VisionFrame? {
-        if (!automation.screenshotGate().isSuccess || !stillAllowed()) return null
+        if (!automation.screenCaptureGate().isSuccess || !stillAllowed()) return null
         val bitmap = captureBitmap() ?: return null
         return try {
-            if (!automation.screenshotGate().isSuccess || !stillAllowed()) {
+            if (!automation.screenCaptureGate().isSuccess || !stillAllowed()) {
                 null
             } else {
                 val output = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, output)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, VISION_JPEG_QUALITY, output)
                 ai.eqo.core.agent.VisionFrame(
                     Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP),
                     bitmap.width,
@@ -478,6 +479,7 @@ class EQOAccessibilityService :
 
     companion object {
         private const val PNG_QUALITY = 100
+        private const val VISION_JPEG_QUALITY = 70
 
         @Volatile
         private var instance: EQOAccessibilityService? = null

@@ -136,8 +136,11 @@ class EqoAutomation(
      * detector has paused the loop, when the service is not bound, when the active window is secure
      * (FLAG_SECURE: banking, authenticator, password screens) and when EQO's own window is in front.
      */
-    fun screenshotGate(): A11yResult =
-        runAction {
+    fun screenshotGate(): A11yResult = runAction { screenCaptureGate() }
+
+    /** Live privacy check only: inspecting a screen is not a node mutation and must not mint touch grace. */
+    fun screenCaptureGate(): A11yResult =
+        currentGateFailure() ?: run {
             when {
                 isSecureWindow() -> A11yResult.failure(A11yError.SecureWindow)
                 ownWindowBlocked("screenshot") != null ->

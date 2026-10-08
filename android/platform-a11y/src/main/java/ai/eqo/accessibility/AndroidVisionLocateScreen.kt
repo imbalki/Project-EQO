@@ -13,47 +13,44 @@ import kotlinx.coroutines.delay
 import java.security.MessageDigest
 
 class AndroidVisionLocateScreen : VisionLocateScreen {
+    @Suppress("ReturnCount") // Fail closed at each live service/window boundary.
     override fun state(): VisionScreenState {
         val service = EQOAccessibilityService.getInstance() ?: return refused("Turn on EQO screen control first.")
-        if (!service.automation.screenshotGate().isSuccess) return refused("EQO cannot look at this protected screen, its own window, or a screen you have taken over.")
+        val gate = service.automation.screenCaptureGate()
+        if (!gate.isSuccess) {
+            return refused(
+                if ((gate as? A11yResult.Failure)?.error ==
+                    A11yError.ActionRejected("screenshot with a password field")
+                ) {
+                    "A password field is visible. EQO will not send this screen."
+                } else {
+                    "EQO cannot look at a protected screen, its own window, or a screen you have taken over."
+                },
+            )
+        }
         val active = service.rootInActiveWindow ?: return refused("EQO cannot check the current screen safely.")
         val app = active.packageName?.toString()
         active.recycle()
-        if (app == null || app == service.packageName) return refused("EQO cannot look at its own or an unknown window.")
+        if (app == null || app == service.packageName) {
+            return refused("EQO cannot look at its own or an unknown window.")
+        }
         val display = service.getSystemService(WindowManager::class.java).maximumWindowMetrics.bounds
         val windows = service.windows.sortedBy { it.id }
         val target = windows.firstOrNull { it.isActive } ?: return refused("EQO cannot check the active window.")
-        val own = mutableListOf<ControlBox>()
-        val digest = MessageDigest.getInstance("SHA-256")
+        val scan = WindowScan(app, target.id)
         var refusal: String? = null
         for (window in windows) {
-            if (service.isSecureWindow(window)) refusal = "This is a protected window. EQO will not send this screen."
-            val root = window.root
-            if (root == null) {
-                if (window.type == AccessibilityWindowInfo.TYPE_APPLICATION || window.isActive) {
-                    refusal = "EQO cannot check every visible app window safely."
-                }
-            } else {
-                if (root.packageName?.toString() == service.packageName) {
-                    val box = bounds(window)
-                    own += box
-                    // Keep the 1x1 takeover probe, but never send an EQO consent/key/approval surface.
-                    if (box.right - box.left > 1 || box.bottom - box.top > 1) {
-                        refusal = "EQO cannot send an image while its own window is visible."
-                    }
-                }
-                digest.update("${window.id}:${bounds(window)}".toByteArray())
-                inspectTree(root, digest)?.let { refusal = it }
-            }
+            inspectWindow(window, service, scan)?.let { refusal = it }
         }
         return VisionScreenState(
             display.width(),
             display.height(),
-            digest.digest().joinToString("") { "%02x".format(it) },
+            scan.digest.digest().joinToString("") { "%02x".format(it) },
             app,
             bounds(target),
-            own,
+            scan.own,
             refusal,
+            scan.others,
         )
     }
 
@@ -63,25 +60,27 @@ class AndroidVisionLocateScreen : VisionLocateScreen {
         return EQOAccessibilityService.getInstance()?.captureVisionFrame { state() == before }
     }
 
-    override fun tap(box: ControlBox, expected: VisionScreenState): Boolean {
+    override fun tap(
+        box: ControlBox,
+        expected: VisionScreenState,
+    ): Boolean {
         val service = EQOAccessibilityService.getInstance() ?: return false
-        return service.automation.runAction {
-            val live = state()
-            if (live != expected || live.refusal != null || !box.inside(live.width, live.height) ||
-                live.ownWindows.any(box::overlaps)
-            ) {
-                A11yResult.failure(A11yError.ActionRejected("vision locate"))
-            } else {
-                service.gatedActions.clickCoordinates(
-                    (box.left + box.right) / 2f,
-                    (box.top + box.bottom) / 2f,
-                )
-            }
-        }.isSuccess
+        return service.automation
+            .runAction {
+                val live = state()
+                if (live != expected || !safeBox(box, live)) {
+                    A11yResult.failure(A11yError.ActionRejected("vision locate"))
+                } else {
+                    service.gatedActions.clickCoordinates(
+                        (box.left + box.right) / 2f,
+                        (box.top + box.bottom) / 2f,
+                    )
+                }
+            }.isSuccess
     }
 
     override suspend fun settledState(): VisionScreenState {
-        delay(700)
+        delay(SETTLE_MS)
         return state()
     }
 
@@ -91,8 +90,56 @@ class AndroidVisionLocateScreen : VisionLocateScreen {
         return ControlBox(rect.left, rect.top, rect.right, rect.bottom)
     }
 
+    private fun safeBox(
+        box: ControlBox,
+        state: VisionScreenState,
+    ): Boolean =
+        state.refusal == null &&
+            box.inside(state.width, state.height) &&
+            state.ownWindows.none(box::overlaps) &&
+            state.otherWindows.none(box::overlaps) &&
+            box.left >= state.targetBounds.left &&
+            box.top >= state.targetBounds.top &&
+            box.right <= state.targetBounds.right &&
+            box.bottom <= state.targetBounds.bottom
+
+    private fun inspectWindow(
+        window: AccessibilityWindowInfo,
+        service: EQOAccessibilityService,
+        scan: WindowScan,
+    ): String? {
+        if (service.isSecureWindow(window)) return "This is a protected screen. Nothing will be sent."
+        val root = window.root
+        var refusal: String? = null
+        if (root == null) {
+            refusal = "EQO cannot check every visible window safely."
+        } else {
+            val app = root.packageName?.toString()
+            if (app == null || window.id == scan.activeWindow && app != scan.app) {
+                refusal = "The active app or a visible window could not be checked safely."
+                root.recycle()
+            } else if (app == service.packageName) {
+                val box = bounds(window)
+                scan.own += box
+                // Keep the 1x1 takeover probe, but never send an EQO consent/key/approval surface.
+                if (box.right - box.left > 1 || box.bottom - box.top > 1) {
+                    refusal = "EQO cannot send an image while its own window is visible."
+                }
+                root.recycle()
+            } else {
+                if (app != scan.app) scan.others += bounds(window)
+                scan.digest.update("${window.id}:${bounds(window)}".toByteArray())
+                inspectTree(root, scan.digest)?.let { refusal = it }
+            }
+        }
+        return refusal
+    }
+
     /** Inspect every node, including masked descendants; never read password text. Recycle obtained nodes. */
-    private fun inspectTree(root: AccessibilityNodeInfo, digest: MessageDigest): String? {
+    private fun inspectTree(
+        root: AccessibilityNodeInfo,
+        digest: MessageDigest,
+    ): String? {
         val pending = ArrayDeque<AccessibilityNodeInfo>()
         pending.add(root)
         var inspected = 0
@@ -106,8 +153,9 @@ class AndroidVisionLocateScreen : VisionLocateScreen {
                     val rect = Rect()
                     node.getBoundsInScreen(rect)
                     digest.update(
-                        "${node.className}|${node.viewIdResourceName}|${node.text}|${node.contentDescription}|".toByteArray(),
+                        "${node.className}|${node.viewIdResourceName}|${node.text}|".toByteArray(),
                     )
+                    digest.update("${node.contentDescription}|".toByteArray())
                     digest.update("$rect|${node.isFocused}|${node.isVisibleToUser}|${node.childCount}".toByteArray())
                 }
                 repeat(node.childCount) { node.getChild(it)?.let(pending::addLast) }
@@ -122,10 +170,22 @@ class AndroidVisionLocateScreen : VisionLocateScreen {
         return refusal
     }
 
-    private fun refused(reason: String): VisionScreenState =
-        VisionScreenState(0, 0, "", "", ControlBox(0, 0, 0, 0), refusal = reason)
+    private fun refused(reason: String): VisionScreenState {
+        val noBounds = ControlBox(0, 0, 0, 0)
+        return VisionScreenState(0, 0, "", "", noBounds, refusal = reason)
+    }
+
+    private class WindowScan(
+        val app: String,
+        val activeWindow: Int,
+    ) {
+        val own = mutableListOf<ControlBox>()
+        val others = mutableListOf<ControlBox>()
+        val digest: MessageDigest = MessageDigest.getInstance("SHA-256")
+    }
 
     private companion object {
         const val MAX_NODES = 4_000
+        const val SETTLE_MS = 700L
     }
 }

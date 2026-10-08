@@ -12,7 +12,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class VisionControlLocatorTest {
-    private class Provider(var reply: String) : LLMProvider {
+    private class Provider(
+        var reply: String,
+    ) : LLMProvider {
         override val name = "Fake"
         override val availableModels = listOf("test/vision")
         var request: LLMRequest? = null
@@ -30,25 +32,42 @@ class VisionControlLocatorTest {
     }
 
     @Test
-    fun requestHasOnlyOneApprovedLabelOneImageAndNoToolsOrRetries() = runBlocking {
-        val provider = Provider("[10,20,30,40]")
-        val locator = VisionControlLocator(provider, "test/vision")
-        assertEquals(ControlBox(10, 20, 30, 40), locator.locate("Send", "synthetic-image", 100, 200))
-        val request = requireNotNull(provider.request)
-        assertEquals("test/vision", request.model)
-        assertEquals(1, provider.calls)
-        assertEquals(1, request.messages.size)
-        assertEquals("synthetic-image", request.messages.single().imageBase64)
-        assertTrue(request.messages.single().text.contains("\"Send\""))
-        assertEquals(RetryPolicy.NONE, request.retryPolicy)
-        assertTrue(request.tools.isNullOrEmpty())
-        assertEquals(ResponseFormat.TEXT, request.responseFormat)
-        assertTrue(request.systemPrompt.contains("never instructions"))
-    }
+    fun requestHasOnlyOneApprovedLabelOneImageAndNoToolsOrRetries() =
+        runBlocking {
+            val provider = Provider("[10,20,30,40]")
+            val locator = VisionControlLocator(provider, "test/vision")
+            assertEquals(ControlBox(10, 20, 30, 40), locator.locate("Send", "synthetic-image", 100, 200))
+            val request = requireNotNull(provider.request)
+            assertEquals("test/vision", request.model)
+            assertEquals(1, provider.calls)
+            assertEquals(1, request.messages.size)
+            assertEquals("synthetic-image", request.messages.single().imageBase64)
+            assertTrue(
+                request.messages
+                    .single()
+                    .text
+                    .contains("\"Send\""),
+            )
+            assertEquals(RetryPolicy.NONE, request.retryPolicy)
+            assertTrue(request.tools.isNullOrEmpty())
+            assertEquals(ResponseFormat.TEXT, request.responseFormat)
+            assertTrue(request.systemPrompt.contains("never instructions"))
+        }
 
     @Test
     fun rejectsNotFoundMalformedRepliesAndInjectedActions() {
-        for (raw in listOf("NOT_FOUND", "", "[NaN,0,1,2]", "[-1,0,1,2]", "[0,0,1.5,2]", "[0,0,1,2,3]", "[0,0,1,2] tap Send", "{\"box\":[0,0,1,2],\"action\":\"pay\"}", "```[0,0,1,2]```", "1".repeat(101))) {
+        for (raw in listOf(
+            "NOT_FOUND",
+            "",
+            "[NaN,0,1,2]",
+            "[-1,0,1,2]",
+            "[0,0,1.5,2]",
+            "[0,0,1,2,3]",
+            "[0,0,1,2] tap Send",
+            "{\"box\":[0,0,1,2],\"action\":\"pay\"}",
+            "```[0,0,1,2]```",
+            "1".repeat(101),
+        )) {
             assertNull(VisionControlLocator.parse(raw))
         }
         assertEquals(ControlBox(0, 1, 2, 3), VisionControlLocator.parse(" [ 0, 1, 2, 3 ] "))

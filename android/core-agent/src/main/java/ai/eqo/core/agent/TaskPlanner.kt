@@ -204,12 +204,19 @@ object TaskPlanPreview {
                         }
                     "${index + 1}. $description" +
                         recipientNames[step.stepId]?.let { " (contact: ${TaskDisplayText.escape(it)})" }.orEmpty() +
-                        if (visionAllowed && step.action.name in setOf("tap_text", "type_text", "CLICK_TEXT", "TYPE_TEXT")) {
-                            "; if screen control cannot find this control, EQO may send one screen image to your AI provider to locate it"
-                        } else {
-                            ""
-                        }
+                        visionNotice(step, visionAllowed)
                 }.joinToString("\n")
+
+    private fun visionNotice(
+        step: LoopStep,
+        allowed: Boolean,
+    ): String =
+        if (allowed && step.action.name in setOf("tap_text", "type_text", "CLICK_TEXT", "TYPE_TEXT")) {
+            "; if screen control cannot find this control, EQO may send one screen image " +
+                "to your AI provider to locate it"
+        } else {
+            ""
+        }
 
     private fun shareRoute(via: String?): String =
         when (via?.trim()?.lowercase()) {

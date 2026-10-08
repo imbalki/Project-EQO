@@ -729,7 +729,11 @@ class TaskActivity : Activity() {
     ) {
         val prepared = portedActions.prepareRecipients(steps)
         if (!isFinishing && !isDestroyed) {
-            showPlan(ApprovedTaskPlan(prepared.steps, visionAllowed = VisionLocateSettings.enabled(this)), prepared.names, missing)
+            showPlan(
+                ApprovedTaskPlan(prepared.steps, visionAllowed = VisionLocateSettings.enabled(this)),
+                prepared.names,
+                missing,
+            )
         }
     }
 

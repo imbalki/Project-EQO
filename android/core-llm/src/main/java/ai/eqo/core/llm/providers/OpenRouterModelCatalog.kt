@@ -96,9 +96,16 @@ object OpenRouterModelCatalog {
                     inputPrice = pricing?.let { text(it, "prompt") },
                     outputPrice = pricing?.let { text(it, "completion") },
                     acceptsImages =
-                        obj.get("architecture")?.takeIf { it.isJsonObject }?.asJsonObject
-                            ?.get("input_modalities")?.takeIf { it.isJsonArray }?.asJsonArray
-                            ?.any { it.isJsonPrimitive && it.asJsonPrimitive.isString && it.asString == "image" } == true,
+                        obj
+                            .get("architecture")
+                            ?.takeIf { it.isJsonObject }
+                            ?.asJsonObject
+                            ?.get("input_modalities")
+                            ?.takeIf { it.isJsonArray }
+                            ?.asJsonArray
+                            ?.any {
+                                it.isJsonPrimitive && it.asJsonPrimitive.isString && it.asString == "image"
+                            } == true,
                 )
             }.distinctBy { it.id }
             .toList()

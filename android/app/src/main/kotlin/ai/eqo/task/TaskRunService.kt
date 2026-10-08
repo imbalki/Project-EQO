@@ -162,7 +162,11 @@ class TaskRunService : Service() {
                 config =
                     ActionLoop.Config(
                         actionTimeoutOverridesMs =
-                            if (plan.visionAllowed) VisionLocateRuntime.VERBS.associateWith { 60_000L } else emptyMap(),
+                            if (plan.visionAllowed) {
+                                VisionLocateRuntime.VERBS.associateWith { VisionLocateRuntime.LOCATE_TIMEOUT_MS }
+                            } else {
+                                emptyMap()
+                            },
                     ),
             )
         TaskRunSession.controller = controller

@@ -58,4 +58,29 @@ class OwnWindowGuardTest {
         val root = FakeNode(packageName = "ai.eqo.app").child(key)
         assertTrue(EqoAutomation({ root }, { state }, takeover).tap("Send").isSuccess)
     }
+
+    @Test
+    fun `screen capture refuses EQO password and secure windows`() {
+        assertTrue(automation(FakeNode(packageName = "ai.eqo.app")).screenCaptureGate() is A11yResult.Failure)
+        val password = FakeNode(packageName = "com.other.app").child(FakeNode(isPassword = true))
+        assertEquals(
+            A11yError.ActionRejected("screenshot with a password field"),
+            (automation(password).screenCaptureGate() as A11yResult.Failure).error,
+        )
+        val secure = EqoAutomation({ FakeNode() }, { state }, takeover, { true }, "ai.eqo.app")
+        assertEquals(A11yError.SecureWindow, (secure.screenCaptureGate() as A11yResult.Failure).error)
+    }
+
+    @Test
+    fun `privacy inspection never creates extra touch grace`() {
+        val automator = automation(FakeNode(packageName = "com.other.app"))
+        takeover.onAgentActionStarted()
+        try {
+            assertTrue(automator.screenCaptureGate().isSuccess)
+            assertTrue(takeover.onTouch(TakeoverDetector.TouchSource.USER, 10L))
+            assertEquals(A11yError.TakeoverDetected, (automator.screenCaptureGate() as A11yResult.Failure).error)
+        } finally {
+            takeover.onAgentActionFinished()
+        }
+    }
 }

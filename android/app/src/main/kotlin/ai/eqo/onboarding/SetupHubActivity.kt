@@ -29,9 +29,12 @@ class SetupHubActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.setup_hub)
         findViewById<android.widget.CheckBox>(R.id.vision_locate).apply {
-            isChecked = ai.eqo.task.VisionLocateSettings.enabled(this@SetupHubActivity)
+            isChecked =
+                ai.eqo.task.VisionLocateSettings
+                    .enabled(this@SetupHubActivity)
             setOnCheckedChangeListener { _, checked ->
-                ai.eqo.task.VisionLocateSettings.setEnabled(this@SetupHubActivity, checked)
+                ai.eqo.task.VisionLocateSettings
+                    .setEnabled(this@SetupHubActivity, checked)
             }
         }
         findViewById<android.widget.CheckBox>(R.id.require_plan_approval).apply {

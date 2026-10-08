@@ -302,6 +302,11 @@ class ActionLoop(
         return null
     }
 
+    private fun actionTimeout(step: LoopStep): Long {
+        val override = config.actionTimeoutOverridesMs[step.action.name]
+        return override ?: config.actionTimeoutMs
+    }
+
     /**
      * Executes one apply with in-flight tracking, a hard timeout and the
      * irreversible-action rule: an irreversible apply is never cancelled
@@ -337,7 +342,7 @@ class ActionLoop(
                                 cancelledMidApply = true
                             }
                         command is CmdPause || command is CmdTakeover -> enqueue(command)
-                        waitedMs >= (config.actionTimeoutOverridesMs[step.action.name] ?: config.actionTimeoutMs) -> {
+                        waitedMs >= actionTimeout(step) -> {
                             job.cancel()
                             timedOut = true
                         }
