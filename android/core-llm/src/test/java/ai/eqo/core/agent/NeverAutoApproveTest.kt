@@ -12,7 +12,7 @@ import org.junit.Test
  */
 class NeverAutoApproveTest {
     @Test
-    fun `exactly the spec's twelve actions are flagged`() {
+    fun `the original twelve plus WhatsApp calls are flagged`() {
         val flagged =
             ActionSchema.ALL_ACTIONS
                 .filter { it.neverAutoApprove }
@@ -34,6 +34,7 @@ class NeverAutoApproveTest {
                 "CLEAR_BROWSER_DATA",
                 "LOCK_DOOR",
                 "DISMISS_NOTIFICATION",
+                "WHATSAPP_CALL",
             ),
             flagged,
         )

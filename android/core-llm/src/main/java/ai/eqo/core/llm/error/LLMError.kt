@@ -77,6 +77,10 @@ class LLMException internal constructor(
     /** Simple class name of the underlying failure (never its message), for diagnostics only. */
     val causeClass: String? = null,
 ) : IOException(safeMessage(error, provider, status)) {
+    /** Set by the mapper before publishing; never changes category or retry policy. */
+    var timedOut: Boolean = false
+        internal set
+
     val provider: String =
         provider
             .takeIf(ProviderCatalog::isKnown)
@@ -243,7 +247,7 @@ object LLMErrorMapper {
             model = model,
             retryable = error == LLMError.Network && isConnectFailure,
             causeClass = throwable.javaClass.simpleName,
-        )
+        ).also { it.timedOut = throwable is SocketTimeoutException }
     }
 
     fun malformed(

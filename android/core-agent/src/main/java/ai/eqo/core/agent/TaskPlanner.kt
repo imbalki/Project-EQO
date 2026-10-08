@@ -186,11 +186,21 @@ class ApprovedTaskPlan(
 }
 
 object TaskPlanPreview {
-    fun describe(steps: List<LoopStep>): String =
+    fun describe(
+        steps: List<LoopStep>,
+        recipientNames: Map<String, String> = emptyMap(),
+    ): String =
         "EQO will:\n" +
             steps
                 .mapIndexed { index, step ->
-                    "${index + 1}. ${describe(step)}"
+                    val description =
+                        if (step.action.name == "WHATSAPP_CALL") {
+                            whatsappCallPreview(step.action.params)
+                        } else {
+                            describe(step)
+                        }
+                    "${index + 1}. $description" +
+                        recipientNames[step.stepId]?.let { " (contact: ${TaskDisplayText.escape(it)})" }.orEmpty()
                 }.joinToString("\n")
 
     private fun shareRoute(via: String?): String =
@@ -202,6 +212,11 @@ object TaskPlanPreview {
         }
 
     private fun quote(value: String): String = "\"" + TaskDisplayText.escape(value).replace("\"", "\\\"") + "\""
+
+    private fun whatsappCallPreview(params: Map<String, String>): String =
+        "place a WhatsApp ${if (params["video"] == "true") "video" else "voice"} call to " +
+            quote(params["contact"].orEmpty()) +
+            "; this rings a real person (no automatic retry)"
 
     private fun describe(step: LoopStep): String {
         val p = step.action.params

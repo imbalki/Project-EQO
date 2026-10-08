@@ -252,18 +252,30 @@ class StudyActionExecutor(
             "scroll" to { port.scroll(it.value("direction").ifBlank { "down" }) },
         )
 
-    suspend fun execute(step: LoopStep): ExecuteResult =
-        if (approvedPlan != null && !approvedPlan.permits(step)) {
+    private val handoffs = mutableMapOf<String, String>()
+
+    fun handoffDetail(stepId: String): String? = handoffs[stepId]
+
+    suspend fun execute(step: LoopStep): ExecuteResult {
+        handoffs.remove(step.stepId)
+        return if (approvedPlan != null && !approvedPlan.permits(step)) {
             ExecuteResult.Failure("Step was not approved")
         } else {
-            dispatch(step.action)
+            dispatch(step.action, step.stepId)
         }
+    }
 
     @Suppress("ReturnCount") // One early return per gated action kind.
-    private suspend fun dispatch(action: ExecutedAction): ExecuteResult {
+    private suspend fun dispatch(action: ExecutedAction, stepId: String): ExecuteResult {
         if (action.name == action.name.uppercase()) {
             val execute = registryExecute ?: return ExecuteResult.Failure("Registry executor unavailable")
             val result = execute(action.name, action.params)
+            when (result) {
+                is ai.eqo.actions.base.ActionResult.UserActionRequired -> handoffs[stepId] = result.message
+                is ai.eqo.actions.base.ActionResult.PendingUserAction -> handoffs[stepId] = result.message
+                is ai.eqo.actions.base.ActionResult.NeedsInput -> handoffs[stepId] = result.question
+                else -> Unit
+            }
             android.util.Log.i("EqoRun", "action=${action.name} result=${result.javaClass.simpleName}")
             return if (result.success) {
                 ExecuteResult.Success(result.data.orEmpty())
@@ -276,6 +288,7 @@ class StudyActionExecutor(
             handlers[verb]
                 ?: return ExecuteResult.Failure("no study executor for action '${action.name}'")
         return if (handler(action.params)) {
+            if (verb in setOf("compose_sms", "compose_email")) handoffs[stepId] = successDetail(verb)
             ExecuteResult.Success(successDetail(verb))
         } else {
             port.lastFailure

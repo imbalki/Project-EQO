@@ -60,12 +60,19 @@ import kotlin.coroutines.resume
 
 // One screen owns run control + approval cards + receipts; splitting it would scatter the
 // SF-4 mint site across files (same reasoning as ActionLoop's own @Suppress precedent).
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class TaskActivity : Activity() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var controller: StudyTaskController? = null
-    private val actionPermissions by lazy { TaskPermissionRequester(this) }
+    private var waitingPermission: String? = null
+    private var displayedStatus = PlanStatus.PENDING
+    private val actionPermissions by lazy {
+        TaskPermissionRequester(this) { permission ->
+            waitingPermission = permission
+            renderPlanStatus(displayedStatus)
+        }
+    }
 
     // TASK-069: foundation entry point for ported steps. Typed-request flow remains
     // unchanged; its later integration must call this registry after action approval.
@@ -421,7 +428,12 @@ class TaskActivity : Activity() {
     private val countdown = Handler(Looper.getMainLooper())
 
     private fun renderPlanStatus(status: PlanStatus) {
+        displayedStatus = status
         findViewById<TextView>(R.id.task_state).text = planLabel(status.name)
+        waitingPermission?.let {
+            findViewById<TextView>(R.id.task_state).text =
+                getString(R.string.run_permission_waiting, RunStatusMapping.permissionName(it))
+        }
         val running = status == PlanStatus.RUNNING
         val paused = status == PlanStatus.PAUSED
         findViewById<Button>(R.id.task_start_button).isEnabled = !running && !paused
@@ -485,6 +497,7 @@ class TaskActivity : Activity() {
                 StepProgressState.RUNNING -> getString(R.string.task_running)
                 StepProgressState.DONE -> getString(R.string.task_done)
                 StepProgressState.FAILED -> getString(R.string.task_failed)
+                StepProgressState.NEEDS_YOU -> getString(R.string.task_needs_you)
                 StepProgressState.UNKNOWN -> getString(R.string.task_unknown_result)
             }
         return getString(R.string.setup_row_format, actionLabel(step.name), state, stepDetail(step))
@@ -492,7 +505,8 @@ class TaskActivity : Activity() {
 
     /** The end-of-run receipt: what happened, what did not, what is unknown (REQ-TASK-06). */
     private fun renderReceipt(receipt: RunReceipt) {
-        findViewById<TextView>(R.id.task_state).text = planLabel(receipt.terminal)
+        val terminal = RunStatusMapping.terminal(receipt)
+        findViewById<TextView>(R.id.task_state).text = planLabel(terminal)
         renderSteps(receipt.steps)
 
         fun names(ids: List<String>): String =
@@ -502,7 +516,7 @@ class TaskActivity : Activity() {
         val text =
             getString(
                 R.string.task_receipt_format,
-                planLabel(receipt.terminal),
+                planLabel(terminal),
                 names(receipt.executedStepIds),
                 names(receipt.notExecutedStepIds),
             ) +
@@ -511,7 +525,13 @@ class TaskActivity : Activity() {
                 } else {
                     getString(R.string.task_receipt_unknown, names(receipt.unknownResultStepIds))
                 }
-        findViewById<TextView>(R.id.task_receipt).text = text
+        val needsYou =
+            if (receipt.needsYouStepIds.isEmpty()) {
+                ""
+            } else {
+                getString(R.string.run_receipt_needs_you, names(receipt.needsYouStepIds))
+            }
+        findViewById<TextView>(R.id.task_receipt).text = getString(R.string.run_receipt_join, text, needsYou)
     }
 
     private fun approvalTarget(target: String): String =
@@ -561,6 +581,7 @@ class TaskActivity : Activity() {
                 "RUNNING" -> R.string.task_running
                 "COMPLETED" -> R.string.task_completed
                 "FAILED" -> R.string.task_failed
+                "NEEDS_YOU" -> R.string.task_needs_you
                 "PAUSED" -> R.string.task_paused
                 "STOPPED" -> R.string.task_stopped
                 "CANCELLED" -> R.string.task_cancelled
@@ -568,8 +589,9 @@ class TaskActivity : Activity() {
             },
         )
 
-    private fun stepDetail(step: StepProgress): String =
-        when {
+    private fun stepDetail(step: StepProgress): String {
+        RunStatusMapping.detail(step)?.let { return getString(it.resource, it.argument) }
+        return when {
             step.detail == FailureClass.A11Y_LOST.repair -> getString(R.string.accessibility_disabled)
             step.detail == FailureClass.BINDER_DEAD.repair -> getString(R.string.task_helper_lost)
             step.detail.startsWith("Android permission ") -> getString(R.string.task_permission_missing)
@@ -589,6 +611,7 @@ class TaskActivity : Activity() {
                 ai.eqo.core.agent.TaskDisplayText
                     .escape(step.detail)
         }
+    }
 
     private var debugPlanReceiver: DebugPlanReceiver? = null
 
@@ -601,9 +624,11 @@ class TaskActivity : Activity() {
                         val steps =
                             ai.eqo.core.agent.RegistryPlanVocabulary
                                 .parse(json, portedActions.enabledActionNames)
-                        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(steps))
-                    } catch (failure: IllegalArgumentException) {
-                        android.util.Log.w("EqoRun", "debug plan rejected: ${failure.message}")
+                        if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
+                    } catch (failure: ai.eqo.actions.impl.RecipientPreparationException) {
+                        findViewById<TextView>(R.id.task_state).text = failure.message
+                    } catch (_: IllegalArgumentException) {
+                        android.util.Log.w("EqoRun", "debug_plan code=PLAN_REJECTED")
                     }
                 }
             }
@@ -639,18 +664,31 @@ class TaskActivity : Activity() {
         }
     }
 
-    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    @Suppress("TooGenericExceptionCaught", "SwallowedException", "CyclomaticComplexMethod")
     private suspend fun makePlan(request: String) {
         try {
-            val steps =
+            val result =
                 withContext(Dispatchers.IO) {
                     val planner =
                         TaskPlanningRuntime.planner(applicationContext, portedActions.enabledActionNames)
                             ?: throw MissingTaskKey()
                     // Never capture EQO's key/setup/request UI; execution observations stay local.
-                    planWithOneNetworkRetry { planner.plan(request, UntrustedScreenText.wrap("")) }
+                    val resolver =
+                        ai.eqo.actions.impl
+                            .LaunchableAppResolver(packageManager)
+                    val fallback = MissingAppFallback { resolver.resolve(it) != null }
+                    val first = planWithOneNetworkRetry { planner.plan(request, UntrustedScreenText.wrap("")) }
+                    fallback.prepare(request, first) { constrained ->
+                        planWithOneNetworkRetry { planner.plan(constrained, UntrustedScreenText.wrap("")) }
+                    }
                 }
-            if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(steps))
+            if (!isFinishing && !isDestroyed) {
+                when (result) {
+                    is MissingAppFallback.Result.Ready -> prepareAndShowPlan(result.steps, result.missing)
+                    is MissingAppFallback.Result.Stopped ->
+                        findViewById<TextView>(R.id.task_state).text = result.message
+                }
+            }
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (_: MissingTaskKey) {
@@ -662,10 +700,16 @@ class TaskActivity : Activity() {
             }
         } catch (failure: LLMException) {
             // Error category only (never the message, request or key).
-            android.util.Log.w("EqoRun", "planner llm error=${failure.error} cause=${failure.causeClass}")
+            android.util.Log.w(
+                "EqoRun",
+                "planner code=${if (failure.timedOut) "MODEL_SLOW" else failure.error.code} " +
+                    "cause=${failure.causeClass}",
+            )
             findViewById<TextView>(R.id.task_state).setText(planningError(failure))
+        } catch (failure: ai.eqo.actions.impl.RecipientPreparationException) {
+            findViewById<TextView>(R.id.task_state).text = failure.message
         } catch (failure: IllegalArgumentException) {
-            android.util.Log.w("EqoRun", "planner rejected: ${failure.message}")
+            android.util.Log.w("EqoRun", "planner code=PLAN_REJECTED")
             findViewById<TextView>(R.id.task_state).text =
                 getString(R.string.task_plan_rejected_detail, failure.message.orEmpty())
         } catch (_: Exception) {
@@ -679,42 +723,40 @@ class TaskActivity : Activity() {
         }
     }
 
-    private fun showPlan(plan: ApprovedTaskPlan) {
+    private suspend fun prepareAndShowPlan(
+        steps: List<ai.eqo.core.agent.LoopStep>,
+        missing: List<String> = emptyList(),
+    ) {
+        val prepared = portedActions.prepareRecipients(steps)
+        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing)
+    }
+
+    private fun showPlan(
+        plan: ApprovedTaskPlan,
+        recipientNames: Map<String, String> = emptyMap(),
+        missing: List<String> = emptyList(),
+    ) {
         val steps = plan.steps()
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
-        val preview = TaskPlanPreview.describe(steps)
-        // Debug builds only: plan text can contain message bodies, so a release build never logs it.
-        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
-            android.util.Log.i("EqoRun", "plan: " + preview.lines().joinToString(" "))
-        }
+        val notice =
+            if (missing.isEmpty()) {
+                ""
+            } else {
+                ai.eqo.core.agent.TaskDisplayText
+                    .escape(missing.joinToString(", ")) +
+                    " is not installed on this phone, so this plan uses Chrome instead.\n\n"
+            }
+        val preview = notice + TaskPlanPreview.describe(steps, recipientNames)
+        // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
-        if (!PlanApprovalSettings.required(this)) {
+        if (!PlanApprovalSettings.requiredFor(this, steps)) {
             startRun(plan)
             return
         }
-        AlertDialog
-            .Builder(this)
-            .setTitle(R.string.task_plan_title)
-            .setMessage(preview)
-            .setPositiveButton(R.string.task_approval_approve) { _, _ ->
-                // Execute the same immutable snapshot described above, never a replan or display text.
-                startRun(plan)
-            }.setNegativeButton(R.string.task_approval_reject) { _, _ ->
-                findViewById<TextView>(R.id.task_state).setText(R.string.task_rejected)
-            }.show()
-            .also { prepareTaskDialog(it) }
+        PlanFallbackDialog(this, ::startRun).show(plan, preview, missing).also { prepareTaskDialog(it) }
     }
 
-    private fun planningError(failure: LLMException): Int =
-        when (failure.error) {
-            ai.eqo.core.llm.error.LLMError.AuthMissing,
-            ai.eqo.core.llm.error.LLMError.AuthInvalid,
-            -> R.string.model_error_auth
-            ai.eqo.core.llm.error.LLMError.RateLimited -> R.string.model_error_rate
-            ai.eqo.core.llm.error.LLMError.QuotaExhausted -> R.string.model_error_credit
-            ai.eqo.core.llm.error.LLMError.ModelUnavailable -> R.string.model_error_model
-            else -> R.string.task_call_failed
-        }
+    private fun planningError(failure: LLMException): Int = RunStatusMapping.planning(failure.error, failure.timedOut)
 
     override fun onDestroy() {
         debugPlanReceiver?.let { unregisterReceiver(it) }

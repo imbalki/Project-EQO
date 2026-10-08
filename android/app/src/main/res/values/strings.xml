@@ -125,7 +125,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_unknown_result">Unknown result — verify manually.</string>
 
     <!-- Owner-facing presentation; readiness and safety decisions stay in their own models. -->
-    <string name="home_explanation">Start with setup, then type a task. EQO makes a plan for you to approve before it runs. SMS and email open drafts; WhatsApp and Telegram can press Send.</string>
+    <string name="home_explanation">Start with setup, then type a task. EQO makes a plan for you to approve before it runs. You can use contact names, phone numbers or emails. Messaging steps can press Send; review the recipient and every step.</string>
     <string name="setup_return">Return to setup</string>
     <string name="setup_next">Next: %1$s</string>
     <string name="setup_row_format">%1$s — %2$s\n%3$s</string>
@@ -158,7 +158,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_pending">Waiting</string>
     <string name="task_running">Working</string>
     <string name="task_done">Done</string>
-    <string name="task_failed">Needs attention — review setup before trying again.</string>
+    <string name="task_failed">Could not finish</string>
     <string name="task_paused">Paused — resume only when you choose and confirm.</string>
     <string name="task_cancelled">Stopped or cancelled</string>
     <string name="task_completed">Completed — check the result on your phone.</string>
@@ -176,7 +176,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_no_recipient">No recipient selected</string>
     <string name="task_did_not_run">This step did not run. It was skipped or cancelled before completion; check the task result above.</string>
     <string name="task_request_hint">What should EQO do?</string>
-    <string name="task_recipient_limit">EQO cannot read contacts. Type the phone number or email here, or fill it in the draft app. SMS and email are drafts only. WhatsApp and Telegram steps press Send in the open chat. Review every step before approving.</string>
+    <string name="task_recipient_limit">EQO asks permission to read Contacts only when a plan uses a name. You can type phone numbers and emails too. The preview shows the resolved recipient before you approve. Messaging steps may press Send in the open app. Review every step before approving.</string>
     <string name="task_request_empty">Type a request first.</string>
     <string name="task_planning">Making a plan — nothing is running yet.</string>
     <string name="task_plan_title">Review the whole plan</string>
@@ -203,4 +203,20 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_already_paused">Already paused</string>
     <string name="task_no_sms_app">No default SMS app is available. Install or enable an SMS app and set it as default to open a draft. Nothing was sent.</string>
     <string name="require_plan_approval">Require approval before EQO runs a plan</string>
+    <string name="task_needs_you">Needs you</string>
+    <string name="run_receipt_needs_you">\nNeeds you: %1$s</string>
+    <string name="run_receipt_join">%1$s%2$s</string>
+    <string name="run_sms_draft">The text draft is open. Press Send, or tell EQO to retry. Nothing was verified as sent.</string>
+    <string name="run_email_draft">The email draft is open. Press Send, or tell EQO to retry. Nothing was verified as sent.</string>
+    <string name="run_chat_draft">The %1$s draft is open. Press Send, or tell EQO to retry. Nothing was verified as sent.</string>
+    <string name="run_user_action">%1$s Finish this step yourself, or tell EQO to retry.</string>
+    <string name="run_accessibility_off">Accessibility is off or disconnected. Turn on EQO in Android Accessibility settings, then try again.</string>
+    <string name="run_permission_missing">EQO needs %1$s permission. Allow it in Android Settings > Apps > EQO > Permissions, then try again. This step did not run.</string>
+    <string name="run_permission_explanation">%1$s Android access was not allowed. Allow it, then try again. This step did not run.</string>
+    <string name="run_permission_waiting">Needs you — EQO needs %1$s access. Answer the Android prompt or follow the access instructions. This step is waiting for your choice.</string>
+    <string name="run_app_missing">%1$s is not installed. Install or enable it, then try again.</string>
+    <string name="run_target_missing">EQO could not find “%1$s”. Open the right screen, or tell EQO the button or field label to look for.</string>
+    <string name="run_action_rejected">The app did not accept the tap or text entry. Check the current screen, then try again.</string>
+    <string name="run_failed_unknown">This step could not finish. EQO did not receive a specific reason. Check the current screen before trying again.</string>
+    <string name="run_model_slow">The model took too long to answer. Try Plan again. Nothing ran.</string>
 </resources>

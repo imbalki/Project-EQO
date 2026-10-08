@@ -1,5 +1,21 @@
 # TASK-005 per-file provenance map
 
+## Missing-app preflight additions
+
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/LaunchableAppResolver.kt` | EQO-NEW | `ai.eqo.actions.impl` | Local shared launchable-app resolution |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/MissingAppFallback.kt` | EQO-NEW | `ai.eqo.task` | Pre-approval Chrome fallback and explicit store search |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/MissingAppFallbackTest.kt` | EQO-NEW | `ai.eqo.task` | Local fake preflight and approval regressions |
+
+## Run-status additions (t_4fa4cbd6)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/RunStatusMapping.kt` | EQO-NEW | `ai.eqo.task` | Presentation-only handoff and plain failure mapping |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/RunStatusMappingTest.kt` | EQO-NEW | `ai.eqo.task` | Handoff, diagnosis and non-secret logging regressions |
+
+## WhatsApp call additions (t_d3c58c41)
+
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/WhatsAppCallFlow.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO targeted WhatsApp chat deep link and single-attempt gated call |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/WhatsAppCallTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO registry and fake-tree call regressions; no real calls |
+
 ## TASK-077 additions (issue #20)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/TaskRunService.kt` | EQO-NEW | `ai.eqo.task` | EQO foreground run owner and UI snapshot |
@@ -590,6 +606,8 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ConnectKeyEnrollment.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20, PR #77 CONNECT-plane correction) |
 | :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/ConnectKeyEnrollmentTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20, PR #77 CONNECT-plane correction) |
 
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ContactResolverTest.kt` | NEW | `ai.eqo.core.agent` | EQO contacts task t_212ea16c: fake Contacts provider safety and privacy tests |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/ContactRecipientsTest.kt` | NEW | `ai.eqo.actions.impl` | EQO contacts task t_212ea16c: five-action fake recipient and approval regressions |
 ## Helper authorization follow-up to PR #77 (Refs #20)
 
 | Module | File | Kind | Package | Provenance |

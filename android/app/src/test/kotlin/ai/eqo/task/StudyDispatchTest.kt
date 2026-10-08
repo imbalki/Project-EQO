@@ -74,6 +74,60 @@ class StudyDispatchTest {
             assertEquals("sms::$raw", port.last)
         }
 
+    @Test fun registryHandoffStopsTheLoopButPresentsNeedsYou() =
+        runBlocking {
+            val steps =
+                listOf(
+                    LoopStep(
+                        "1",
+                        ExecutedAction("SEND_SMS", mapOf("contact" to "test recipient", "message" to "test draft")),
+                    ),
+                    LoopStep("2", ExecutedAction("WAIT")),
+                )
+            val plan = ApprovedTaskPlan(steps)
+            val calls = mutableListOf<String>()
+            val executor =
+                StudyActionExecutor(RecordingPort(), plan) { name, _ ->
+                    calls += name
+                    ai.eqo.actions.base.ActionResult
+                        .UserActionRequired("SMS draft opened; nothing was sent")
+                }
+            val controller =
+                StudyTaskController(
+                    steps,
+                    StudyPermissionCheck({ true }, { true }, { true }),
+                    StudyApprovalGate(
+                        StudyApprovalSurface { ai.eqo.study.ApprovalOutcome.Approved },
+                        { 0L },
+                        plan,
+                    ),
+                    executor,
+                    observe = { "" },
+                    takeoverDetector = ai.eqo.accessibility.TakeoverDetector(),
+                )
+            val receipt = controller.run()
+            assertEquals(listOf("SEND_SMS"), calls)
+            assertEquals("FAILED", receipt.terminal)
+            assertEquals(ai.eqo.study.StepProgressState.NEEDS_YOU, receipt.steps.first().state)
+            assertEquals(ai.eqo.study.StepProgressState.PENDING, receipt.steps.last().state)
+            assertEquals("NEEDS_YOU", RunStatusMapping.terminal(receipt))
+            assertEquals(ai.eqo.R.string.run_sms_draft, RunStatusMapping.detail(receipt.steps.first())?.resource)
+        }
+
+    @Test fun executorHandoffDoesNotTurnNeedsInputIntoSuccess() =
+        runBlocking {
+            val step = LoopStep("1", ExecutedAction("SEND_SMS"))
+            val executor =
+                StudyActionExecutor(RecordingPort(), registryExecute = { _, _ ->
+                    ai.eqo.actions.base.ActionResult
+                        .NeedsInput("Choose a recipient")
+                })
+            val result = executor.execute(step)
+            assertTrue(result is ExecuteResult.Failure)
+            assertEquals("Needs user input: Choose a recipient", (result as ExecuteResult.Failure).reason)
+            assertEquals("Choose a recipient", executor.handoffDetail("1"))
+        }
+
     private class RecordingPort : StudyAutomationPort {
         var last = ""
 

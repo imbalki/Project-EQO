@@ -41,6 +41,10 @@ class RegistryPlannerTest {
         val prompt = RegistryPlanVocabulary.prompt(enabled)
         assertTrue(prompt.contains("TYPE_TEXT"))
         assertTrue(prompt.contains("searchText"))
+        assertTrue(prompt.contains("saved contact name or a phone number"))
+        assertTrue(prompt.contains("SEND_EMAIL to may be a name or email"))
+        assertTrue(prompt.contains("Never invent recipients or addresses"))
+        assertTrue(prompt.contains("Telegram usernames must start with @"))
         assertFalse(prompt.contains("MAKE_CALL:"))
     }
 
@@ -78,6 +82,58 @@ class RegistryPlannerTest {
         assertTrue(plan.matches(steps))
         assertFalse(plan.matches(listOf(changed)))
     }
+
+    @Test fun whatsappCallsAreSingleApprovedIrreversibleStepsWithStrictVideo() {
+        val actions = setOf("WHATSAPP_CALL")
+        val voice = """{"steps":[{"action":"WHATSAPP_CALL","params":{"contact":"Alice"}}]}"""
+        val step = RegistryPlanVocabulary.parse(voice, actions).single()
+        assertTrue(step.action.irreversible)
+        assertTrue(SensitivityApprovalPolicy.requiresApproval(step.action))
+        assertTrue(ActionSchema.isNeverAutoApprove("WHATSAPP_CALL"))
+        assertFalse(AutoApprovalPolicy.isGrantable("WHATSAPP_CALL"))
+        assertEquals(false, ActionSchema.applyDefaults("WHATSAPP_CALL", mapOf("contact" to "Alice"))["video"])
+        val preview = TaskPlanPreview.describe(listOf(step))
+        assertTrue(preview.contains("WhatsApp voice call"))
+        assertTrue(preview.contains("Alice"))
+        assertTrue(preview.contains("rings a real person"))
+        val video = voice.replace(""""contact":"Alice"""", """"contact":"Alice","video":"true"""")
+        assertTrue(TaskPlanPreview.describe(RegistryPlanVocabulary.parse(video, actions)).contains("video call"))
+        assertThrows(IllegalArgumentException::class.java) {
+            RegistryPlanVocabulary.parse(video.replace("true", "maybe"), actions)
+        }
+        val prompt = RegistryPlanVocabulary.prompt(actions)
+        assertTrue(prompt.contains("use one WHATSAPP_CALL"))
+        assertTrue(prompt.contains("Never auto-retry a call"))
+        assertFalse(prompt.contains("then CLICK_TEXT Call"))
+    }
+
+    @Test fun whatsappCallIsNeverRetriedAfterAmbiguousFailure() =
+        runTest {
+            val steps =
+                RegistryPlanVocabulary.parse(
+                    """{"steps":[{"action":"WHATSAPP_CALL","params":{"contact":"Alice"}}]}""",
+                    setOf("WHATSAPP_CALL"),
+                )
+            var attempts = 0
+            var approvals = 0
+            val loop =
+                ActionLoop(
+                    steps = steps,
+                    approvalGate = {
+                        approvals++
+                        ApprovalDecision.Approved
+                    },
+                    execute = { _ ->
+                        attempts++
+                        ExecuteResult.Failure("Unknown call state", transient = true)
+                    },
+                    observe = { "" },
+                )
+            val result = loop.run()
+            assertEquals(1, approvals)
+            assertEquals(1, attempts)
+            assertEquals(PlanTerminal.FAILED, result.terminal)
+        }
 
     private class Fake(
         private val outputs: List<String>,

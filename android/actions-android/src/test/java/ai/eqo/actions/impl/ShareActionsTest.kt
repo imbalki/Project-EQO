@@ -201,6 +201,16 @@ class ShareActionsTest {
         }
 
     @Test
+    fun `denied contacts permission at lookup sends nothing`() =
+        runTest {
+            book["Alex"] = ContactResolution.PermissionDenied
+            book["Sam"] = ContactResolution.PermissionDenied
+            assertFalse(shareContact("Alex", "Sam", "sms").success)
+            assertFalse(shareLocation("Sam", "sms").success)
+            assertTrue(sent.isEmpty())
+        }
+
+    @Test
     fun `invalid via is rejected before any lookup`() =
         runTest {
             assertFalse(shareLocation("Sam", "carrier-pigeon").success)
