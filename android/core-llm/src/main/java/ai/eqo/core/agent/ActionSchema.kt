@@ -354,8 +354,19 @@ object ActionSchema {
                 Use this for ANY URL navigation task. Do NOT use made-up actions
                 like NAVIGATE_TO_URL, GO_TO_URL, BROWSE_WEBSITE, VISIT_WEBSITE — 
                 use OPEN_URL instead.""",
-                params = listOf(ParamDefinition("url", ParamType.STRING, true, "URL to open (e.g. google.com, https://example.com)")),
-                examples = listOf("open google.com", "go to youtube.com", "visit github.com", "navigate to example.com", "browse website"),
+                params =
+                    listOf(
+                        ParamDefinition("url", ParamType.STRING, true, "HTTP(S) URL to open"),
+                        ParamDefinition("browser", ParamType.ENUM, false, "Open in Chrome", listOf("chrome")),
+                    ),
+                examples =
+                    listOf(
+                        "open google.com",
+                        "go to youtube.com",
+                        "visit github.com",
+                        "navigate to example.com",
+                        "browse website",
+                    ),
                 category = ActionCategory.SYSTEM,
             ),
             ActionDefinition(
@@ -378,7 +389,7 @@ object ActionSchema {
                 name = "MAKE_CALL",
                 description = "Makes a phone call to a contact or number",
                 params = listOf(ParamDefinition("contact", ParamType.STRING, true, "Contact name or phone number")),
-                examples = listOf("call dad", "call mom", "call XXXXXXXXXX", "phone John"),
+                examples = listOf("call dad", "call mom", "call 9876543210", "phone John"),
                 category = ActionCategory.COMMUNICATION,
             ),
             ActionDefinition(

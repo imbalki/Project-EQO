@@ -378,69 +378,12 @@ internal class SystemActions(
         ): ActionResult {
             requireRegistryExecution()?.let { return it }
             val appName = params["appName"] ?: return ActionResult(false, null, "appName parameter missing")
-            val pm = context.packageManager
-            if (appName.equals("settings", ignoreCase = true)) {
-                launcher.open(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                kotlinx.coroutines.delay(2000)
-                return ActionResult.Success(mapOf("message" to "Settings opened."))
-            }
-            val alias =
-                ai.eqo.core.agent.AliasResolver
-                    .appPackage(appName)
-            val aliasIntent = alias?.let(pm::getLaunchIntentForPackage)
-            if (aliasIntent != null) {
-                launcher.open(aliasIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                kotlinx.coroutines.delay(2000)
-                return ActionResult.Success(mapOf("message" to "Requested app launched."))
-            }
-            val mainIntent =
-                Intent(Intent.ACTION_MAIN, null).apply {
-                    addCategory(Intent.CATEGORY_LAUNCHER)
-                }
-            val resolveInfos = pm.queryIntentActivities(mainIntent, 0)
-
-            // 1. Try to find a match among launcher apps first
-            var matchedPackage =
-                resolveInfos
-                    .find {
-                        val label = it.loadLabel(pm).toString()
-                        val pkgName = it.activityInfo.packageName
-                        label.contains(appName, ignoreCase = true) || pkgName.contains(appName, ignoreCase = true)
-                    }?.activityInfo
-                    ?.packageName
-
-            // 2. If not found in launcher apps, try matching installed applications as a fallback
-            if (matchedPackage == null) {
-                try {
-                    // Only visible packages; no QUERY_ALL_PACKAGES grant.
-                    @android.annotation.SuppressLint("QueryPermissionsNeeded")
-                    val packages = pm.getInstalledApplications(0)
-                    matchedPackage =
-                        packages
-                            .find {
-                                val label = pm.getApplicationLabel(it).toString()
-                                label.contains(appName, ignoreCase = true) || it.packageName.contains(appName, ignoreCase = true)
-                            }?.packageName
-                } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    // Ignore installed applications check exceptions
-                }
-            }
-
-            return if (matchedPackage != null) {
-                val intent = pm.getLaunchIntentForPackage(matchedPackage)
-                if (intent != null) {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    launcher.open(intent)
-                    // Wait 2 seconds for app transition to prevent race conditions in subsequent steps
-                    kotlinx.coroutines.delay(2000)
-                    ActionResult(true, "$appName is open!", null)
-                } else {
-                    ActionResult(false, null, "Launcher intent not found for $matchedPackage")
-                }
-            } else {
-                ActionResult(false, null, "App '$appName' not installed.")
-            }
+            val intent =
+                LaunchableAppResolver(context.packageManager).resolve(appName)
+                    ?: return ActionResult.Failure("Requested app is not installed or cannot be opened.")
+            launcher.open(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            kotlinx.coroutines.delay(2000)
+            return ActionResult.Success(mapOf("message" to "Requested app launched."))
         }
     }
 
@@ -703,6 +646,8 @@ internal class SystemActions(
         ): ActionResult {
             requireRegistryExecution()?.let { return it }
             val url = params["url"] ?: return ActionResult(false, null, "No URL provided")
+            val browser = params["browser"]
+            if (browser != null && browser != "chrome") return ActionResult.Failure("Unsupported browser.")
             return try {
                 // Ensure URL has a scheme
                 val fullUrl =
@@ -720,6 +665,7 @@ internal class SystemActions(
                     Intent(Intent.ACTION_VIEW, uri).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
+                if (browser == "chrome") intent.setPackage("com.android.chrome")
                 launcher.open(intent)
                 ActionResult.Success(mapOf("message" to "URL opened."))
             } catch (e: Exception) {

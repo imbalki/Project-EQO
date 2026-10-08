@@ -642,15 +642,29 @@ class TaskActivity : Activity() {
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private suspend fun makePlan(request: String) {
         try {
-            val steps =
+            val result =
                 withContext(Dispatchers.IO) {
                     val planner =
                         TaskPlanningRuntime.planner(applicationContext, portedActions.enabledActionNames)
                             ?: throw MissingTaskKey()
                     // Never capture EQO's key/setup/request UI; execution observations stay local.
-                    planWithOneNetworkRetry { planner.plan(request, UntrustedScreenText.wrap("")) }
+                    val resolver =
+                        ai.eqo.actions.impl
+                            .LaunchableAppResolver(packageManager)
+                    val fallback = MissingAppFallback { resolver.resolve(it) != null }
+                    val first = planWithOneNetworkRetry { planner.plan(request, UntrustedScreenText.wrap("")) }
+                    fallback.prepare(request, first) { constrained ->
+                        planWithOneNetworkRetry { planner.plan(constrained, UntrustedScreenText.wrap("")) }
+                    }
                 }
-            if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(steps))
+            if (!isFinishing && !isDestroyed) {
+                when (result) {
+                    is MissingAppFallback.Result.Ready ->
+                        showPreparedPlan(ApprovedTaskPlan(result.steps), result.missing)
+                    is MissingAppFallback.Result.Stopped ->
+                        findViewById<TextView>(R.id.task_state).text = result.message
+                }
+            }
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (_: MissingTaskKey) {
@@ -665,7 +679,7 @@ class TaskActivity : Activity() {
             android.util.Log.w("EqoRun", "planner llm error=${failure.error} cause=${failure.causeClass}")
             findViewById<TextView>(R.id.task_state).setText(planningError(failure))
         } catch (failure: IllegalArgumentException) {
-            android.util.Log.w("EqoRun", "planner rejected: ${failure.message}")
+            android.util.Log.w("EqoRun", "planner_rejected")
             findViewById<TextView>(R.id.task_state).text =
                 getString(R.string.task_plan_rejected_detail, failure.message.orEmpty())
         } catch (_: Exception) {
@@ -679,30 +693,29 @@ class TaskActivity : Activity() {
         }
     }
 
-    private fun showPlan(plan: ApprovedTaskPlan) {
+    private fun showPlan(plan: ApprovedTaskPlan) = showPreparedPlan(plan, emptyList())
+
+    private fun showPreparedPlan(
+        plan: ApprovedTaskPlan,
+        missing: List<String>,
+    ) {
         val steps = plan.steps()
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
-        val preview = TaskPlanPreview.describe(steps)
-        // Debug builds only: plan text can contain message bodies, so a release build never logs it.
-        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
-            android.util.Log.i("EqoRun", "plan: " + preview.lines().joinToString(" "))
-        }
+        val notice =
+            if (missing.isEmpty()) {
+                ""
+            } else {
+                ai.eqo.core.agent.TaskDisplayText
+                    .escape(missing.joinToString(", ")) +
+                    " is not installed on this phone, so this plan uses Chrome instead.\n\n"
+            }
+        val preview = notice + TaskPlanPreview.describe(steps)
         findViewById<TextView>(R.id.task_preview).text = preview
         if (!PlanApprovalSettings.required(this)) {
             startRun(plan)
             return
         }
-        AlertDialog
-            .Builder(this)
-            .setTitle(R.string.task_plan_title)
-            .setMessage(preview)
-            .setPositiveButton(R.string.task_approval_approve) { _, _ ->
-                // Execute the same immutable snapshot described above, never a replan or display text.
-                startRun(plan)
-            }.setNegativeButton(R.string.task_approval_reject) { _, _ ->
-                findViewById<TextView>(R.id.task_state).setText(R.string.task_rejected)
-            }.show()
-            .also { prepareTaskDialog(it) }
+        PlanFallbackDialog(this, ::startRun).show(plan, preview, missing).also { prepareTaskDialog(it) }
     }
 
     private fun planningError(failure: LLMException): Int =
