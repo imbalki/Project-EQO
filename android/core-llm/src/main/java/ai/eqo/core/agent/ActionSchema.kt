@@ -1345,7 +1345,6 @@ object ActionSchema {
                     ),
                 examples = listOf("list files in downloads", "show files"),
                 category = ActionCategory.ADVANCED,
-                risk = ActionRisk.READ_ONLY,
             ),
             ActionDefinition(
                 name = "FIND_FILES",
@@ -1359,7 +1358,6 @@ object ActionSchema {
                     ),
                 examples = listOf("find my resume pdf", "find files named invoice in downloads"),
                 category = ActionCategory.ADVANCED,
-                risk = ActionRisk.READ_ONLY,
             ),
             ActionDefinition(
                 name = "READ_FILE",

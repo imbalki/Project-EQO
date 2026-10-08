@@ -125,7 +125,8 @@ class AttachmentSpecTest {
                     .required,
             )
         }
-        assertEquals(ai.eqo.core.agent.ActionRisk.READ_ONLY, ActionSchema.riskForAction("FIND_FILES"))
-        assertEquals(ai.eqo.core.agent.ActionRisk.READ_ONLY, ActionSchema.riskForAction("LIST_FILES"))
+        // File browsing stays in the Advanced category, so macros and routines may never run it unattended.
+        assertEquals(ActionRisk.ADVANCED_CONTROL, ActionSchema.riskForAction("FIND_FILES"))
+        assertEquals(ActionRisk.ADVANCED_CONTROL, ActionSchema.riskForAction("LIST_FILES"))
     }
 }
