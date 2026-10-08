@@ -116,8 +116,9 @@ internal class CommunicationActions constructor(
     private val contactResolver: ContactResolver,
     private val callFlowExecutor: CallFlowExecutor,
     private val launcher: GatedIntentLauncher,
-    private val automation: () -> ai.eqo.accessibility.EqoAutomation? = { null },
     private val attachments: AttachmentShare? = null,
+    // Keep last: callers and tests pass it as a trailing lambda.
+    private val automation: () -> ai.eqo.accessibility.EqoAutomation? = { null },
 ) {
     fun getActions(): List<Action> =
         listOf(
