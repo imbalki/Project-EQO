@@ -2,6 +2,7 @@
 package ai.eqo.actions.impl
 
 import android.content.Context
+import androidx.core.content.edit
 import java.io.File
 
 /** The one screenshot EQO took most recently. `attachment=last_screenshot` means this file. */
@@ -20,7 +21,7 @@ internal class PrefsLastScreenshotStore(
     override fun get(): File? = prefs.getString(KEY, null)?.let(::File)?.takeIf { it.isFile }
 
     override fun record(file: File) {
-        prefs.edit().putString(KEY, file.absolutePath).apply()
+        prefs.edit { putString(KEY, file.absolutePath) }
     }
 
     private companion object {
