@@ -5,6 +5,7 @@ import ai.eqo.core.agent.LoopStep
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import androidx.core.net.toUri
 
 /** Local preflight is separate from the explicitly requested planner call. Never takes an approved plan. */
 internal class MissingAppFallback(
@@ -111,7 +112,7 @@ internal class StoreSearchOpener(
     fun search(app: String): Boolean {
         val query = Uri.encode(app)
         return try {
-            open(Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=$query")))
+            open(Intent(Intent.ACTION_VIEW, "market://search?q=$query".toUri()))
             true
         } catch (_: ActivityNotFoundException) {
             try {
