@@ -12,11 +12,11 @@ import android.app.PendingIntent
 import android.app.RemoteInput
 import android.app.Service
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import androidx.core.net.toUri
 import java.util.UUID
 import java.util.concurrent.Executors
 
@@ -142,7 +142,7 @@ class WirelessPairingService : Service() {
                     2,
                     Intent(this, WirelessPairingService::class.java)
                         .setAction(REPLY)
-                        .setData(Uri.parse("eqo-pairing://reply/$token"))
+                        .setData("eqo-pairing://reply/$token".toUri())
                         .putExtra(TOKEN, token),
                     PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
                 )
