@@ -206,7 +206,7 @@ class WhatsAppCallTest {
         }
 
     @Test
-    fun `resolved name calls without sending and ambiguous name preserves video picker metadata`() =
+    fun `resolved name calls without sending and ambiguous or unknown names are refused plainly`() =
         runTest {
             val voice = Node("Voice call")
             root = voice
@@ -218,12 +218,13 @@ class WhatsAppCallTest {
                     "Alice",
                     listOf(Contact("Alice A", phone), Contact("Alice B", "+155****4321")),
                 )
-            val picker = call("true", "Alice", true) as ActionResult.NeedsInput
-            assertEquals("WHATSAPP_CALL", picker.metadata["action"])
-            assertEquals("true", picker.metadata["video"])
+            // Changed with the contacts-by-name work: several matches never open a picker or guess a person;
+            // the call is refused with a plain message and nothing is launched.
+            val ambiguous = call("true", "Alice", true)
+            assertTrue(ambiguous is ActionResult.Failure)
             assertNull(shadowOf(context).nextStartedActivity)
             resolution = ContactResolution.NotFound("Nobody")
-            assertTrue(call(contact = "Nobody", fakeResolver = true) is ActionResult.NeedsInput)
+            assertTrue(call(contact = "Nobody", fakeResolver = true) is ActionResult.Failure)
             assertNull(shadowOf(context).nextStartedActivity)
         }
 

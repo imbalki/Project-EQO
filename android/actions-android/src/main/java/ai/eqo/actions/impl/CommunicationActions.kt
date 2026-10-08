@@ -135,13 +135,8 @@ internal class CommunicationActions constructor(
             return when (val resolved = contactResolver.resolveWithDisambiguation(contact)) {
                 is ContactResolution.Found ->
                     WhatsAppCallFlow(launcher, automation).execute(resolved.contact.phoneNumber, video)
-                is ContactResolution.Ambiguous ->
-                    buildContactPickerResult(contact, resolved.matches, name, mapOf("video" to video.toString()))
-                is ContactResolution.NotFound ->
-                    ActionResult.NeedsInput(
-                        question = "I couldn't find '$contact'. What's their WhatsApp number?",
-                        metadata = mapOf("param" to "contact"),
-                    )
+                // Several matches, no match or no Contacts permission: say so plainly, never guess a person.
+                else -> ActionResult.Failure(resolved.failureMessage())
             }
         }
     }

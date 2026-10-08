@@ -202,7 +202,15 @@ class AndroidActionRegistry internal constructor(
 
     companion object {
         private val CONTACT_ACTIONS =
-            setOf("SEND_SMS", "SEND_WHATSAPP", "WHATSAPP_CALL", "SEND_TELEGRAM", "MAKE_CALL", "MAKE_VIDEO_CALL", "SEND_EMAIL")
+            setOf(
+                "SEND_SMS",
+                "SEND_WHATSAPP",
+                "WHATSAPP_CALL",
+                "SEND_TELEGRAM",
+                "MAKE_CALL",
+                "MAKE_VIDEO_CALL",
+                "SEND_EMAIL",
+            )
         private val UNTRUSTED_OUTPUTS =
             setOf(
                 "READ_FILE",
