@@ -19,31 +19,17 @@ internal object RunDiagnostics {
             "study_action_not_applied",
         )
 
-    // Only short identifier-like reasons are logged; free text could carry user content.
-    private val SAFE_REASON = Regex("[A-Za-z0-9_ .:'-]{1,80}")
+    fun code(result: ExecuteResult): String =
+        when (result) {
+            is ExecuteResult.Success -> "executor_success_not_independent_receipt"
+            is ExecuteResult.Failure -> result.reason.takeIf { it in failureCodes } ?: "execution_failed"
+            is ExecuteResult.Interrupted -> "apply_interrupted_effect_unknown"
+        }
 
     fun result(
         stepIndex: Int,
         result: ExecuteResult,
     ) {
-        val code =
-            when (result) {
-                is ExecuteResult.Success -> "executor_success_not_independent_receipt"
-                is ExecuteResult.Failure -> result.reason.takeIf { it in failureCodes } ?: "execution_failed"
-                is ExecuteResult.Interrupted -> "apply_interrupted_effect_unknown"
-            }
-        val kind =
-            when (result) {
-                is ExecuteResult.Success -> "Success"
-                is ExecuteResult.Failure -> "Failure"
-                is ExecuteResult.Interrupted -> "Interrupted"
-            }
-        val detail =
-            (result as? ExecuteResult.Failure)
-                ?.reason
-                ?.takeIf { SAFE_REASON.matches(it) }
-                ?.let { " reason=$it" }
-                .orEmpty()
-        Log.i("EqoRun", "step=$stepIndex execute=$kind code=$code$detail")
+        Log.i("EqoRun", "step=$stepIndex code=${code(result)}")
     }
 }

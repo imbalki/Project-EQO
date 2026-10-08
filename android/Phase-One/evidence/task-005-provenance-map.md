@@ -1,5 +1,10 @@
 # TASK-005 per-file provenance map
 
+## Run-status additions (t_4fa4cbd6)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/RunStatusMapping.kt` | EQO-NEW | `ai.eqo.task` | Presentation-only handoff and plain failure mapping |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/RunStatusMappingTest.kt` | EQO-NEW | `ai.eqo.task` | Handoff, diagnosis and non-secret logging regressions |
+
 ## TASK-077 additions (issue #20)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/TaskRunService.kt` | EQO-NEW | `ai.eqo.task` | EQO foreground run owner and UI snapshot |
