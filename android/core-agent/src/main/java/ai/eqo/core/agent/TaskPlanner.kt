@@ -223,7 +223,8 @@ object TaskPlanPreview {
                 p["subject"].orEmpty(),
             )}, body ${quote(p["body"].orEmpty())}; you send it"
             "SHARE_CONTACT" ->
-                "send the saved phone number of ${quote(p["contact"].orEmpty())} to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
+                "send the saved phone number of ${quote(p["contact"].orEmpty())} " +
+                    "to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
             "SHARE_LOCATION" ->
                 "send your current location (a Google Maps link) to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
             else -> {

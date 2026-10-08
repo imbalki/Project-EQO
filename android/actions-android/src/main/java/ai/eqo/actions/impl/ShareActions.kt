@@ -39,9 +39,8 @@ internal class AndroidLocationSource(
 ) : LocationSource {
     @SuppressLint("MissingPermission")
     override suspend fun current(context: Context): LocationFix? {
-        if (context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return null
-        }
+        val fine = android.Manifest.permission.ACCESS_FINE_LOCATION
+        if (context.checkSelfPermission(fine) != PackageManager.PERMISSION_GRANTED) return null
         val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
         val providers = PROVIDERS.filter { runCatching { manager.isProviderEnabled(it) }.getOrDefault(false) }
         val fresh =
@@ -71,7 +70,7 @@ internal class AndroidLocationSource(
     private companion object {
         const val FIX_TIMEOUT_MILLIS = 8_000L
         val FRESH_PROVIDERS = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
-        val PROVIDERS = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER)
+        val PROVIDERS = FRESH_PROVIDERS + LocationManager.PASSIVE_PROVIDER
     }
 }
 
@@ -137,7 +136,9 @@ internal class ShareActions(
             is ContactResolution.Ambiguous ->
                 Recipient.Refused(ActionResult.Failure(ambiguous(to, resolved.matches)))
             is ContactResolution.NotFound ->
-                Recipient.Refused(ActionResult.Failure("No saved contact or number matches '${to.trim()}'. Nothing was sent."))
+                Recipient.Refused(
+                    ActionResult.Failure("No saved contact or number matches '${to.trim()}'. Nothing was sent."),
+                )
         }
     }
 
@@ -151,7 +152,8 @@ internal class ShareActions(
         when (recipient) {
             is Recipient.Refused -> recipient.result
             is Recipient.Email -> routes.email(recipient.address, subject, text, context)
-            is Recipient.Phone -> if (via == VIA_SMS) routes.sms(recipient.number, text) else routes.whatsApp(recipient.number, text)
+            is Recipient.Phone ->
+                if (via == VIA_SMS) routes.sms(recipient.number, text) else routes.whatsApp(recipient.number, text)
         }
 
     private fun ambiguous(
@@ -215,8 +217,11 @@ internal class ShareActions(
             if (target is Recipient.Refused) return target.result
             val fix =
                 locationSource.current(context)
-                    ?: return ActionResult.Failure("EQO could not get the phone's location. Is location on? Nothing was sent.")
-            val text = "My location: https://maps.google.com/?q=${coordinate(fix.latitude)},${coordinate(fix.longitude)}"
+                    ?: return ActionResult.Failure(
+                        "EQO could not get the phone's location. Is location on? Nothing was sent.",
+                    )
+            val point = "${coordinate(fix.latitude)},${coordinate(fix.longitude)}"
+            val text = "My location: https://maps.google.com/?q=$point"
             return send(target, via, "My location", text, context)
         }
     }
