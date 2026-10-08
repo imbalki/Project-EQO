@@ -4,6 +4,8 @@ package ai.eqo.actions.impl
 import ai.eqo.core.agent.AttachmentSpec
 import android.net.Uri
 import android.webkit.MimeTypeMap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /** One file ready to hand to another app. */
@@ -31,6 +33,9 @@ internal class AttachmentShare(
     private val accessGranted: () -> Boolean,
     private val uriFor: (File) -> Uri,
 ) {
+    /** [prepare] off the caller's thread: it copies files, which can take a moment. */
+    suspend fun prepareOnIo(raw: String?): PreparedShare = withContext(Dispatchers.IO) { prepare(raw) }
+
     /** Checks every reference, then stages copies. Nothing is staged unless every reference is acceptable. */
     fun prepare(raw: String?): PreparedShare {
         staging.sweep()
