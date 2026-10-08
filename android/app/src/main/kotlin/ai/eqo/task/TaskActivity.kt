@@ -687,7 +687,8 @@ class TaskActivity : Activity() {
             // Error category only (never the message, request or key).
             android.util.Log.w(
                 "EqoRun",
-                "planner code=${if (failure.timedOut) "MODEL_SLOW" else failure.error.code} cause=${failure.causeClass}",
+                "planner code=${if (failure.timedOut) "MODEL_SLOW" else failure.error.code} " +
+                    "cause=${failure.causeClass}",
             )
             findViewById<TextView>(R.id.task_state).setText(planningError(failure))
         } catch (failure: IllegalArgumentException) {
