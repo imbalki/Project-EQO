@@ -160,7 +160,11 @@ class AndroidActionRegistryTest {
     fun `email creates a draft with correct extras not a sent receipt`() =
         runTest {
             resolve(Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:")))
-            val result = registry.execute("SEND_EMAIL", mapOf("to" to "owner@example.test", "subject" to "test", "body" to "body"))
+            val result =
+                registry.execute(
+                    "SEND_EMAIL",
+                    mapOf("to" to "owner@example.test", "subject" to "test", "body" to "body"),
+                )
             assertTrue(result is ActionResult.UserActionRequired)
             val intent = shadowOf(context as android.app.Application).nextStartedActivity
             assertEquals("mailto:", intent.dataString)
