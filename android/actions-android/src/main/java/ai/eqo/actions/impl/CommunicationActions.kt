@@ -81,7 +81,7 @@ internal class CommunicationActions constructor(
                 body: String,
                 context: Context,
             ): ActionResult =
-                SendEmailAction(AndroidEmailComposer(launcher))
+                SendEmailAction(AndroidEmailComposer(launcher), contactResolver)
                     .execute(mapOf("to" to to, "subject" to subject, "body" to body), context)
         }
 

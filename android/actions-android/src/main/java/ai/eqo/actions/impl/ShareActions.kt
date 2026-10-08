@@ -8,6 +8,7 @@ import ai.eqo.actions.base.ActionResult
 import ai.eqo.core.agent.Contact
 import ai.eqo.core.agent.ContactResolution
 import ai.eqo.core.agent.ContactResolver
+import ai.eqo.core.agent.failureMessage
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
@@ -135,6 +136,8 @@ internal class ShareActions(
             is ContactResolution.Found -> Recipient.Phone(resolved.contact.phoneNumber)
             is ContactResolution.Ambiguous ->
                 Recipient.Refused(ActionResult.Failure(ambiguous(to, resolved.matches)))
+            is ContactResolution.PermissionDenied ->
+                Recipient.Refused(ActionResult.Failure(resolved.failureMessage()))
             is ContactResolution.NotFound ->
                 Recipient.Refused(
                     ActionResult.Failure("No saved contact or number matches '${to.trim()}'. Nothing was sent."),
@@ -191,6 +194,8 @@ internal class ShareActions(
                     is ContactResolution.Found -> resolved.contact
                     is ContactResolution.Ambiguous ->
                         return ActionResult.Failure(ambiguous(query, resolved.matches))
+                    is ContactResolution.PermissionDenied ->
+                        return ActionResult.Failure(resolved.failureMessage())
                     is ContactResolution.NotFound ->
                         return ActionResult.Failure("No saved contact named '$query' was found. Nothing was sent.")
                 }
