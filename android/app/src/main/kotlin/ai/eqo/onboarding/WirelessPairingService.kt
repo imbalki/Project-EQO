@@ -48,6 +48,7 @@ class WirelessPairingService : Service() {
             return
         }
         WirelessPairingSession.message = null
+        WirelessPairingSession.discovering = true
         discovery = WirelessAdbDiscovery(this, WirelessPairingSession.state, ::changed).also { it.start() }
         main.postDelayed(expiry, SESSION_MS)
     }
@@ -159,6 +160,8 @@ class WirelessPairingService : Service() {
 
     override fun onDestroy() {
         closed = true
+        WirelessPairingSession.discovering = false
+        WirelessPairingSession.message = null
         main.removeCallbacks(expiry)
         discovery?.close()
         worker.shutdownNow()

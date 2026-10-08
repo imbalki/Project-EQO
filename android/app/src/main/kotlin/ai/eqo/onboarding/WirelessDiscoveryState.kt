@@ -111,6 +111,7 @@ internal fun pairNotificationReply(
 
 internal object WirelessPairingSession {
     var state = WirelessDiscoveryState()
+    var discovering = false
     var observer: (() -> Unit)? = null
     var busy = false
     var message: String? = null

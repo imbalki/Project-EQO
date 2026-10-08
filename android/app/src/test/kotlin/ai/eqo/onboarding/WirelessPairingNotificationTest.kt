@@ -40,6 +40,7 @@ class WirelessPairingNotificationTest {
     @After
     fun reset() {
         WirelessPairingSession.state = WirelessDiscoveryState()
+        WirelessPairingSession.discovering = false
         WirelessPairingSession.busy = false
         WirelessPairingSession.message = null
         WirelessPairingSession.observer = null
@@ -221,7 +222,10 @@ class WirelessPairingNotificationTest {
         val capabilities = shadowOf(NetworkCapabilities()).addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
         connectivity.setNetworkCapabilities(network, capabilities)
         // Fixture-only hidden setters exist in Android's full runtime, not its public SDK stubs.
-        val address = LinkAddress::class.java.getConstructor(String::class.java).newInstance("192.0.2.1/24")
+        val address =
+            LinkAddress::class.java
+                .getConstructor(InetAddress::class.java, Int::class.javaPrimitiveType)
+                .newInstance(InetAddress.getByName("192.0.2.1"), 24)
         val properties = LinkProperties()
         LinkProperties::class.java.getMethod("addLinkAddress", LinkAddress::class.java).invoke(properties, address)
         connectivity.setLinkProperties(network, properties)
@@ -250,10 +254,11 @@ class WirelessPairingNotificationTest {
             .single()
             .onServiceFound(info)
         shadowOf(Looper.getMainLooper()).idle()
+        // Manually invoking a shadow callback does not remove its completed listener.
         nsd
             .getResolveListeners(info)
             .orEmpty()
-            .single()
+            .last()
             .onServiceResolved(info)
         shadowOf(Looper.getMainLooper()).idle()
     }

@@ -192,7 +192,15 @@ class WirelessAdbSetupActivity : Activity() {
 
     private fun canConnect(): Boolean {
         val wifi = WirelessPairingSession.state.networkId != null
-        if (!wifi) showMessage(getString(R.string.wireless_wifi_needed))
+        if (!wifi) {
+            val message =
+                if (WirelessPairingSession.discovering) {
+                    R.string.wireless_wifi_needed
+                } else {
+                    R.string.wireless_discovery_stopped
+                }
+            showMessage(getString(message))
+        }
         val idle = !busy && !WirelessPairingSession.busy
         return isPermitted && idle && wifi
     }
@@ -217,6 +225,7 @@ class WirelessAdbSetupActivity : Activity() {
         val state = WirelessPairingSession.state
         val message =
             when {
+                !WirelessPairingSession.discovering -> R.string.wireless_discovery_stopped
                 state.networkId == null -> R.string.wireless_wifi_needed
                 state.endpoints() != null -> R.string.wireless_ports_found
                 state.timedOut && state.connectionPort == null -> R.string.wireless_debugging_off

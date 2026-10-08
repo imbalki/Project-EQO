@@ -79,6 +79,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="wireless_developer_options">Open Developer options</string>
     <string name="wireless_discovery_start">Find ports / enable code notification</string>
     <string name="wireless_discovery_stop">Stop finding ports</string>
+    <string name="wireless_discovery_stopped">Port search stopped. Tap Find ports to start it again. Each search lasts five minutes.</string>
     <string name="wireless_discovery_waiting">Looking for this phone\'s wireless debugging ports… Open the pairing dialog.</string>
     <string name="wireless_ports_found">Both ports found. Only the six-digit code is needed.</string>
     <string name="wireless_debugging_off">Wireless debugging may be off, or its ports could not be found. Open Developer options and turn it on. If it is already on, use the port boxes below.</string>
