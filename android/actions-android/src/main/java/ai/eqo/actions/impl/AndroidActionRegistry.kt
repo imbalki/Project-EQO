@@ -280,7 +280,6 @@ class AndroidActionRegistry internal constructor(
             return AndroidActionRegistry(
                 context,
                 listOf(
-<<<<<<< HEAD
                     CommunicationActions(
                         contacts,
                         calls,
@@ -288,9 +287,6 @@ class AndroidActionRegistry internal constructor(
                         automation = automation,
                         attachments = files.attachments,
                     ).getActions(),
-=======
-                    CommunicationActions(contacts, calls, launcher, files.attachments, automation).getActions(),
->>>>>>> 1190536 (fix(android): keep CommunicationActions' automation lambda as the last parameter)
                     FileActions(files.browser).getActions(),
                     AdvancedControlActions().getActions(),
                     SystemActions(launcher, permissions, automation, options.screenAnalyzer, files.screenshots)

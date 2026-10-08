@@ -116,11 +116,7 @@ internal class CommunicationActions constructor(
     private val contactResolver: ContactResolver,
     private val callFlowExecutor: CallFlowExecutor,
     private val launcher: GatedIntentLauncher,
-<<<<<<< HEAD
     private val locationSource: LocationSource = AndroidLocationSource(),
-    private val automation: () -> ai.eqo.accessibility.EqoAutomation? = { null },
-=======
->>>>>>> 1190536 (fix(android): keep CommunicationActions' automation lambda as the last parameter)
     private val attachments: AttachmentShare? = null,
     // Keep last: callers and tests pass it as a trailing lambda.
     private val automation: () -> ai.eqo.accessibility.EqoAutomation? = { null },
