@@ -598,3 +598,5 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :app | `android/app/src/main/kotlin/ai/eqo/onboarding/HelperPermissionPrompt.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, helper consent follow-up to PR #77) |
 | :app | `android/app/src/test/kotlin/ai/eqo/onboarding/HelperAuthorizationTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, helper consent follow-up to PR #77) |
 | :app | `android/app/src/test/kotlin/ai/eqo/onboarding/HelperPermissionPromptTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, helper consent follow-up to PR #77) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/ShareActions.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, share contact / share location actions) |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/ShareActionsTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, share contact / share location actions) |

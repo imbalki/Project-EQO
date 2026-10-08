@@ -88,6 +88,18 @@ class AndroidActionRegistry internal constructor(
         if (name in CONTACT_ACTIONS && !isNumber && !telegramUsername) {
             required += ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Allow contacts access to find this person.")
         }
+        if (name in SHARE_ACTIONS) {
+            val to = params["to"].orEmpty().trim()
+            val toPhone = to.replace(Regex("[+\\-\\s()]"), "")
+            val recipientIsName = params["via"]?.trim()?.lowercase() != "email" && !(toPhone.isNotEmpty() && toPhone.all { it.isDigit() })
+            if (name == "SHARE_CONTACT" || recipientIsName) {
+                required += ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Allow contacts access to find this person.")
+            }
+            if (name == "SHARE_LOCATION") {
+                required +=
+                    ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Allow location access to share where you are.")
+            }
+        }
         if (name == "MAKE_CALL" && DeviceCapabilities.canMakeCalls(context)) {
             required += ActionPermission.Runtime(Manifest.permission.CALL_PHONE, "Allow phone access to place this call.")
             required +=
@@ -153,6 +165,7 @@ class AndroidActionRegistry internal constructor(
 
     companion object {
         private val CONTACT_ACTIONS = setOf("SEND_SMS", "SEND_WHATSAPP", "SEND_TELEGRAM", "MAKE_CALL", "MAKE_VIDEO_CALL")
+        private val SHARE_ACTIONS = setOf("SHARE_CONTACT", "SHARE_LOCATION")
         private val UNTRUSTED_OUTPUTS =
             setOf(
                 "READ_FILE",

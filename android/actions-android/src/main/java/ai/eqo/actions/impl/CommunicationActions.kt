@@ -61,8 +61,32 @@ internal class CommunicationActions constructor(
     private val contactResolver: ContactResolver,
     private val callFlowExecutor: CallFlowExecutor,
     private val launcher: GatedIntentLauncher,
+    private val locationSource: LocationSource = AndroidLocationSource(),
 ) {
     private val json = Json { ignoreUnknownKeys = true }
+
+    /** SHARE_CONTACT / SHARE_LOCATION reuse the WhatsApp, SMS and email routes below unchanged. */
+    private val shareRoutes =
+        object : ShareRoutes {
+            override suspend fun whatsApp(
+                phone: String,
+                message: String,
+            ): ActionResult = executeWhatsApp(phone, phone, message)
+
+            override suspend fun sms(
+                phone: String,
+                message: String,
+            ): ActionResult = executeSms(phone, phone, message)
+
+            override suspend fun email(
+                to: String,
+                subject: String,
+                body: String,
+                context: Context,
+            ): ActionResult =
+                SendEmailAction(AndroidEmailComposer(launcher))
+                    .execute(mapOf("to" to to, "subject" to subject, "body" to body), context)
+        }
 
     fun getActions(): List<Action> =
         listOf(
@@ -76,7 +100,7 @@ internal class CommunicationActions constructor(
             MakeVideoCallAction(),
             ReadMessagesAction(),
             ReadEmailsAction(),
-        )
+        ) + ShareActions(contactResolver, locationSource, shareRoutes).getActions()
 
     companion object {
         /**
