@@ -160,7 +160,7 @@ class AutomationExecutorsTest {
             )
         assertTrue(registry.enabledActionNames.containsAll(names))
         names.forEach { assertNotNull(ActionSchema.getAction(it)) }
-        assertEquals(95, registry.enabledActionNames.size)
+        assertEquals(96, registry.enabledActionNames.size)
     }
 
     @Test
