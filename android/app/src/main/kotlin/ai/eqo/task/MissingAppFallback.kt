@@ -116,7 +116,8 @@ internal class StoreSearchOpener(
             true
         } catch (_: ActivityNotFoundException) {
             try {
-                open(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/search?q=$query&c=apps")))
+                val web = "https://play.google.com/store/search?q=$query&c=apps".toUri()
+                open(Intent(Intent.ACTION_VIEW, web))
                 true
             } catch (_: ActivityNotFoundException) {
                 false
