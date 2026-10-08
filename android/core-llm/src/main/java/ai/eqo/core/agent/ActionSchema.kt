@@ -44,6 +44,16 @@ enum class ActionCategory {
 }
 
 object ActionSchema {
+    /** Shared by SEND_EMAIL, SEND_WHATSAPP and SEND_SMS; declared first so the catalog below can use it. */
+    private val ATTACHMENT_PARAM =
+        ParamDefinition(
+            "attachment",
+            ParamType.STRING,
+            false,
+            "Optional file to attach: a file path, or last_screenshot for the latest EQO screenshot. " +
+                "Several: separate with |",
+        )
+
     val ALL_ACTIONS =
         listOf(
             // ── SYSTEM ──────────────────────────────────────
@@ -85,7 +95,9 @@ object ActionSchema {
             ),
             ActionDefinition(
                 name = "TAKE_SCREENSHOT",
-                description = "Takes a screenshot of current screen",
+                description =
+                    "Takes a screenshot of the current screen and saves it in EQO's own Screenshots folder " +
+                        "(attach it later with attachment=last_screenshot). Refused on protected screens.",
                 params = emptyList(),
                 examples = listOf("take screenshot", "screenshot", "capture screen", "screengrab"),
                 category = ActionCategory.SYSTEM,
@@ -419,6 +431,7 @@ object ActionSchema {
                     listOf(
                         ParamDefinition("contact", ParamType.STRING, true, "Contact name or number"),
                         ParamDefinition("message", ParamType.STRING, true, "Message to send"),
+                        ATTACHMENT_PARAM,
                     ),
                 examples = listOf("send hi to dad on whatsapp", "whatsapp mom I'm coming home"),
                 category = ActionCategory.COMMUNICATION,
@@ -470,6 +483,7 @@ object ActionSchema {
                     listOf(
                         ParamDefinition("contact", ParamType.STRING, true, "Contact name or number"),
                         ParamDefinition("message", ParamType.STRING, true, "SMS message text"),
+                        ATTACHMENT_PARAM,
                     ),
                 examples = listOf("send sms to dad", "text mom"),
                 category = ActionCategory.COMMUNICATION,
@@ -483,7 +497,7 @@ object ActionSchema {
                         ParamDefinition("subject", ParamType.STRING, true, "Email subject"),
                         ParamDefinition("body", ParamType.STRING, true, "Email body"),
                         ParamDefinition("cc", ParamType.STRING, false, "CC recipients"),
-                        ParamDefinition("attachments", ParamType.STRING, false, "Attachment paths"),
+                        ATTACHMENT_PARAM,
                     ),
                 examples = listOf("send email to boss", "email John"),
                 category = ActionCategory.COMMUNICATION,
@@ -1263,10 +1277,30 @@ object ActionSchema {
             // ── ADVANCED (Files & Accessibility) ────────────
             ActionDefinition(
                 name = "LIST_FILES",
-                description = "Lists files in a directory",
-                params = listOf(ParamDefinition("path", ParamType.STRING, true, "Directory path")),
+                description =
+                    "Read-only. Lists the files in a folder such as Downloads, Documents, Pictures, DCIM, " +
+                        "Screenshots or a full path. Needs All files access outside EQO's own workspace.",
+                params =
+                    listOf(
+                        ParamDefinition("folder", ParamType.STRING, false, "Folder name or path; empty: EQO workspace"),
+                    ),
                 examples = listOf("list files in downloads", "show files"),
                 category = ActionCategory.ADVANCED,
+                risk = ActionRisk.READ_ONLY,
+            ),
+            ActionDefinition(
+                name = "FIND_FILES",
+                description =
+                    "Read-only. Finds files whose name contains the query, searching a folder and the folders " +
+                        "inside it. Returns names and paths only, never file contents. Needs All files access.",
+                params =
+                    listOf(
+                        ParamDefinition("query", ParamType.STRING, true, "Part of the file name to look for"),
+                        ParamDefinition("folder", ParamType.STRING, false, "Folder to search; empty: everywhere"),
+                    ),
+                examples = listOf("find my resume pdf", "find files named invoice in downloads"),
+                category = ActionCategory.ADVANCED,
+                risk = ActionRisk.READ_ONLY,
             ),
             ActionDefinition(
                 name = "READ_FILE",

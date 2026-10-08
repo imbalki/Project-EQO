@@ -93,6 +93,18 @@
             android:background="@drawable/study_card_interactive"
             android:text="@string/setup_hub_row_chrome_consent" />
 
+        <TextView
+            style="@style/StudySetupRow"
+            android:id="@+id/row_all_files"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/study_card_padding"
+            android:minHeight="52dp"
+            android:focusable="true"
+            android:clickable="true"
+            android:background="@drawable/study_card_interactive"
+            android:text="@string/setup_hub_row_all_files" />
+
         <Button
             style="@style/StudyButton"
             android:id="@+id/setup_recheck_button"

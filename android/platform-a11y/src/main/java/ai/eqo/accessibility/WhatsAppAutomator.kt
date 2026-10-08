@@ -115,4 +115,27 @@ object WhatsAppAutomator {
         Log.d("WhatsAppAutomator", "Post-send verification passed — message appears to be sent")
         return true
     }
+
+    /**
+     * After a file was shared into WhatsApp: the preview screen shows the file with a caption box and a round
+     * Send button. Presses that button only when the preview is on screen. If WhatsApp is still asking
+     * which chat to use (the contact picker), nothing is pressed and the owner picks the chat.
+     */
+    suspend fun automateSendSharedFiles(): Boolean {
+        val service = EQOAccessibilityService.getInstance() ?: return false
+        delay(SHARE_SETTLE_MS)
+        val inWhatsApp = service.rootInActiveWindow?.packageName?.toString() == "com.whatsapp"
+        return inWhatsApp && pressSharedSend(service.gatedActions)
+    }
+
+    private fun pressSharedSend(actions: GatedServiceActions): Boolean {
+        val byId = SHARE_SEND_IDS.firstOrNull { actions.findAndClickById(it).isSuccess }
+        val clicked = byId != null || actions.findAndClick("Send").isSuccess
+        if (!clicked) Log.w("WhatsAppAutomator", "No Send button on the shared-file preview")
+        return clicked
+    }
+
+    private const val SHARE_SETTLE_MS = 4000L
+    private val SHARE_SEND_IDS =
+        listOf("com.whatsapp:id/send", "com.whatsapp:id/send_button", "com.whatsapp:id/button_send")
 }

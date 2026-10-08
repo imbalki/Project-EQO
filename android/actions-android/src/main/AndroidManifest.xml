@@ -38,6 +38,7 @@
         <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="tg" /></intent>
         <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>
         <package android:name="com.whatsapp" />
+        <package android:name="com.google.android.gm" />
         <package android:name="org.telegram.messenger" />
         <package android:name="org.telegram.messenger.web" />
         <package android:name="org.telegram.plus" />
