@@ -1,12 +1,14 @@
 // Origin: EQO TASK-069 (#20), just-in-time Android permission UI regressions.
 package ai.eqo.task
 
+import ai.eqo.R
 import ai.eqo.actions.impl.ActionPermission
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.os.Looper
 import android.provider.Settings
+import android.widget.TextView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -166,6 +168,10 @@ class TaskPermissionRequesterTest {
         assertNull("opening the task screen requests no grant", shadowOf(activity).lastRequestedPermission)
         val inFlight =
             startRequest(requester, ActionPermission.Runtime(Manifest.permission.CALL_PHONE, "Place this call."))
+
+        val waitingText = activity.findViewById<TextView>(R.id.task_state).text.toString()
+        assertTrue(waitingText.contains("Needs you"))
+        assertTrue(waitingText.contains("Phone"))
 
         lifecycle.pause().stop().destroy()
 

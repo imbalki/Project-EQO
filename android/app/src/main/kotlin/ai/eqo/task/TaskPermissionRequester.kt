@@ -19,6 +19,7 @@ import kotlin.coroutines.resume
 /** Owned by one TaskActivity. No grants are requested at setup/startup. */
 internal class TaskPermissionRequester(
     private val activity: Activity,
+    private val onWaiting: (String?) -> Unit = {},
 ) : PermissionRequester {
     private val mutex = Mutex()
     private var pending: CancellableContinuation<Boolean>? = null
@@ -35,6 +36,12 @@ internal class TaskPermissionRequester(
                 suspendCancellableCoroutine { continuation ->
                     pending = continuation
                     requested = permission
+                    onWaiting(
+                        when (permission) {
+                            is ActionPermission.Runtime -> permission.name
+                            is ActionPermission.SpecialAccess -> permission.settingsAction
+                        },
+                    )
                     continuation.invokeOnCancellation {
                         activity.runOnUiThread { settle(false) }
                     }
@@ -115,6 +122,7 @@ internal class TaskPermissionRequester(
         val continuation = pending
         pending = null
         requested = null
+        onWaiting(null)
         leftForSettings = false
         settingsLaunched = false
         // Cleanup must never swallow the user's answer (and tests may settle from a
