@@ -61,7 +61,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
 
     <!-- TASK-015: guided wireless ADB (UF-04/UF-05, S-08..S-11). Two ports, two names (REQ-ADB-05). -->
     <string name="wireless_adb_title">Wireless debugging</string>
-    <string name="wireless_adb_explanation">EQO pairs through Android\'s own Wireless debugging screen: Settings → About phone → Build number (tap seven times) → Developer options → Wireless debugging → Pair device with pairing code. Android\'s wireless debugging uses two different ports with two different names. The pairing port is shown inside the "Pair device with pairing code" dialog, next to the pairing code. The connection port is the "IP address &amp; port" value on the wireless debugging screen itself. EQO uses this connection only to start its own helper.</string>
+    <string name="wireless_adb_explanation">1. Connect this phone to Wi-Fi. Tap Find ports to enable the code notification.\n2. Open Developer options, turn on Wireless debugging, then tap Pair device with pairing code.\n3. Keep that dialog open. Reply to the EQO notification with the six-digit code.\n4. Return to EQO, tap Connect again, then tap Allow in EQO\'s helper prompt.\nIf notifications are blocked, enter the code here using split screen. EQO finds both ports for you.</string>
     <string name="wireless_adb_pairing_code_hint">Pairing code (six digits)</string>
     <string name="wireless_adb_pairing_port_hint">Pairing port</string>
     <string name="wireless_adb_connection_port_hint">Connection port</string>
@@ -69,12 +69,29 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="wireless_adb_reconnect">Connect again (already paired)</string>
     <string name="wireless_adb_forget">Forget this pairing</string>
     <string name="wireless_adb_state_label">Status: %1$s</string>
-    <string name="wireless_link_not_paired">Not paired. Enter the pairing code and both ports from the Wireless debugging screen, then tap Pair and connect.</string>
+    <string name="wireless_link_not_paired">Not paired. Open Android\'s pairing dialog and enter its six-digit code.</string>
     <string name="wireless_link_connected">Paired and connected.</string>
-    <string name="wireless_link_lost">Paired, but not connected right now. Check that Wireless debugging is on, enter the connection port, then tap Connect again.</string>
+    <string name="wireless_link_lost">Paired, but not connected right now. Turn on Wireless debugging, then tap Connect again.</string>
     <string name="wireless_link_repair">Needs re-pair. This phone no longer matches the pairing EQO recorded. Open Wireless debugging, tap Pair device with pairing code, and pair again.</string>
     <string name="wireless_adb_working">Working… keep the pairing dialog open.</string>
-    <string name="wireless_adb_bad_input">Enter the six-digit pairing code and a port number between 1 and 65535 in each port box.</string>
+    <string name="wireless_adb_bad_input">Enter the six-digit code. Wait for EQO to find both ports, or fill in the fallback port boxes.</string>
+    <string name="wireless_wifi_needed">Wi-Fi needed. Connect this phone to Wi-Fi before pairing.</string>
+    <string name="wireless_developer_options">Open Developer options</string>
+    <string name="wireless_discovery_start">Find ports / enable code notification</string>
+    <string name="wireless_discovery_stop">Stop finding ports</string>
+    <string name="wireless_discovery_waiting">Looking for this phone\'s wireless debugging ports… Open the pairing dialog.</string>
+    <string name="wireless_ports_found">Both ports found. Only the six-digit code is needed.</string>
+    <string name="wireless_debugging_off">Wireless debugging may be off, or its ports could not be found. Open Developer options and turn it on. If it is already on, use the port boxes below.</string>
+    <string name="wireless_manual_fallback">Ports not found yet. Keep the pairing dialog open, or enter its pairing port and the connection port from Wireless debugging.</string>
+    <string name="wireless_settings_unavailable">Could not open Developer options. Open it from your phone\'s Settings.</string>
+    <string name="wireless_notification_channel">EQO wireless pairing</string>
+    <string name="wireless_notification_title">EQO is finding wireless debugging</string>
+    <string name="wireless_notification_ready">Enter the pairing code for EQO</string>
+    <string name="wireless_notification_waiting">Open Wireless debugging and its pairing-code dialog. Tap here to return to EQO.</string>
+    <string name="wireless_notification_reply">Enter code</string>
+    <string name="wireless_reply_invalid">Enter exactly six digits. Keep the pairing dialog open while EQO finds both ports.</string>
+    <string name="wireless_reply_paired">Paired securely. Return to EQO and tap Connect again to start the helper and approve its prompt.</string>
+    <string name="wireless_reply_failed">Could not pair securely. Reopen the pairing dialog and try its new code. Return to EQO if ports need to be entered.</string>
     <string name="wireless_adb_bad_port">Enter the connection port (the IP address and port value on the Wireless debugging screen).</string>
     <string name="wireless_adb_forgotten">Pairing forgotten. Pair again to connect.</string>
     <string name="wireless_adb_check_passed">Passed</string>
