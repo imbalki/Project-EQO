@@ -595,6 +595,8 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :adb-pairing | `android/adb-pairing/src/main/kotlin/ai/eqo/adb/pairing/ConnectKeyEnrollment.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20, PR #77 CONNECT-plane correction) |
 | :adb-pairing | `android/adb-pairing/src/test/kotlin/ai/eqo/adb/pairing/ConnectKeyEnrollmentTest.kt` | EQO-NEW | `ai.eqo.adb.pairing` | imbalki/project-eqo (EQO-authored, TASK-080 issue #20, PR #77 CONNECT-plane correction) |
 
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ContactResolverTest.kt` | NEW | `ai.eqo.core.agent` | EQO contacts task t_212ea16c: fake Contacts provider safety and privacy tests |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/ContactRecipientsTest.kt` | NEW | `ai.eqo.actions.impl` | EQO contacts task t_212ea16c: five-action fake recipient and approval regressions |
 ## Helper authorization follow-up to PR #77 (Refs #20)
 
 | Module | File | Kind | Package | Provenance |

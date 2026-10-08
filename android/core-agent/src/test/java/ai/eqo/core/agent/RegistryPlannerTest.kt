@@ -41,6 +41,10 @@ class RegistryPlannerTest {
         val prompt = RegistryPlanVocabulary.prompt(enabled)
         assertTrue(prompt.contains("TYPE_TEXT"))
         assertTrue(prompt.contains("searchText"))
+        assertTrue(prompt.contains("saved contact name or a phone number"))
+        assertTrue(prompt.contains("SEND_EMAIL to may be a name or email"))
+        assertTrue(prompt.contains("Never invent recipients or addresses"))
+        assertTrue(prompt.contains("Telegram usernames must start with @"))
         assertFalse(prompt.contains("MAKE_CALL:"))
     }
 

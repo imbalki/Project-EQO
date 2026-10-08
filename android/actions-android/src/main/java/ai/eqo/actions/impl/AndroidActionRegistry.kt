@@ -7,13 +7,20 @@ import ai.eqo.accessibility.UntrustedScreenText
 import ai.eqo.actions.base.Action
 import ai.eqo.actions.base.ActionResult
 import ai.eqo.core.agent.ActionSchema
+import ai.eqo.core.agent.ContactResolution
 import ai.eqo.core.agent.ContactResolver
+import ai.eqo.core.agent.LoopStep
+import ai.eqo.core.agent.failureMessage
+import ai.eqo.core.agent.isLiteralEmail
+import ai.eqo.core.agent.isLiteralPhone
 import ai.eqo.core.security.AndroidSensitiveMemoryStore
 import ai.eqo.core.security.SensitiveMemoryStore
 import ai.eqo.core.util.DeviceCapabilities
 import android.Manifest
 import android.content.Context
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * The only public executor entry point. Construction is explicit; action implementations
@@ -25,6 +32,7 @@ class AndroidActionRegistry internal constructor(
     families: List<List<Action>>,
     private val permissions: PermissionRequester,
     private val unknownActions: UnknownActionSink,
+    private val contactResolver: ContactResolver = ContactResolver(context),
 ) {
     private val executors: Map<String, Action> = families.flatten().associateBy { it.name }
     val enabledActionNames: Set<String> get() = executors.keys.toSet()
@@ -74,19 +82,60 @@ class AndroidActionRegistry internal constructor(
         }
     }
 
+    /** Lookup is local and happens before approval. The approved snapshot contains the literal destination. */
+    suspend fun prepareRecipients(steps: List<LoopStep>): RecipientPlan {
+        val names = mutableMapOf<String, String>()
+        val prepared =
+            steps.map { step ->
+                val name = step.action.name
+                if (name !in CONTACT_ACTIONS) return@map step
+                val key = if (name == "SEND_EMAIL") "to" else "contact"
+                val input =
+                    step.action.params[key]
+                        .orEmpty()
+                        .trim()
+                if (name == "SEND_TELEGRAM" && input.startsWith("@")) return@map step
+                val needed = requiredPermissions(name, step.action.params)
+                val permission = needed.firstOrNull { it.name == Manifest.permission.READ_CONTACTS }
+                if (permission != null && !permissions.request(permission)) {
+                    throw RecipientPreparationException(ContactResolution.PermissionDenied.failureMessage())
+                }
+                val resolved =
+                    withContext(Dispatchers.IO) {
+                        if (name == "SEND_EMAIL") {
+                            contactResolver.resolveEmailWithDisambiguation(input)
+                        } else {
+                            contactResolver.resolveWithDisambiguation(input)
+                        }
+                    }
+                if (resolved !is ContactResolution.Found) throw RecipientPreparationException(resolved.failureMessage())
+                names[step.stepId] = resolved.contact.name
+                step.copy(
+                    action = step.action.copy(params = step.action.params + (key to resolved.contact.phoneNumber)),
+                )
+            }
+        return RecipientPlan(prepared, names.toMap())
+    }
+
     private fun requiredPermissions(
         name: String,
         params: Map<String, String>,
     ): List<ActionPermission.Runtime> {
         val required = mutableListOf<ActionPermission.Runtime>()
-        val contact = params["contact"].orEmpty().trim()
-        val phone = contact.replace(Regex("[+\\-\\s()]"), "")
-        val isNumber = phone.isNotEmpty() && phone.all { it.isDigit() }
-        val telegramUsername =
-            name == "SEND_TELEGRAM" &&
-                (contact.startsWith("@") || (contact.isNotEmpty() && !contact.contains(" ") && !contact.all { it.isDigit() }))
-        if (name in CONTACT_ACTIONS && !isNumber && !telegramUsername) {
-            required += ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Allow contacts access to find this person.")
+        val contact = params[if (name == "SEND_EMAIL") "to" else "contact"].orEmpty().trim()
+        val direct =
+            if (name == "SEND_EMAIL") {
+                isLiteralEmail(contact)
+            } else {
+                isLiteralPhone(contact) ||
+                    (name == "SEND_TELEGRAM" && contact.startsWith("@"))
+            }
+        if (name in CONTACT_ACTIONS && !direct) {
+            required +=
+                ActionPermission.Runtime(
+                    Manifest.permission.READ_CONTACTS,
+                    ContactResolution.PermissionDenied.failureMessage(),
+                )
         }
         if (name == "MAKE_CALL" && DeviceCapabilities.canMakeCalls(context)) {
             required += ActionPermission.Runtime(Manifest.permission.CALL_PHONE, "Allow phone access to place this call.")
@@ -141,7 +190,7 @@ class AndroidActionRegistry internal constructor(
         ) {
             (result["message"] ?: result["text"] ?: result["content"])?.let { result["response"] = it }
         }
-        if (name in CONTACT_ACTIONS && "contact" !in result) {
+        if (name in CONTACT_ACTIONS && name != "SEND_EMAIL" && "contact" !in result) {
             val aliases = if (name == "MAKE_CALL") listOf("number", "phone", "phoneNumber") else listOf("to", "recipient", "username")
             aliases.firstNotNullOfOrNull { result[it] }?.let { result["contact"] = it }
         }
@@ -153,7 +202,7 @@ class AndroidActionRegistry internal constructor(
 
     companion object {
         private val CONTACT_ACTIONS =
-            setOf("SEND_SMS", "SEND_WHATSAPP", "WHATSAPP_CALL", "SEND_TELEGRAM", "MAKE_CALL", "MAKE_VIDEO_CALL")
+            setOf("SEND_SMS", "SEND_WHATSAPP", "WHATSAPP_CALL", "SEND_TELEGRAM", "MAKE_CALL", "MAKE_VIDEO_CALL", "SEND_EMAIL")
         private val UNTRUSTED_OUTPUTS =
             setOf(
                 "READ_FILE",
@@ -183,6 +232,7 @@ class AndroidActionRegistry internal constructor(
             options: RegistryOptions,
         ): AndroidActionRegistry {
             val launcher = GatedIntentLauncher(context, automation)
+            val contacts = options.contactResolver ?: ContactResolver(context)
             val calls = CallFlowExecutor(options.callVerifier ?: AndroidCallFlowVerifier(), launcher)
             val http = options.informationHttp ?: AndroidInformationHttp(context)
             val memoryStore = options.memoryStore ?: AndroidSensitiveMemoryStore(context)
@@ -194,7 +244,7 @@ class AndroidActionRegistry internal constructor(
             return AndroidActionRegistry(
                 context,
                 listOf(
-                    CommunicationActions(ContactResolver(context), calls, launcher, automation).getActions(),
+                    CommunicationActions(contacts, calls, launcher, automation).getActions(),
                     AdvancedControlActions().getActions(),
                     SystemActions(launcher, permissions, automation, options.screenAnalyzer).getActions(),
                     CalendarActions(launcher, permissions, automation).getActions(),
@@ -212,6 +262,7 @@ class AndroidActionRegistry internal constructor(
                 ),
                 permissions,
                 unknownActions,
+                contacts,
             ).also { registry = it }
         }
     }
@@ -226,9 +277,20 @@ class RegistryOptions(
     val productivityStore: ProductivityStore = UnavailableProductivityStore,
     val screenMemoryExtractor: ScreenMemoryExtractor? = null,
 ) {
+    internal var contactResolver: ContactResolver? = null
     internal var callVerifier: CallFlowVerifier? = null
     internal var informationHttp: InformationHttp? = null
     internal var memoryStore: SensitiveMemoryStore? = null
     internal var automationDaos: AutomationDaos? = null
     internal var autoReplyConfig: AutoReplyConfigStore? = null
 }
+
+/** Display labels stay local; only steps are passed to the immutable approval snapshot. */
+data class RecipientPlan(
+    val steps: List<LoopStep>,
+    val names: Map<String, String>,
+)
+
+class RecipientPreparationException(
+    message: String,
+) : IllegalArgumentException(message)

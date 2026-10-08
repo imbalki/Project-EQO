@@ -8,13 +8,11 @@ import ai.eqo.actions.base.Action
 import ai.eqo.actions.base.ActionResult
 import ai.eqo.core.agent.ContactResolution
 import ai.eqo.core.agent.ContactResolver
-import ai.eqo.core.agent.maskPhone
+import ai.eqo.core.agent.failureMessage
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.net.toUri
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.net.URLEncoder
 
 internal enum class EmailComposeOutcome {
@@ -63,8 +61,6 @@ internal class CommunicationActions constructor(
     private val launcher: GatedIntentLauncher,
     private val automation: () -> ai.eqo.accessibility.EqoAutomation? = { null },
 ) {
-    private val json = Json { ignoreUnknownKeys = true }
-
     fun getActions(): List<Action> =
         listOf(
             MakeCallAction(),
@@ -73,64 +69,12 @@ internal class CommunicationActions constructor(
             SendTelegramAction(),
             OpenTelegramAction(),
             SendSmsAction(),
-            SendEmailAction(AndroidEmailComposer(launcher)),
+            SendEmailAction(AndroidEmailComposer(launcher), contactResolver),
             SendWhatsAppGroupAction(),
             MakeVideoCallAction(),
             ReadMessagesAction(),
             ReadEmailsAction(),
         )
-
-    companion object {
-        /**
-         * Legacy static resolve for backward compat.
-         * Used by actions that don't yet support disambiguation.
-         */
-        private fun resolveContactToPhoneNumber(
-            context: Context,
-            contact: String,
-        ): String {
-            require(!contact.startsWith("\$")) { "Unresolved contact placeholder: $contact" }
-            val cleaned = contact.replace(" ", "").replace("-", "")
-            if (cleaned.startsWith("+") || (cleaned.isNotEmpty() && cleaned.all { it.isDigit() })) {
-                return cleaned
-            }
-            val result = ContactResolver.resolve(context, contact)
-            if (result is ContactResolver.ContactResult.Found) {
-                return result.phoneNumber
-            }
-            throw IllegalArgumentException("Contact '$contact' not found in your contacts")
-        }
-    }
-
-    /**
-     * Build a NeedsInput with contact picker metadata.
-     * Metadata stores match data as JSON so it survives serialization.
-     */
-    private fun buildContactPickerResult(
-        contactQuery: String,
-        matches: List<ai.eqo.core.agent.Contact>,
-        action: String,
-        extraMeta: Map<String, String> = emptyMap(),
-    ): ActionResult.NeedsInput {
-        val matchesJson =
-            json.encodeToString(
-                matches.map { mapOf("name" to it.name, "phone" to it.phoneNumber, "type" to it.type) },
-            )
-        return ActionResult.NeedsInput(
-            question = "Which '$contactQuery' do you mean?",
-            options =
-                matches.mapIndexed { i, c ->
-                    "${i + 1}. ${c.name} (${c.type}: ${maskPhone(c.phoneNumber)})"
-                },
-            metadata =
-                mapOf(
-                    "type" to "contact_picker",
-                    "query" to contactQuery,
-                    "action" to action,
-                    "matches" to matchesJson,
-                ) + extraMeta,
-        )
-    }
 
     // ── MAKE_CALL with disambiguation ────────────────────────
 
@@ -151,12 +95,7 @@ internal class CommunicationActions constructor(
 
             return when (val resolved = contactResolver.resolveWithDisambiguation(contact)) {
                 is ContactResolution.Found -> executeCall(resolved.contact.phoneNumber, context)
-                is ContactResolution.Ambiguous -> buildContactPickerResult(contact, resolved.matches, "MAKE_CALL")
-                is ContactResolution.NotFound ->
-                    ActionResult.NeedsInput(
-                        question = "I couldn't find '$contact' in your contacts. What's their number?",
-                        metadata = mapOf("param" to "contact"),
-                    )
+                else -> ActionResult.Failure(resolved.failureMessage())
             }
         }
     }
@@ -176,18 +115,7 @@ internal class CommunicationActions constructor(
 
             return when (val resolved = contactResolver.resolveWithDisambiguation(contact)) {
                 is ContactResolution.Found -> executeWhatsApp(resolved.contact.phoneNumber, contact, message)
-                is ContactResolution.Ambiguous ->
-                    buildContactPickerResult(
-                        contact,
-                        resolved.matches,
-                        "SEND_WHATSAPP",
-                        mapOf("message" to message),
-                    )
-                is ContactResolution.NotFound ->
-                    ActionResult.NeedsInput(
-                        question = "I couldn't find '$contact'. What's their WhatsApp number?",
-                        metadata = mapOf("param" to "contact"),
-                    )
+                else -> ActionResult.Failure(resolved.failureMessage())
             }
         }
     }
@@ -241,29 +169,13 @@ internal class CommunicationActions constructor(
                     ?: return ActionResult(false, null, "message is missing")
 
             val trimmed = contact.trim()
-            if (trimmed.startsWith("@") || (trimmed.isNotEmpty() && !trimmed.contains(" ") && !trimmed.all { it.isDigit() })) {
-                // Direct Telegram username/handle
+            if (trimmed.startsWith("@")) {
                 return executeTelegram(trimmed.removePrefix("@"), contact, message, context, isUsername = true)
-            }
-
-            if (trimmed.startsWith("+") || (trimmed.isNotEmpty() && trimmed.all { it.isDigit() })) {
-                // Direct phone number
-                return executeTelegram(trimmed, contact, message, context, isUsername = false)
             }
 
             return when (val resolved = contactResolver.resolveWithDisambiguation(contact)) {
                 is ContactResolution.Found -> executeTelegram(resolved.contact.phoneNumber, contact, message, context, isUsername = false)
-                is ContactResolution.Ambiguous ->
-                    buildContactPickerResult(
-                        contact,
-                        resolved.matches,
-                        "SEND_TELEGRAM",
-                        mapOf("message" to message),
-                    )
-                is ContactResolution.NotFound -> {
-                    // If not found in device contacts, treat as Telegram username
-                    executeTelegram(trimmed.removePrefix("@"), contact, message, context, isUsername = true)
-                }
+                else -> ActionResult.Failure(resolved.failureMessage())
             }
         }
     }
@@ -316,7 +228,7 @@ internal class CommunicationActions constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.e("OpenTelegram", "Failed to open Telegram: ${e.localizedMessage}")
+                Log.e("OpenTelegram", "Failed to open Telegram")
                 ActionResult(false, null, "Couldn't open Telegram right now.")
             }
         }
@@ -345,18 +257,7 @@ internal class CommunicationActions constructor(
 
             return when (val resolved = contactResolver.resolveWithDisambiguation(contact)) {
                 is ContactResolution.Found -> executeSms(resolved.contact.phoneNumber, contact, message)
-                is ContactResolution.Ambiguous ->
-                    buildContactPickerResult(
-                        contact,
-                        resolved.matches,
-                        "SEND_SMS",
-                        mapOf("message" to message),
-                    )
-                is ContactResolution.NotFound ->
-                    ActionResult.NeedsInput(
-                        question = "I couldn't find '$contact'. What's their phone number?",
-                        metadata = mapOf("param" to "contact"),
-                    )
+                else -> ActionResult.Failure(resolved.failureMessage())
             }
         }
     }
@@ -385,8 +286,8 @@ internal class CommunicationActions constructor(
                 "WhatsApp draft opened, but EQO could not press Send. Nothing was verified as sent.",
             )
         } catch (e: Exception) {
-            Log.e("SendWhatsApp", "WhatsApp failed: ${e.localizedMessage}")
-            ActionResult(false, null, "WhatsApp didn't work. ${e.localizedMessage ?: "Please try again."}", true)
+            Log.e("SendWhatsApp", "WhatsApp failed")
+            ActionResult(false, null, "WhatsApp could not be opened. No send was verified.", true)
         }
     }
 
@@ -461,8 +362,8 @@ internal class CommunicationActions constructor(
                 "Telegram draft opened, but EQO could not press Send. Nothing was verified as sent.",
             )
         } catch (e: Exception) {
-            Log.e("SendTelegram", "Telegram failed: ${e.localizedMessage}")
-            ActionResult(false, null, "Telegram didn't work. ${e.localizedMessage ?: "Please try again."}", true)
+            Log.e("SendTelegram", "Telegram failed")
+            ActionResult(false, null, "Telegram could not be opened. No send was verified.", true)
         }
     }
 
@@ -512,6 +413,7 @@ internal class CommunicationActions constructor(
 
     internal class SendEmailAction(
         private val emailComposer: EmailComposer,
+        private val contactResolver: ContactResolver,
     ) : Action {
         override val name: String = "SEND_EMAIL"
 
@@ -520,7 +422,10 @@ internal class CommunicationActions constructor(
             context: Context,
         ): ActionResult {
             requireRegistryExecution()?.let { return it }
-            val to = params["to"] ?: return ActionResult(false, null, "to email is missing")
+            val input = params["to"] ?: return ActionResult(false, null, "to email is missing")
+            val resolved = contactResolver.resolveEmailWithDisambiguation(input)
+            if (resolved !is ContactResolution.Found) return ActionResult.Failure(resolved.failureMessage())
+            val to = resolved.contact.phoneNumber
             val subject = params["subject"] ?: ""
             val body = params["body"] ?: ""
             return try {
@@ -572,7 +477,7 @@ internal class CommunicationActions constructor(
                     "WhatsApp is open. Find the '$groupName' group, enter the message and tap Send; sending was not verified.",
                 )
             } catch (e: Exception) {
-                Log.e("WhatsAppGroup", "Group message failed: ${e.localizedMessage}")
+                Log.e("WhatsAppGroup", "Group message failed")
                 ActionResult(false, null, "Couldn't open WhatsApp. Is it installed?")
             }
         }
@@ -587,7 +492,9 @@ internal class CommunicationActions constructor(
         ): ActionResult {
             requireRegistryExecution()?.let { return it }
             val contact = params["contact"] ?: return ActionResult(false, null, "contact parameter missing")
-            val phone = resolveContactToPhoneNumber(context, contact)
+            val resolved = contactResolver.resolveWithDisambiguation(contact)
+            if (resolved !is ContactResolution.Found) return ActionResult.Failure(resolved.failureMessage())
+            val phone = resolved.contact.phoneNumber
             val app = params["app"] ?: "whatsapp"
             return try {
                 when (app.lowercase()) {
@@ -639,7 +546,7 @@ internal class CommunicationActions constructor(
                 }
                 ActionResult.UserActionRequired("Calling app opened. Start the video call yourself; a call was not verified.")
             } catch (e: Exception) {
-                Log.e("VideoCall", "Video call failed: ${e.localizedMessage}")
+                Log.e("VideoCall", "Video call failed")
                 ActionResult(false, null, "Couldn't start the video call. Try again?")
             }
         }
@@ -675,7 +582,7 @@ internal class CommunicationActions constructor(
                     ActionResult(false, null, "Couldn't open the messaging app.")
                 }
             } catch (e: Exception) {
-                Log.e("ReadMessages", "Failed: ${e.localizedMessage}")
+                Log.e("ReadMessages", "Failed")
                 ActionResult(false, null, "Couldn't open your messages right now.")
             }
         }
@@ -697,7 +604,7 @@ internal class CommunicationActions constructor(
                 launcher.open(intent)
                 ActionResult(true, "Your email is open!", null)
             } catch (e: Exception) {
-                Log.e("ReadEmails", "Failed: ${e.localizedMessage}")
+                Log.e("ReadEmails", "Failed")
                 ActionResult(false, null, "Couldn't open the email app.")
             }
     }

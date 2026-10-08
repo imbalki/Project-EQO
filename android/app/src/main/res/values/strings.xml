@@ -125,7 +125,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_unknown_result">Unknown result — verify manually.</string>
 
     <!-- Owner-facing presentation; readiness and safety decisions stay in their own models. -->
-    <string name="home_explanation">Start with setup, then type a task. EQO makes a plan for you to approve before it runs. SMS and email open drafts; WhatsApp and Telegram can press Send.</string>
+    <string name="home_explanation">Start with setup, then type a task. EQO makes a plan for you to approve before it runs. You can use contact names, phone numbers or emails. Messaging steps can press Send; review the recipient and every step.</string>
     <string name="setup_return">Return to setup</string>
     <string name="setup_next">Next: %1$s</string>
     <string name="setup_row_format">%1$s — %2$s\n%3$s</string>
@@ -176,7 +176,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_no_recipient">No recipient selected</string>
     <string name="task_did_not_run">This step did not run. It was skipped or cancelled before completion; check the task result above.</string>
     <string name="task_request_hint">What should EQO do?</string>
-    <string name="task_recipient_limit">EQO cannot read contacts. Type the phone number or email here, or fill it in the draft app. SMS and email are drafts only. WhatsApp and Telegram steps press Send in the open chat. Review every step before approving.</string>
+    <string name="task_recipient_limit">EQO asks permission to read Contacts only when a plan uses a name. You can type phone numbers and emails too. The preview shows the resolved recipient before you approve. Messaging steps may press Send in the open app. Review every step before approving.</string>
     <string name="task_request_empty">Type a request first.</string>
     <string name="task_planning">Making a plan — nothing is running yet.</string>
     <string name="task_plan_title">Review the whole plan</string>
