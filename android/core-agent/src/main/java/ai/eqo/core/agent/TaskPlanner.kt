@@ -211,6 +211,13 @@ object TaskPlanPreview {
             else -> "by ${quote(via.orEmpty())}"
         }
 
+    /** Names every file that leaves the phone, so the owner approves exactly what goes out. */
+    private fun attachmentSuffix(raw: String?): String {
+        val names = AttachmentSpec.displayNames(raw)
+        if (names.isEmpty()) return ""
+        return "; attaching ${names.size} file${if (names.size == 1) "" else "s"}: " + names.joinToString(", ")
+    }
+
     private fun quote(value: String): String = "\"" + TaskDisplayText.escape(value).replace("\"", "\\\"") + "\""
 
     private fun whatsappCallPreview(params: Map<String, String>): String =
@@ -245,7 +252,8 @@ object TaskPlanPreview {
                 "send your current location (a Google Maps link) to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
             else -> {
                 val definition = requireNotNull(ActionSchema.getAction(step.action.name))
-                "${definition.name}: " + p.entries.joinToString(", ") { "${it.key}=${quote(it.value)}" }
+                "${definition.name}: " + p.entries.joinToString(", ") { "${it.key}=${quote(it.value)}" } +
+                    attachmentSuffix(p[AttachmentSpec.PARAM])
             }
         }
     }

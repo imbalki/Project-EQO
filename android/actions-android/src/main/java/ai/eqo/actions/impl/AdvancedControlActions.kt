@@ -18,7 +18,6 @@ internal class AdvancedControlActions {
 
     fun getActions(): List<Action> =
         listOf(
-            ListFilesAction(),
             ReadFileAction(),
             WriteFileAction(),
             DeleteFileAction(),
@@ -38,19 +37,6 @@ internal class AdvancedControlActions {
             PressEnterAction(),
             WaitAction(),
         )
-
-    private class ListFilesAction : Action {
-        override val name: String = "LIST_FILES"
-
-        override suspend fun execute(
-            params: Map<String, String>,
-            context: Context,
-        ): ActionResult {
-            requireRegistryExecution()?.let { return it }
-            val pathStr = params["path"]
-            return StorageWorkspaceProvider.listFiles(context, pathStr)
-        }
-    }
 
     private class ReadFileAction : Action {
         override val name: String = "READ_FILE"

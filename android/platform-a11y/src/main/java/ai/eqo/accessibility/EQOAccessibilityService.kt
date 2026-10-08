@@ -362,6 +362,50 @@ class EQOAccessibilityService :
         return text
     }
 
+    /**
+     * Saves a PNG of the current screen to [target]. Returns false when Android refuses the capture or the file
+     * cannot be written. Callers run [EqoAutomation.screenshotGate] first; secure windows are refused there.
+     */
+    suspend fun takeScreenshotToFile(target: java.io.File): Boolean {
+        val bitmap = captureBitmap() ?: return false
+        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                target.parentFile?.mkdirs()
+                java.io.FileOutputStream(target).use { bitmap.compress(Bitmap.CompressFormat.PNG, PNG_QUALITY, it) }
+            } catch (_: java.io.IOException) {
+                false
+            } finally {
+                bitmap.recycle()
+            }
+        }
+    }
+
+    private suspend fun captureBitmap(): Bitmap? =
+        suspendCoroutine { continuation ->
+            try {
+                takeScreenshot(
+                    android.view.Display.DEFAULT_DISPLAY,
+                    mainExecutor,
+                    object : TakeScreenshotCallback {
+                        override fun onSuccess(screenshotResult: ScreenshotResult) {
+                            val buffer = screenshotResult.hardwareBuffer
+                            val hardware = Bitmap.wrapHardwareBuffer(buffer, screenshotResult.colorSpace)
+                            val software = hardware?.copy(Bitmap.Config.ARGB_8888, false)
+                            hardware?.recycle()
+                            buffer.close()
+                            continuation.resume(software)
+                        }
+
+                        override fun onFailure(errorCode: Int) {
+                            continuation.resume(null)
+                        }
+                    },
+                )
+            } catch (_: RuntimeException) {
+                continuation.resume(null)
+            }
+        }
+
     suspend fun takeScreenshotAndEncode(): String? {
         return suspendCoroutine { continuation ->
             try {
@@ -412,6 +456,8 @@ class EQOAccessibilityService :
     }
 
     companion object {
+        private const val PNG_QUALITY = 100
+
         @Volatile
         private var instance: EQOAccessibilityService? = null
 

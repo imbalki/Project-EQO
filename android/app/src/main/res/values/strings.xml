@@ -34,6 +34,10 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="setup_hub_row_wireless_adb">Wireless debugging pairing</string>
     <string name="setup_hub_row_helper">Helper connection</string>
     <string name="setup_hub_row_chrome_consent">Browser control (optional)</string>
+    <string name="setup_hub_row_all_files">All files access (optional, for sending files)</string>
+    <string name="all_files_explainer">Lets EQO find files such as PDFs and photos on your phone and attach them to a WhatsApp, email or text message you approve. EQO shows you the file names before anything is sent, and never reads app data or settings. Tap to open Android\'s page, switch it on for EQO, then come back.</string>
+    <string name="all_files_granted">On. EQO can find and attach files named in a task you approve. You can switch it off any time in Android Settings.</string>
+    <string name="all_files_no_settings">This phone has no All files access page. Look for it under Settings, Apps, Special app access.</string>
     <string name="setup_hub_open_task">Try the sample task</string>
     <string name="setup_hub_recheck">Re-check everything</string>
     <string name="setup_hub_recheck_complete">Re-check complete. Results updated below.</string>
