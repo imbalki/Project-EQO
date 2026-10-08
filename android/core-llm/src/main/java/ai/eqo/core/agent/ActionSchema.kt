@@ -393,6 +393,26 @@ object ActionSchema {
                 category = ActionCategory.COMMUNICATION,
             ),
             ActionDefinition(
+                name = "WHATSAPP_CALL",
+                description =
+                    "Opens the requested WhatsApp chat and presses its call control, " +
+                        "without sending a message. Never retry.",
+                params =
+                    listOf(
+                        ParamDefinition("contact", ParamType.STRING, true, "Contact name or phone number"),
+                        ParamDefinition(
+                            "video",
+                            ParamType.BOOLEAN,
+                            false,
+                            "Video call instead of voice (default false)",
+                            defaultValue = false,
+                        ),
+                    ),
+                examples = listOf("call dad on WhatsApp", "video call mom on WhatsApp"),
+                category = ActionCategory.COMMUNICATION,
+                neverAutoApprove = true,
+            ),
+            ActionDefinition(
                 name = "SEND_WHATSAPP",
                 description = "Sends WhatsApp message. Opens WhatsApp internally.",
                 params =

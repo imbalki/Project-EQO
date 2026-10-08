@@ -78,7 +78,7 @@ class AndroidActionRegistryTest {
 
     @Test
     fun `enabled action names exist in the single schema and executor classes are internal`() {
-        assertEquals(94, registry.enabledActionNames.size)
+        assertEquals(95, registry.enabledActionNames.size)
         registry.enabledActionNames.forEach { assertNotNull(ActionSchema.getAction(it)) }
         // Public surface never exposes Action objects, constructors or family lists.
         assertFalse(AndroidActionRegistry::class.java.methods.any { it.returnType == Action::class.java })
@@ -160,11 +160,15 @@ class AndroidActionRegistryTest {
     fun `email creates a draft with correct extras not a sent receipt`() =
         runTest {
             resolve(Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:")))
-            val result = registry.execute("SEND_EMAIL", mapOf("to" to "owner@example.invalid", "subject" to "test", "body" to "body"))
+            val result =
+                registry.execute(
+                    "SEND_EMAIL",
+                    mapOf("to" to "owner@example.test", "subject" to "test", "body" to "body"),
+                )
             assertTrue(result is ActionResult.UserActionRequired)
             val intent = shadowOf(context as android.app.Application).nextStartedActivity
             assertEquals("mailto:", intent.dataString)
-            assertArrayEquals(arrayOf("owner@example.invalid"), intent.getStringArrayExtra(Intent.EXTRA_EMAIL))
+            assertArrayEquals(arrayOf("owner@example.test"), intent.getStringArrayExtra(Intent.EXTRA_EMAIL))
             assertEquals("test", intent.getStringExtra(Intent.EXTRA_SUBJECT))
             assertEquals("body", intent.getStringExtra(Intent.EXTRA_TEXT))
         }
@@ -173,7 +177,7 @@ class AndroidActionRegistryTest {
     fun `missing messaging handlers fail honestly`() =
         runTest {
             assertFalse(registry.execute("SEND_SMS", mapOf("contact" to "+15551234567", "message" to "hello")).success)
-            assertFalse(registry.execute("SEND_EMAIL", mapOf("to" to "owner@example.invalid")).success)
+            assertFalse(registry.execute("SEND_EMAIL", mapOf("to" to "owner@example.test")).success)
         }
 
     @Test

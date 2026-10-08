@@ -24,12 +24,12 @@ import java.util.UUID
 interface A11yNode {
     val text: CharSequence?
 
+    /** Package that owns this node's window (null when unknown, for example in fakes). */
+    val packageName: CharSequence? get() = null
+
     val contentDescription: CharSequence?
 
     val hintText: CharSequence? get() = null
-
-    /** Package that owns this node's window (null when unknown, for example in fakes). */
-    val packageName: CharSequence? get() = null
 
     /**
      * TASK-012 (SF-2): true for password/masked fields. Their text and their
@@ -82,11 +82,11 @@ class AccessibilityNodeAdapter(
 ) : A11yNode {
     override val text: CharSequence? get() = node.text
 
+    override val packageName: CharSequence? get() = node.packageName
+
     override val contentDescription: CharSequence? get() = node.contentDescription
 
     override val hintText: CharSequence? get() = node.hintText
-
-    override val packageName: CharSequence? get() = node.packageName
 
     override val isPassword: Boolean get() = node.isPassword()
 

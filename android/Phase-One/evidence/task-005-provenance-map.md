@@ -5,6 +5,10 @@
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/LaunchableAppResolver.kt` | EQO-NEW | `ai.eqo.actions.impl` | Local shared launchable-app resolution |
 | :app | `android/app/src/main/kotlin/ai/eqo/task/MissingAppFallback.kt` | EQO-NEW | `ai.eqo.task` | Pre-approval Chrome fallback and explicit store search |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/MissingAppFallbackTest.kt` | EQO-NEW | `ai.eqo.task` | Local fake preflight and approval regressions |
+## WhatsApp call additions (t_d3c58c41)
+
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/WhatsAppCallFlow.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO targeted WhatsApp chat deep link and single-attempt gated call |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/WhatsAppCallTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | EQO registry and fake-tree call regressions; no real calls |
 
 ## TASK-077 additions (issue #20)
 
