@@ -624,7 +624,9 @@ class TaskActivity : Activity() {
                         val steps =
                             ai.eqo.core.agent.RegistryPlanVocabulary
                                 .parse(json, portedActions.enabledActionNames)
-                        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(steps))
+                        if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
+                    } catch (failure: ai.eqo.actions.impl.RecipientPreparationException) {
+                        findViewById<TextView>(R.id.task_state).text = failure.message
                     } catch (_: IllegalArgumentException) {
                         android.util.Log.w("EqoRun", "debug_plan code=PLAN_REJECTED")
                     }
@@ -673,7 +675,7 @@ class TaskActivity : Activity() {
                     // Never capture EQO's key/setup/request UI; execution observations stay local.
                     planWithOneNetworkRetry { planner.plan(request, UntrustedScreenText.wrap("")) }
                 }
-            if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(steps))
+            if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (_: MissingTaskKey) {
@@ -691,6 +693,8 @@ class TaskActivity : Activity() {
                     "cause=${failure.causeClass}",
             )
             findViewById<TextView>(R.id.task_state).setText(planningError(failure))
+        } catch (failure: ai.eqo.actions.impl.RecipientPreparationException) {
+            findViewById<TextView>(R.id.task_state).text = failure.message
         } catch (failure: IllegalArgumentException) {
             android.util.Log.w("EqoRun", "planner code=PLAN_REJECTED")
             findViewById<TextView>(R.id.task_state).text =
@@ -706,11 +710,19 @@ class TaskActivity : Activity() {
         }
     }
 
-    private fun showPlan(plan: ApprovedTaskPlan) {
+    private suspend fun prepareAndShowPlan(steps: List<ai.eqo.core.agent.LoopStep>) {
+        val prepared = portedActions.prepareRecipients(steps)
+        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(prepared.steps), prepared.names)
+    }
+
+    private fun showPlan(
+        plan: ApprovedTaskPlan,
+        recipientNames: Map<String, String> = emptyMap(),
+    ) {
         val steps = plan.steps()
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
-        val preview = TaskPlanPreview.describe(steps)
-
+        val preview = TaskPlanPreview.describe(steps, recipientNames)
+        // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
         if (!PlanApprovalSettings.required(this)) {
             startRun(plan)
