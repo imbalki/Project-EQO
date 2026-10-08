@@ -724,7 +724,7 @@ class TaskActivity : Activity() {
         val preview = TaskPlanPreview.describe(steps, recipientNames)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
-        if (!PlanApprovalSettings.required(this)) {
+        if (!PlanApprovalSettings.requiredFor(this, steps)) {
             startRun(plan)
             return
         }
