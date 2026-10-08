@@ -688,7 +688,7 @@ class TaskActivity : Activity() {
             android.util.Log.i("EqoRun", "plan: " + preview.lines().joinToString(" "))
         }
         findViewById<TextView>(R.id.task_preview).text = preview
-        if (!PlanApprovalSettings.required(this)) {
+        if (!PlanApprovalSettings.requiredFor(this, steps)) {
             startRun(plan)
             return
         }

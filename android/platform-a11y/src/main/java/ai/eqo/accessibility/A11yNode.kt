@@ -24,6 +24,8 @@ import java.util.UUID
 interface A11yNode {
     val text: CharSequence?
 
+    val packageName: CharSequence? get() = null
+
     val contentDescription: CharSequence?
 
     val hintText: CharSequence? get() = null
@@ -81,6 +83,8 @@ class AccessibilityNodeAdapter(
     private val context: Context? = null,
 ) : A11yNode {
     override val text: CharSequence? get() = node.text
+
+    override val packageName: CharSequence? get() = node.packageName
 
     override val contentDescription: CharSequence? get() = node.contentDescription
 

@@ -190,10 +190,17 @@ object TaskPlanPreview {
         "EQO will:\n" +
             steps
                 .mapIndexed { index, step ->
-                    "${index + 1}. ${describe(step)}"
+                    val description =
+                        if (step.action.name == "WHATSAPP_CALL") whatsappCallPreview(step.action.params) else describe(step)
+                    "${index + 1}. $description"
                 }.joinToString("\n")
 
     private fun quote(value: String): String = "\"" + TaskDisplayText.escape(value).replace("\"", "\\\"") + "\""
+
+    private fun whatsappCallPreview(params: Map<String, String>): String =
+        "place a WhatsApp ${if (params["video"] == "true") "video" else "voice"} call to " +
+            quote(params["contact"].orEmpty()) +
+            "; this rings a real person (no automatic retry)"
 
     private fun describe(step: LoopStep): String {
         val p = step.action.params

@@ -61,6 +61,7 @@ internal class CommunicationActions constructor(
     private val contactResolver: ContactResolver,
     private val callFlowExecutor: CallFlowExecutor,
     private val launcher: GatedIntentLauncher,
+    private val automation: () -> ai.eqo.accessibility.EqoAutomation? = { null },
 ) {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -68,6 +69,7 @@ internal class CommunicationActions constructor(
         listOf(
             MakeCallAction(),
             SendWhatsAppAction(),
+            WhatsAppCallAction(),
             SendTelegramAction(),
             OpenTelegramAction(),
             SendSmsAction(),
@@ -181,6 +183,32 @@ internal class CommunicationActions constructor(
                         "SEND_WHATSAPP",
                         mapOf("message" to message),
                     )
+                is ContactResolution.NotFound ->
+                    ActionResult.NeedsInput(
+                        question = "I couldn't find '$contact'. What's their WhatsApp number?",
+                        metadata = mapOf("param" to "contact"),
+                    )
+            }
+        }
+    }
+
+    private inner class WhatsAppCallAction : Action {
+        override val name: String = "WHATSAPP_CALL"
+
+        override suspend fun execute(
+            params: Map<String, String>,
+            context: Context,
+        ): ActionResult {
+            requireRegistryExecution()?.let { return it }
+            val contact = params["contact"] ?: return ActionResult.Failure("contact is missing")
+            val video =
+                params["video"]?.toBooleanStrictOrNull()
+                    ?: return ActionResult.Failure("video must be true or false")
+            return when (val resolved = contactResolver.resolveWithDisambiguation(contact)) {
+                is ContactResolution.Found ->
+                    WhatsAppCallFlow(launcher, automation).execute(resolved.contact.phoneNumber, video)
+                is ContactResolution.Ambiguous ->
+                    buildContactPickerResult(contact, resolved.matches, name, mapOf("video" to video.toString()))
                 is ContactResolution.NotFound ->
                     ActionResult.NeedsInput(
                         question = "I couldn't find '$contact'. What's their WhatsApp number?",
@@ -346,19 +374,7 @@ internal class CommunicationActions constructor(
         message: String,
     ): ActionResult {
         return try {
-            val encodedMsg = URLEncoder.encode(message, "UTF-8")
-            val whatsappUri =
-                if (phone.matches(Regex("\\+?[0-9]+"))) {
-                    "https://api.whatsapp.com/send?phone=$phone&text=$encodedMsg".toUri()
-                } else {
-                    "whatsapp://send?text=$encodedMsg".toUri()
-                }
-            val intent =
-                Intent(Intent.ACTION_VIEW, whatsappUri).apply {
-                    setPackage("com.whatsapp")
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-            launcher.open(intent)
+            launcher.openWhatsAppChat(phone, message)
 
             if (ai.eqo.accessibility.WhatsAppAutomator
                     .automateSend(message)
