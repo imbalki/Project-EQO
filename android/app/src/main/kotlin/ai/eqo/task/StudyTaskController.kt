@@ -85,21 +85,24 @@ class StudyTaskController(
         val result = executor.execute(step)
         RunDiagnostics.result(steps.indexOf(step) + 1, result)
         onStepProgress(
-            StepProgress(
-                stepId = step.stepId,
-                name = step.action.name,
-                state =
-                    when (result) {
-                        is ExecuteResult.Success -> StepProgressState.DONE
-                        is ExecuteResult.Failure -> StepProgressState.FAILED
-                        is ExecuteResult.Interrupted -> StepProgressState.UNKNOWN
-                    },
-                detail =
-                    when (result) {
-                        is ExecuteResult.Success -> result.detail
-                        is ExecuteResult.Failure -> result.reason
-                        is ExecuteResult.Interrupted -> "Unknown result — verify manually (${result.note})"
-                    },
+            present(
+                step,
+                StepProgress(
+                    stepId = step.stepId,
+                    name = step.action.name,
+                    state =
+                        when (result) {
+                            is ExecuteResult.Success -> StepProgressState.DONE
+                            is ExecuteResult.Failure -> StepProgressState.FAILED
+                            is ExecuteResult.Interrupted -> StepProgressState.UNKNOWN
+                        },
+                    detail =
+                        when (result) {
+                            is ExecuteResult.Success -> result.detail
+                            is ExecuteResult.Failure -> result.reason
+                            is ExecuteResult.Interrupted -> "Unknown result — verify manually (${result.note})"
+                        },
+                ),
             ),
         )
         return result
@@ -185,16 +188,24 @@ class StudyTaskController(
         val progress =
             report.steps.map { record ->
                 val step = steps.firstOrNull { it.stepId == record.stepId }
-                StepProgress(
-                    stepId = record.stepId,
-                    name = step?.action?.name ?: record.stepId,
-                    state = record.outcome.toProgressState(),
-                    elapsedMs = 0L,
-                    detail = record.outcome.toDetail(),
+                present(
+                    step,
+                    StepProgress(
+                        stepId = record.stepId,
+                        name = step?.action?.name ?: record.stepId,
+                        state = record.outcome.toProgressState(),
+                        elapsedMs = 0L,
+                        detail = record.outcome.toDetail(),
+                    ),
                 )
             }
         return RunReceipt(steps = progress, terminal = report.terminal?.name ?: "NONE")
     }
+
+    private fun present(
+        step: LoopStep?,
+        progress: StepProgress,
+    ): StepProgress = RunStatusMapping.progress(step, progress, executor.handoffDetail(progress.stepId))
 
     private fun StepOutcome.toProgressState(): StepProgressState =
         when (this) {

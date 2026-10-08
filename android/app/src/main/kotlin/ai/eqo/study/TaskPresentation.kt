@@ -14,6 +14,7 @@ enum class StepProgressState {
     RUNNING,
     DONE,
     FAILED,
+    NEEDS_YOU,
 
     /**
      * The apply was interrupted mid-flight (timeout or user cancel): the effect is
@@ -29,6 +30,8 @@ data class StepProgress(
     val elapsedMs: Long = 0L,
     /** Receipt / reason text: what happened, or why it did not. */
     val detail: String = "",
+    /** Planned app/button/field label, UI only; never logged. */
+    val targetLabel: String = "",
 )
 
 /**
@@ -78,9 +81,12 @@ data class RunReceipt(
     val notExecutedStepIds: List<String>
         get() =
             steps
-                .filter { it.state == StepProgressState.PENDING || it.state == StepProgressState.UNKNOWN }
+                .filter { it.state in setOf(StepProgressState.PENDING, StepProgressState.UNKNOWN) }
                 .map { it.stepId }
 
     val unknownResultStepIds: List<String>
         get() = steps.filter { it.state == StepProgressState.UNKNOWN }.map { it.stepId }
+
+    val needsYouStepIds: List<String>
+        get() = steps.filter { it.state == StepProgressState.NEEDS_YOU }.map { it.stepId }
 }
