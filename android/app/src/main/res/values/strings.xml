@@ -5,7 +5,7 @@
     <string name="voice_ready">Type your request or tap Mic to speak.</string>
     <string name="voice_permission_title">Allow microphone for voice input?</string>
     <string name="voice_permission_message">EQO needs microphone access only to turn your speech into an editable request. EQO does not save audio. Your phone’s speech service may send audio to its provider. You can keep typing instead.</string>
-    <string name="voice_listening">Listening...</string>
+    <string name="voice_listening">Listening…</string>
     <string name="voice_review">Review or edit your words, then tap the normal task button. Nothing has been submitted.</string>
     <string name="voice_not_caught">Did not catch that - try again</string>
     <string name="voice_not_allowed">Microphone not allowed. You can keep typing.</string>
