@@ -137,12 +137,36 @@ class AndroidActionRegistry internal constructor(
                     ContactResolution.PermissionDenied.failureMessage(),
                 )
         }
+        required += sharePermissions(name, params)
         if (name == "MAKE_CALL" && DeviceCapabilities.canMakeCalls(context)) {
             required += ActionPermission.Runtime(Manifest.permission.CALL_PHONE, "Allow phone access to place this call.")
             required +=
                 ActionPermission.Runtime(Manifest.permission.READ_PHONE_STATE, "Allow phone state access to verify that the call started.")
         }
         return required
+    }
+
+    /** Contacts access to find a named recipient or contact; precise location only to read the position. */
+    private fun sharePermissions(
+        name: String,
+        params: Map<String, String>,
+    ): List<ActionPermission.Runtime> {
+        if (name !in SHARE_ACTIONS) return emptyList()
+        val to = params["to"].orEmpty().replace(Regex("[+\\-\\s()]"), "")
+        val toIsNumber = to.isNotEmpty() && to.all { it.isDigit() }
+        val byEmail = params["via"]?.trim()?.lowercase() == "email"
+        val contactsPermission =
+            ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Allow contacts access to find this person.")
+        val locationPermission =
+            ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Allow location to share where you are.")
+        return buildList {
+            if (name == "SHARE_CONTACT" || !(byEmail || toIsNumber)) {
+                add(contactsPermission)
+            }
+            if (name == "SHARE_LOCATION") {
+                add(locationPermission)
+            }
+        }
     }
 
     /** Upstream accepted aliases are mapped to schema keys before the one schema validator. */
@@ -211,6 +235,7 @@ class AndroidActionRegistry internal constructor(
                 "MAKE_VIDEO_CALL",
                 "SEND_EMAIL",
             )
+        private val SHARE_ACTIONS = setOf("SHARE_CONTACT", "SHARE_LOCATION")
         private val UNTRUSTED_OUTPUTS =
             setOf(
                 "READ_FILE",
@@ -252,7 +277,7 @@ class AndroidActionRegistry internal constructor(
             return AndroidActionRegistry(
                 context,
                 listOf(
-                    CommunicationActions(contacts, calls, launcher, automation).getActions(),
+                    CommunicationActions(contacts, calls, launcher, automation = automation).getActions(),
                     AdvancedControlActions().getActions(),
                     SystemActions(launcher, permissions, automation, options.screenAnalyzer).getActions(),
                     CalendarActions(launcher, permissions, automation).getActions(),

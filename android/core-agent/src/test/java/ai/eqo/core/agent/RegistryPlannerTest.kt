@@ -151,4 +151,23 @@ class RegistryPlannerTest {
 
         override suspend fun isAvailable() = true
     }
+
+    @Test fun shareActionsArePlannedAndPreviewedInPlainWords() {
+        val shared = setOf("SHARE_CONTACT", "SHARE_LOCATION")
+        val prompt = RegistryPlanVocabulary.prompt(shared)
+        assertTrue(prompt.contains("SHARE_CONTACT:") && prompt.contains("SHARE_LOCATION:"))
+        val plan =
+            """{"steps":[{"action":"SHARE_CONTACT","params":{"contact":"Alex","to":"Sam","via":"whatsapp"}},""" +
+                """{"action":"SHARE_LOCATION","params":{"to":"Sam","via":"sms"}}]}"""
+        val steps = RegistryPlanVocabulary.parse(plan, shared)
+        val preview = TaskPlanPreview.describe(steps)
+        val contactLine = "send the saved phone number of \"Alex\" to \"Sam\" in a WhatsApp message (EQO presses Send)"
+        val locationLine =
+            "send your current location (a Google Maps link) to \"Sam\" in a text-message draft; you send it"
+        assertTrue(preview, preview.contains(contactLine))
+        assertTrue(preview, preview.contains(locationLine))
+        assertThrows(IllegalArgumentException::class.java) {
+            RegistryPlanVocabulary.parse(plan.replace("\"via\":\"sms\"", "\"via\":\"fax\""), shared)
+        }
+    }
 }

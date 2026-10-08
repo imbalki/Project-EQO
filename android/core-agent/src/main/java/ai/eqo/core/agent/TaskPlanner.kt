@@ -203,6 +203,14 @@ object TaskPlanPreview {
                         recipientNames[step.stepId]?.let { " (contact: ${TaskDisplayText.escape(it)})" }.orEmpty()
                 }.joinToString("\n")
 
+    private fun shareRoute(via: String?): String =
+        when (via?.trim()?.lowercase()) {
+            "whatsapp" -> "in a WhatsApp message (EQO presses Send)"
+            "sms" -> "in a text-message draft; you send it"
+            "email" -> "in an email draft; you send it"
+            else -> "by ${quote(via.orEmpty())}"
+        }
+
     private fun quote(value: String): String = "\"" + TaskDisplayText.escape(value).replace("\"", "\\\"") + "\""
 
     private fun whatsappCallPreview(params: Map<String, String>): String =
@@ -210,6 +218,7 @@ object TaskPlanPreview {
             quote(params["contact"].orEmpty()) +
             "; this rings a real person (no automatic retry)"
 
+    @Suppress("CyclomaticComplexMethod")
     private fun describe(step: LoopStep): String {
         val p = step.action.params
         val recipient = TaskDisplayText.escape(p["to"].orEmpty().ifBlank { "a recipient you fill in" })
@@ -229,6 +238,11 @@ object TaskPlanPreview {
             "compose_email" -> "open an email draft to $recipient, subject ${quote(
                 p["subject"].orEmpty(),
             )}, body ${quote(p["body"].orEmpty())}; you send it"
+            "SHARE_CONTACT" ->
+                "send the saved phone number of ${quote(p["contact"].orEmpty())} " +
+                    "to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
+            "SHARE_LOCATION" ->
+                "send your current location (a Google Maps link) to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
             else -> {
                 val definition = requireNotNull(ActionSchema.getAction(step.action.name))
                 "${definition.name}: " + p.entries.joinToString(", ") { "${it.key}=${quote(it.value)}" }

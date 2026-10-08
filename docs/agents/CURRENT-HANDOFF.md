@@ -22,6 +22,13 @@ Merged to main on 2026-10-07: #74 typed requests, #77 wireless pairing, #81 batc
 | #78 | Chrome control | PARKED: Android 11 refuses an ordinary app's connection to Chrome's DevTools socket; needs the adb-forward route through the helper after #88 |
 | #79 | Throwaway combined test build | Do not merge |
 
+## Share contact / share location (branch `feat/share-contact-location`, draft PR)
+- Done: two new actions, `SHARE_CONTACT(contact, to, via)` and `SHARE_LOCATION(to, via)`, `via` = whatsapp, sms or email. They reuse the existing WhatsApp, SMS and email routes and the contact resolver. Contacts permission and precise-location permission are asked only when the step runs. The plan screen says plainly what is sent ("the saved phone number of X", "your current location"). Several matching contacts: the step fails and lists the names, it never guesses. Location is never stored or logged.
+- Added: `ShareActions.kt` (+ test), schema entries, planner wording, preview wording.
+- Not done / not testable here: this cloud session could not reach the Android build servers, so ktlint, detekt, the unit tests and the app build were NOT run. Run `./gradlew ktlintCheck detekt test` for `core-llm`, `core-agent`, `actions-android` first.
+- Not testable without the phone: the real permission prompts, a real GPS fix, WhatsApp "Send" press, SMS and email drafts opening.
+- Expect merge conflicts with `feat/files-attachments` in `ActionSchema`, `AndroidActionRegistry` and the planner vocabulary; the registry test counts enabled actions (now 96).
+
 ## Hermes workers (GitHub login is unreliable for dispatcher-started workers)
 Workers started by the Hermes gateway failed twice with "no GitHub login" (12:44, 15:36) although a worker started from a normal shell is logged in as imbalki. Do not copy tokens around. Pattern that works: create a git worktree under C:\Users\<user>\Claude\worktrees\ for each card from origin/main, tell the worker to COMMIT LOCALLY ONLY, then the lead pushes the branch and opens the PR. Security reviewers read a saved diff file plus the worktree. Fallback chain for every profile: DeepSeek v4.1 Flash then GLM 5.3 Flash. Dev profile eqo-trial = GPT 6.1 Sol.
 In flight (cards): contacts by name (t_212ea16c), WHATSAPP_CALL action (t_d3c58c41), plain run status (t_4fa4cbd6), exit review doc (t_e8434d96), security review of #88 (t_1b5c2aa0).
