@@ -1,5 +1,11 @@
 # TASK-005 per-file provenance map
 
+## Missing-app preflight additions
+
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/LaunchableAppResolver.kt` | EQO-NEW | `ai.eqo.actions.impl` | Local shared launchable-app resolution |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/MissingAppFallback.kt` | EQO-NEW | `ai.eqo.task` | Pre-approval Chrome fallback and explicit store search |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/MissingAppFallbackTest.kt` | EQO-NEW | `ai.eqo.task` | Local fake preflight and approval regressions |
+
 ## Run-status additions (t_4fa4cbd6)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/RunStatusMapping.kt` | EQO-NEW | `ai.eqo.task` | Presentation-only handoff and plain failure mapping |

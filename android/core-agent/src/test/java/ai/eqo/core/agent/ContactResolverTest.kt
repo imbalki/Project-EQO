@@ -38,12 +38,12 @@ class ContactResolverTest {
     @Test
     fun `phone and email names use the appropriate provider destination`() =
         runTest {
-            provider.rows = listOf("Balan Kumar" to "+1 (555) 123-4567")
-            val phone = resolver.resolveWithDisambiguation("Balan") as ContactResolution.Found
-            assertEquals("Balan Kumar", phone.contact.name)
+            provider.rows = listOf("Alice Example" to "+1 (555) 123-4567")
+            val phone = resolver.resolveWithDisambiguation("Alice") as ContactResolution.Found
+            assertEquals("Alice Example", phone.contact.name)
             assertEquals("+15551234567", phone.contact.phoneNumber)
-            provider.rows = listOf("Balan Kumar" to "balan@example.test")
-            val email = resolver.resolveEmailWithDisambiguation("Balan") as ContactResolution.Found
+            provider.rows = listOf("Alice Example" to "balan@example.test")
+            val email = resolver.resolveEmailWithDisambiguation("Alice") as ContactResolution.Found
             assertEquals("balan@example.test", email.contact.phoneNumber)
             assertEquals(ContactsContract.CommonDataKinds.Email.CONTENT_URI, provider.lastUri)
             assertNoContactLogs()
@@ -52,44 +52,44 @@ class ContactResolverTest {
     @Test
     fun `exact name does not bypass another matching person and same name endpoints are ambiguous`() =
         runTest {
-            provider.rows = listOf("Balan" to "+15551234567", "Balan Raj" to "+15557654321")
-            assertTrue(resolver.resolveWithDisambiguation("Balan") is ContactResolution.Ambiguous)
-            provider.rows = listOf("Balan" to "+15551234567", "Balan" to "+15557654321")
-            val result = resolver.resolveWithDisambiguation("Balan") as ContactResolution.Ambiguous
+            provider.rows = listOf("Alice" to "+15551234567", "Alice Raj" to "+15557654321")
+            assertTrue(resolver.resolveWithDisambiguation("Alice") is ContactResolution.Ambiguous)
+            provider.rows = listOf("Alice" to "+15551234567", "Alice" to "+15557654321")
+            val result = resolver.resolveWithDisambiguation("Alice") as ContactResolution.Ambiguous
             assertEquals(2, result.matches.size)
-            provider.rows = listOf("Balan" to "first@example.test", "Balan" to "second@example.test")
-            assertTrue(resolver.resolveEmailWithDisambiguation("Balan") is ContactResolution.Ambiguous)
+            provider.rows = listOf("Alice" to "first@example.test", "Alice" to "second@example.test")
+            assertTrue(resolver.resolveEmailWithDisambiguation("Alice") is ContactResolution.Ambiguous)
             assertNoContactLogs()
         }
 
     @Test
     fun `different names sharing a number still require clarification`() =
         runTest {
-            provider.rows = listOf("Balan Kumar" to "+15551234567", "Balan Raj" to "+15551234567")
-            val result = resolver.resolveWithDisambiguation("Balan") as ContactResolution.Ambiguous
+            provider.rows = listOf("Alice Example" to "+15551234567", "Alice Raj" to "+15551234567")
+            val result = resolver.resolveWithDisambiguation("Alice") as ContactResolution.Ambiguous
             assertEquals(2, result.matches.size)
         }
 
     @Test
     fun `duplicates are not extra matches and blank endpoints do not resolve`() =
         runTest {
-            provider.rows = listOf("Balan" to "+15551234567", "Balan" to "+15551234567")
-            assertTrue(resolver.resolveWithDisambiguation("Balan") is ContactResolution.Found)
-            provider.rows = listOf("Balan" to "")
-            assertTrue(resolver.resolveWithDisambiguation("Balan") is ContactResolution.NotFound)
+            provider.rows = listOf("Alice" to "+15551234567", "Alice" to "+15551234567")
+            assertTrue(resolver.resolveWithDisambiguation("Alice") is ContactResolution.Found)
+            provider.rows = listOf("Alice" to "")
+            assertTrue(resolver.resolveWithDisambiguation("Alice") is ContactResolution.NotFound)
         }
 
     @Test
     fun `permission denial and revocation during query are explicit`() =
         runTest {
             shadowOf(context).denyPermissions(Manifest.permission.READ_CONTACTS)
-            assertEquals(ContactResolution.PermissionDenied, resolver.resolveWithDisambiguation("Balan"))
-            assertEquals(ContactResolution.PermissionDenied, resolver.resolveEmailWithDisambiguation("Balan"))
+            assertEquals(ContactResolution.PermissionDenied, resolver.resolveWithDisambiguation("Alice"))
+            assertEquals(ContactResolution.PermissionDenied, resolver.resolveEmailWithDisambiguation("Alice"))
             assertEquals(0, provider.queries)
             shadowOf(context).grantPermissions(Manifest.permission.READ_CONTACTS)
             provider.denied = true
-            assertEquals(ContactResolution.PermissionDenied, resolver.resolveWithDisambiguation("Balan"))
-            assertEquals(ContactResolution.PermissionDenied, resolver.resolveEmailWithDisambiguation("Balan"))
+            assertEquals(ContactResolution.PermissionDenied, resolver.resolveWithDisambiguation("Alice"))
+            assertEquals(ContactResolution.PermissionDenied, resolver.resolveEmailWithDisambiguation("Alice"))
             assertNoContactLogs()
         }
 
@@ -107,14 +107,14 @@ class ContactResolverTest {
     @Test
     fun `name wildcard characters are escaped instead of matching everyone`() =
         runTest {
-            resolver.resolveWithDisambiguation("Balan%_")
-            assertEquals("%Balan\\%\\_%", provider.lastArgument)
+            resolver.resolveWithDisambiguation("Alice%_")
+            assertEquals("%Alice\\%\\_%", provider.lastArgument)
             assertTrue(provider.lastSelection!!.contains("ESCAPE"))
         }
 
     private fun assertNoContactLogs() {
         ShadowLog.getLogs().forEach {
-            assertFalse(it.msg.contains("Balan"))
+            assertFalse(it.msg.contains("Alice"))
             assertFalse(it.msg.contains("15551234567"))
             assertFalse(it.msg.contains("balan@example.test"))
         }
@@ -138,7 +138,7 @@ class ContactResolverTest {
             sortOrder: String?,
         ): MatrixCursor {
             queries++
-            if (denied) throw SecurityException("Balan private provider error")
+            if (denied) throw SecurityException("Alice private provider error")
             lastUri = uri
             lastArgument = selectionArgs?.firstOrNull()
             lastSelection = selection

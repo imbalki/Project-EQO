@@ -60,7 +60,7 @@ import kotlin.coroutines.resume
 
 // One screen owns run control + approval cards + receipts; splitting it would scatter the
 // SF-4 mint site across files (same reasoning as ActionLoop's own @Suppress precedent).
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class TaskActivity : Activity() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -664,18 +664,31 @@ class TaskActivity : Activity() {
         }
     }
 
-    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    @Suppress("TooGenericExceptionCaught", "SwallowedException", "CyclomaticComplexMethod")
     private suspend fun makePlan(request: String) {
         try {
-            val steps =
+            val result =
                 withContext(Dispatchers.IO) {
                     val planner =
                         TaskPlanningRuntime.planner(applicationContext, portedActions.enabledActionNames)
                             ?: throw MissingTaskKey()
                     // Never capture EQO's key/setup/request UI; execution observations stay local.
-                    planWithOneNetworkRetry { planner.plan(request, UntrustedScreenText.wrap("")) }
+                    val resolver =
+                        ai.eqo.actions.impl
+                            .LaunchableAppResolver(packageManager)
+                    val fallback = MissingAppFallback { resolver.resolve(it) != null }
+                    val first = planWithOneNetworkRetry { planner.plan(request, UntrustedScreenText.wrap("")) }
+                    fallback.prepare(request, first) { constrained ->
+                        planWithOneNetworkRetry { planner.plan(constrained, UntrustedScreenText.wrap("")) }
+                    }
                 }
-            if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
+            if (!isFinishing && !isDestroyed) {
+                when (result) {
+                    is MissingAppFallback.Result.Ready -> prepareAndShowPlan(result.steps, result.missing)
+                    is MissingAppFallback.Result.Stopped ->
+                        findViewById<TextView>(R.id.task_state).text = result.message
+                }
+            }
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (_: MissingTaskKey) {
@@ -710,35 +723,37 @@ class TaskActivity : Activity() {
         }
     }
 
-    private suspend fun prepareAndShowPlan(steps: List<ai.eqo.core.agent.LoopStep>) {
+    private suspend fun prepareAndShowPlan(
+        steps: List<ai.eqo.core.agent.LoopStep>,
+        missing: List<String> = emptyList(),
+    ) {
         val prepared = portedActions.prepareRecipients(steps)
-        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(prepared.steps), prepared.names)
+        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing)
     }
 
     private fun showPlan(
         plan: ApprovedTaskPlan,
         recipientNames: Map<String, String> = emptyMap(),
+        missing: List<String> = emptyList(),
     ) {
         val steps = plan.steps()
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
-        val preview = TaskPlanPreview.describe(steps, recipientNames)
+        val notice =
+            if (missing.isEmpty()) {
+                ""
+            } else {
+                ai.eqo.core.agent.TaskDisplayText
+                    .escape(missing.joinToString(", ")) +
+                    " is not installed on this phone, so this plan uses Chrome instead.\n\n"
+            }
+        val preview = notice + TaskPlanPreview.describe(steps, recipientNames)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
         if (!PlanApprovalSettings.requiredFor(this, steps)) {
             startRun(plan)
             return
         }
-        AlertDialog
-            .Builder(this)
-            .setTitle(R.string.task_plan_title)
-            .setMessage(preview)
-            .setPositiveButton(R.string.task_approval_approve) { _, _ ->
-                // Execute the same immutable snapshot described above, never a replan or display text.
-                startRun(plan)
-            }.setNegativeButton(R.string.task_approval_reject) { _, _ ->
-                findViewById<TextView>(R.id.task_state).setText(R.string.task_rejected)
-            }.show()
-            .also { prepareTaskDialog(it) }
+        PlanFallbackDialog(this, ::startRun).show(plan, preview, missing).also { prepareTaskDialog(it) }
     }
 
     private fun planningError(failure: LLMException): Int = RunStatusMapping.planning(failure.error, failure.timedOut)

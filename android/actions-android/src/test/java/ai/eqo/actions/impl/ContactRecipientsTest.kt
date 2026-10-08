@@ -35,20 +35,20 @@ class ContactRecipientsTest {
     private var allowed = true
     private var lookups = 0
     private val requested = mutableListOf<String>()
-    private var resolution: ContactResolution = ContactResolution.Found(Contact("Balan Kumar", PHONE))
+    private var resolution: ContactResolution = ContactResolution.Found(Contact("Alice Example", PHONE))
     private val resolver =
         object : ContactResolver(context) {
             override suspend fun resolveWithDisambiguation(input: String): ContactResolution {
-                if (input != "Balan") return super.resolveWithDisambiguation(input)
+                if (input != "Alice") return super.resolveWithDisambiguation(input)
                 lookups++
                 return resolution
             }
 
             override suspend fun resolveEmailWithDisambiguation(input: String): ContactResolution {
-                if (input != "Balan") return super.resolveEmailWithDisambiguation(input)
+                if (input != "Alice") return super.resolveEmailWithDisambiguation(input)
                 lookups++
                 return if (resolution is ContactResolution.Found) {
-                    ContactResolution.Found(Contact("Balan Kumar", EMAIL, type = "Email"))
+                    ContactResolution.Found(Contact("Alice Example", EMAIL, type = "Email"))
                 } else {
                     resolution
                 }
@@ -68,7 +68,7 @@ class ContactRecipientsTest {
 
     private fun params(
         action: String,
-        recipient: String = "Balan",
+        recipient: String = "Alice",
     ): Map<String, String> =
         when (action) {
             "MAKE_CALL" -> mapOf("contact" to recipient)
@@ -122,14 +122,14 @@ class ContactRecipientsTest {
         runTest {
             resolution =
                 ContactResolution.Ambiguous(
-                    "Balan",
-                    listOf(Contact("Balan Kumar", PHONE), Contact("Balan Raj", "+15557654321")),
+                    "Alice",
+                    listOf(Contact("Alice Example", PHONE), Contact("Alice Raj", "+15557654321")),
                 )
             val registry = registry()
             ACTIONS.forEach { action ->
                 val result = registry.execute(action, params(action))
                 assertFalse(result.success)
-                assertTrue(result.error!!.contains("Balan Kumar, Balan Raj"))
+                assertTrue(result.error!!.contains("Alice Example, Alice Raj"))
                 assertTrue(result.error!!.contains("Nothing was done"))
                 assertFalse(result.error!!.contains(PHONE))
                 assertNull(shadowOf(context).nextStartedActivity)
@@ -155,7 +155,7 @@ class ContactRecipientsTest {
     @Test
     fun `missing Telegram name never falls back to an invented username`() =
         runTest {
-            resolution = ContactResolution.NotFound("Balan")
+            resolution = ContactResolution.NotFound("Alice")
             val result = registry().execute("SEND_TELEGRAM", params("SEND_TELEGRAM"))
             assertFalse(result.success)
             assertNull(shadowOf(context).nextStartedActivity)
@@ -170,12 +170,12 @@ class ContactRecipientsTest {
             val prepared = registry.prepareRecipients(steps)
             val approved = ApprovedTaskPlan(prepared.steps)
             val preview = TaskPlanPreview.describe(approved.steps(), prepared.names)
-            assertTrue(preview.contains("Balan Kumar"))
+            assertTrue(preview.contains("Alice Example"))
             assertTrue(preview.contains(PHONE))
             assertTrue(preview.contains(EMAIL))
             assertEquals(ACTIONS.size, lookups)
             assertNull(shadowOf(context).nextStartedActivity)
-            resolution = ContactResolution.Found(Contact("Balan Raj", "+15557654321"))
+            resolution = ContactResolution.Found(Contact("Alice Raj", "+15557654321"))
             registry.execute(
                 "SEND_WHATSAPP",
                 approved
@@ -222,14 +222,14 @@ class ContactRecipientsTest {
             allowed = true
             resolution =
                 ContactResolution.Ambiguous(
-                    "Balan",
-                    listOf(Contact("Balan Kumar", PHONE), Contact("Balan Raj", "+15557654321")),
+                    "Alice",
+                    listOf(Contact("Alice Example", PHONE), Contact("Alice Raj", "+15557654321")),
                 )
             try {
                 registry().prepareRecipients(listOf(step))
                 throw AssertionError("ambiguity must stop preview")
             } catch (failure: RecipientPreparationException) {
-                assertTrue(failure.message!!.contains("Balan Kumar, Balan Raj"))
+                assertTrue(failure.message!!.contains("Alice Example, Alice Raj"))
                 assertFalse(failure.message!!.contains(PHONE))
             }
             assertNull(shadowOf(context).nextStartedActivity)
@@ -238,7 +238,7 @@ class ContactRecipientsTest {
 
     private fun assertNoContactLogs() {
         ShadowLog.getLogs().forEach {
-            assertFalse(it.msg.contains("Balan"))
+            assertFalse(it.msg.contains("Alice"))
             assertFalse(it.msg.contains(PHONE))
             assertFalse(it.msg.contains(EMAIL))
         }

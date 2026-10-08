@@ -210,7 +210,10 @@ class SystemActionsTest {
         runTest(timeout = 5.seconds) {
             assertTrue(execute("OPEN_URL", mapOf("url" to "example.org/a")).success)
             assertEquals("https://example.org/a", shadowOf(context as Application).nextStartedActivity.dataString)
-            assertFalse(execute("OPEN_URL", mapOf("url" to "https://user:owner@example.invalid")).success)
+            assertTrue(execute("OPEN_URL", mapOf("url" to "https://example.org", "browser" to "chrome")).success)
+            assertEquals("com.android.chrome", shadowOf(context as Application).nextStartedActivity.`package`)
+            assertFalse(execute("OPEN_URL", mapOf("url" to "https://example.org", "browser" to "unknown")).success)
+            assertFalse(execute("OPEN_URL", mapOf("url" to "https://user:pass@example.org")).success)
             assertTrue(execute("INSTALL_APP", mapOf("appName" to "notes & tasks")) is ActionResult.UserActionRequired)
             val store = shadowOf(context as Application).nextStartedActivity
             assertEquals("market", store.data!!.scheme)
