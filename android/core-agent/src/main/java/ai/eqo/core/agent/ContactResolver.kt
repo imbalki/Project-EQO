@@ -1,12 +1,10 @@
 // Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/agent/ContactResolver.kt
 package ai.eqo.core.agent
 
-import ai.eqo.core.memory.MemoryStore
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.ContactsContract
-import android.util.Log
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -38,176 +36,21 @@ sealed class ContactResolution {
         val matches: List<Contact>,
     ) : ContactResolution()
 
+    data object PermissionDenied : ContactResolution()
+
     /** Nothing found → ask user for number */
     data class NotFound(
         val searchedName: String,
     ) : ContactResolution()
 }
 
-/**
- * Resolves contact names (including relationship words like "dad", "mom")
- * to phone numbers with smart disambiguation support.
- *
- * 3-tier resolution:
- *   Tier 1: Exact match → execute immediately
- *   Tier 2: One fuzzy match → execute immediately
- *   Tier 3: Multiple matches → return Ambiguous for user picker
- *
- * Also supports memory-backed contact preferences — once the user picks
- * "Dad" from [Dad, Dada, Daddu], future "call dad" resolves instantly.
- */
+/** Resolves locally; multiple destinations always require clarification, never a remembered guess. */
 @Singleton
 open class ContactResolver
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
-        private val memoryManager: MemoryStore? = null,
     ) {
-        companion object {
-            private const val TAG = "ContactResolver"
-
-            /**
-             * Legacy static resolve for backward compatibility.
-             * Used by CommunicationActions.resolveContactToPhoneNumber().
-             */
-            fun resolve(
-                context: Context,
-                input: String,
-            ): ContactResult {
-                val cleaned = input.trim()
-
-                // CASE 1: Input is already a phone number
-                val digitsOnly = cleaned.replace(Regex("[^0-9+]"), "")
-                if (digitsOnly.length >= 7 && (digitsOnly.all { it.isDigit() || it == '+' })) {
-                    return ContactResult.Found(
-                        displayName = cleaned,
-                        phoneNumber = digitsOnly,
-                    )
-                }
-
-                // Check contacts permission
-                if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS)
-                    != PackageManager.PERMISSION_GRANTED
-                ) {
-                    Log.w(TAG, "READ_CONTACTS permission not granted")
-                    return ContactResult.NotFound(cleaned)
-                }
-
-                // CASE 2: Exact name match in Android contacts
-                val exactMatch = searchContactsLegacy(context, cleaned, exact = true)
-                if (exactMatch != null) return exactMatch
-
-                // CASE 3: Partial/LIKE match in Android contacts
-                val partialMatch = searchContactsLegacy(context, cleaned, exact = false)
-                if (partialMatch != null) return partialMatch
-
-                // CASE 4: Fuzzy relationship matching
-                val fuzzyMatch = fuzzyRelationshipSearchLegacy(context, cleaned)
-                if (fuzzyMatch != null) return fuzzyMatch
-
-                // CASE 5: Not found
-                return ContactResult.NotFound(cleaned)
-            }
-
-            // lint false positive: the cursor is closed by `?.use { }` on every path,
-            // but the Recycle detector does not model Kotlin's use() inlining. See #67.
-            @Suppress("Recycle")
-            private fun searchContactsLegacy(
-                context: Context,
-                name: String,
-                exact: Boolean,
-            ): ContactResult.Found? {
-                val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
-                val projection =
-                    arrayOf(
-                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                        ContactsContract.CommonDataKinds.Phone.NUMBER,
-                    )
-                val selection: String
-                val selectionArgs: Array<String>
-                if (exact) {
-                    selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} = ?"
-                    selectionArgs = arrayOf(name)
-                } else {
-                    selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?"
-                    selectionArgs = arrayOf("%$name%")
-                }
-                try {
-                    val candidates = mutableListOf<Pair<String, String>>()
-                    context.contentResolver.query(uri, projection, selection, selectionArgs, null)?.use { cursor ->
-                        val nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-                        val numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                        if (nameIdx >= 0 && numIdx >= 0) {
-                            while (cursor.moveToNext()) {
-                                val displayName = cursor.getString(nameIdx) ?: continue
-                                val number = cursor.getString(numIdx)?.replace(Regex("[^0-9+]"), "")
-                                if (!number.isNullOrBlank()) {
-                                    candidates.add(displayName to number)
-                                }
-                            }
-                        }
-                    }
-                    if (candidates.isEmpty()) return null
-                    val bestMatch =
-                        candidates
-                            .sortedWith(
-                                compareBy(
-                                    { if (it.first.equals(name, ignoreCase = true)) 0 else 1 },
-                                    { it.first.length },
-                                ),
-                            ).first()
-                    return ContactResult.Found(bestMatch.first, bestMatch.second)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Contact search failed: ${e.message}")
-                }
-                return null
-            }
-
-            private val relationshipAliasesStatic: Map<String, List<String>> =
-                mapOf(
-                    "dad" to listOf("dad", "father", "papa", "baba", "abbu", "pita", "daddy", "pops"),
-                    "mom" to listOf("mom", "mother", "mama", "maa", "amma", "mummy", "mum", "mommy", "ma"),
-                    "wife" to listOf("wife", "wifey", "mrs", "better half", "patni", "biwi"),
-                    "husband" to listOf("husband", "hubby", "mr", "pati"),
-                    "brother" to listOf("brother", "bro", "bhai", "anna", "bhaiya"),
-                    "sister" to listOf("sister", "sis", "didi", "akka", "behan"),
-                    "boss" to listOf("boss", "manager", "sir", "madam"),
-                    "home" to listOf("home", "house", "landline", "ghar"),
-                    "office" to listOf("office", "work", "company", "workplace"),
-                )
-
-            private fun fuzzyRelationshipSearchLegacy(
-                context: Context,
-                name: String,
-            ): ContactResult.Found? {
-                val lower = name.lowercase()
-                val searchTerms =
-                    relationshipAliasesStatic.entries
-                        .firstOrNull { (key, aliases) ->
-                            key == lower || aliases.any { it.equals(lower, ignoreCase = true) }
-                        }?.value ?: return null
-                for (term in searchTerms) {
-                    val exact = searchContactsLegacy(context, term, exact = true)
-                    if (exact != null) return exact
-                    val partial = searchContactsLegacy(context, term, exact = false)
-                    if (partial != null) return partial
-                }
-                return null
-            }
-        }
-
-        /** Legacy result type kept for backward compat with CommunicationActions */
-        sealed class ContactResult {
-            data class Found(
-                val displayName: String,
-                val phoneNumber: String,
-            ) : ContactResult()
-
-            data class NotFound(
-                val searchedName: String,
-            ) : ContactResult()
-        }
-
         // ── New disambiguation-aware resolve ──────────────────
 
         /**
@@ -217,92 +60,63 @@ open class ContactResolver
         open suspend fun resolveWithDisambiguation(input: String): ContactResolution {
             val query = input.trim()
 
-            Log.d(TAG, "── Contact Resolution for: '$query' ──")
-
-            // STEP 1: Is it already a phone number?
-            if (isPhoneNumber(query)) {
-                Log.d(TAG, "  → Direct phone number")
-                return ContactResolution.Found(
-                    Contact(
-                        name = query,
-                        phoneNumber = cleanPhone(query),
-                        source = "direct_input",
-                    ),
-                )
+            if (isLiteralPhone(query)) {
+                return ContactResolution.Found(Contact(query, cleanPhone(query), source = "direct_input"))
             }
-
-            // STEP 2: Check memory for saved preference
-            val memoryMatch = memoryManager?.recallContactPreference(query)
-            if (memoryMatch != null) {
-                Log.d(TAG, "  → Memory preference: ${memoryMatch.name}")
-                return ContactResolution.Found(memoryMatch)
+            if (!contactsGranted()) return ContactResolution.PermissionDenied
+            return try {
+                choose(query, findAllMatches(query))
+            } catch (_: SecurityException) {
+                ContactResolution.PermissionDenied
             }
+        }
 
-            // Check contacts permission
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                Log.w(TAG, "READ_CONTACTS permission not granted")
-                return ContactResolution.NotFound(query)
-            }
-
-            // STEP 3: Get ALL matching contacts
-            val allMatches = findAllMatches(query)
-
-            Log.d(TAG, "  Found ${allMatches.size} matches:")
-            allMatches.forEach { c -> Log.d(TAG, "    - ${c.name} (${c.phoneNumber}) score=${c.matchScore}") }
-
+        open suspend fun resolveEmailWithDisambiguation(input: String): ContactResolution {
+            val query = input.trim()
             return when {
-                // No matches found
-                allMatches.isEmpty() ->
-                    ContactResolution.NotFound(query)
-
-                // Exactly one match → use it
-                allMatches.size == 1 -> {
-                    Log.d(TAG, "  → Single match: ${allMatches.first().name}")
-                    ContactResolution.Found(allMatches.first())
-                }
-
-                else -> {
-                    // Check if we have an exact case-insensitive match.
-                    // If we do, and there's only one distinct contact name among exact matches,
-                    // we bypass partial/fuzzy matches and return the exact match.
-                    val exactMatches = allMatches.filter { it.name.equals(query, ignoreCase = true) }
-                    val distinctExactNames = exactMatches.map { it.name.lowercase().trim() }.distinct()
-
-                    if (exactMatches.isNotEmpty() && distinctExactNames.size == 1) {
-                        Log.d(TAG, "  → Found exact match, bypassing partial matches: ${exactMatches.first().name}")
-                        ContactResolution.Found(exactMatches.first())
-                    } else {
-                        // Multiple matches — check if they are all the SAME person
-                        // (same display name, just different phone numbers)
-                        val distinctNames = allMatches.map { it.name.lowercase().trim() }.distinct()
-
-                        if (distinctNames.size == 1) {
-                            // All matches are the same person — pick the highest-scored one
-                            Log.d(TAG, "  → All same name, using highest score: ${allMatches.first().name}")
-                            ContactResolution.Found(allMatches.first())
-                        } else {
-                            // Multiple DIFFERENT people matched → ALWAYS show picker
-                            // Even if one is an exact match, user should choose
-                            Log.d(TAG, "  → ${distinctNames.size} different names — showing picker")
-
-                            // Deduplicate by name (keep highest score for each name)
-                            val deduped =
-                                allMatches
-                                    .groupBy { it.name.lowercase().trim() }
-                                    .map { (_, contacts) -> contacts.maxByOrNull { it.matchScore }!! }
-                                    .sortedByDescending { it.matchScore }
-                                    .take(5)
-
-                            ContactResolution.Ambiguous(
-                                query = query,
-                                matches = deduped,
+                isLiteralEmail(query) ->
+                    ContactResolution.Found(Contact(query, query, type = "Email", source = "direct_input"))
+                !contactsGranted() -> ContactResolution.PermissionDenied
+                else ->
+                    try {
+                        val matches =
+                            queryContacts(
+                                ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                                arrayOf(
+                                    ContactsContract.CommonDataKinds.Email.DISPLAY_NAME,
+                                    ContactsContract.CommonDataKinds.Email.ADDRESS,
+                                    ContactsContract.CommonDataKinds.Email.TYPE,
+                                ),
+                                "${ContactsContract.CommonDataKinds.Email.DISPLAY_NAME} LIKE ?",
+                                arrayOf("%${escapeLike(query)}%"),
+                                email = true,
                             )
-                        }
+                        choose(query, matches)
+                    } catch (_: SecurityException) {
+                        ContactResolution.PermissionDenied
                     }
-                }
             }
+        }
+
+        private fun contactsGranted(): Boolean =
+            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) ==
+                PackageManager.PERMISSION_GRANTED
+
+        private fun choose(
+            query: String,
+            matches: List<Contact>,
+        ): ContactResolution {
+            val distinct = matches.filter { it.phoneNumber.isNotBlank() }.distinctBy { it.name to it.phoneNumber }
+            return when (distinct.size) {
+                0 -> ContactResolution.NotFound(query)
+                1 -> ContactResolution.Found(distinct.single())
+                else -> ContactResolution.Ambiguous(query, distinct)
+            }
+        }
+
+        private fun escapeLike(value: String): String {
+            val escaped = value.replace("\\", "\\\\")
+            return escaped.replace("%", "\\%").replace("_", "\\_")
         }
 
         /**
@@ -310,7 +124,7 @@ open class ContactResolver
          */
         private fun findAllMatches(query: String): List<Contact> {
             val results = mutableListOf<Contact>()
-            val seen = mutableSetOf<String>() // avoid duplicates by phone number
+            val seen = mutableSetOf<String>() // duplicate rows only; distinct names/numbers remain ambiguous
 
             val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
             val projection =
@@ -327,7 +141,7 @@ open class ContactResolver
                 "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} = ?",
                 arrayOf(query),
             ).forEach { contact ->
-                if (seen.add(contact.phoneNumber)) {
+                if (seen.add(contact.name + "\u0000" + contact.phoneNumber)) {
                     results.add(contact.copy(matchScore = 100))
                 }
             }
@@ -337,9 +151,9 @@ open class ContactResolver
                 uri,
                 projection,
                 "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?",
-                arrayOf(query),
+                arrayOf(escapeLike(query)),
             ).forEach { contact ->
-                if (seen.add(contact.phoneNumber)) {
+                if (seen.add(contact.name + "\u0000" + contact.phoneNumber)) {
                     results.add(contact.copy(matchScore = 90))
                 }
             }
@@ -350,9 +164,9 @@ open class ContactResolver
                 uri,
                 projection,
                 "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?",
-                arrayOf("%$query%"),
+                arrayOf("%${escapeLike(query)}%"),
             ).forEach { contact ->
-                if (seen.add(contact.phoneNumber)) {
+                if (seen.add(contact.name + "\u0000" + contact.phoneNumber)) {
                     // Boost score if the name IS the query (just different case).
                     // Boost if name starts with query and query is a full word:
                     // e.g., query="dad", name="Dad Mobile" gets 80
@@ -383,7 +197,7 @@ open class ContactResolver
                     "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?",
                     arrayOf("%$alias%"),
                 ).forEach { contact ->
-                    if (seen.add(contact.phoneNumber)) {
+                    if (seen.add(contact.name + "\u0000" + contact.phoneNumber)) {
                         results.add(contact.copy(matchScore = 50))
                     }
                 }
@@ -401,34 +215,41 @@ open class ContactResolver
             projection: Array<String>,
             selection: String,
             selectionArgs: Array<String>,
+            email: Boolean = false,
         ): List<Contact> {
             val contacts = mutableListOf<Contact>()
-            try {
-                context.contentResolver
-                    .query(
-                        uri,
-                        projection,
-                        selection,
-                        selectionArgs,
-                        null,
-                    )?.use { cursor ->
-                        while (cursor.moveToNext()) {
-                            val name = cursor.getString(0) ?: continue
-                            val number = cursor.getString(1) ?: continue
-                            val type = cursor.getInt(2)
-                            contacts.add(
-                                Contact(
-                                    name = name,
-                                    phoneNumber = cleanPhone(number),
-                                    type = getPhoneTypeLabel(type),
-                                    source = "contacts",
-                                ),
-                            )
-                        }
+            context.contentResolver
+                .query(
+                    uri,
+                    projection,
+                    if (selection.contains("LIKE")) "$selection ESCAPE '\\'" else selection,
+                    selectionArgs,
+                    null,
+                )?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val name = cursor.getString(0) ?: continue
+                        val number = cursor.getString(1) ?: continue
+                        val type = cursor.getInt(2)
+                        val destination = if (email) number.trim() else cleanPhone(number)
+                        val valid =
+                            if (email) {
+                                destination.matches(
+                                    Regex("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"),
+                                )
+                            } else {
+                                isLiteralPhone(destination)
+                            }
+                        if (!valid) continue
+                        contacts.add(
+                            Contact(
+                                name = name,
+                                phoneNumber = destination,
+                                type = if (email) "Email" else getPhoneTypeLabel(type),
+                                source = "contacts",
+                            ),
+                        )
                     }
-            } catch (e: Exception) {
-                Log.e(TAG, "Contact query failed: ${e.message}")
-            }
+                }
             return contacts
         }
 
@@ -518,12 +339,6 @@ open class ContactResolver
             }
         }
 
-        private fun isPhoneNumber(input: String): Boolean =
-            input
-                .replace(Regex("[+\\-\\s()]"), "")
-                .all { it.isDigit() } &&
-                input.replace(Regex("[+\\-\\s()]"), "").length >= 7
-
         private fun cleanPhone(number: String): String = number.replace(Regex("[\\s\\-()]"), "").trim()
 
         private fun getPhoneTypeLabel(type: Int): String =
@@ -535,7 +350,25 @@ open class ContactResolver
             }
     }
 
-/** Mask phone for privacy in picker display: XXXXXXXXXX → XXXXX***** */
+/** Same literal classification at the permission and lookup boundaries. */
+fun isLiteralPhone(input: String): Boolean = input.replace(Regex("[\\s\\-()]"), "").matches(Regex("\\+?[0-9]{7,}"))
+
+fun isLiteralEmail(input: String): Boolean = input.trim().matches(Regex("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"))
+
+fun ContactResolution.failureMessage(): String =
+    when (this) {
+        is ContactResolution.Ambiguous ->
+            "Several contacts match: " +
+                matches.map { TaskDisplayText.escape(it.name) }.distinct().joinToString(", ") +
+                ". Say the full name, or type the number or email if the names are the same. " +
+                "Nothing was done."
+        ContactResolution.PermissionDenied -> "Contacts permission is needed to find this person. Nothing was done."
+        is ContactResolution.NotFound ->
+            "No matching contact with a usable number or email was found. Nothing was done."
+        is ContactResolution.Found -> error("Recipient is already resolved")
+    }
+
+/** Mask phone for privacy in picker display: 9876543210 → 98765***** */
 fun maskPhone(phone: String): String =
     if (phone.length >= 5) {
         phone.take(5) + "*".repeat(phone.length - 5)
