@@ -91,6 +91,17 @@ class ShareActionsTest {
             UnknownActionSink {},
         )
 
+    private suspend fun shareContact(
+        contact: String,
+        to: String,
+        via: String,
+    ) = registry().execute("SHARE_CONTACT", mapOf("contact" to contact, "to" to to, "via" to via))
+
+    private suspend fun shareLocation(
+        to: String,
+        via: String,
+    ) = registry().execute("SHARE_LOCATION", mapOf("to" to to, "via" to via))
+
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
@@ -101,7 +112,7 @@ class ShareActionsTest {
     @Test
     fun `share contact sends Name colon number through whatsapp`() =
         runTest {
-            val result = registry().execute("SHARE_CONTACT", mapOf("contact" to "Alex", "to" to "Sam", "via" to "whatsapp"))
+            val result = shareContact("Alex", "Sam", "whatsapp")
             assertTrue(result.success)
             assertEquals(listOf("whatsapp|+15550199|Alex Example: +15550100"), sent)
         }
@@ -109,8 +120,8 @@ class ShareActionsTest {
     @Test
     fun `share contact uses the sms and email routes`() =
         runTest {
-            registry().execute("SHARE_CONTACT", mapOf("contact" to "Alex", "to" to "Sam", "via" to "SMS"))
-            registry().execute("SHARE_CONTACT", mapOf("contact" to "Alex", "to" to "sam@example.test", "via" to "email"))
+            shareContact("Alex", "Sam", "SMS")
+            shareContact("Alex", "sam@example.test", "email")
             assertEquals(
                 listOf(
                     "sms|+15550199|Alex Example: +15550100",
@@ -128,7 +139,7 @@ class ShareActionsTest {
                     "Alex",
                     listOf(Contact("Alex Rivera", "+15550111"), Contact("Alex Example", "+15550100")),
                 )
-            val result = registry().execute("SHARE_CONTACT", mapOf("contact" to "Alex", "to" to "Sam", "via" to "whatsapp"))
+            val result = shareContact("Alex", "Sam", "whatsapp")
             assertFalse(result.success)
             assertTrue(result.error.orEmpty().contains("Alex Example, Alex Rivera"))
             assertFalse(result.error.orEmpty().contains("+1555"))
@@ -138,20 +149,20 @@ class ShareActionsTest {
     @Test
     fun `share contact refuses unknown contacts, raw numbers and ambiguous recipients`() =
         runTest {
-            assertFalse(registry().execute("SHARE_CONTACT", mapOf("contact" to "Nobody", "to" to "Sam", "via" to "sms")).success)
+            assertFalse(shareContact("Nobody", "Sam", "sms").success)
             book["+15550100"] = found("+15550100", "+15550100", source = "direct_input")
-            assertFalse(registry().execute("SHARE_CONTACT", mapOf("contact" to "+15550100", "to" to "Sam", "via" to "sms")).success)
+            assertFalse(shareContact("+15550100", "Sam", "sms").success)
             book["Sam"] = ContactResolution.Ambiguous("Sam", listOf(Contact("Sam A", "+1"), Contact("Sam B", "+2")))
-            val ambiguous = registry().execute("SHARE_CONTACT", mapOf("contact" to "Alex", "to" to "Sam", "via" to "sms"))
+            val ambiguous = shareContact("Alex", "Sam", "sms")
             assertTrue(ambiguous.error.orEmpty().contains("Sam A, Sam B"))
-            assertFalse(registry().execute("SHARE_CONTACT", mapOf("contact" to "Alex", "to" to "not-an-email", "via" to "email")).success)
+            assertFalse(shareContact("Alex", "not-an-email", "email").success)
             assertTrue(sent.isEmpty())
         }
 
     @Test
     fun `share location sends the maps link and nothing else`() =
         runTest {
-            val result = registry().execute("SHARE_LOCATION", mapOf("to" to "Sam", "via" to "whatsapp"))
+            val result = shareLocation("Sam", "whatsapp")
             assertTrue(result.success)
             assertEquals(listOf("whatsapp|+15550199|My location: https://maps.google.com/?q=12.971600,77.594600"), sent)
             assertFalse(result.data.orEmpty().contains("12.97"))
@@ -161,10 +172,10 @@ class ShareActionsTest {
     fun `share location without a fix or with an unknown recipient sends nothing`() =
         runTest {
             fix = null
-            assertFalse(registry().execute("SHARE_LOCATION", mapOf("to" to "Sam", "via" to "sms")).success)
+            assertFalse(shareLocation("Sam", "sms").success)
             fix = LocationFix(1.0, 2.0)
             locationReads = 0
-            assertFalse(registry().execute("SHARE_LOCATION", mapOf("to" to "Nobody", "via" to "sms")).success)
+            assertFalse(shareLocation("Nobody", "sms").success)
             assertEquals("position is not read when the recipient is unusable", 0, locationReads)
             assertTrue(sent.isEmpty())
         }
@@ -172,19 +183,19 @@ class ShareActionsTest {
     @Test
     fun `permissions are requested at the moment of need and a refusal stops the step`() =
         runTest {
-            registry().execute("SHARE_CONTACT", mapOf("contact" to "Alex", "to" to "Sam", "via" to "whatsapp"))
+            shareContact("Alex", "Sam", "whatsapp")
             assertEquals(listOf(Manifest.permission.READ_CONTACTS), requested)
             requested.clear()
-            registry().execute("SHARE_LOCATION", mapOf("to" to "Sam", "via" to "sms"))
+            shareLocation("Sam", "sms")
             assertEquals(listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.ACCESS_FINE_LOCATION), requested)
             requested.clear()
-            registry().execute("SHARE_LOCATION", mapOf("to" to "sam@example.test", "via" to "email"))
+            shareLocation("sam@example.test", "email")
             assertEquals(listOf(Manifest.permission.ACCESS_FINE_LOCATION), requested)
             requested.clear()
             sent.clear()
             grant = false
             locationReads = 0
-            assertFalse(registry().execute("SHARE_LOCATION", mapOf("to" to "+15550199", "via" to "sms")).success)
+            assertFalse(shareLocation("+15550199", "sms").success)
             assertEquals(0, locationReads)
             assertTrue(sent.isEmpty())
         }
@@ -192,7 +203,7 @@ class ShareActionsTest {
     @Test
     fun `invalid via is rejected before any lookup`() =
         runTest {
-            assertFalse(registry().execute("SHARE_LOCATION", mapOf("to" to "Sam", "via" to "carrier-pigeon")).success)
+            assertFalse(shareLocation("Sam", "carrier-pigeon").success)
             assertTrue(sent.isEmpty())
             assertEquals(0, locationReads)
         }

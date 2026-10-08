@@ -493,13 +493,30 @@ object ActionSchema {
                 name = "SHARE_CONTACT",
                 description =
                     "Sends the saved phone number of one of the user's contacts, as plain text 'Name: number', " +
-                        "to another person by WhatsApp, text message or email. 'contact' is the contact whose number is shared; " +
-                        "'to' is the recipient. Fails with the matching names if more than one contact matches.",
+                        "to another person by WhatsApp, text message or email. " +
+                        "'contact' is the contact whose number is shared; 'to' is the recipient. " +
+                        "Fails with the matching names if more than one contact matches.",
                 params =
                     listOf(
-                        ParamDefinition("contact", ParamType.STRING, true, "Name of the saved contact whose number is shared"),
-                        ParamDefinition("to", ParamType.STRING, true, "Recipient: contact name or number (WhatsApp, SMS) or email address"),
-                        ParamDefinition("via", ParamType.ENUM, true, "How to send it", listOf("whatsapp", "sms", "email")),
+                        ParamDefinition(
+                            "contact",
+                            ParamType.STRING,
+                            true,
+                            "Name of the saved contact whose number is shared",
+                        ),
+                        ParamDefinition(
+                            "to",
+                            ParamType.STRING,
+                            true,
+                            "Recipient: contact name or number (WhatsApp, SMS) or email address",
+                        ),
+                        ParamDefinition(
+                            "via",
+                            ParamType.ENUM,
+                            true,
+                            "How to send it",
+                            listOf("whatsapp", "sms", "email"),
+                        ),
                     ),
                 examples = listOf("send the number of Alex to Sam on whatsapp", "share Alex's contact with Sam by sms"),
                 category = ActionCategory.COMMUNICATION,
@@ -513,8 +530,19 @@ object ActionSchema {
                         "text message or email. The location is not stored.",
                 params =
                     listOf(
-                        ParamDefinition("to", ParamType.STRING, true, "Recipient: contact name or number (WhatsApp, SMS) or email address"),
-                        ParamDefinition("via", ParamType.ENUM, true, "How to send it", listOf("whatsapp", "sms", "email")),
+                        ParamDefinition(
+                            "to",
+                            ParamType.STRING,
+                            true,
+                            "Recipient: contact name or number (WhatsApp, SMS) or email address",
+                        ),
+                        ParamDefinition(
+                            "via",
+                            ParamType.ENUM,
+                            true,
+                            "How to send it",
+                            listOf("whatsapp", "sms", "email"),
+                        ),
                     ),
                 examples = listOf("send my location to Sam on whatsapp", "share where I am with Sam by sms"),
                 category = ActionCategory.COMMUNICATION,
