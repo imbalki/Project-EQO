@@ -109,7 +109,7 @@ class AndroidActionRegistry internal constructor(
         val contactsPermission =
             ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Allow contacts access to find this person.")
         val locationPermission =
-            ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Allow location access to share your position.")
+            ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Allow location to share where you are.")
         return buildList {
             if (name == "SHARE_CONTACT" || !(byEmail || toIsNumber)) {
                 add(contactsPermission)
