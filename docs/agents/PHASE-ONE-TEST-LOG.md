@@ -5,7 +5,15 @@
 Branch `feat/voice-v2`, card t_e9801e01. No phone was contacted or modified. No real provider audio was uploaded.
 Initial `:app:ktlintFormat :core-llm:ktlintFormat :app:compileDebugUnitTestKotlin --max-workers=2
 -Pkotlin.compiler.execution.strategy=in-process` succeeded in 8m 27s (Gradle daemon log verified after tool timeout).
-Final module checks are recorded here when complete. CI remains the full merge gate.
+Final frozen-source checks for local code head `381b083` completed after the earlier worker timed out:
+`:app:ktlintFormat :core-llm:ktlintFormat :app:ktlintCheck :core-llm:ktlintCheck :app:detekt
+:core-llm:detekt :app:testDebugUnitTest :core-llm:testDebugUnitTest --max-workers=2`.
+Saved `voice-v2-final-gates.log` reports `BUILD SUCCESSFUL in 9m 48s` (220 actionable tasks).
+Verified XML: app 209 tests, core-llm 277 tests; zero failures/errors, one existing core-llm skip.
+All 34 voice/provider tests pass (6 Android adapter, 10 presenter, 13 v2 recording/UI, 5 provider).
+Both module debug lint XML reports contain zero fatal/error/warning issues. Repo/branding/provenance checks
+pass (451 Kotlin files and 451 provenance rows); no changed Kotlin line exceeds 120 characters.
+CI remains the full merge gate; no APK install or real audio upload was performed.
 
 Phone checklist (owner must record build commit and actual outcome):
 - [ ] Phone engine: long English sentence with multiple 3–4 second pauses; partials appear live, stop control works.

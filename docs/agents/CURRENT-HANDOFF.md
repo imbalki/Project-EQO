@@ -10,9 +10,11 @@ Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every me
 - AI records a cache WAV (16 kHz mono, 60-second cap), then uses the existing BYOK OpenRouter provider and shared
   planning client. Public model metadata must advertise audio before upload. A text-only model is refused with
   plain guidance and a Phone voice option. Success/error/cancel deletes audio; no words/audio logging or auto-submit.
-- Verification in progress: initial module-scoped format and unit-test compilation succeeded (daemon reported
-  BUILD SUCCESSFUL in 8m 27s after the terminal timed out). Final checks and fake-provider tests recorded below
-  when complete. CI is still the full gate. Design: `docs/adr/0011-voice-input-engines.md`.
+- Verified local code head `381b083`: app/core-llm ktlintFormat, ktlintCheck, detekt and debug unit tests;
+  final saved Gradle run reports BUILD SUCCESSFUL in 9m 48s. XML reports: 486 tests, zero failures/errors,
+  one existing core-llm skip; all 34 voice/provider tests pass. Both debug lint reports have zero issues.
+  Repo/branding/provenance checks pass (451 Kotlin files, 451 rows); changed Kotlin lines are <=120 chars.
+  CI is still the full gate. Design: `docs/adr/0011-voice-input-engines.md`.
 - NOT TESTED ON PHONE: long English/Hindi pauses, installed language packs, AudioRecord, provider audio models,
   permission dialogs, airplane mode, 60-second cap and cancellation. See the phone checklist in the test log.
 - Local commits only; lead owns push/PR. This card goes to same-card review, not self-completion.
