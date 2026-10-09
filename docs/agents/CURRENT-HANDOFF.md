@@ -1,6 +1,7 @@
 # Current handoff (any agent can take over from this page)
 
 Last updated: 2026-10-09 (edge handle local handoff added). Update this file in the same PR as every merge to `main`.
+Last updated: 2026-10-09 (Explain screen section added). Update this file in the same PR as every merge to `main`.
 
 ## IN PROGRESS: files and attachments (branch `feat/files-attachments`, draft PR, do not merge)
 Plain-language status, updated after each step. Details and design: `docs/adr/0007-shared-files-and-attachments.md`.
@@ -42,6 +43,13 @@ Plain-language status, updated after each step. Details and design: `docs/adr/00
 - NOT TESTED ON PHONE. Checklist in PHASE-ONE-TEST-LOG.md covers Gmail/Chrome/Settings, drag/edge switch,
   Back/outside, hidden apps, Pause during a run, agent-tap refusal and OEM keyboard/full-screen behavior.
   Lead pushes/opens the PR; this worker commits locally only. CI is the full gate.
+## Explain screen (t_699c0abc, local branch `feat/explain-screen`)
+
+- Implemented separately from automation: Quick Settings tile and optional ongoing-notification action; transient entry finishes before screen reading; bounded active-app text extraction with password/own-window exclusion; sparse/visual-question screenshot fallback through the existing in-memory accessibility JPEG primitive; exact-model image-capability check from the cached public catalog; large translucent accessibility overlay; read-aloud/auto-read; typed follow-ups that retain only the session's original screen context.
+- Screen-sharing consent is OFF by default, with first-use disclosure and an optional settings screen in Setup. No shared vision-locate consent exists on inspected origin/main `4a49832`. Before integration, if vision-locate has landed, replace the separate consent with its shared setting. ADR-0009 documents the permissive `ScreenProtectionPolicy` seam (next phase: protected-screen setting). No action/approval/takeover/own-window guard logic changed.
+- Remote main was rechecked and fetched during verification: `92802e7` adds draft-only voice input, not vision-locate consent. This branch retains its original base `4a49832`; the lead owns integration with the voice commit. A voice-drafted screen question, once submitted through the same task input, receives the shortcut guidance; the explanation sheet itself does not depend on voice input. Its controls scroll when space is limited, and follow-ups can also submit from the keyboard Send action. The input requests no personalized IME learning using the platform flag; the device keyboard must respect it.
+- Verified code commit `96220ce`: app-scoped `ktlintFormat`, `ktlintCheck`, `detekt`, `testDebugUnitTest`, `lintDebug` and `assembleDebug` all exit 0 (run one at a time, max two workers); 209 app tests, including 29 Explain executions, zero failures/errors/skips. Repo branding/provenance gate passes (448 Kotlin paths/rows); real debug APK built. Exact commands, output and APK checksum are in PHASE-ONE-TEST-LOG.md.
+- NOT TESTED ON PHONE: tile/shade entry on Android 11/13/14+, notification permission/channel behavior, live screen capture/model answers, overlay/keyboard layout, TTS and device language. Full-repository Gradle checks, other modules' unit tests, release checks and device instrumentation were not run. See the dedicated phone checklist in PHASE-ONE-TEST-LOG.md. The lead publishes; no push/PR by this worker. CI remains the full merge gate.
 
 ## Goal
 EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-key, accessibility automation, wireless-ADB helper, Chrome control, guided setup, approvals, Pause/Stop/takeover). Owner is non-technical: plain language, real command output, say what was not tested.

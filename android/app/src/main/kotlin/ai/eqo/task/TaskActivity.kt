@@ -668,6 +668,12 @@ class TaskActivity : Activity() {
                 setOf(LoopState.RUNNING, LoopState.PAUSED)
         if (planning || active) return
         val request = findViewById<EditText>(R.id.task_request).text.toString().trim()
+        if (ai.eqo.explain.ExplainSession
+                .isScreenRequest(request)
+        ) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.explain_use_shortcut)
+            return
+        }
         if (request.isBlank()) {
             findViewById<TextView>(R.id.task_state).setText(R.string.task_request_empty)
         } else {

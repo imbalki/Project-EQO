@@ -11,6 +11,15 @@
 | :app | `android/app/src/main/kotlin/ai/eqo/handle/BuiltInHandleShortcuts.kt` | EQO-NEW | `ai.eqo.handle` | Existing controller Pause/Stop and app/task entries |
 | :app | `android/app/src/main/kotlin/ai/eqo/handle/EdgeHandleSettingsActivity.kt` | EQO-NEW | `ai.eqo.handle` | Opt-in, shortcut choice, Up/Down, reset and restore |
 | :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleFeaturesTest.kt` | EQO-NEW | `ai.eqo.handle` | Preference, focus and real public controller regressions |
+## Explain screen additions (t_699c0abc)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSession.kt` | EQO-NEW | `ai.eqo.explain` | Read-only explanation session, privacy bounds and protected-screen policy seam |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainRuntime.kt` | EQO-NEW | `ai.eqo.explain` | Foreground tree extraction, memory-only capture and configured provider adapter |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainEntry.kt` | EQO-NEW | `ai.eqo.explain` | Tile, transient entry, notification shortcut and Boolean preferences |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainOverlay.kt` | EQO-NEW | `ai.eqo.explain` | Accessibility result sheet, typed follow-ups and device speech |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSettingsActivity.kt` | EQO-NEW | `ai.eqo.explain` | Screen-sharing consent, auto-read and notification settings |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainSessionTest.kt` | EQO-NEW | `ai.eqo.explain` | Fake-source/model decision, privacy and lifetime regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainAndroidTest.kt` | EQO-NEW | `ai.eqo.explain` | Android extractor, capability metadata and explicit notification routing regressions |
 
 ## Voice-input additions (t_e9ef0f95)
 
