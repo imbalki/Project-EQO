@@ -10,6 +10,12 @@
 | :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainSessionTest.kt` | EQO-NEW | `ai.eqo.explain` | Fake-source/model decision, privacy and lifetime regressions |
 | :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainAndroidTest.kt` | EQO-NEW | `ai.eqo.explain` | Android extractor, capability metadata and explicit notification routing regressions |
 
+## Voice-input additions (t_e9ef0f95)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceInputPresenter.kt` | EQO-NEW | `ai.eqo.task` | Draft-only speech presentation, no submission capability |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskVoiceInput.kt` | EQO-NEW | `ai.eqo.task` | Just-in-time microphone permission and Android speech adapter |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceInputPresenterTest.kt` | EQO-NEW | `ai.eqo.task` | Fake voice result, permission, error and stale callback regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/TaskVoiceInputTest.kt` | EQO-NEW | `ai.eqo.task` | Android speech intent and error mapping regressions |
 ## One-step pairing additions (t_681e8ea6)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WirelessDiscoveryState.kt` | EQO-NEW | `ai.eqo.onboarding` | Local Wi-Fi endpoint eligibility and strict notification code parsing |
