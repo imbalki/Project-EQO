@@ -16,6 +16,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.core.graphics.toColorInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.lang.ref.WeakReference
 import java.util.Locale
 
 /** Accessibility overlay, not an automation control. All context dies with this sheet. */
@@ -46,9 +48,14 @@ class ExplainOverlay private constructor(
             setPadding(padding, padding, padding, padding)
             background =
                 GradientDrawable().apply {
-                    setColor(Color.parseColor("#F2181C24"))
+                    setColor("#F2181C24".toColorInt())
                     cornerRadius = PADDING_DP * resources.displayMetrics.density
                 }
+            isSaveEnabled = false
+        }
+    private val sheet =
+        ScrollView(service).apply {
+            addView(content)
             isSaveEnabled = false
         }
     private val output =
@@ -66,6 +73,9 @@ class ExplainOverlay private constructor(
             setHintTextColor(Color.LTGRAY)
             minHeight = (TOUCH_TARGET_DP * resources.displayMetrics.density).toInt()
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEND or
+                android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI or
+                android.view.inputmethod.EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
             importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
             isSaveEnabled = false
             filters = arrayOf(android.text.InputFilter.LengthFilter(ExplainSession.MAX_QUESTION))
@@ -101,6 +111,14 @@ class ExplainOverlay private constructor(
             attach()
         } else {
             content.addView(question)
+            question.setOnEditorActionListener { _, action, _ ->
+                if (action == android.view.inputmethod.EditorInfo.IME_ACTION_SEND) {
+                    ask(question.text.toString())
+                    true
+                } else {
+                    false
+                }
+            }
             button(R.string.explain_ask) { ask(question.text.toString()) }
             button(R.string.explain_read) { speak() }
             speech =
@@ -145,7 +163,7 @@ class ExplainOverlay private constructor(
     private fun attach() {
         if (!attached && !closed) {
             try {
-                manager.addView(content, params)
+                manager.addView(sheet, params)
                 attached = true
             } catch (_: WindowManager.BadTokenException) {
                 android.util.Log.i("EqoExplain", "explain: text, error BadTokenException")
@@ -161,7 +179,7 @@ class ExplainOverlay private constructor(
         if (attached) {
             attached = false
             try {
-                manager.removeViewImmediate(content)
+                manager.removeViewImmediate(sheet)
             } catch (_: IllegalArgumentException) {
                 // Android already removed the overlay when the accessibility service disconnected.
             }
@@ -196,7 +214,7 @@ class ExplainOverlay private constructor(
                         "capture" -> service.getString(R.string.explain_text_only_capture)
                         else -> ""
                     }
-                output.text = notice + answer
+                output.text = service.getString(R.string.explain_result, notice, answer)
                 android.util.Log.i("EqoExplain", "explain: ${active.sourceType}, ok")
                 attach()
                 if (ExplainSettings.autoRead(service)) speak()
@@ -250,11 +268,11 @@ class ExplainOverlay private constructor(
         question.text.clear()
         output.text = ""
         detach()
-        if (current === this) current = null
+        if (current?.get() === this) current = null
     }
 
     companion object {
-        private var current: ExplainOverlay? = null
+        private var current: WeakReference<ExplainOverlay>? = null
         private const val PADDING_DP = 24
         private const val ANSWER_SP = 22f
         private const val QUESTION_SP = 20f
@@ -265,8 +283,10 @@ class ExplainOverlay private constructor(
         private const val DETACH_DELAY_MS = 350L
 
         fun open(service: EQOAccessibilityService) {
-            current?.close()
-            current = ExplainOverlay(service).also { it.start() }
+            current?.get()?.close()
+            val overlay = ExplainOverlay(service)
+            current = WeakReference(overlay)
+            overlay.start()
         }
     }
 }

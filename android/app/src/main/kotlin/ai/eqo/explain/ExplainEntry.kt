@@ -76,6 +76,8 @@ class ExplainTileService : TileService() {
         }
     }
 
+    // The PendingIntent overload exists only on API 34+. Older devices require the guarded Intent path.
+    @android.annotation.SuppressLint("StartActivityAndCollapseDeprecated")
     override fun onClick() {
         super.onClick()
         unlockAndRun {

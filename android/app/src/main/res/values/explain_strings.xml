@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="explain_title">Explain screen</string>
+    <string name="explain_result">%1$s%2$s</string>
     <string name="explain_settings">Explain screen settings</string>
     <string name="explain_initial_question">Explain this screen and what I can do next.</string>
     <string name="explain_followup">Ask a follow-up</string>
