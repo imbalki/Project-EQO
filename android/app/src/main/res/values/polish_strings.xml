@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="explain_resize">― Resize</string>
+    <string name="explain_see_screen">See screen</string>
+    <string name="hub_edge_handle">Edge handle</string>
+    <string name="hub_handle_hint">Tap the handle for Explain screen and other EQO shortcuts.</string>
+    <string name="hub_handle_accessibility_off">Accessibility is off. Turn on EQO in Screen control service to show the handle.</string>
+    <string name="hub_background">Keep EQO running in the background</string>
+    <string name="background_hints">Choose EQO and allow background running in battery settings. On ColorOS or Realme, allow Auto-launch and background activity in App battery management. On Xiaomi, allow Autostart and choose No restrictions. On Samsung, remove EQO from Sleeping apps and add it to Never sleeping apps. Names vary by phone; these choices are yours and do not guarantee the phone will keep EQO alive.</string>
+    <string name="background_no_settings">Battery settings are not available here. Open Settings → Battery and find EQO.</string>
+    <string name="explain_tile_steps">1. Swipe down twice from the top of the screen.\n2. Tap the pencil or Edit button to open the Quick Settings editor.\n3. Drag Explain screen into your active tiles, then tap Done.</string>
+    <string name="explain_add_tile">Add Explain screen tile</string>
+    <string name="explain_editor_hint">Open Quick Settings editor</string>
+    <string name="explain_editor_manual">Swipe down twice, then tap the pencil or Edit button. Android does not offer a direct editor link on this phone.</string>
+    <string name="explain_primary_entry">Start with the Edge handle: turn it on in Setup, open another app, tap the handle, then Explain screen. The notification, accessibility button and Quick Settings tile are alternate entries.</string>
+    <string name="handle_hidden_count">Hidden apps: %1$d</string>
+    <string name="handle_unhide_app">Unhide %1$s</string>
+    <string name="handle_unhide_all">Unhide all</string>
+</resources>

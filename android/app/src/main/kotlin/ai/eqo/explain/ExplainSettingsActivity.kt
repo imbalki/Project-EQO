@@ -34,11 +34,49 @@ class ExplainSettingsActivity : Activity() {
         layout.addView(notification)
         layout.addView(
             TextView(this).apply {
-                setText(R.string.explain_use_shortcut)
+                setText(R.string.explain_primary_entry)
                 textSize = BODY_SP
             },
         )
         setContentView(ScrollView(this).apply { addView(layout) })
+        layout.addView(
+            TextView(this).apply {
+                setText(R.string.explain_tile_steps)
+                textSize = BODY_SP
+            },
+        )
+        layout.addView(
+            android.widget.Button(this).apply {
+                setText(R.string.explain_editor_hint)
+                setOnClickListener {
+                    android.widget.Toast
+                        .makeText(
+                            this@ExplainSettingsActivity,
+                            R.string.explain_editor_manual,
+                            android.widget.Toast.LENGTH_LONG,
+                        ).show()
+                }
+            },
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            layout.addView(
+                android.widget.Button(this).apply {
+                    setText(R.string.explain_add_tile)
+                    setOnClickListener { requestTile() }
+                },
+            )
+        }
+    }
+
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun requestTile() {
+        getSystemService(android.app.StatusBarManager::class.java).requestAddTileService(
+            android.content.ComponentName(this, ExplainTileService::class.java),
+            getString(R.string.explain_title),
+            android.graphics.drawable.Icon
+                .createWithResource(this, R.drawable.ic_launcher),
+            mainExecutor,
+        ) { /* Android owns the confirmation and reports cancellation; manual steps remain visible. */ }
     }
 
     private fun option(

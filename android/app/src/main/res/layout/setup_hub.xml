@@ -139,5 +139,21 @@
         <Button android:id="@+id/explain_settings" style="@style/StudySecondaryButton"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:minHeight="52dp" android:text="@string/explain_settings" />
+        <Switch android:id="@+id/hub_edge_handle"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="52dp" android:text="@string/hub_edge_handle"
+            android:textSize="@dimen/study_text_body" />
+        <TextView android:id="@+id/hub_handle_hint" style="@style/StudyBody"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/hub_handle_hint" />
+        <Button android:id="@+id/hub_handle_settings" style="@style/StudySecondaryButton"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="52dp" android:text="@string/handle_settings_title" />
+        <Button android:id="@+id/hub_background" style="@style/StudySecondaryButton"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="52dp" android:text="@string/hub_background" />
+        <TextView style="@style/StudyBody"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/background_hints" />
     </LinearLayout>
 </ScrollView>

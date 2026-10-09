@@ -1,5 +1,10 @@
 # TASK-005 per-file provenance map
 
+## Explain/handle UX polish (t_e84b3eaa)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainPanelState.kt` | EQO-NEW | `ai.eqo.explain` | Bounded panel sizes and clock-testable five-second touch-through state |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainPolishTest.kt` | EQO-NEW | `ai.eqo.explain` | Panel, reopen, notification refresh, entry routes, hub and hidden-app regressions |
+
 ## Edge-handle additions (t_a3fa16d0)
 
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleShortcutRegistry.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Internal shortcut API and fake-store-testable choice/order |

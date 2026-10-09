@@ -9,6 +9,7 @@
     android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewClicked|typeViewScrolled|typeViewTextChanged|typeTouchInteractionStart|typeTouchInteractionEnd"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagReportViewIds|flagIncludeNotImportantViews|flagRequestAccessibilityButton"
+    android:isAccessibilityTool="true"
     android:canPerformGestures="true"
     android:canTakeScreenshot="true"
     android:canRetrieveWindowContent="true"
