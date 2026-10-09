@@ -50,6 +50,10 @@ internal class SharedStorageCatalog(
 
     fun metadata(file: File): SharedMediaEntry? = indexed[file.path]
 
+    fun modifiedMillis(file: File): Long =
+        metadata(file)?.modifiedMillis?.takeIf { it > 0 }
+            ?: metadata(file)?.addedMillis?.takeIf { it > 0 } ?: file.lastModified()
+
     fun belongs(
         file: File,
         group: String,

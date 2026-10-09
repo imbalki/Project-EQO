@@ -5,6 +5,7 @@ import ai.eqo.R
 import ai.eqo.actions.impl.AttachmentChoice
 import android.app.Activity
 import android.app.AlertDialog
+import android.os.Looper
 import android.widget.TextView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -23,6 +24,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlertDialog
 
@@ -80,6 +82,7 @@ class TaskAttachmentSelectionTest {
             )
             assertFalse(result.isCompleted)
             ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
             runCurrent()
             assertTrue(result.await())
         }

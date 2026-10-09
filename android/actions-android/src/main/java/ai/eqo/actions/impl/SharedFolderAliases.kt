@@ -31,7 +31,9 @@ internal class SharedFolderAliases(
         val group =
             folders.keys.firstOrNull { normalize(it) == normalize(first) }
                 ?: groups(first).firstOrNull() ?: return null
-        val candidates = (learned[group].orEmpty() + folders[group].orEmpty()).distinct()
+        val known = folders[group].orEmpty()
+        val discovered = learned[group].orEmpty()
+        val candidates = if (group == "screenshot") (discovered + known).distinct() else (known + discovered).distinct()
         val target = candidates.firstOrNull { File(root, it).isDirectory } ?: candidates.firstOrNull() ?: return null
         val suffix = reference.substringAfter('/', "")
         return if (suffix.isEmpty()) File(root, target) else File(File(root, target), suffix)

@@ -3,7 +3,6 @@ package ai.eqo.actions.impl
 
 import ai.eqo.core.agent.AttachmentSearch
 import java.io.File
-import java.nio.file.Files
 import java.time.Instant
 import java.time.ZoneId
 
@@ -81,8 +80,7 @@ internal class AttachmentFileSearch(
         return FileSearchResult.Matches(found.sortedWith(compareByDescending<File> { modified(it) }.thenBy { it.name }))
     }
 
-    private fun searchable(file: File): Boolean =
-        !file.name.startsWith('.') && !Files.isSymbolicLink(file.toPath()) && layout.isAllowed(file)
+    private fun searchable(file: File): Boolean = !file.name.startsWith('.') && !layout.hasLinkedAncestor(file) && layout.isAllowed(file)
 
     private fun matches(
         file: File,
@@ -108,11 +106,7 @@ internal class AttachmentFileSearch(
         }
     }
 
-    private fun modified(file: File): Long {
-        val metadata = catalog?.metadata(file)
-        return metadata?.modifiedMillis?.takeIf { it > 0 }
-            ?: metadata?.addedMillis?.takeIf { it > 0 } ?: file.lastModified()
-    }
+    private fun modified(file: File): Long = catalog?.modifiedMillis(file) ?: file.lastModified()
 
     private fun belongs(
         file: File,

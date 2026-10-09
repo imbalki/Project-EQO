@@ -62,8 +62,10 @@ class AttachmentFileSearchTest {
         }
 
     private fun search(raw: String): List<File> =
-        (AttachmentFileSearch(layout, { true }, zone).search(AttachmentSearch.parse(raw))
-            as FileSearchResult.Matches).files
+        (
+            AttachmentFileSearch(layout, { true }, zone).search(AttachmentSearch.parse(raw))
+                as FileSearchResult.Matches
+        ).files
 
     private fun share(selection: AttachmentSelection? = null): AttachmentShare =
         AttachmentShare(
@@ -126,8 +128,17 @@ class AttachmentFileSearchTest {
         file("staged/bill.pdf")
         file("Download/.hidden/bill.pdf")
         val safe = file("Download/bill.pdf")
-        Files.createSymbolicLink(File(root, "Download/bill-link.pdf").toPath(), safe.toPath())
-        Files.createSymbolicLink(File(root, "Download/linked").toPath(), safe.parentFile.toPath())
+        val linked = file("Download/bill-link.pdf")
+        val targetDir = File(root, "Documents").apply { mkdirs() }
+        val linkedDir = File(root, "Download/linked").apply { mkdirs() }
+        layout =
+            SharedStorageLayout(
+                root,
+                stagingAreas = listOf(staging),
+                aliases = layout.aliases,
+                isLink = { it == linked || it == linkedDir },
+            )
+        assertTrue(targetDir.isDirectory)
         assertEquals(listOf(safe), search("find:bill"))
         assertTrue(runCatching { layout.file("Download/bill-link.pdf") }.exceptionOrNull() is SecurityException)
         assertTrue(runCatching { layout.folder("Download/linked") }.exceptionOrNull() is SecurityException)

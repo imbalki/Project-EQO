@@ -2,7 +2,6 @@
 package ai.eqo.task
 
 import ai.eqo.R
-
 import ai.eqo.actions.impl.AttachmentChoice
 import ai.eqo.actions.impl.AttachmentSelection
 import ai.eqo.core.agent.TaskDisplayText

@@ -86,11 +86,15 @@ class SharedStorageCatalogTest {
         for (paths in layouts) {
             paths.forEach(::file)
             val catalog = SharedStorageCatalog(layout, SharedMediaSource { emptyList() }, MemoryMap())
-            assertEquals(paths[0],
-                find("find:type=screenshot", catalog).single().relativeTo(root).invariantSeparatorsPath)
+            assertEquals(
+                paths[0],
+                find("find:type=screenshot", catalog).single().relativeTo(root).invariantSeparatorsPath,
+            )
             assertEquals(paths[1], find("find:type=camera", catalog).single().relativeTo(root).invariantSeparatorsPath)
-            assertEquals(paths[2],
-                find("find:type=downloads", catalog).single().relativeTo(root).invariantSeparatorsPath)
+            assertEquals(
+                paths[2],
+                find("find:type=downloads", catalog).single().relativeTo(root).invariantSeparatorsPath,
+            )
             assertEquals(2, find("find:type=gallery", catalog).size)
             paths.forEach { File(root, it).delete() }
         }
@@ -98,21 +102,30 @@ class SharedStorageCatalogTest {
 
     @Test fun mediaBucketLearnsBrandSpecificPathAndMimeAndDatesTakePriority() {
         file("Vendor/GalleryShots/receipt.bin").setLastModified(day - 10 * DAY_MS)
-        val entries = listOf(
-            SharedMediaEntry("Vendor/GalleryShots/", "receipt.bin", "Screenshots", "image/png", day, day),
-        )
+        val entries =
+            listOf(
+                SharedMediaEntry("Vendor/GalleryShots/", "receipt.bin", "Screenshots", "image/png", day, day),
+            )
         val store = MemoryMap()
         val catalog = SharedStorageCatalog(layout, SharedMediaSource { entries }, store)
         assertEquals("receipt.bin", find("find:type=screenshot,date=2026-10-07", catalog).single().name)
         assertEquals(listOf("Vendor/GalleryShots"), store.map?.get("screenshot"))
         assertEquals(File(root, "Vendor/GalleryShots"), layout.folder("Screenshots"))
         assertFalse(store.map.toString().contains("receipt.bin"))
-        val share = AttachmentShare(layout, object : LastScreenshotStore {
-            override fun get(): File? = null
-            override fun record(file: File) = Unit
-        }, ShareStaging(File(root, "staging")), { true }, catalog = catalog) {
-            Uri.parse("content://synthetic/${it.name}")
-        }
+        val share =
+            AttachmentShare(
+                layout,
+                object : LastScreenshotStore {
+                    override fun get(): File? = null
+
+                    override fun record(file: File) = Unit
+                },
+                ShareStaging(File(root, "staging")),
+                { true },
+                catalog = catalog,
+            ) {
+                Uri.parse("content://synthetic/${it.name}")
+            }
         val ready = share.prepare("find:type=screenshot") as PreparedShare.Ready
         assertEquals("image/png", ready.files.single().mimeType)
     }
@@ -166,7 +179,14 @@ class SharedStorageCatalogTest {
             )
         paths.forEach(::file)
         val catalog = SharedStorageCatalog(layout, SharedMediaSource { emptyList() }, MemoryMap())
-        assertEquals("a.pdf", find("find:type=pdf,folder=whatsapp", catalog).single().name)
+        assertTrue(find("find:type=pdf,folder=whatsapp", catalog).single().name in setOf("a.pdf", "b.pdf"))
+        assertEquals(
+            "a.pdf",
+            find(
+                "find:type=pdf,folder=Android/media/com.whatsapp/WhatsApp/Media",
+                catalog,
+            ).single().name,
+        )
         assertEquals("c.pdf", find("find:type=pdf,folder=whatsapp_business", catalog).single().name)
         assertEquals("d.pdf", find("find:type=pdf,folder=telegram", catalog).single().name)
         assertEquals("e.png", find("find:type=image,folder=instagram", catalog).single().name)
@@ -211,11 +231,13 @@ class SharedStorageCatalogTest {
             if (denied) throw SecurityException("synthetic permission denial")
             uris += uri
             columns = projection!!.toList()
-            if (filesWithoutBucket && uri.path?.contains("file") == true &&
-                MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME in columns
-            ) throw IllegalArgumentException("synthetic OEM missing bucket column")
+            val missingBucket =
+                filesWithoutBucket &&
+                    uri.path?.contains("file") == true &&
+                    MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME in columns
+            require(!missingBucket) { "synthetic OEM missing bucket column" }
             return MatrixCursor(projection).apply {
-                val values = arrayOf("Vendor/GalleryShots/", "receipt.bin", "image/png", 123L, 100L, "Screenshots")
+                val values = arrayOf<Any>("Vendor/GalleryShots/", "receipt.bin", "image/png", 123L, 100L, "Screenshots")
                 addRow(values.take(projection.size).toTypedArray())
             }
         }

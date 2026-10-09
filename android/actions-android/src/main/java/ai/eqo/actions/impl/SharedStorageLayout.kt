@@ -17,6 +17,7 @@ internal class SharedStorageLayout(
     ownAppAreas: List<File> = emptyList(),
     stagingAreas: List<File> = emptyList(),
     val aliases: SharedFolderAliases = SharedFolderAliases.EMPTY,
+    private val isLink: (File) -> Boolean = { Files.isSymbolicLink(it.toPath()) },
 ) {
     var learnedFolders: Map<String, List<String>> = emptyMap()
     val root: File = canonical(root)
@@ -46,7 +47,7 @@ internal class SharedStorageLayout(
     fun hasLinkedAncestor(file: File): Boolean {
         var segment: File? = file.absoluteFile
         while (segment != null) {
-            if (Files.isSymbolicLink(segment.toPath())) return true
+            if (isLink(segment)) return true
             segment = segment.parentFile
         }
         return false
@@ -62,7 +63,7 @@ internal class SharedStorageLayout(
     private fun locate(reference: String): File {
         require(reference.isNotEmpty()) { "Empty path" }
         if (reference.split('/', '\\').any { it == ".." }) throw SecurityException("Traversal cannot be shared.")
-        if (reference.startsWith("/")) return File(reference)
+        if (File(reference).isAbsolute || reference.startsWith("/")) return File(reference)
         val segments = reference.split('/').filter { it.isNotEmpty() }
         return aliases.folder(root, reference, learnedFolders)
             ?: segments.fold(root) { dir, part -> File(dir, part) }

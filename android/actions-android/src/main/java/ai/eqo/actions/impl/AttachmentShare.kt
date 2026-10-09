@@ -72,7 +72,10 @@ internal class AttachmentShare(
             stageAll(sources.map { it.second })
         }
 
-    private suspend fun select(reference: String, located: Located): Located {
+    private suspend fun select(
+        reference: String,
+        located: Located,
+    ): Located {
         if (located !is Located.Candidates || selection == null) return located
         val offered = located.files.take(MAX_CHOICES)
         val index = selection.choose(reference.substringAfter(':'), offered.map(::choice))
@@ -80,7 +83,12 @@ internal class AttachmentShare(
             ?: Located.Missing("File selection unavailable or cancelled. " + ambiguity(located.files))
     }
 
-    private fun choice(file: File) = AttachmentChoice(file.name, file.lastModified(), file.length())
+    private fun choice(file: File) =
+        AttachmentChoice(
+            file.name,
+            catalog?.modifiedMillis(file) ?: file.lastModified(),
+            file.length(),
+        )
 
     private fun ambiguity(files: List<File>): String =
         "Several files match: " +
@@ -111,10 +119,12 @@ internal class AttachmentShare(
         val staged = mutableListOf<File>()
         return try {
             sources.forEach { staged += staging.stage(it) }
-            PreparedShare.Ready(staged.zip(sources).map { (copy, source) ->
-                val mime = catalog?.metadata(source)?.mime?.takeIf { it.contains('/') } ?: mimeFor(source.name)
-                ShareFile(uriFor(copy), mime, source.name, copy)
-            })
+            PreparedShare.Ready(
+                staged.zip(sources).map { (copy, source) ->
+                    val mime = catalog?.metadata(source)?.mime?.takeIf { it.contains('/') } ?: mimeFor(source.name)
+                    ShareFile(uriFor(copy), mime, source.name, copy)
+                },
+            )
         } catch (_: java.io.IOException) {
             staging.discard(staged)
             PreparedShare.Refused("EQO could not copy a file to attach.")

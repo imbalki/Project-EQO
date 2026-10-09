@@ -35,8 +35,11 @@ internal class AndroidSharedMediaSource(
                 read(uri, cancellation, deadline).take(MAX_ENTRIES - entries.size).forEach { entry ->
                     val key = entry.relativePath.trimEnd('/') + "/" + entry.name
                     val previous = entries[key]
-                    entries[key] = entry.copy(bucket = entry.bucket ?: previous?.bucket,
-                        mime = entry.mime ?: previous?.mime)
+                    entries[key] =
+                        entry.copy(
+                            bucket = entry.bucket ?: previous?.bucket,
+                            mime = entry.mime ?: previous?.mime,
+                        )
                 }
             }
         } finally {
