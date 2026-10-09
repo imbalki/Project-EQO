@@ -162,6 +162,8 @@ class EqoAutomation(
     fun runAction(block: () -> A11yResult): A11yResult =
         when {
             takeover.isPaused -> A11yResult.failure(A11yError.TakeoverDetected)
+            ownPackage != null && ai.eqo.accessibility.handle.HandleWindowGuard.shared.panelOpen ->
+                A11yResult.failure(A11yError.ActionRejected("EQO edge handle panel"))
             serviceState() == ServiceState.ACCESSIBILITY_DISABLED ->
                 // Typed error on the first attempt. Callers must not retry.
                 A11yResult.failure(A11yError.AccessibilityDisabled)
@@ -199,7 +201,12 @@ class EqoAutomation(
      * retries keep waiting for the real target app to come to the front.
      */
     fun ownWindowBlocked(target: String): A11yResult? =
-        if (ownPackage != null && rootProvider()?.packageName?.toString() == ownPackage) {
+        if (ownPackage != null &&
+            (
+                ai.eqo.accessibility.handle.HandleWindowGuard.shared.panelOpen ||
+                    rootProvider()?.packageName?.toString() == ownPackage
+            )
+        ) {
             A11yResult.failure(A11yError.NodeNotFound(target))
         } else {
             null

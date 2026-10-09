@@ -1,6 +1,8 @@
 // Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt
 package ai.eqo.accessibility
 
+import ai.eqo.accessibility.handle.EdgeHandleOverlay
+import ai.eqo.accessibility.handle.HandleWindowGuard
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.content.Context
@@ -41,6 +43,7 @@ class EQOAccessibilityService :
             .AtomicInteger(0)
 
     private var touchProbeView: TouchProbeView? = null
+    private var edgeHandle: EdgeHandleOverlay? = null
 
     /**
      * Typed observe/tap/scroll/type layer over this service's node tree. Surfaces
@@ -95,10 +98,21 @@ class EQOAccessibilityService :
         instance = this
         // Only Phase-One takeover observation; no donor work is started on binding.
         addTouchProbe()
+        windowManager?.let { manager ->
+            edgeHandle = EdgeHandleOverlay(this, manager).also { it.setProbeAvailable(touchProbeView != null) }
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            val targetPackage = event.packageName?.toString()
+            val windowClass = event.className?.toString().orEmpty()
+            val appWindow = targetPackage != packageName || windowClass.endsWith("Activity")
+            if (targetPackage != null && appWindow && !windowClass.contains("InputMethod")) {
+                edgeHandle?.updateForeground(targetPackage)
+            }
+        }
         // TASK-009: TYPE_TOUCH_INTERACTION_START fires when a finger (or an
         // injected touch) starts on the screen. Combined with the overlay touch
         // probe below it feeds the takeover detector; the second source for the
@@ -137,8 +151,15 @@ class EQOAccessibilityService :
         // Handle interruption
     }
 
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        edgeHandle?.configurationChanged()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        edgeHandle?.destroy()
+        edgeHandle = null
         removeTouchProbe()
         instance = null
     }
@@ -313,6 +334,8 @@ class EQOAccessibilityService :
         x: Float,
         y: Float,
     ): Boolean {
+        // The active root can belong to another app underneath our overlay: coordinates need their own guard.
+        if (HandleWindowGuard.shared.blocksGesture(x, y)) return false
         val path =
             Path().apply {
                 moveTo(x, y)

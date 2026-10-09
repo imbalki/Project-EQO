@@ -53,6 +53,7 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent>
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
     </queries>
 
     <application
@@ -63,6 +64,18 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/eqo_label"
         android:theme="@style/StudyTheme">
+        <activity android:name=".explain.ExplainEntryActivity" android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" android:noHistory="true"
+            android:excludeFromRecents="true" android:taskAffinity="" />
+        <activity android:name=".explain.ExplainSettingsActivity" android:exported="false" />
+        <service android:name=".explain.ExplainTileService" android:exported="true"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:label="@string/explain_title" android:icon="@drawable/ic_launcher">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
+        <service android:name=".explain.ExplainNotificationService" android:exported="false" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="User-enabled ongoing Explain screen shortcut; screen observation only after an explicit tap" />
+        </service>
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -84,6 +97,9 @@
              open-source notices screen (UF-14). -->
         <activity
             android:name=".onboarding.SetupHubActivity"
+            android:exported="false" />
+        <activity
+            android:name=".handle.EdgeHandleSettingsActivity"
             android:exported="false" />
         <activity
             android:name=".onboarding.ModelKeySetupActivity"
