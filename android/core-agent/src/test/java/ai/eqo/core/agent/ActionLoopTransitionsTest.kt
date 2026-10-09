@@ -16,6 +16,33 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ActionLoopTransitionsTest {
+    @Test fun permissionWaitDoesNotConsumeTheApplyBudget() =
+        runTest {
+            var waiting = true
+            var applies = 0
+            val loop =
+                ActionLoop(
+                    steps = listOf(testStep("permission")),
+                    approvalGate = { ApprovalDecision.Approved },
+                    execute = {
+                        kotlinx.coroutines.delay(119_000)
+                        waiting = false
+                        applies++
+                        ExecuteResult.Success("done")
+                    },
+                    observe = { "" },
+                    isPermissionWaiting = { waiting },
+                )
+            val run = async { loop.run() }
+            advanceTimeBy(118_000)
+            runCurrent()
+            assertTrue(loop.isActionInFlight())
+            assertFalse(run.isCompleted)
+            advanceUntilIdle()
+            assertEquals(1, applies)
+            assertEquals(PlanTerminal.COMPLETED, run.await().terminal)
+        }
+
     /**
      * Documented transition bounds (virtual time, ms):
      *  - pause/takeover: current apply + one command tick + phase handling

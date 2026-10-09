@@ -31,9 +31,31 @@ import org.robolectric.shadows.ShadowLog
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
 class ContactRecipientsTest {
+    @Test fun locationToTypedNumberOnlyRequestsLocationNotContacts() =
+        runTest {
+            registry().execute("SHARE_LOCATION", mapOf("to" to PHONE, "via" to "sms"))
+            assertEquals(listOf(Manifest.permission.ACCESS_FINE_LOCATION), requested)
+            assertEquals(0, lookups)
+        }
+
+    @Test fun whatsappDraftOpensTextWithoutSendOrContactsPermission() =
+        runTest {
+            val result = registry().execute("SEND_WHATSAPP", params("SEND_WHATSAPP", PHONE) + ("draftOnly" to "true"))
+            assertTrue(result is ai.eqo.actions.base.ActionResult.UserActionRequired)
+            val draft = result as ai.eqo.actions.base.ActionResult.UserActionRequired
+            assertTrue(draft.message.contains("You press Send"))
+            val intent = shadowOf(context).nextStartedActivity
+            assertEquals("hello", intent.data!!.getQueryParameter("text"))
+            assertTrue(requested.isEmpty())
+            assertEquals(0, lookups)
+            assertNull(shadowOf(context).nextStartedActivity)
+        }
+
     private val context = ApplicationProvider.getApplicationContext<Application>()
     private var allowed = true
     private var lookups = 0
+    private val emailInputs = mutableListOf<String>()
+    private val emailResolutions = mutableMapOf<String, ContactResolution>()
     private val requested = mutableListOf<String>()
     private var resolution: ContactResolution = ContactResolution.Found(Contact("Alice Example", PHONE))
     private val resolver =
@@ -45,17 +67,21 @@ class ContactRecipientsTest {
             }
 
             override suspend fun resolveEmailWithDisambiguation(input: String): ContactResolution {
-                if (input != "Alice") return super.resolveEmailWithDisambiguation(input)
-                lookups++
-                return if (resolution is ContactResolution.Found) {
-                    ContactResolution.Found(Contact("Alice Example", EMAIL, type = "Email"))
-                } else {
-                    resolution
+                emailInputs += input
+                val configured = emailResolutions[input]
+                if (configured != null || input == "Alice") {
+                    lookups++
+                    return configured ?: if (resolution is ContactResolution.Found) {
+                        ContactResolution.Found(Contact("Alice Example", EMAIL, type = "Email"))
+                    } else {
+                        resolution
+                    }
                 }
+                return super.resolveEmailWithDisambiguation(input)
             }
         }
 
-    private fun registry() =
+    private fun registry(options: RegistryOptions = RegistryOptions()) =
         AndroidActionRegistry.create(
             context,
             PermissionRequester {
@@ -63,7 +89,7 @@ class ContactRecipientsTest {
                 allowed
             },
             { EqoAutomation({ null }, { EqoAutomation.ServiceState.AVAILABLE }, TakeoverDetector()) },
-            options = RegistryOptions().also { it.contactResolver = resolver },
+            options = options.also { it.contactResolver = resolver },
         )
 
     private fun params(
@@ -76,18 +102,21 @@ class ContactRecipientsTest {
             else -> mapOf("contact" to recipient, "message" to "hello")
         }
 
-    private fun handler(intent: Intent) {
+    private fun handler(
+        intent: Intent,
+        targetPackage: String = "test.recipient",
+    ) {
         shadowOf(context.packageManager).addResolveInfoForIntent(
             intent,
             ResolveInfo().apply {
                 activityInfo =
                     android.content.pm.ActivityInfo().apply {
-                        packageName = "test.recipient"
+                        packageName = targetPackage
                         name = "ComposeActivity"
                         applicationInfo =
                             android.content.pm
                                 .ApplicationInfo()
-                                .apply { packageName = "test.recipient" }
+                                .apply { packageName = targetPackage }
                     }
             },
         )
@@ -235,6 +264,178 @@ class ContactRecipientsTest {
             assertNull(shadowOf(context).nextStartedActivity)
             assertNoContactLogs()
         }
+
+    @Test
+    fun `email literals split all separators without permission or resolver calls`() =
+        runTest {
+            allowed = false
+            handler(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")))
+            val input = "  $EMAIL ; bob@example.test AND carol@example.test, dave@example.test  "
+            val registry = registry()
+            val prepared = registry.prepareRecipients(listOf(emailStep(input)))
+            registry.execute(
+                "SEND_EMAIL",
+                prepared.steps
+                    .single()
+                    .action.params,
+            )
+            assertEquals(
+                listOf(EMAIL, "bob@example.test", "carol@example.test", "dave@example.test"),
+                shadowOf(context).nextStartedActivity.getStringArrayExtra(Intent.EXTRA_EMAIL)!!.toList(),
+            )
+            assertTrue(requested.isEmpty())
+            assertTrue(emailInputs.isEmpty())
+        }
+
+    @Test
+    fun `mixed email preview freezes every address and only looks up names`() =
+        runTest {
+            emailResolutions["Bob"] =
+                ContactResolution.Found(Contact("Bob Example", "bob@example.test", type = "Email"))
+            val registry = registry()
+            val prepared = registry.prepareRecipients(listOf(emailStep("Alice; $EMAIL and Bob")))
+            val approved = ApprovedTaskPlan(prepared.steps)
+            val preview = TaskPlanPreview.describe(approved.steps(), prepared.names)
+            assertTrue(preview.contains("Alice Example"))
+            assertTrue(preview.contains("Bob Example"))
+            assertTrue(preview.contains("bob@example.test"))
+            assertEquals(listOf("Alice", "Bob"), emailInputs)
+            assertEquals(listOf(Manifest.permission.READ_CONTACTS), requested)
+            resolution = ContactResolution.NotFound("Alice")
+            emailResolutions["Bob"] = ContactResolution.NotFound("Bob")
+            allowed = false
+            handler(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")))
+            registry.execute(
+                "SEND_EMAIL",
+                approved
+                    .steps()
+                    .single()
+                    .action.params,
+            )
+            assertEquals(
+                listOf(EMAIL, EMAIL, "bob@example.test"),
+                shadowOf(context).nextStartedActivity.getStringArrayExtra(Intent.EXTRA_EMAIL)!!.toList(),
+            )
+            assertEquals(listOf("Alice", "Bob"), emailInputs)
+            assertEquals(listOf(Manifest.permission.READ_CONTACTS), requested)
+            assertTrue(approved.matches(prepared.steps))
+        }
+
+    @Test
+    fun `email missing ambiguous or addressless later recipient fails atomically by name`() =
+        runTest {
+            val failures =
+                listOf(
+                    ContactResolution.NotFound("Bob"),
+                    ContactResolution.Ambiguous("Bob", listOf(Contact("Bob One", EMAIL), Contact("Bob Two", EMAIL))),
+                    ContactResolution.Found(Contact("Bob", "", type = "Email")),
+                )
+            failures.forEach { failure ->
+                emailResolutions["Bob"] = failure
+                val registry = registry()
+                val result = registry.execute("SEND_EMAIL", params("SEND_EMAIL", "Alice and Bob"))
+                assertFalse(result.success)
+                assertTrue(result.error!!.contains("Email recipient 'Bob'"))
+                try {
+                    registry.prepareRecipients(listOf(emailStep("Alice, Bob")))
+                    throw AssertionError("a failed recipient must stop preview")
+                } catch (error: RecipientPreparationException) {
+                    assertTrue(error.message!!.contains("Email recipient 'Bob'"))
+                }
+                assertNull(shadowOf(context).nextStartedActivity)
+            }
+        }
+
+    @Test
+    fun `mixed email denial stops preview and execution before any lookup`() =
+        runTest {
+            allowed = false
+            val registry = registry()
+            val input = "$EMAIL; Alice"
+            assertFalse(registry.execute("SEND_EMAIL", params("SEND_EMAIL", input)).success)
+            try {
+                registry.prepareRecipients(listOf(emailStep(input)))
+                throw AssertionError("denial must stop preview")
+            } catch (error: RecipientPreparationException) {
+                assertTrue(error.message!!.contains("Contacts permission is needed"))
+            }
+            assertTrue(emailInputs.isEmpty())
+            assertNull(shadowOf(context).nextStartedActivity)
+        }
+
+    @Test
+    fun `attachment email intent carries separate recipients`() =
+        runTest {
+            val root = java.io.File(context.cacheDir, "email-storage").apply { mkdirs() }
+            java.io.File(root, "note.txt").writeText("hello")
+            val options =
+                RegistryOptions().also {
+                    it.storageRoot = root
+                    it.allFilesAccess = { true }
+                    it.shareUri = { file -> Uri.parse("content://test/${file.name}") }
+                }
+            handler(
+                Intent(Intent.ACTION_SEND).setType("text/plain").setPackage("com.google.android.gm"),
+                "com.google.android.gm",
+            )
+            registry(options).execute(
+                "SEND_EMAIL",
+                params("SEND_EMAIL", "Alice; bob@example.test") + ("attachment" to "note.txt"),
+            )
+            val intent = shadowOf(context).nextStartedActivity
+            assertEquals(listOf(EMAIL, "bob@example.test"), intent.getStringArrayExtra(Intent.EXTRA_EMAIL)!!.toList())
+            assertEquals("com.google.android.gm", intent.`package`)
+            assertEquals(listOf("Alice"), emailInputs)
+        }
+
+    @Test
+    fun `email names reach fake composer as a complete ordered recipient list`() =
+        runTest {
+            emailResolutions["Bob"] =
+                ContactResolution.Found(Contact("Bob Example", "bob@example.test", type = "Email"))
+            val composed = mutableListOf<List<String>>()
+            val action =
+                CommunicationActions.SendEmailAction(
+                    EmailComposer { _, to, subject, body ->
+                        composed += listOf(to, subject, body)
+                        EmailComposeOutcome.VERIFIED_SENT
+                    },
+                    resolver,
+                )
+            val registry =
+                AndroidActionRegistry(
+                    context,
+                    listOf(listOf(action)),
+                    PermissionRequester { true },
+                    UnknownActionSink {},
+                    resolver,
+                )
+            assertTrue(registry.execute("SEND_EMAIL", params("SEND_EMAIL", "Alice and Bob")).success)
+            assertEquals(listOf(listOf("$EMAIL, bob@example.test", "test", "hello")), composed)
+            assertEquals(listOf("Alice", "Bob"), emailInputs)
+        }
+
+    @Test
+    fun `separator only email recipients fail before lookup or launch`() =
+        runTest {
+            val registry = registry()
+            assertFalse(registry.execute("SEND_EMAIL", params("SEND_EMAIL", " ; , ")).success)
+            try {
+                registry.prepareRecipients(listOf(emailStep(" ; , ")))
+                throw AssertionError("empty recipients must stop preview")
+            } catch (error: RecipientPreparationException) {
+                assertTrue(error.message!!.contains("At least one email recipient"))
+            }
+            assertTrue(emailInputs.isEmpty())
+            assertTrue(requested.isEmpty())
+            assertNull(shadowOf(context).nextStartedActivity)
+        }
+
+    private fun emailStep(input: String) =
+        LoopStep(
+            "email",
+            ExecutedAction("SEND_EMAIL", params("SEND_EMAIL", input), irreversible = true),
+        )
 
     private fun assertNoContactLogs() {
         ShadowLog.getLogs().forEach {

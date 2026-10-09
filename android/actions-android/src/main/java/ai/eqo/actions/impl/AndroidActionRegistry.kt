@@ -27,12 +27,14 @@ import kotlinx.coroutines.withContext
  * and their lists are module-internal. Later batches add families in create(), not another
  * dispatcher or vocabulary. The caller must still obtain contextual action approval.
  */
+@Suppress("TooManyFunctions") // Single execution boundary also owns its shared prerequisite inventory.
 class AndroidActionRegistry internal constructor(
     private val context: Context,
     families: List<List<Action>>,
     private val permissions: PermissionRequester,
     private val unknownActions: UnknownActionSink,
     private val contactResolver: ContactResolver = ContactResolver(context),
+    private val allFilesAccess: () -> Boolean = { android.os.Environment.isExternalStorageManager() },
 ) {
     private val executors: Map<String, Action> = families.flatten().associateBy { it.name }
     val enabledActionNames: Set<String> get() = executors.keys.toSet()
@@ -62,11 +64,20 @@ class AndroidActionRegistry internal constructor(
             return ActionResult.Failure("Required parameters must not be empty: ${blankRequired.joinToString { it.name }}.")
         }
         return try {
+            if (needsSharedAccess(actionName, ready) && !requestAllFilesAccess()) {
+                android.util.Log.w("EqoRun", "action=$actionName reason=needs_all_files_access")
+                return ActionResult.UserActionRequired(
+                    "Turn on All files access for EQO. This step did not run. Stop and explicitly restart this plan.",
+                )
+            }
             for (permission in requiredPermissions(actionName, ready)) {
                 android.util.Log.i("EqoRun", "action=$actionName permission=${permission.name} check=request")
                 if (!permissions.request(permission)) {
                     android.util.Log.w("EqoRun", "action=$actionName permission=${permission.name} denied")
-                    return ActionResult.Failure("${permission.explanation} Permission was not granted; this step did not run.")
+                    return ActionResult.UserActionRequired(
+                        "${permission.explanation} This step did not run. " +
+                            "Stop and explicitly restart the plan to grant access.",
+                    )
                 }
             }
             val result = executeRegistered(action, ready, context)
@@ -100,13 +111,19 @@ class AndroidActionRegistry internal constructor(
                 if (permission != null && !permissions.request(permission)) {
                     throw RecipientPreparationException(ContactResolution.PermissionDenied.failureMessage())
                 }
+                if (name == "SEND_EMAIL") {
+                    val recipients = withContext(Dispatchers.IO) { resolveEmailRecipients(input, contactResolver) }
+                    names[step.stepId] = recipients.labels.joinToString(", ")
+                    return@map step.copy(
+                        action =
+                            step.action.copy(
+                                params = step.action.params + (key to recipients.addresses.joinToString(", ")),
+                            ),
+                    )
+                }
                 val resolved =
                     withContext(Dispatchers.IO) {
-                        if (name == "SEND_EMAIL") {
-                            contactResolver.resolveEmailWithDisambiguation(input)
-                        } else {
-                            contactResolver.resolveWithDisambiguation(input)
-                        }
+                        contactResolver.resolveWithDisambiguation(input)
                     }
                 if (resolved !is ContactResolution.Found) throw RecipientPreparationException(resolved.failureMessage())
                 names[step.stepId] = resolved.contact.name
@@ -117,6 +134,37 @@ class AndroidActionRegistry internal constructor(
         return RecipientPlan(prepared, names.toMap())
     }
 
+    /** Settings is human-driven before a run starts, never an automation/takeover exemption. */
+    suspend fun prepareFileAccess(steps: List<LoopStep>): Boolean =
+        steps.none { needsSharedAccess(it.action.name, it.action.params) } || requestAllFilesAccess()
+
+    /** One shared inventory for preview, preflight and execution; literal recipients need no lookup grant. */
+    fun plannedRuntimePermissions(steps: List<LoopStep>): List<ActionPermission.Runtime> =
+        steps.flatMap { requiredPermissions(it.action.name, it.action.params) }.distinctBy { it.name }
+
+    suspend fun prepareRuntimeAccess(steps: List<LoopStep>): Boolean {
+        val required = plannedRuntimePermissions(steps)
+        return required.all { permissions.request(it) }
+    }
+
+    private fun needsSharedAccess(
+        name: String,
+        params: Map<String, String>,
+    ): Boolean = name == "FIND_FILES" || name == "LIST_FILES" && !FileActions.usesWorkspace(params["folder"].orEmpty())
+
+    private suspend fun requestAllFilesAccess(): Boolean {
+        if (allFilesAccess()) return true
+        return permissions.request(
+            ActionPermission.SpecialAccess(
+                android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                true,
+                ALL_FILES_INSTRUCTION,
+                allFilesAccess,
+            ),
+        ) &&
+            allFilesAccess()
+    }
+
     private fun requiredPermissions(
         name: String,
         params: Map<String, String>,
@@ -125,7 +173,7 @@ class AndroidActionRegistry internal constructor(
         val contact = params[if (name == "SEND_EMAIL") "to" else "contact"].orEmpty().trim()
         val direct =
             if (name == "SEND_EMAIL") {
-                isLiteralEmail(contact)
+                splitEmailRecipients(contact).all { isLiteralEmail(it) }
             } else {
                 isLiteralPhone(contact) ||
                     (name == "SEND_TELEGRAM" && contact.startsWith("@"))
@@ -138,12 +186,37 @@ class AndroidActionRegistry internal constructor(
                 )
         }
         required += sharePermissions(name, params)
+        extraPermission(name, params)?.let { required += it }
         if (name == "MAKE_CALL" && DeviceCapabilities.canMakeCalls(context)) {
             required += ActionPermission.Runtime(Manifest.permission.CALL_PHONE, "Allow phone access to place this call.")
             required +=
                 ActionPermission.Runtime(Manifest.permission.READ_PHONE_STATE, "Allow phone state access to verify that the call started.")
         }
         return required
+    }
+
+    private fun extraPermission(
+        name: String,
+        params: Map<String, String>,
+    ): ActionPermission.Runtime? {
+        val extra =
+            when (name) {
+                "TOGGLE_FLASHLIGHT" -> Manifest.permission.CAMERA to "Allow camera access to control the flashlight."
+                "GET_WEATHER" ->
+                    if (params["location"].isNullOrBlank() || params["location"] == "current location") {
+                        Manifest.permission.ACCESS_COARSE_LOCATION to "Allow approximate location for local weather."
+                    } else {
+                        null
+                    }
+                "CREATE_CALENDAR_EVENT" ->
+                    if (isDirectCalendarInsert(params)) {
+                        Manifest.permission.WRITE_CALENDAR to "Allow calendar access to save this event."
+                    } else {
+                        null
+                    }
+                else -> null
+            }
+        return extra?.let { ActionPermission.Runtime(it.first, it.second) }
     }
 
     /** Contacts access to find a named recipient or contact; precise location only to read the position. */
@@ -199,6 +272,7 @@ class AndroidActionRegistry internal constructor(
         if (name == "ADD_NOTE") {
             if ("title" !in result) result["name"]?.let { result["title"] = it }
             if ("content" !in result) (result["text"] ?: result["body"])?.let { result["content"] = it }
+            if (result["content"].isNullOrBlank()) result["title"]?.let { result["content"] = it }
         }
         if (name == "LIST_FILES" && "folder" !in result) result["path"]?.let { result["folder"] = it }
         if (name in setOf("READ_NOTES", "RECALL_MEMORY") && "query" !in result) {
@@ -226,6 +300,8 @@ class AndroidActionRegistry internal constructor(
     }
 
     companion object {
+        private const val ALL_FILES_INSTRUCTION =
+            "Turn on All files access for EQO, then return here to continue with this plan."
         private val CONTACT_ACTIONS =
             setOf(
                 "SEND_SMS",
@@ -307,6 +383,7 @@ class AndroidActionRegistry internal constructor(
                 permissions,
                 unknownActions,
                 contacts,
+                options.allFilesAccess ?: { android.os.Environment.isExternalStorageManager() },
             ).also { registry = it }
         }
     }

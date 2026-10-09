@@ -109,6 +109,42 @@ class ShareActionsTest {
         book["Sam"] = found("Sam Example", "+15550199")
     }
 
+    @Test fun preflightListsDeduplicatedPermissionsAndNeverReadsOrSends() =
+        runTest {
+            fun step(
+                id: String,
+                to: String,
+            ) = ai.eqo.core.agent.LoopStep(
+                stepId = id,
+                action =
+                    ai.eqo.core.agent.ExecutedAction(
+                        "SHARE_LOCATION",
+                        mapOf("to" to to, "via" to "sms"),
+                    ),
+            )
+            val registry = registry()
+            val steps = listOf(step("one", "Sam"), step("two", "+15550199"))
+            assertEquals(
+                listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.ACCESS_FINE_LOCATION),
+                registry.plannedRuntimePermissions(steps).map { it.name },
+            )
+            assertEquals(
+                listOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                registry.plannedRuntimePermissions(listOf(steps.last())).map { it.name },
+            )
+            assertTrue(registry.prepareRuntimeAccess(steps))
+            assertEquals(0, locationReads)
+            assertTrue(sent.isEmpty())
+            requested.clear()
+            grant = false
+            assertFalse(registry.prepareRuntimeAccess(steps))
+            assertEquals(listOf(Manifest.permission.READ_CONTACTS), requested)
+            val refused = shareLocation("Sam", "sms") as ActionResult.UserActionRequired
+            assertTrue(refused.message.contains("explicitly restart"))
+            assertEquals(0, locationReads)
+            assertTrue(sent.isEmpty())
+        }
+
     @Test
     fun `share contact sends Name colon number through whatsapp`() =
         runTest {

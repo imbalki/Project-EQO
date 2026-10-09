@@ -59,6 +59,8 @@ class ActionLoop(
     private val externalTakeoverReason: () -> PauseReason? = { null },
     private val onResumeConfirmed: (UserResumeConfirmation) -> Unit = {},
     private val onDiagnostic: (String) -> Unit = {},
+    private val isPermissionWaiting: () -> Boolean = { false },
+    private val applyTimeoutMs: (LoopStep) -> Long = { config.actionTimeoutMs },
 ) {
     data class Config(
         /** Command-poll granularity; every transition is bounded in these. */
@@ -321,7 +323,7 @@ class ActionLoop(
             try {
                 while (job.isActive) {
                     delay(config.tickMs)
-                    waitedMs += config.tickMs
+                    waitedMs += applyBudgetTickMs()
                     val command = pollCommand()
                     when {
                         command is CmdStop || command is CmdCancel ->
@@ -359,6 +361,8 @@ class ActionLoop(
                 inFlight.decrementAndGet()
             }
         }
+
+    private fun applyBudgetTickMs(): Long = if (isPermissionWaiting()) 0L else config.tickMs
 
     /** File choice and exact-name confirmation each allow a minute, only on approved file sends. */
     private fun applyTimeoutMs(step: LoopStep): Long =

@@ -60,6 +60,11 @@ internal object RunStatusMapping {
                 )
             -> Text(R.string.run_accessibility_off)
             step.detail == FailureClass.BINDER_DEAD.repair -> Text(R.string.task_helper_lost)
+            step.detail.contains("EQO did not save a screenshot") ->
+                Text(
+                    R.string.run_user_action,
+                    "Open a non-protected app and check EQO accessibility is on, then try again.",
+                )
             step.detail.startsWith("Android permission ") ->
                 Text(
                     R.string.run_permission_missing,
@@ -121,7 +126,15 @@ internal object RunStatusMapping {
             "POST_NOTIFICATIONS" -> "Notifications"
             "MANAGE_OVERLAY_PERMISSION" -> "Display over other apps"
             "ACTION_NOTIFICATION_LISTENER_SETTINGS" -> "Notification access"
+            "MANAGE_APP_ALL_FILES_ACCESS_PERMISSION" -> "All files access"
             else -> name.substringAfterLast('.').replace('_', ' ').lowercase()
+        }
+
+    fun permissionInstruction(name: String): String =
+        if (name == android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION) {
+            "Turn on All files access for EQO, then return here."
+        } else {
+            "Tap Allow for ${permissionName(name)}."
         }
 
     fun planning(

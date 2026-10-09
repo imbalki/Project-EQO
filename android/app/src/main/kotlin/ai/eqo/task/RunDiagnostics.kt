@@ -30,6 +30,20 @@ internal object RunDiagnostics {
         stepIndex: Int,
         result: ExecuteResult,
     ) {
-        Log.i("EqoRun", "step=$stepIndex code=${code(result)}")
+        Log.i("EqoRun", "step=$stepIndex code=${code(result)} reason=${failureKind(result)}")
+    }
+
+    fun failureKind(result: ExecuteResult): String {
+        val reason = (result as? ExecuteResult.Failure)?.reason.orEmpty()
+        return when {
+            reason.contains("All files access", ignoreCase = true) -> "needs_all_files_access"
+            reason in setOf("a11y_not_bound", "a11y_disabled") ||
+                reason.contains("accessibility in Settings", ignoreCase = true) -> "accessibility_off"
+            reason.contains("screenshot", ignoreCase = true) -> "no_screenshot_permission"
+            reason.contains("empty", ignoreCase = true) -> "empty"
+            reason.contains("not found", ignoreCase = true) -> "not_found"
+            result is ExecuteResult.Failure -> "execution_failed"
+            else -> "none"
+        }
     }
 }
