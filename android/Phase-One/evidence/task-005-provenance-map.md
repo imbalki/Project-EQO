@@ -4,6 +4,16 @@
 
 | :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainPanelState.kt` | EQO-NEW | `ai.eqo.explain` | Bounded panel sizes and clock-testable five-second touch-through state |
 | :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainPolishTest.kt` | EQO-NEW | `ai.eqo.explain` | Panel, reopen, notification refresh, entry routes, hub and hidden-app regressions |
+## Pairing discovery fix (t_9a512691)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/MdnsMessage.kt` | EQO-NEW | `ai.eqo.onboarding` | Bounded DNS SRV/A/AAAA parser, compression loop guard and own-address validation |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WifiMdnsResolver.kt` | EQO-NEW | `ai.eqo.onboarding` | Wi-Fi-bound multicast query with bounded retry and one-winner framework fallback |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WirelessPairingReply.kt` | EQO-NEW | `ai.eqo.onboarding` | Strict transient code and optional explicit ports; revision-bound wait when connect port is unknown |
+| :app | `android/app/src/debug/kotlin/ai/eqo/onboarding/DebugPairReceiver.kt` | EQO-NEW | `ai.eqo.onboarding` | Debug source-set lab receiver, DEBUG guard, DUMP-protected manifest and shared pairing service |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/MdnsMessageTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Synthetic DNS packets, compression, truncation, bounds and own-host safety |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/WirelessResolveAttemptTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Fake framework success/failure/timeout, fallback order and late callbacks |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/WirelessPairingReplyTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Reply validation and fake pair/connect runner without helper authorization |
+| :app | `android/app/src/testDebug/kotlin/ai/eqo/onboarding/DebugPairReceiverTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Debug receiver forwarding, malformed extras and release-source-set exclusion guard |
 
 ## Edge-handle additions (t_a3fa16d0)
 

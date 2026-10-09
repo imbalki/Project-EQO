@@ -52,6 +52,41 @@
      Hide another app, unhide it individually, then Unhide all; check count and immediate drawing.
      Verify EQO settings always retain the handle even with a legacy own-package hidden preference.
 
+## Pairing discovery fix (t_9a512691, local-only fix/pairing-discovery)
+
+- Implemented: NSD still finds service instances. One bounded framework resolve attempt is preferred;
+  failure or no callback within 1.5 seconds invokes an independent Wi-Fi-interface-bound multicast
+  SRV query, then A/AAAA queries for its target. The socket uses mDNS multicast membership and a
+  WifiManager multicast lock; retries stop after four seconds. Network changes/close cancel sockets,
+  invalidate callbacks and release the lock. Parser limits packets, record counts, names and pointer
+  traversal; malformed/truncated/compression-loop replies yield no records. Only this phone's Wi-Fi
+  addresses are eligible, including IPv6 scope preservation. Logs contain only resolve method/status.
+- Notification Reply is available even with no discovered ports. Both reply and the in-app password
+  field accept CODE, CODE PAIRPORT, or CODE PAIRPORT CONNECTPORT, with spaces/commas, six ASCII code
+  digits and ports 1024–65535. Explicit ports override discovery; equal ports are refused. Three fields
+  require no discovery. Two fields use a known connection port, or wait in memory for up to one minute
+  for it; the owner can replace the pending reply with three fields. Waiting never starts PAIR, guesses
+  a connection port or reports enrollment. Codes are not saved in view state, logs or durable storage.
+- Security: no adb-pairing/authentication changes. Fresh CONNECT enrollment stays bound to its real
+  endpoint, PAIR and pinned CONNECT share the existing runner, and background replies never start or
+  authorize the helper. Return to EQO and tap Connect again; ADR-0006's own-process human Allow tap
+  remains required. Pending replies are discarded on timeout, Wi-Fi revision change, service close,
+  Forget and a new foreground pairing/reconnect run (synchronous main-thread cancellation).
+- Debug lab: `ai.eqo.debug.PAIR`, only in debug source/manifest, additionally checks BuildConfig.DEBUG
+  and requires sender permission android.permission.DUMP. Extras: string `code`, integer `pairing_port`
+  and integer `connection_port`. An explicit broadcast to ai.eqo.app/ai.eqo.onboarding.DebugPairReceiver
+  forwards validated extras to the same non-exported pairing service; it does not approve the helper.
+  Never paste real codes, addresses or ports into docs/logs. Tests cover release source-set exclusion.
+- Verified code commit `c8d6d2ad98ee912f57e3ed2bd3fc19e814a7b40b`: sequential app ktlintFormat,
+  ktlintCheck/detekt/testDebugUnitTest, then lintDebug/assembleDebug/processReleaseMainManifest all exit 0,
+  with `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`. Final JUnit XML: 255 app tests,
+  including 50 pairing regressions, zero failures/errors/skips. Repo/branding/provenance and whitespace/
+  changed-Kotlin line-length checks pass; all eight new Kotlin files are mapped (469 files/469 rows).
+  Actual merged debug manifest has the DUMP-protected receiver/action; actual merged release manifest
+  has neither. Debug APK exists, includes the receiver DEX and all four helper starter ABIs. Exact
+  commands, checksum and phone checklist are in PHASE-ONE-TEST-LOG.md. NOT TESTED ON PHONE; full root/
+  other-module unit suites, release APK/lint/unit tests and device instrumentation/CI were not run.
+  Lead owns install/device checklist, push/PR and the full CI merge gate. Worker requests same-card review.
 
 Last updated: 2026-10-09 (edge handle local handoff added). Update this file in the same PR as every merge to `main`.
 Last updated: 2026-10-09 (Explain screen section added). Update this file in the same PR as every merge to `main`.

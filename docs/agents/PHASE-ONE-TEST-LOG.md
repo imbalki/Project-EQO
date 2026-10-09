@@ -25,6 +25,68 @@ open-close-open from each entry, notification recovery after service death and p
 QS editor/manual install (API 30) and platform add request (API 33+), accessibility/volume shortcut,
 hub handle immediate rendering/off hint, battery settings, real Ask focus/mic and per-app/all unhide.
 
+## Pairing discovery fix (t_9a512691, fix/pairing-discovery): NOT TESTED ON PHONE
+
+Local-only implementation; no device was contacted or changed. No model/provider request was made.
+Verified code commit: `c8d6d2ad98ee912f57e3ed2bd3fc19e814a7b40b` (later documentation-only commit does
+not change tested code). Each command below ran sequentially from `android/`, with
+`--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`, and exited 0:
+
+| Gradle tasks | Actual final result |
+|---|---|
+| `:app:ktlintFormat` | BUILD SUCCESSFUL in 1m 2s |
+| `:app:ktlintCheck :app:detekt :app:testDebugUnitTest` | BUILD SUCCESSFUL in 6m; 255 app tests |
+| `:app:lintDebug :app:assembleDebug :app:processReleaseMainManifest` | BUILD SUCCESSFUL in 13m 3s |
+
+- Final JUnit XML: 255 tests, zero failures/errors/skips. Pairing regressions: 50 executions (DNS parser 8,
+  reply/pending state 6, fake resolve attempt 3, debug receiver 3, existing discovery state 10, notification/
+  Android discovery 20 on API 30 and 33). Includes real framework failure/timeout callbacks with an injected
+  mDNS lookup, late NSD rejection, code-envelope consumption, strict input, network-bound pending expiry,
+  and unchanged fake PAIR+CONNECT-only/no-helper path. Test data is synthetic; no pairing sockets were
+  opened against a device. Real multicast socket/lock behavior remains a phone checklist item.
+- Source-set regression verifies the lab receiver is only under `src/debug`, guarded by BuildConfig.DEBUG
+  and protected by DUMP. Read-back of actual merged debug/release manifests independently confirms the
+  exact debug receiver/action/permission and absence of the receiver/action in release. The built debug
+  APK's DEX contains the receiver. A release APK/DEX was not built or inspected.
+- Actual APK: `android/app/build/outputs/apk/debug/app-debug.apk`, 59,776,547 bytes; SHA-256
+  `c7d10024f9b3154fcdb049cc6163b844b55d3e193cf5d8a208443fcc5aded1f8`.
+  ZIP inspection confirms helper starters for arm64-v8a, armeabi-v7a, x86 and x86_64. No install attempted.
+- `bash scripts/check.sh` passes: BRANDING GATE PASSED, 469 tracked Kotlin files/469 provenance rows.
+  `git diff --check` and changed Kotlin lines <=120 checks pass. Raw host logs are kept under ignored
+  `android/app/build/reports/pairing-fix/`, not committed. No push, PR or gh action by this worker.
+- NOT RUN: full root/all-module Gradle checks, untouched modules' unit-test tasks, release lint/unit tests/
+  APK build, connected/device instrumentation or GitHub CI. App tasks' dependency compilation/lint
+  analysis is not those modules' unit-test execution. NOT TESTED ON PHONE; every phone item below remains.
+
+Initial lint/compile findings were fixed without a baseline: bounded parser wire-number annotation,
+named transport constants, split framework listener method, short imports/lines and explicit test generic.
+
+Phone checklist (lead/owner; record build commit and pass/fail, never real identifiers or credentials):
+- On the Android 11/ColorOS phone, open EQO setup, enable its notification, then open Wireless debugging.
+  Open Pair device with pairing code. Confirm EQO finds both ports despite the framework mapping failure;
+  app logs may contain only `resolve: nsd fail` / `resolve: mdns ok` (or generic fail), no values/names.
+- While the pairing dialog stays open, reply with its six-digit code from the notification. Verify PAIR
+  and CONNECT pass, no helper authorization occurs in the background, and returning/tapping Connect again
+  displays the protected EQO helper prompt. Deny/Back must fail; Allow must be a real human tap.
+- Force discovery to be unavailable in a lab build or environment: Reply remains visible. Supply code,
+  pairing port and connection port in one string, with spaces then commas, without split screen. Verify
+  the normal pinned path succeeds, and the code is cleared/consumed. Check the in-app box accepts both.
+- Supply code and pairing port only: use a discovered connection port if present; otherwise verify the
+  plain waiting message, no premature pairing or secure-enrollment report, successful late discovery,
+  replacement by a three-field reply and discard after one minute. No connection port is guessed.
+  Forget or a new foreground pair/reconnect must cancel the pending code before any new transport work.
+- Reject malformed codes, Unicode digits, signs, out-of-range/equal ports, extra fields and bad separators
+  before transport. Show a plain error; do not echo the entry or exception. Reopen expired pairing dialog.
+- Test notification denial/channel blocking and the in-app fallback; keyboard allows spaces/commas and
+  does not save/autofill the code. Check Android 13+ notification permission and background restrictions.
+- Toggle Wi-Fi, change network/address, enable VPN (API 30–32), stop discovery and close during lookup:
+  no stale endpoints/replies restore state; multicast socket/lock are released. Another LAN device's
+  advertised service is never selected. Repeat toggle/re-pair and rejected server-key/pinning scenarios.
+- In an installed DEBUG build only, use an explicit DUMP-authorized lab broadcast with the three extras
+  documented in CURRENT-HANDOFF.md. Verify shared PAIR+CONNECT, no helper auto-consent. A normal sender
+  without DUMP is denied; a release build has no receiver/action/class and cannot accept the broadcast.
+- Verify actual local multicast/unicast delivery, OEM multicast filtering and service-name handling;
+  host fixtures do not prove any of these real-network behaviors. CI remains the complete merge gate.
 
 ## Edge handle (t_a3fa16d0, feat/edge-handle): NOT TESTED ON PHONE
 
