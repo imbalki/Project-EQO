@@ -26,6 +26,38 @@
 - Focused actions rerun: `:actions-android:testDebugUnitTest --tests 'ai.eqo.actions.impl.AttachmentFileSearchTest' --tests 'ai.eqo.actions.impl.SharedStorageCatalogTest' --tests 'ai.eqo.actions.impl.SharedStorageTest' --tests 'ai.eqo.actions.impl.FileFeaturesRegistryTest'` with the same worker/compiler flags. Exit 0, `BUILD SUCCESSFUL in 1m 21s`, 106 tasks (one executed, 105 up-to-date). Fresh XML confirms 60 tests, zero failures/errors, three capability skips. This focused execution replaces the local XML files from the failing full run; the full-run failure remains recorded above, not concealed by the focused pass.
 - `bash scripts/check.sh`: exit 0, `455` Kotlin files/provenance rows, `BRANDING GATE PASSED`, `OK`. `git diff --check`: exit 0. Added/modified Kotlin lines are at most 120 characters; pre-existing schema/registry long lines are unchanged.
 - NOT RUN: phone, instrumentation, publication/CI or a repository-wide Gradle gate. Required phone checklist above remains unchecked.
+## Voice v2 — 2026-10-09 — NOT TESTED ON PHONE
+
+Branch `feat/voice-v2`, card t_e9801e01. No phone was contacted or modified. No real provider audio was uploaded.
+Initial `:app:ktlintFormat :core-llm:ktlintFormat :app:compileDebugUnitTestKotlin --max-workers=2
+-Pkotlin.compiler.execution.strategy=in-process` succeeded in 8m 27s (Gradle daemon log verified after tool timeout).
+Final frozen-source checks for local code head `381b083` completed after the earlier worker timed out:
+`:app:ktlintFormat :core-llm:ktlintFormat :app:ktlintCheck :core-llm:ktlintCheck :app:detekt
+:core-llm:detekt :app:testDebugUnitTest :core-llm:testDebugUnitTest --max-workers=2`.
+Saved `voice-v2-final-gates.log` reports `BUILD SUCCESSFUL in 9m 48s` (220 actionable tasks).
+Verified XML: app 209 tests, core-llm 277 tests; zero failures/errors, one existing core-llm skip.
+All 34 voice/provider tests pass (6 Android adapter, 10 presenter, 13 v2 recording/UI, 5 provider).
+Both module debug lint XML reports contain zero fatal/error/warning issues. Repo/branding/provenance checks
+pass (451 Kotlin files and 451 provenance rows); no changed Kotlin line exceeds 120 characters.
+Resumed-worker confirmation on the unchanged Kotlin source: app/core-llm `ktlintCheck`, `detekt`,
+`testDebugUnitTest` and `lintDebug`, with `--max-workers=2 --console=plain
+-Pkotlin.compiler.execution.strategy=in-process`, exited 0: `BUILD SUCCESSFUL in 28m 3s`
+(370 actionable tasks: 42 executed, 328 up-to-date). Unit tests were up-to-date from the passing frozen-source run.
+CI remains the full merge gate; no APK install or real audio upload was performed.
+
+Phone checklist (owner must record build commit and actual outcome):
+- [ ] Phone engine: long English sentence with multiple 3–4 second pauses; partials appear live, stop control works.
+- [ ] Phone engine: hi-IN long Hindi sentence with pauses; en-IN, device default and provider-reported languages.
+- [ ] If the service still ends early, already-heard words remain; next mic tap adds rather than wipes.
+- [ ] Grant, deny, cancel and permanently deny microphone permission; no request at startup, typing still works.
+- [ ] Edit recognized words; nothing submits until the normal task button is tapped, preview/approval unchanged.
+- [ ] AI engine: first-use consent accept/decline; only accepted consent allows capture and provider upload.
+- [ ] Audio-capable configured model: English and Hindi verbatim transcripts; stop tap, 60-second cap, repeat append.
+- [ ] Text-only model: plain audio-unsupported explanation and Use Phone voice fallback; no audio upload.
+- [ ] Airplane mode on both engines: understandable failure, words kept, no automatic network retry.
+- [ ] Leave screen while recording/transcribing, or tap mic during transcription: no late draft overwrite,
+      microphone released and EQO voice cache file deleted. Test failures/cancellation as well as success.
+- [ ] Compare phone vs AI accuracy and latency; verify offline language packs separately in the phone provider.
 
 ## Explain/handle UX polish (t_e84b3eaa): NOT TESTED ON PHONE
 

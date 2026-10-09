@@ -1,5 +1,24 @@
 # Current handoff (any agent can take over from this page)
 
+Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every merge to `main`.
+
+## Voice v2 (t_e9801e01, local-only branch `feat/voice-v2`)
+- Phone remains the default: 4/3/5-second speech-intent pause hints, live partials, Stop listening control,
+  preserved early-end text and append-on-next-tap. Providers may ignore pause hints; no automatic restarts.
+- Setup: Voice engine (Phone / AI model via OpenRouter), Voice language (device default / en-IN / hi-IN /
+  additional tags reported by the phone speech service). AI requires first-use consent before permission/capture.
+- AI records a cache WAV (16 kHz mono, 60-second cap), then uses the existing BYOK OpenRouter provider and shared
+  planning client. Public model metadata must advertise audio before upload. A text-only model is refused with
+  plain guidance and a Phone voice option. Success/error/cancel deletes audio; no words/audio logging or auto-submit.
+- Verified local code head `381b083`: app/core-llm ktlintFormat, ktlintCheck, detekt and debug unit tests;
+  final saved Gradle run reports BUILD SUCCESSFUL in 9m 48s. XML reports: 486 tests, zero failures/errors,
+  one existing core-llm skip; all 34 voice/provider tests pass. Both debug lint reports have zero issues.
+  Repo/branding/provenance checks pass (451 Kotlin files, 451 rows); changed Kotlin lines are <=120 chars.
+  Resumed-worker confirmation of both modules' static checks, tests and debug lint exited 0 in 28m 3s.
+  CI is still the full gate. Design: `docs/adr/0011-voice-input-engines.md`.
+- NOT TESTED ON PHONE: long English/Hindi pauses, installed language packs, AudioRecord, provider audio models,
+  permission dialogs, airplane mode, 60-second cap and cancellation. See the phone checklist in the test log.
+- Local commits only; lead owns push/PR. This card goes to same-card review, not self-completion.
 ## Explain/handle UX polish (t_e84b3eaa, feat/explain-handle-polish): NOT TESTED ON PHONE
 
 - Compact Explain panel defaults to 25% of screen height; drag/tap the resize bar for a one-line
