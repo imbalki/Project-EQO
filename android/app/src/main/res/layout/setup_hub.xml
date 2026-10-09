@@ -128,6 +128,25 @@
             android:layout_height="wrap_content"
             android:text="@string/notices_button"
             android:minHeight="52dp" />
+        <Button
+            style="@style/StudySecondaryButton"
+            android:id="@+id/voice_engine_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:text="@string/voice_engine_title" />
+        <TextView
+            style="@style/StudyBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/voice_ai_disclosure" />
+        <Button
+            style="@style/StudySecondaryButton"
+            android:id="@+id/voice_language_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:text="@string/voice_language_title" />
         <CheckBox
             android:id="@+id/require_plan_approval"
             android:textSize="@dimen/study_text_body"

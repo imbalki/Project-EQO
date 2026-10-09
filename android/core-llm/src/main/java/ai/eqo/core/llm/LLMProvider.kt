@@ -90,7 +90,16 @@ data class LLMRequest(
     val retryPolicy: RetryPolicy = RetryPolicy.DEFAULT,
     @Transient
     val providerConfig: ProviderRequestConfig? = null,
+    @Transient
+    val inputAudio: InputAudio? = null,
 )
+
+/** Ephemeral WAV payload, never serialized into history or rendered by request logging. */
+class InputAudio(
+    val base64: String,
+) {
+    override fun toString(): String = "<redacted audio>"
+}
 
 enum class ResponseFormat {
     JSON,

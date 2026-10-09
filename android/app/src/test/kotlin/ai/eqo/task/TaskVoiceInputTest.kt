@@ -104,7 +104,14 @@ class TaskVoiceInputTest {
             RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,
             intent.getStringExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL),
         )
-        assertFalse(intent.getBooleanExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true))
+        assertTrue(intent.getBooleanExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false))
+        assertEquals(4000L, intent.getLongExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 0))
+        assertEquals(
+            3000L,
+            intent.getLongExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 0),
+        )
+        assertEquals(5000L, intent.getLongExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 0))
+        assertEquals("hi-IN", TaskVoiceInput.recognitionIntent("hi-IN").getStringExtra(RecognizerIntent.EXTRA_LANGUAGE))
         assertFalse(intent.hasExtra("android.speech.extra.GET_AUDIO"))
         assertFalse(intent.hasExtra("android.speech.extra.GET_AUDIO_FORMAT"))
     }

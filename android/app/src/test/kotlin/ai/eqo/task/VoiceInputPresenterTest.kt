@@ -76,4 +76,39 @@ class VoiceInputPresenterTest {
         assertEquals(VoiceInputState.READY, states.last())
         assertEquals(emptyList<String>(), drafts)
     }
+
+    @Test
+    fun partialsReplaceCurrentSegmentAndEarlyEndAppendsOnNextTap() {
+        var draft = "Typed prefix"
+        var stops = 0
+        val voice = VoiceInputPresenter({}, { draft = it }, {}, {}, { draft }, { stops++ })
+        voice.tap(true)
+        voice.partial("long")
+        assertEquals("Typed prefix long", draft)
+        voice.partial("long sentence")
+        assertEquals("Typed prefix long sentence", draft)
+        voice.error(VoiceInputState.NOT_CAUGHT)
+        voice.tap(true)
+        voice.partial("with pauses")
+        voice.tap(true)
+        assertEquals(1, stops)
+        voice.result(null)
+        assertEquals("Typed prefix long sentence with pauses", draft)
+        voice.tap(true)
+        voice.result("and more")
+        assertEquals("Typed prefix long sentence with pauses and more", draft)
+    }
+
+    @Test
+    fun processingCanBeCancelledAndLateTranscriptIsIgnored() {
+        var cancelled = false
+        val voice = VoiceInputPresenter(states::add, drafts::add, {}, {}, cancelProcessing = { cancelled = true })
+        voice.tap(true)
+        voice.processing()
+        voice.tap(true)
+        voice.result("late transcript")
+        assertEquals(true, cancelled)
+        assertEquals(VoiceInputState.READY, states.last())
+        assertEquals(emptyList<String>(), drafts)
+    }
 }

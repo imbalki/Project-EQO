@@ -5,6 +5,7 @@ internal enum class VoiceInputState {
     READY,
     PERMISSION_NEEDED,
     LISTENING,
+    PROCESSING,
     REVIEW,
     NOT_CAUGHT,
     NOT_ALLOWED,
@@ -13,7 +14,7 @@ internal enum class VoiceInputState {
     ;
 
     companion object {
-        val BLOCKS_TAP = setOf(UNAVAILABLE, LISTENING, PERMISSION_NEEDED)
+        val BLOCKS_TAP = setOf(UNAVAILABLE, PERMISSION_NEEDED)
     }
 }
 
@@ -23,12 +24,29 @@ internal class VoiceInputPresenter(
     private val fillDraft: (String) -> Unit,
     private val requestPermission: () -> Unit,
     private val startListening: () -> Unit,
+    private val readDraft: () -> String = { "" },
+    private val stopListening: () -> Unit = {},
+    private val cancelProcessing: () -> Unit = {},
 ) {
     private var state = VoiceInputState.READY
+    private var prefix = ""
+    private var partial = ""
 
-    fun availability(available: Boolean) = update(if (available) VoiceInputState.READY else VoiceInputState.UNAVAILABLE)
+    fun availability(available: Boolean) {
+        if (state in setOf(VoiceInputState.PERMISSION_NEEDED, VoiceInputState.LISTENING, VoiceInputState.PROCESSING)) return
+        update(if (available) VoiceInputState.READY else VoiceInputState.UNAVAILABLE)
+    }
 
     fun tap(permissionGranted: Boolean) {
+        if (state == VoiceInputState.PROCESSING) {
+            cancelProcessing()
+            cancel()
+            return
+        }
+        if (state == VoiceInputState.LISTENING) {
+            stopListening()
+            return
+        }
         if (state in VoiceInputState.BLOCKS_TAP) return
         if (permissionGranted) {
             listen()
@@ -44,24 +62,39 @@ internal class VoiceInputPresenter(
     }
 
     fun result(text: String?) {
-        if (state != VoiceInputState.LISTENING) return
-        if (text.isNullOrBlank()) {
+        if (state !in setOf(VoiceInputState.LISTENING, VoiceInputState.PROCESSING)) return
+        val heard = text?.takeIf { it.isNotBlank() } ?: partial
+        if (heard.isBlank()) {
             update(VoiceInputState.NOT_CAUGHT)
         } else {
-            fillDraft(text)
+            fillDraft(join(heard))
             update(VoiceInputState.REVIEW)
         }
     }
 
+    fun partial(text: String?) {
+        if (state != VoiceInputState.LISTENING || text.isNullOrBlank()) return
+        partial = text
+        fillDraft(join(text))
+    }
+
+    private fun join(text: String): String = listOf(prefix, text.trim()).filter { it.isNotBlank() }.joinToString(" ")
+
     fun error(failure: VoiceInputState) {
-        if (state == VoiceInputState.LISTENING) update(failure)
+        if (state in setOf(VoiceInputState.LISTENING, VoiceInputState.PROCESSING)) update(failure)
+    }
+
+    fun processing() {
+        if (state == VoiceInputState.LISTENING) update(VoiceInputState.PROCESSING)
     }
 
     fun cancel() {
-        if (state == VoiceInputState.LISTENING) update(VoiceInputState.READY)
+        if (state in setOf(VoiceInputState.LISTENING, VoiceInputState.PROCESSING)) update(VoiceInputState.READY)
     }
 
     private fun listen() {
+        prefix = readDraft().trimEnd()
+        partial = ""
         update(VoiceInputState.LISTENING)
         startListening()
     }

@@ -1,5 +1,12 @@
 # TASK-005 per-file provenance map
 
+## Voice v2 additions (t_e9801e01)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceSettings.kt` | EQO-NEW | `ai.eqo.task` | Non-secret engine/language/consent preferences and setup controls |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceAudioRecorder.kt` | EQO-NEW | `ai.eqo.task` | Bounded ephemeral PCM/WAV capture and file cleanup |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceInputV2Test.kt` | EQO-NEW | `ai.eqo.task` | Fake recorder/provider draft-only consent and cleanup regressions |
+| :core-llm | `android/core-llm/src/test/java/ai/eqo/core/llm/providers/OpenRouterAudioTest.kt` | EQO-NEW | `ai.eqo.core.llm.providers` | Synthetic input_audio and capability tests; no network |
+
 ## Voice-input additions (t_e9ef0f95)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceInputPresenter.kt` | EQO-NEW | `ai.eqo.task` | Draft-only speech presentation, no submission capability |

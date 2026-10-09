@@ -28,6 +28,8 @@ class SetupHubActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.setup_hub)
+        ai.eqo.task.VoiceSettings
+            .bind(this)
         findViewById<android.widget.CheckBox>(R.id.require_plan_approval).apply {
             isChecked =
                 ai.eqo.task.PlanApprovalSettings
