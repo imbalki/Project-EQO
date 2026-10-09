@@ -1,6 +1,6 @@
 # Current handoff (any agent can take over from this page)
 
-Last updated: 2026-10-08 (files and attachments section added). Update this file in the same PR as every merge to `main`.
+Last updated: 2026-10-09 (local round-1 fixes and host verification). Update this file in the same PR as every merge to `main`.
 
 ## IN PROGRESS: files and attachments (branch `feat/files-attachments`, draft PR, do not merge)
 Plain-language status, updated after each step. Details and design: `docs/adr/0007-shared-files-and-attachments.md`.
@@ -17,7 +17,7 @@ Plain-language status, updated after each step. Details and design: `docs/adr/00
 - Named notes apps use app tap/type planning, not EQO internal ADD_NOTE. Title-only internal notes use the title as content. Arithmetic words, including percent of, evaluate locally; invalid arithmetic no longer launches web search. WhatsApp `draftOnly=true` opens a prefilled chat and never calls Send; preview says "you press Send". A pre-approval guard forces draft mode and rejects submit/tap/send routes for type/write/draft/don't-send requests. A bare message cannot silently pick SMS/WhatsApp; it asks for the channel once.
 - Email recipients split on commas, semicolons and " and "; literals bypass lookup/Contacts permission, names resolve individually, failed recipients are identified before any compose launch, and approved destinations remain frozen. Permission waiting now says "Tap Allow for Contacts/Location" or "Turn on All files access".
 - Per-contact channel memory is follow-up: the existing productivity preference boundary is unavailable by default, not a simple working per-contact store. No preference database or runtime dependency was added.
-- Verification in progress: module-scoped checks run sequentially with two workers. Initial full actions suite ran 145 tests with five failures in untouched macro/shared-storage tests (macro timeout, Windows link/path behavior). Focused round-1 checks are being rerun; final results will be recorded below and in the test log. No phone or instrumentation tests, release build or full Gradle gate have run.
+- Verified with sequential, two-worker Gradle module checks (`ktlintFormat`, `ktlintCheck`, `detekt`, `testDebugUnitTest`): actions 71 focused tests passed; core-agent 107 passed; core-llm 272 discovered, one skipped, no failures; platform-a11y 102 passed. `scripts/check.sh` passed. Final app checks are running after correcting test fixture parameters, a stale-dialog intent assertion and the expected new permission copy. Initial full actions suite ran 145 tests with five failures in untouched macro/shared-storage tests (macro timeout, Windows link/path behavior); baseline was not separately reproduced. No phone or instrumentation tests, APK/release build or full Gradle gate have run. CI remains required.
 
 ## Goal
 EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-key, accessibility automation, wireless-ADB helper, Chrome control, guided setup, approvals, Pause/Stop/takeover). Owner is non-technical: plain language, real command output, say what was not tested.

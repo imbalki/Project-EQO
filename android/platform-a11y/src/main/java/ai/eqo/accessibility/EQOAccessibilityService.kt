@@ -119,6 +119,50 @@ class EQOAccessibilityService :
 
     fun reportControlSurfaceTouch() = reportTouchToTakeoverDetector()
 
+    @Volatile
+    var runtimePermissionPending: Boolean = false
+
+    internal fun isPermissionDialogTouch(
+        x: Int,
+        y: Int,
+    ): Boolean {
+        if (!runtimePermissionPending) return false
+        return windows.any { window ->
+            val root = window.root
+            val packageName = root?.packageName?.toString()
+            val systemPackage =
+                runCatching {
+                    packageName != null &&
+                        packageManager.getApplicationInfo(packageName, 0).flags and
+                        android.content.pm.ApplicationInfo.FLAG_SYSTEM != 0
+                }.getOrDefault(false)
+            val dialogNodes = root?.findAccessibilityNodeInfosByViewId("$packageName:id/grant_dialog").orEmpty()
+            val buttons =
+                listOf(
+                    "permission_allow_button",
+                    "permission_allow_foreground_only_button",
+                    "permission_deny_button",
+                ).flatMap { root?.findAccessibilityNodeInfosByViewId("$packageName:id/$it").orEmpty() }
+            val insideDialog =
+                buttons.isNotEmpty() &&
+                    (dialogNodes.ifEmpty { buttons }).any { node ->
+                        val bounds = android.graphics.Rect()
+                        node.getBoundsInScreen(bounds)
+                        node.isVisibleToUser && bounds.contains(x, y)
+                    }
+            dialogNodes.forEach { it.recycle() }
+            buttons.forEach { it.recycle() }
+            root?.recycle()
+            permissionTouchAllowed(
+                runtimePermissionPending,
+                packageName,
+                systemPackage,
+                window.isActive && window.type == android.view.accessibility.AccessibilityWindowInfo.TYPE_APPLICATION,
+                insideDialog,
+            )
+        }
+    }
+
     private fun reportTouchToTakeoverDetector() {
         val source =
             if (gestureInFlight.get() > 0) {
@@ -172,7 +216,8 @@ class EQOAccessibilityService :
         probe.setOnTouchListener(
             View.OnTouchListener { v, event ->
                 if (event.action == MotionEvent.ACTION_OUTSIDE &&
-                    !takeoverDetector.isControlTouch(event.rawX.toInt(), event.rawY.toInt())
+                    !takeoverDetector.isControlTouch(event.rawX.toInt(), event.rawY.toInt()) &&
+                    !isPermissionDialogTouch(event.rawX.toInt(), event.rawY.toInt())
                 ) {
                     reportTouchToTakeoverDetector()
                 }
@@ -457,6 +502,25 @@ class EQOAccessibilityService :
 
     companion object {
         private const val PNG_QUALITY = 100
+
+        internal fun permissionTouchAllowed(
+            pending: Boolean,
+            packageName: String?,
+            systemPackage: Boolean,
+            activeDialog: Boolean,
+            insideBounds: Boolean,
+        ): Boolean =
+            pending &&
+                systemPackage &&
+                activeDialog &&
+                insideBounds &&
+                packageName in
+                setOf(
+                    "com.android.permissioncontroller",
+                    "com.google.android.permissioncontroller",
+                    "com.android.packageinstaller",
+                    "com.google.android.packageinstaller",
+                )
 
         @Volatile
         private var instance: EQOAccessibilityService? = null

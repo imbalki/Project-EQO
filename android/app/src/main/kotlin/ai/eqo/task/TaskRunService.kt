@@ -159,6 +159,8 @@ class TaskRunService : Service() {
                     TaskRunSession.changed()
                 },
                 config = ActionLoop.Config(),
+                isPermissionWaiting = { TaskRunSession.permissionRequester?.isWaiting() == true },
+                cancelPermissionWait = { TaskRunSession.permissionRequester?.cancelWaiting() },
             )
         TaskRunSession.controller = controller
         launchRun(controller)

@@ -12,9 +12,13 @@ import android.widget.TextView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
@@ -42,6 +46,77 @@ import java.util.concurrent.atomic.AtomicReference
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
 class TaskPermissionRequesterTest {
+    @Test fun staleSettingsInstructionsCannotLaunchOrCancelTheNextRequest() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val requester = TaskPermissionRequester(activity)
+        val first =
+            startRequest(
+                requester,
+                ActionPermission.SpecialAccess(
+                    Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                    true,
+                    "Turn on All files access.",
+                    { false },
+                ),
+            )
+        val oldDialog = ShadowAlertDialog.getLatestAlertDialog()
+        requester.cancelWaiting()
+        awaitSettled(first, "cancelled Settings instructions")
+        val second =
+            startRequest(
+                requester,
+                ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Find a recipient."),
+            )
+        assertEquals("android.content.pm.action.REQUEST_PERMISSIONS", shadowOf(activity).nextStartedActivity.action)
+        oldDialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        oldDialog.getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
+        assertNull(shadowOf(activity).nextStartedActivity)
+        assertNull(second.outcome.get())
+        assertTrue(requester.isWaiting())
+        requester.cancelWaiting()
+        awaitSettled(second, "cancelled second request")
+    }
+
+    @Test fun stopSettlesPermissionWaitAndOldCallbackCannotSettleTheNextRequest() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val requester = TaskPermissionRequester(activity)
+        val permission = ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Find a recipient.")
+        val first = startRequest(requester, permission)
+        val oldCode = shadowOf(activity).lastRequestedPermission.requestCode
+        assertTrue(requester.isWaiting())
+        requester.cancelWaiting()
+        awaitSettled(first, "Stop cancelling permission")
+        assertEquals(false, first.outcome.get())
+        val second = startRequest(requester, permission)
+        val newCode = shadowOf(activity).lastRequestedPermission.requestCode
+        org.junit.Assert.assertFalse(requester.onRequestPermissionsResult(oldCode))
+        assertNull(second.outcome.get())
+        shadowOf(activity.application).grantPermissions(Manifest.permission.READ_CONTACTS)
+        assertTrue(requester.onRequestPermissionsResult(newCode))
+        awaitSettled(second, "new permission callback")
+        assertEquals(true, second.outcome.get())
+    }
+
+    @Test fun requestWaitsUpTo120SecondsInVirtualTime() =
+        kotlinx.coroutines.test.runTest {
+            Dispatchers.setMain(kotlinx.coroutines.test.StandardTestDispatcher(testScheduler))
+            val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+            val requester = TaskPermissionRequester(activity)
+            val result =
+                async {
+                    requester.request(
+                        ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Share location."),
+                    )
+                }
+            runCurrent()
+            advanceTimeBy(119_999)
+            assertTrue(requester.isWaiting())
+            org.junit.Assert.assertFalse(result.isCompleted)
+            advanceUntilIdle()
+            assertEquals(false, result.await())
+            org.junit.Assert.assertFalse(requester.isWaiting())
+        }
+
     @Before
     fun setUp() {
         Dispatchers.setMain(Dispatchers.Unconfined)
@@ -170,7 +245,7 @@ class TaskPermissionRequesterTest {
             startRequest(requester, ActionPermission.Runtime(Manifest.permission.CALL_PHONE, "Place this call."))
 
         val waitingText = activity.findViewById<TextView>(R.id.task_state).text.toString()
-        assertTrue(waitingText.contains("Needs you"))
+        assertTrue(waitingText.contains("Tap Allow"))
         assertTrue(waitingText.contains("Phone"))
 
         lifecycle.pause().stop().destroy()

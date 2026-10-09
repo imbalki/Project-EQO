@@ -5,12 +5,110 @@ import ai.eqo.core.agent.ExecuteResult
 import ai.eqo.core.agent.ExecutedAction
 import ai.eqo.core.agent.LoopStep
 import ai.eqo.core.agent.TaskPlanPreview
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StudyDispatchTest {
+    @Test fun stopCancelsAnIrreversiblePermissionWaitBeforeAnyEffect() =
+        runTest {
+            val answer = CompletableDeferred<Boolean>()
+            var waiting = false
+            var effects = 0
+            val step =
+                LoopStep(
+                    "location",
+                    ExecutedAction("SHARE_LOCATION", mapOf("to" to "Example", "via" to "sms"), irreversible = true),
+                )
+            val plan = ApprovedTaskPlan(listOf(step))
+            val executor =
+                StudyActionExecutor(RecordingPort(), plan) { _, _ ->
+                    waiting = true
+                    val allowed = answer.await()
+                    waiting = false
+                    if (allowed) {
+                        effects++
+                        ai.eqo.actions.base.ActionResult
+                            .Success(mapOf("message" to "done"))
+                    } else {
+                        ai.eqo.actions.base.ActionResult
+                            .Failure("Permission was not granted; this step did not run.")
+                    }
+                }
+            val controller =
+                StudyTaskController(
+                    listOf(step),
+                    StudyPermissionCheck({ true }, { true }, { true }),
+                    StudyApprovalGate(StudyApprovalSurface { error("Already approved") }, { 0L }, plan),
+                    executor,
+                    observe = { "" },
+                    takeoverDetector = ai.eqo.accessibility.TakeoverDetector(),
+                    isPermissionWaiting = { waiting },
+                    cancelPermissionWait = { answer.complete(false) },
+                )
+            val run = async { controller.run() }
+            runCurrent()
+            advanceTimeBy(6_000)
+            runCurrent()
+            assertTrue(!run.isCompleted)
+            assertTrue(controller.stop())
+            advanceUntilIdle()
+            assertEquals("STOPPED", run.await().terminal)
+            assertEquals(0, effects)
+        }
+
+    @Test fun grantAfterFiveSecondsContinuesSameApprovedStepExactlyOnce() =
+        runTest {
+            val answer = CompletableDeferred<Boolean>()
+            var waiting = false
+            var effects = 0
+            val step =
+                LoopStep(
+                    "email",
+                    ExecutedAction(
+                        "SEND_EMAIL",
+                        mapOf("to" to "Example", "subject" to "Test", "body" to "Test"),
+                        irreversible = true,
+                    ),
+                )
+            val plan = ApprovedTaskPlan(listOf(step))
+            val executor =
+                StudyActionExecutor(RecordingPort(), plan) { _, _ ->
+                    waiting = true
+                    answer.await()
+                    waiting = false
+                    effects++
+                    ai.eqo.actions.base.ActionResult
+                        .Success(mapOf("message" to "done"))
+                }
+            val controller =
+                StudyTaskController(
+                    listOf(step),
+                    StudyPermissionCheck({ true }, { true }, { true }),
+                    StudyApprovalGate(StudyApprovalSurface { error("No second approval") }, { 0L }, plan),
+                    executor,
+                    observe = { "" },
+                    takeoverDetector = ai.eqo.accessibility.TakeoverDetector(),
+                    isPermissionWaiting = { waiting },
+                )
+            val run = async { controller.run() }
+            runCurrent()
+            advanceTimeBy(15_000)
+            runCurrent()
+            assertTrue(!run.isCompleted)
+            answer.complete(true)
+            advanceUntilIdle()
+            assertEquals("COMPLETED", run.await().terminal)
+            assertEquals(1, effects)
+        }
+
     @Test fun handlerMapKeepsLegacyAliasesAndDefaults() =
         runBlocking {
             val port = RecordingPort()

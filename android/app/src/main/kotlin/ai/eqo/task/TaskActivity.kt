@@ -69,7 +69,7 @@ class TaskActivity : Activity() {
     private var waitingPermission: String? = null
     private var displayedStatus = PlanStatus.PENDING
     private val actionPermissions by lazy {
-        TaskPermissionRequester(this) { permission ->
+        TaskPermissionRequester(this, ::prepareTaskDialog) { permission ->
             waitingPermission = permission
             renderPlanStatus(displayedStatus)
         }
@@ -296,13 +296,12 @@ class TaskActivity : Activity() {
                         approvedPlan = approved,
                     ),
                 executor = executor,
-                observe = {
-                    val result = liveAutomation()?.observe()
-                    (result as? ai.eqo.accessibility.A11yResult.Success)?.detail ?: ""
-                },
+                observe = ::observeTaskScreen,
                 onPlanStatus = { status -> mainHandler.post { renderPlanStatus(status) } },
                 onStepProgress = { progress -> mainHandler.post { renderStep(progress) } },
                 config = SamplePractice.config,
+                isPermissionWaiting = actionPermissions::isWaiting,
+                cancelPermissionWait = actionPermissions::cancelWaiting,
                 onControlFeedback = { feedback -> mainHandler.post { renderControlFeedback(feedback) } },
                 onInterStepWait = { next, total, remaining ->
                     mainHandler.post {
@@ -319,6 +318,11 @@ class TaskActivity : Activity() {
                 if (controller === newController) controller = null
             }
         }
+    }
+
+    private fun observeTaskScreen(): String {
+        val result = liveAutomation()?.observe()
+        return (result as? ai.eqo.accessibility.A11yResult.Success)?.detail ?: ""
     }
 
     private fun actionExecutor(approved: ApprovedTaskPlan): StudyActionExecutor {
@@ -437,7 +441,7 @@ class TaskActivity : Activity() {
         findViewById<TextView>(R.id.task_state).text = planLabel(status.name)
         waitingPermission?.let {
             findViewById<TextView>(R.id.task_state).text =
-                getString(R.string.run_permission_waiting, RunStatusMapping.permissionName(it))
+                RunStatusMapping.permissionInstruction(it)
         }
         val running = status == PlanStatus.RUNNING
         val paused = status == PlanStatus.PAUSED
@@ -732,6 +736,11 @@ class TaskActivity : Activity() {
         steps: List<ai.eqo.core.agent.LoopStep>,
         missing: List<String> = emptyList(),
     ) {
+        findViewById<TextView>(R.id.task_preview).text = TaskPlanPreview.describe(steps)
+        if (!portedActions.prepareFileAccess(steps)) {
+            findViewById<TextView>(R.id.task_state).text = "Turn on All files access for EQO, then try this plan again."
+            return
+        }
         val prepared = portedActions.prepareRecipients(steps)
         if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing)
     }

@@ -28,13 +28,75 @@ class TaskPlanner(
                     temperature = 0f,
                 ),
             )
-        if (enabledActions == null) return parse(response.content)
-        return try {
-            RegistryPlanVocabulary.parse(response.content, enabledActions)
-        } catch (failure: IllegalArgumentException) {
-            repair(input, prompt, failure.message.orEmpty())
-        } catch (_: IllegalStateException) {
-            repair(input, prompt, "Plan JSON has an invalid structure")
+        if (enabledActions == null) return respectDraftRequest(request, parse(response.content))
+        val planned =
+            try {
+                RegistryPlanVocabulary.parse(response.content, enabledActions)
+            } catch (failure: IllegalArgumentException) {
+                repair(input, prompt, failure.message.orEmpty())
+            } catch (_: IllegalStateException) {
+                repair(input, prompt, "Plan JSON has an invalid structure")
+            }
+        return respectDraftRequest(request, respectMessageChannel(request, planned))
+    }
+
+    private fun respectMessageChannel(
+        request: String,
+        steps: List<LoopStep>,
+    ): List<LoopStep> {
+        val genericMessage = Regex("\\bmessage\\b", RegexOption.IGNORE_CASE).containsMatchIn(request)
+        val channelNamed =
+            Regex(
+                "\\b(whatsapp|sms|email|telegram)\\b|text message",
+                RegexOption.IGNORE_CASE,
+            ).containsMatchIn(request)
+        if (!genericMessage || channelNamed || steps.none { it.action.name in setOf("SEND_WHATSAPP", "SEND_SMS") }) {
+            return steps
+        }
+        require("ASK_USER" in enabledActions.orEmpty()) { "Name SMS or WhatsApp before sending a message" }
+        return listOf(
+            LoopStep(
+                "task-1",
+                ExecutedAction(
+                    "ASK_USER",
+                    mapOf(
+                        "question" to "Which channel should this message use: SMS or WhatsApp?",
+                    ),
+                    irreversible = true,
+                ),
+            ),
+        )
+    }
+
+    /** Fail closed before approval if a model adds outward effects to a draft request. */
+    internal fun respectDraftRequest(
+        request: String,
+        steps: List<LoopStep>,
+    ): List<LoopStep> {
+        val draft = Regex("\\b(type|write|draft)\\b|don['’]?t send|do not send", RegexOption.IGNORE_CASE)
+        if (!draft.containsMatchIn(request)) return steps
+        val safe =
+            setOf(
+                "OPEN_APP",
+                "WAIT",
+                "TYPE_TEXT",
+                "SEND_WHATSAPP",
+                "ASK_USER",
+                "CHAT",
+                "open_app",
+                "type_text",
+                "paste",
+                "compose_sms",
+                "compose_email",
+                "observe",
+            )
+        require(steps.all { it.action.name in safe }) { "Draft-only request cannot include Send or submit steps" }
+        return steps.map { step ->
+            if (step.action.name == "SEND_WHATSAPP") {
+                step.copy(action = step.action.copy(params = step.action.params + ("draftOnly" to "true")))
+            } else {
+                step
+            }
         }
     }
 
@@ -230,6 +292,15 @@ object TaskPlanPreview {
         val p = step.action.params
         val recipient = TaskDisplayText.escape(p["to"].orEmpty().ifBlank { "a recipient you fill in" })
         return when (step.action.name) {
+            "SEND_WHATSAPP" ->
+                "${if (p["draftOnly"] == "true") "draft" else "send"} a WhatsApp message to " +
+                    quote(p["contact"].orEmpty()) + " saying " + quote(p["message"].orEmpty()) +
+                    (if (p["draftOnly"] == "true") "; you press Send" else "; EQO presses Send") +
+                    attachmentSuffix(p[AttachmentSpec.PARAM])
+            "FIND_FILES", "LIST_FILES" ->
+                "${step.action.name}: " + p.entries.joinToString(", ") { "${it.key}=${quote(it.value)}" } +
+                    "; shared folders need All files access; turn it on when Android asks"
+            "TAKE_SCREENSHOT" -> "save a screenshot; EQO accessibility must be on; protected screens are refused"
             "observe" -> "look at the screen"
             "scroll" -> "scroll ${quote(p["direction"].orEmpty())}"
             "open_app" -> "open ${quote(p["app"].orEmpty())}"

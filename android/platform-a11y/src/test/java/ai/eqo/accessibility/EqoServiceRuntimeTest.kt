@@ -8,6 +8,24 @@ import org.junit.Test
 import java.io.File
 
 class EqoServiceRuntimeTest {
+    @Test fun onlyPendingTrustedPermissionDialogTouchesAreExcluded() {
+        fun allowed(
+            pending: Boolean = true,
+            pkg: String? = "com.android.permissioncontroller",
+            system: Boolean = true,
+            active: Boolean = true,
+            inside: Boolean = true,
+        ) = EQOAccessibilityService.permissionTouchAllowed(pending, pkg, system, active, inside)
+        assertTrue(allowed())
+        assertFalse(allowed(pending = false))
+        assertFalse(allowed(pkg = "com.android.settings"))
+        assertFalse(allowed(pkg = "evil.permissioncontroller"))
+        assertFalse(allowed(pkg = null))
+        assertFalse(allowed(system = false))
+        assertFalse(allowed(active = false))
+        assertFalse(allowed(inside = false))
+    }
+
     @Test
     fun constructsWithoutAndroidApplicationOrHiltAndRefusesUnboundActions() {
         val runtime =
@@ -69,6 +87,11 @@ class EqoServiceRuntimeTest {
         ).forEach { assertFalse("Unsupported service seam: $it", source.contains(it)) }
         assertTrue(source.contains("private val nodeTraversal = AccessibilityNodeTraversal()"))
         assertTrue(source.contains("EqoServiceRuntime("))
+        val config = File(root, "platform-a11y/src/main/res/xml/accessibility_service_config.xml").readText()
+        assertTrue(
+            "Screenshots require the declared service capability",
+            config.contains("android:canTakeScreenshot=\"true\""),
+        )
         val appMain = File(root, "app/src/main")
         val application = appMain.walkTopDown().first { it.name == "EqoApplication.kt" }.readText()
         assertFalse(application.contains("@HiltAndroidApp"))

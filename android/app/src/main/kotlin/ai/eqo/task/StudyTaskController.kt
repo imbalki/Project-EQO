@@ -48,6 +48,8 @@ class StudyTaskController(
     private val onControlFeedback: (TaskControlFeedback) -> Unit = {},
     onInterStepWait: (Int, Int, Long) -> Unit = { _, _, _ -> },
     private val takeoverDetector: TakeoverDetector = TakeoverDetector.shared,
+    private val isPermissionWaiting: () -> Boolean = { false },
+    private val cancelPermissionWait: () -> Unit = {},
 ) {
     private val loop =
         ActionLoop(
@@ -62,6 +64,10 @@ class StudyTaskController(
             appBlockPolicy = StudyAppBlockPolicy(),
             onPlanStatus = { status -> reportStatus(status) },
             config = config,
+            isPermissionWaiting = isPermissionWaiting,
+            applyTimeoutMs = { step ->
+                if (step.action.name == "SHARE_LOCATION") LOCATION_APPLY_TIMEOUT_MS else config.actionTimeoutMs
+            },
             onInterStepWait = onInterStepWait,
             onDiagnostic = { android.util.Log.i("EqoRun", it) },
             onResumeConfirmed = { confirmation -> takeoverDetector.resume(confirmation) },
@@ -77,6 +83,10 @@ class StudyTaskController(
                 }
             },
         )
+
+    private companion object {
+        const val LOCATION_APPLY_TIMEOUT_MS = 30_000L
+    }
 
     /** Executes one step and reports its live progress before and after the apply. */
     private suspend fun dispatch(step: LoopStep): ExecuteResult {
@@ -115,6 +125,7 @@ class StudyTaskController(
     fun stop(): Boolean {
         onControlFeedback(TaskControlFeedback.STOP_REQUESTED)
         val accepted = loop.stop()
+        if (accepted) cancelPermissionWait()
         if (!accepted) onControlFeedback(TaskControlFeedback.NOTHING_RUNNING)
         return accepted
     }

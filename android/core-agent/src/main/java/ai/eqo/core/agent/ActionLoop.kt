@@ -59,6 +59,8 @@ class ActionLoop(
     private val externalTakeoverReason: () -> PauseReason? = { null },
     private val onResumeConfirmed: (UserResumeConfirmation) -> Unit = {},
     private val onDiagnostic: (String) -> Unit = {},
+    private val isPermissionWaiting: () -> Boolean = { false },
+    private val applyTimeoutMs: (LoopStep) -> Long = { config.actionTimeoutMs },
 ) {
     data class Config(
         /** Command-poll granularity; every transition is bounded in these. */
@@ -317,10 +319,11 @@ class ActionLoop(
             var timedOut = false
             var cancelledMidApply = false
             var waitedMs = 0L
+            val timeoutMs = applyTimeoutMs(step)
             try {
                 while (job.isActive) {
                     delay(config.tickMs)
-                    waitedMs += config.tickMs
+                    waitedMs += applyBudgetTickMs()
                     val command = pollCommand()
                     when {
                         command is CmdStop || command is CmdCancel ->
@@ -335,7 +338,7 @@ class ActionLoop(
                                 cancelledMidApply = true
                             }
                         command is CmdPause || command is CmdTakeover -> enqueue(command)
-                        waitedMs >= config.actionTimeoutMs -> {
+                        waitedMs >= timeoutMs -> {
                             job.cancel()
                             timedOut = true
                         }
@@ -346,7 +349,7 @@ class ActionLoop(
                 } catch (e: CancellationException) {
                     when {
                         timedOut ->
-                            ExecuteResult.Interrupted("apply timed out mid-apply after ${config.actionTimeoutMs}ms")
+                            ExecuteResult.Interrupted("apply timed out mid-apply after ${timeoutMs}ms")
                         cancelledMidApply ->
                             ExecuteResult.Interrupted("apply cancelled mid-apply by the user; effect unknown")
                         else -> throw e
@@ -358,6 +361,8 @@ class ActionLoop(
                 inFlight.decrementAndGet()
             }
         }
+
+    private fun applyBudgetTickMs(): Long = if (isPermissionWaiting()) 0L else config.tickMs
 
     /** No dispatch while paused or after terminal, including retries and suspended gates. */
     private suspend fun awaitDispatchReady(): Boolean {
