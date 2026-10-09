@@ -36,7 +36,9 @@ internal class AiVoiceInput(
     private var consentPending = false
     private var active = true
 
-    fun activate() { active = true }
+    fun activate() {
+        active = true
+    }
 
     fun tap(afterConsent: () -> Unit) {
         if (!active || consentPending) return
@@ -44,17 +46,20 @@ internal class AiVoiceInput(
             afterConsent()
         } else {
             consentPending = true
-            dialog = AlertDialog.Builder(activity)
-                .setTitle(R.string.voice_ai_consent_title)
-                .setMessage(R.string.voice_ai_disclosure)
-                .setPositiveButton(android.R.string.ok) { _, _ ->
-                    consentPending = false
-                    if (active) {
-                        settings.consent = true
-                        afterConsent()
-                    }
-                }.setNegativeButton(android.R.string.cancel) { _, _ -> consentPending = false }
-                .setOnCancelListener { consentPending = false }.show()
+            dialog =
+                AlertDialog
+                    .Builder(activity)
+                    .setTitle(R.string.voice_ai_consent_title)
+                    .setMessage(R.string.voice_ai_disclosure)
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
+                        consentPending = false
+                        if (active) {
+                            settings.consent = true
+                            afterConsent()
+                        }
+                    }.setNegativeButton(android.R.string.cancel) { _, _ -> consentPending = false }
+                    .setOnCancelListener { consentPending = false }
+                    .show()
         }
     }
 
@@ -63,7 +68,11 @@ internal class AiVoiceInput(
             check(settings.consent && active)
             val session = recordingFactory(activity.cacheDir, scope)
             recording = session
-            session.start { handler.post { if (recording === session && active) stop() } }
+            session.start {
+                handler.post {
+                    if (recording === session && active && transcription?.isActive != true) stop()
+                }
+            }
             handler.postDelayed({
                 if (recording === session && active && transcription?.isActive != true) stop()
             }, VoiceAudioRecorder.MAX_DURATION_MILLIS)
@@ -80,37 +89,47 @@ internal class AiVoiceInput(
             cancel()
             return
         }
+        session.stopCapture()
         presenter.processing()
         val language = settings.language
-        transcription = scope.launch {
-            try {
-                val text = withContext(ioDispatcher) {
-                    val file = session.finish()
-                    transcribeTemporaryAudio(file) { transcribe(it, language) }
+        transcription =
+            scope.launch {
+                try {
+                    val text =
+                        withContext(ioDispatcher) {
+                            val file = session.finish()
+                            transcribeTemporaryAudio(file) { transcribe(it, language) }
+                        }
+                    if (recording === session && active) presenter.result(text)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: AudioUnsupportedException) {
+                    failure(session, R.string.voice_ai_unsupported)
+                } catch (_: Exception) {
+                    failure(session, R.string.voice_ai_error)
+                } finally {
+                    session.cancel()
+                    if (recording === session) recording = null
                 }
-                if (recording === session && active) presenter.result(text)
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: AudioUnsupportedException) {
-                failure(session, R.string.voice_ai_unsupported)
-            } catch (_: Exception) {
-                failure(session, R.string.voice_ai_error)
-            } finally {
-                session.cancel()
-                if (recording === session) recording = null
             }
-        }
     }
 
-    private fun failure(session: VoiceRecording, message: Int) {
+    private fun failure(
+        session: VoiceRecording,
+        message: Int,
+    ) {
         if (recording !== session || !active) return
         presenter.error(VoiceInputState.ERROR)
         activity.findViewById<TextView>(R.id.task_voice_state).setText(message)
-        dialog = AlertDialog.Builder(activity).setMessage(message)
-            .setPositiveButton(R.string.voice_use_phone) { _, _ ->
-                settings.engine = VoiceEngine.PHONE
-                presenter.availability(SpeechRecognizer.isRecognitionAvailable(activity))
-            }.setNegativeButton(android.R.string.cancel, null).show()
+        dialog =
+            AlertDialog
+                .Builder(activity)
+                .setMessage(message)
+                .setPositiveButton(R.string.voice_use_phone) { _, _ ->
+                    settings.engine = VoiceEngine.PHONE
+                    presenter.availability(SpeechRecognizer.isRecognitionAvailable(activity))
+                }.setNegativeButton(android.R.string.cancel, null)
+                .show()
     }
 
     fun cancel() {

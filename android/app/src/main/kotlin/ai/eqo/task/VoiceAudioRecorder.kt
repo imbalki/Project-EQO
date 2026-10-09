@@ -1,10 +1,10 @@
 // Origin: EQO-authored bounded 16 kHz mono PCM/WAV recording; no audio or transcript logging.
 package ai.eqo.task
 
+import android.annotation.SuppressLint
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import android.annotation.SuppressLint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,6 +18,8 @@ internal interface VoiceRecording {
     val file: File
 
     fun start(onLimit: () -> Unit)
+
+    fun stopCapture()
 
     suspend fun finish(): File
 
@@ -81,7 +83,7 @@ internal class VoiceAudioRecorder(
     }
 
     override suspend fun finish(): File {
-        stopAudio()
+        stopCapture()
         writer?.join()
         releaseAudio()
         check(!failure && file.length() > WAV_HEADER_BYTES) { "Audio recording failed" }
@@ -89,7 +91,7 @@ internal class VoiceAudioRecorder(
     }
 
     override fun cancel() {
-        stopAudio()
+        stopCapture()
         // The worker releases its own file handle before the final deletion as well.
         writer?.invokeOnCompletion { file.delete() }
         writer?.cancel()
@@ -98,7 +100,7 @@ internal class VoiceAudioRecorder(
     }
 
     @Synchronized
-    private fun stopAudio() {
+    override fun stopCapture() {
         stopping = true
         runCatching { recorder?.stop() }
     }
@@ -124,7 +126,8 @@ internal class VoiceAudioRecorder(
             cache
                 .listFiles()
                 ?.filter {
-                    it.name.startsWith("eqo-voice-") && it.extension == "wav" && now - it.lastModified() > STALE_AGE_MILLIS
+                    val stale = now - it.lastModified() > STALE_AGE_MILLIS
+                    it.name.startsWith("eqo-voice-") && it.extension == "wav" && stale
                 }?.forEach { it.delete() }
         }
 

@@ -31,6 +31,24 @@ class VoiceInputPresenterTest {
     }
 
     @Test
+    fun cancelledPermissionIntentDoesNotStartOnLateGrant() {
+        presenter.tap(false)
+        presenter.cancel()
+        presenter.permissionResult(true)
+        assertEquals(0, starts)
+        assertEquals(VoiceInputState.READY, states.last())
+    }
+
+    @Test
+    fun permissionDialogPausePreservesIntentUntilGrant() {
+        presenter.tap(false)
+        presenter.cancel(preservePermission = true)
+        presenter.availability(true)
+        presenter.permissionResult(true)
+        assertEquals(1, starts)
+    }
+
+    @Test
     fun permissionGrantStartsOnlyOnceAndResultOnlyFillsDraft() {
         presenter.tap(false)
         presenter.tap(false)

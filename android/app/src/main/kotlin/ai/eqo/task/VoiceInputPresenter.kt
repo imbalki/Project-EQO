@@ -27,7 +27,6 @@ internal class VoiceInputPresenter(
     private val startListening: () -> Unit,
     private val readDraft: () -> String = { "" },
     private val stopListening: () -> Unit = {},
-
 ) {
     private var state = VoiceInputState.READY
     private var prefix = ""
@@ -46,12 +45,13 @@ internal class VoiceInputPresenter(
             }
             VoiceInputState.LISTENING -> stopListening()
             in VoiceInputState.BLOCKS_TAP -> Unit
-            else -> if (permissionGranted) {
-                listen()
-            } else {
-                update(VoiceInputState.PERMISSION_NEEDED)
-                requestPermission()
-            }
+            else ->
+                if (permissionGranted) {
+                    listen()
+                } else {
+                    update(VoiceInputState.PERMISSION_NEEDED)
+                    requestPermission()
+                }
         }
     }
 
@@ -85,8 +85,9 @@ internal class VoiceInputPresenter(
         if (state == VoiceInputState.LISTENING) update(VoiceInputState.PROCESSING)
     }
 
-    fun cancel() {
-        if (state in VoiceInputState.ACTIVE) update(VoiceInputState.READY)
+    fun cancel(preservePermission: Boolean = false) {
+        val pending = state == VoiceInputState.PERMISSION_NEEDED && !preservePermission
+        if (state in VoiceInputState.ACTIVE || pending) update(VoiceInputState.READY)
     }
 
     private fun listen() {

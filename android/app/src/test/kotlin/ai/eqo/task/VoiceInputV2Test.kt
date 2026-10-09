@@ -14,8 +14,8 @@ import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -191,18 +191,19 @@ class VoiceInputV2Test {
     }
 
     @Test
-    fun editingDuringTranscriptionCancelsItAndKeepsUserText() = runTest(dispatcher) {
-        ai()
-        create { _, _ -> awaitCancellation() }
-        tap()
-        tap()
-        advanceUntilIdle()
-        activity.findViewById<EditText>(R.id.task_request).setText("my edit")
-        advanceUntilIdle()
-        assertFalse(clip.file.exists())
-        assertEquals("my edit", activity.findViewById<EditText>(R.id.task_request).text.toString())
-        assertFalse(submitted)
-    }
+    fun editingDuringTranscriptionCancelsItAndKeepsUserText() =
+        runTest(dispatcher) {
+            ai()
+            create { _, _ -> awaitCancellation() }
+            tap()
+            tap()
+            advanceUntilIdle()
+            activity.findViewById<EditText>(R.id.task_request).setText("my edit")
+            advanceUntilIdle()
+            assertFalse(clip.file.exists())
+            assertEquals("my edit", activity.findViewById<EditText>(R.id.task_request).text.toString())
+            assertFalse(submitted)
+        }
 
     @Test
     fun captureLimitFinishesRecording() =
@@ -228,33 +229,48 @@ class VoiceInputV2Test {
     }
 
     @Test
-    fun temporaryAudioBoundaryDeletesOnSuccessErrorAndCancellation() = runTest(dispatcher) {
-        val success = File.createTempFile("boundary-voice-", ".wav", activity.cacheDir)
-        assertEquals("words", transcribeTemporaryAudio(success) { "words" })
-        assertFalse(success.exists())
-        val failure = File.createTempFile("boundary-voice-", ".wav", activity.cacheDir)
-        try {
-            transcribeTemporaryAudio(failure) { throw java.io.IOException("synthetic") }
-        } catch (_: java.io.IOException) {
-            assertFalse(failure.exists())
-        }
-        val cancelled = File.createTempFile("boundary-voice-", ".wav", activity.cacheDir)
-        val job = launch { transcribeTemporaryAudio(cancelled) { awaitCancellation() } }
-        advanceUntilIdle()
-        job.cancelAndJoin()
-        assertFalse(cancelled.exists())
-    }
-
-    @Test
-    fun wallClockCaptureLimitStopsEvenIfRecorderDoesNotSignal() = runTest(dispatcher) {
+    fun stopCaptureHappensBeforeAnyQueuedTranscriptionWork() {
         ai()
         create()
         tap()
-        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(60))
-        advanceUntilIdle()
+        assertFalse(clip.stopped)
+        tap()
+        assertTrue(clip.stopped)
+        assertTrue(clip.file.exists())
+        voice.pause()
         assertFalse(clip.file.exists())
-        assertEquals("spoken words", activity.findViewById<EditText>(R.id.task_request).text.toString())
     }
+
+    @Test
+    fun temporaryAudioBoundaryDeletesOnSuccessErrorAndCancellation() =
+        runTest(dispatcher) {
+            val success = File.createTempFile("boundary-voice-", ".wav", activity.cacheDir)
+            assertEquals("words", transcribeTemporaryAudio(success) { "words" })
+            assertFalse(success.exists())
+            val failure = File.createTempFile("boundary-voice-", ".wav", activity.cacheDir)
+            try {
+                transcribeTemporaryAudio(failure) { throw java.io.IOException("synthetic") }
+            } catch (_: java.io.IOException) {
+                assertFalse(failure.exists())
+            }
+            val cancelled = File.createTempFile("boundary-voice-", ".wav", activity.cacheDir)
+            val job = launch { transcribeTemporaryAudio(cancelled) { awaitCancellation() } }
+            advanceUntilIdle()
+            job.cancelAndJoin()
+            assertFalse(cancelled.exists())
+        }
+
+    @Test
+    fun wallClockCaptureLimitStopsEvenIfRecorderDoesNotSignal() =
+        runTest(dispatcher) {
+            ai()
+            create()
+            tap()
+            shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(60))
+            advanceUntilIdle()
+            assertFalse(clip.file.exists())
+            assertEquals("spoken words", activity.findViewById<EditText>(R.id.task_request).text.toString())
+        }
 
     @Test
     fun staleCleanupDeletesOnlyOldOwnedAudio() {
@@ -276,6 +292,7 @@ class VoiceInputV2Test {
     ) : VoiceRecording {
         override val file = File.createTempFile("fake-voice-", ".wav", cache)
         var started = false
+        var stopped = false
         lateinit var onLimit: () -> Unit
 
         override fun start(onLimit: () -> Unit) {
@@ -283,6 +300,8 @@ class VoiceInputV2Test {
             this.onLimit = onLimit
             file.writeBytes(ByteArray(60))
         }
+
+        override fun stopCapture() { stopped = true }
 
         override suspend fun finish(): File = file
 

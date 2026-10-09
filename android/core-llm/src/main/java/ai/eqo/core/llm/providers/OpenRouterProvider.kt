@@ -27,7 +27,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -93,7 +95,11 @@ class OpenRouterProvider
         private suspend fun await(request: Request): Response =
             suspendCancellableCoroutine { continuation ->
                 val call = client.newCall(request)
-                continuation.invokeOnCancellation { call.cancel() }
+                val reading = AtomicReference<Response?>()
+                continuation.invokeOnCancellation {
+                    call.cancel()
+                    reading.get()?.close()
+                }
                 call.enqueue(
                     object : Callback {
                         override fun onFailure(
@@ -109,11 +115,35 @@ class OpenRouterProvider
                             call: Call,
                             response: Response,
                         ) {
-                            continuation.resume(response) { _, resource, _ -> resource.close() }
+                            reading.set(response)
+                            response.use {
+                                if (continuation.isActive) {
+                                    try {
+                                        val buffered = bufferAudioResponse(response)
+                                        continuation.resume(buffered) { _, resource, _ -> resource.close() }
+                                    } catch (_: IOException) {
+                                        if (continuation.isActive) {
+                                            continuation.resumeWithException(IOException("Audio connection failed"))
+                                        }
+                                    }
+                                }
+                            }
+                            reading.set(null)
                         }
                     },
                 )
             }
+
+        // Consume the body while the continuation still owns cancellation, not just until headers arrive.
+        private fun bufferAudioResponse(response: Response): Response {
+            val source = response.body.source()
+            source.request(OpenRouterModelCatalog.MAX_JSON_CHARS.toLong() + 1)
+            if (source.buffer.size > OpenRouterModelCatalog.MAX_JSON_CHARS) {
+                throw IOException("Audio response too large")
+            }
+            val body = source.readByteArray().toResponseBody(response.body.contentType())
+            return response.newBuilder().body(body).build()
+        }
 
         override suspend fun complete(request: LLMRequest): LLMResponse {
             val config = settingsRepository.llmConfig.first()
@@ -187,19 +217,30 @@ class OpenRouterProvider
         private fun messagesFor(request: LLMRequest): List<Map<String, Any>> {
             val messages = request.messages.toOpenAIMessages(request.systemPrompt).toMutableList()
             request.inputAudio?.let { audio ->
-                messages.add(mapOf(
-                    "role" to "user",
-                    "content" to listOf(mapOf(
-                        "type" to "input_audio",
-                        "input_audio" to mapOf("data" to audio.base64, "format" to "wav"),
-                    )),
-                ))
+                messages.add(
+                    mapOf(
+                        "role" to "user",
+                        "content" to
+                            listOf(
+                                mapOf(
+                                    "type" to "input_audio",
+                                    "input_audio" to mapOf("data" to audio.base64, "format" to "wav"),
+                                ),
+                            ),
+                    ),
+                )
             }
             return messages
         }
 
-        private fun reject(response: Response, request: LLMRequest, key: String): Nothing {
-            if (request.inputAudio != null) throw IOException("Audio provider request failed with HTTP ${response.code}")
+        private fun reject(
+            response: Response,
+            request: LLMRequest,
+            key: String,
+        ): Nothing {
+            if (request.inputAudio != null) {
+                throw IOException("Audio provider request failed with HTTP ${response.code}")
+            }
             throw response.toSafeProviderException(
                 provider = ProviderErrorDetail.Provider.OPENROUTER,
                 request = request,

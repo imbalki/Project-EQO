@@ -11,20 +11,24 @@ import ai.eqo.data.repository.SettingsRepository
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Response
+import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
+import okio.Source
+import okio.Timeout
+import okio.buffer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -34,11 +38,14 @@ import org.junit.Test
 import java.nio.file.Files
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 class OpenRouterAudioTest {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val directory = Files.createTempDirectory("eqo-audio-test").toFile()
+    private val directory = Files.createTempDirectory(
+        java.io.File(System.getenv("TMPDIR") ?: System.getProperty("java.io.tmpdir")).toPath(), "eqo-audio-test",
+    ).toFile()
     private var acceptsAudio = true
     private var completionCode = 200
     private var uploads = 0
@@ -134,16 +141,63 @@ class OpenRouterAudioTest {
     }
 
     @Test
-    fun cancellationCancelsProviderCallWithoutNetwork() = runBlocking {
+    fun cancellationCancelsProviderCallWithoutNetwork() =
+        runBlocking {
+            val entered = CountDownLatch(1)
+            val release = CountDownLatch(1)
+            val observed = AtomicReference<okhttp3.Call>()
+            val fakeClient =
+                OkHttpClient
+                    .Builder()
+                    .addInterceptor { chain ->
+                        observed.set(chain.call())
+                        entered.countDown()
+                        release.await(10, TimeUnit.SECONDS)
+                        Response
+                            .Builder()
+                            .request(chain.request())
+                            .protocol(Protocol.HTTP_1_1)
+                            .code(200)
+                            .message("synthetic")
+                            .body("{}".toResponseBody("application/json".toMediaType()))
+                            .build()
+                    }.build()
+            try {
+                val job =
+                    launch(start = CoroutineStart.UNDISPATCHED) {
+                        OpenRouterProvider(fakeClient, repository).transcribe("test/model", InputAudio("audio"), "en-IN")
+                    }
+                assertTrue(entered.await(10, TimeUnit.SECONDS))
+                job.cancelAndJoin()
+                assertTrue(observed.get().isCanceled())
+            } finally {
+                release.countDown()
+                fakeClient.dispatcher.executorService.shutdown()
+            }
+        }
+
+    @Test
+    fun cancellationClosesAStalledResponseBodyAfterHeaders() = runBlocking {
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
-        val observed = AtomicReference<okhttp3.Call>()
+        val closed = AtomicBoolean(false)
+        val blockedBody = object : ResponseBody() {
+            private val input = object : Source {
+                override fun read(sink: Buffer, byteCount: Long): Long {
+                    entered.countDown()
+                    release.await(10, TimeUnit.SECONDS)
+                    throw java.io.IOException("synthetic stalled body")
+                }
+                override fun timeout(): Timeout = Timeout.NONE
+                override fun close() { closed.set(true); release.countDown() }
+            }.buffer()
+            override fun contentType() = "application/json".toMediaType()
+            override fun contentLength(): Long = -1L
+            override fun source() = input
+        }
         val fakeClient = OkHttpClient.Builder().addInterceptor { chain ->
-            observed.set(chain.call())
-            entered.countDown()
-            release.await(10, TimeUnit.SECONDS)
             Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).message("synthetic")
-                .body("{}".toResponseBody("application/json".toMediaType())).build()
+                .body(blockedBody).build()
         }.build()
         try {
             val job = launch(start = CoroutineStart.UNDISPATCHED) {
@@ -151,7 +205,7 @@ class OpenRouterAudioTest {
             }
             assertTrue(entered.await(10, TimeUnit.SECONDS))
             job.cancelAndJoin()
-            assertTrue(observed.get().isCanceled())
+            assertTrue(closed.get())
         } finally {
             release.countDown()
             fakeClient.dispatcher.executorService.shutdown()

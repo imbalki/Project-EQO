@@ -27,32 +27,46 @@ internal class PhoneVoiceInput(
         try {
             val speech = SpeechRecognizer.createSpeechRecognizer(activity)
             recognizer = speech
-            speech.setRecognitionListener(object : RecognitionListener {
-                override fun onReadyForSpeech(params: Bundle?) = Unit
-                override fun onBeginningOfSpeech() = Unit
-                override fun onRmsChanged(rmsdB: Float) = Unit
-                override fun onBufferReceived(buffer: ByteArray?) = Unit
-                override fun onEndOfSpeech() = awaitFinal(speech)
-                override fun onEvent(eventType: Int, params: Bundle?) = Unit
-                override fun onPartialResults(partialResults: Bundle?) {
-                    if (recognizer === speech) {
-                        presenter.partial(
-                            partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull(),
-                        )
+            speech.setRecognitionListener(
+                object : RecognitionListener {
+                    override fun onReadyForSpeech(params: Bundle?) = Unit
+
+                    override fun onBeginningOfSpeech() = Unit
+
+                    override fun onRmsChanged(rmsdB: Float) = Unit
+
+                    override fun onBufferReceived(buffer: ByteArray?) = Unit
+
+                    override fun onEndOfSpeech() = awaitFinal(speech)
+
+                    override fun onEvent(
+                        eventType: Int,
+                        params: Bundle?,
+                    ) = Unit
+
+                    override fun onPartialResults(partialResults: Bundle?) {
+                        if (recognizer === speech) {
+                            presenter.partial(
+                                partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull(),
+                            )
+                        }
                     }
-                }
-                override fun onError(error: Int) {
-                    if (recognizer !== speech) return
-                    Log.i("EqoVoice", "voice error class=$error")
-                    presenter.error(errorState(error))
-                    cancel()
-                }
-                override fun onResults(results: Bundle?) {
-                    if (recognizer !== speech) return
-                    presenter.result(results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull())
-                    cancel()
-                }
-            })
+
+                    override fun onError(error: Int) {
+                        if (recognizer !== speech) return
+                        Log.i("EqoVoice", "voice error class=$error")
+                        presenter.error(errorState(error))
+                        cancel()
+                    }
+
+                    override fun onResults(results: Bundle?) {
+                        if (recognizer !== speech) return
+                        val words = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
+                        presenter.result(words)
+                        cancel()
+                    }
+                },
+            )
             Log.i("EqoVoice", "voice started")
             speech.startListening(intent(language()))
         } catch (_: SecurityException) {
@@ -99,18 +113,22 @@ internal class PhoneVoiceInput(
         private const val MINIMUM_SPEECH_MILLIS = 5000L
         private const val FINAL_GRACE_MILLIS = 5000L
 
-        fun intent(language: String): Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, language)
-            .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            .putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, COMPLETE_SILENCE_MILLIS)
-            .putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, POSSIBLE_SILENCE_MILLIS)
-            .putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, MINIMUM_SPEECH_MILLIS)
+        fun intent(language: String): Intent =
+            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, language)
+                .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                .putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, COMPLETE_SILENCE_MILLIS)
+                .putExtra(
+                    RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS,
+                    POSSIBLE_SILENCE_MILLIS,
+                ).putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, MINIMUM_SPEECH_MILLIS)
 
-        fun errorState(error: Int): VoiceInputState = when (error) {
-            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> VoiceInputState.NOT_ALLOWED
-            SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> VoiceInputState.NOT_CAUGHT
-            else -> VoiceInputState.ERROR
-        }
+        fun errorState(error: Int): VoiceInputState =
+            when (error) {
+                SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> VoiceInputState.NOT_ALLOWED
+                SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> VoiceInputState.NOT_CAUGHT
+                else -> VoiceInputState.ERROR
+            }
     }
 }

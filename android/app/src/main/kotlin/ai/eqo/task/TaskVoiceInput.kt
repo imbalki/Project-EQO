@@ -27,7 +27,9 @@ internal class TaskVoiceInput(
     transcribe: suspend (File, String) -> String = { file, language ->
         val model = StudyModelChoice.read(activity) ?: error("Set up a model first")
         TaskPlanningRuntime.voiceProvider(activity).transcribe(
-            model, InputAudio(Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)), language,
+            model,
+            InputAudio(Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)),
+            language,
         )
     },
 ) {
@@ -39,26 +41,27 @@ internal class TaskVoiceInput(
     private var resumed = true
     private var pendingGrant: Boolean? = null
     private var writingDraft = false
-    private val presenter: VoiceInputPresenter = VoiceInputPresenter(
-        render = ::render,
-        fillDraft = { text ->
-            writingDraft = true
-            try {
-                draft.setText(text)
-                draft.setSelection(draft.length())
-            } finally {
-                writingDraft = false
-            }
-        },
-        requestPermission = ::requestPermission,
-        startListening = {
-            if (settings.engine == VoiceEngine.OPENROUTER) audio.start() else phone.start()
-        },
-        readDraft = { draft.text.toString() },
-        stopListening = {
-            if (settings.engine == VoiceEngine.OPENROUTER) audio.stop() else phone.stop()
-        },
-    )
+    private val presenter: VoiceInputPresenter =
+        VoiceInputPresenter(
+            render = ::render,
+            fillDraft = { text ->
+                writingDraft = true
+                try {
+                    draft.setText(text)
+                    draft.setSelection(draft.length())
+                } finally {
+                    writingDraft = false
+                }
+            },
+            requestPermission = ::requestPermission,
+            startListening = {
+                if (settings.engine == VoiceEngine.OPENROUTER) audio.start() else phone.start()
+            },
+            readDraft = { draft.text.toString() },
+            stopListening = {
+                if (settings.engine == VoiceEngine.OPENROUTER) audio.stop() else phone.stop()
+            },
+        )
     private val phone: PhoneVoiceInput by lazy { PhoneVoiceInput(activity, presenter) { settings.language } }
     private val audio: AiVoiceInput by lazy {
         AiVoiceInput(activity, presenter, settings, recordingFactory, ioDispatcher, transcribe)
@@ -75,13 +78,18 @@ internal class TaskVoiceInput(
         }
         presenter.availability(engineAvailable())
         mic.setOnClickListener {
-            if (settings.engine == VoiceEngine.OPENROUTER) audio.tap { presenter.tap(micGranted()) }
-            else presenter.tap(micGranted())
+            if (settings.engine == VoiceEngine.OPENROUTER) {
+                audio.tap { presenter.tap(micGranted()) }
+            } else {
+                presenter.tap(micGranted())
+            }
         }
     }
 
-    private fun micGranted(): Boolean =
-        activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+    private fun micGranted(): Boolean {
+        val permission = activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+        return permission == PackageManager.PERMISSION_GRANTED
+    }
 
     fun onPermissionResult(requestCode: Int) {
         if (requestCode == REQUEST_CODE) {
@@ -100,7 +108,8 @@ internal class TaskVoiceInput(
 
     fun pause() {
         resumed = false
-        presenter.cancel()
+        // Android's permission dialog itself can pause the activity. Edits/close invalidate permission intent.
+        presenter.cancel(preservePermission = true)
         phone.cancel()
         audio.pause()
     }
@@ -108,22 +117,28 @@ internal class TaskVoiceInput(
     fun close() {
         pause()
         pendingGrant = null
-        presenter.permissionResult(false)
+        presenter.cancel()
         rationale?.dismiss()
         rationale = null
         audio.close()
     }
 
     private fun requestPermission() {
-        rationale = AlertDialog.Builder(activity)
-            .setTitle(R.string.voice_permission_title)
-            .setMessage(
-                if (settings.engine == VoiceEngine.PHONE) R.string.voice_permission_message
-                else R.string.voice_ai_disclosure,
-            ).setPositiveButton(android.R.string.ok) { _, _ ->
-                activity.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_CODE)
-            }.setNegativeButton(android.R.string.cancel) { _, _ -> presenter.permissionResult(false) }
-            .setOnCancelListener { presenter.permissionResult(false) }.show()
+        rationale =
+            AlertDialog
+                .Builder(activity)
+                .setTitle(R.string.voice_permission_title)
+                .setMessage(
+                    if (settings.engine == VoiceEngine.PHONE) {
+                        R.string.voice_permission_message
+                    } else {
+                        R.string.voice_ai_disclosure
+                    },
+                ).setPositiveButton(android.R.string.ok) { _, _ ->
+                    activity.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_CODE)
+                }.setNegativeButton(android.R.string.cancel) { _, _ -> presenter.permissionResult(false) }
+                .setOnCancelListener { presenter.permissionResult(false) }
+                .show()
     }
 
     private fun engineAvailable(): Boolean {
@@ -135,23 +150,28 @@ internal class TaskVoiceInput(
         mic.isEnabled = state !in VoiceInputState.BLOCKS_TAP
         mic.setText(if (state == VoiceInputState.LISTENING) R.string.voice_stop else R.string.voice_button)
         mic.contentDescription = mic.text
-        status.setText(when (state) {
-            VoiceInputState.READY -> R.string.voice_ready
-            VoiceInputState.PERMISSION_NEEDED -> R.string.voice_permission_title
-            VoiceInputState.LISTENING -> R.string.voice_listening
-            VoiceInputState.PROCESSING -> R.string.voice_processing
-            VoiceInputState.REVIEW -> R.string.voice_review
-            VoiceInputState.NOT_CAUGHT -> R.string.voice_not_caught
-            VoiceInputState.NOT_ALLOWED -> R.string.voice_not_allowed
-            VoiceInputState.UNAVAILABLE -> R.string.voice_unavailable
-            VoiceInputState.ERROR -> R.string.voice_error
-        })
+        status.setText(
+            when (state) {
+                VoiceInputState.READY -> R.string.voice_ready
+                VoiceInputState.PERMISSION_NEEDED -> R.string.voice_permission_title
+                VoiceInputState.LISTENING -> R.string.voice_listening
+                VoiceInputState.PROCESSING -> R.string.voice_processing
+                VoiceInputState.REVIEW -> R.string.voice_review
+                VoiceInputState.NOT_CAUGHT -> R.string.voice_not_caught
+                VoiceInputState.NOT_ALLOWED -> R.string.voice_not_allowed
+                VoiceInputState.UNAVAILABLE -> R.string.voice_unavailable
+                VoiceInputState.ERROR -> R.string.voice_error
+            },
+        )
     }
 
     companion object {
         const val REQUEST_CODE = 6902
-        fun recognitionIntent(language: String = Locale.getDefault().toLanguageTag()): Intent =
-            PhoneVoiceInput.intent(language)
+
+        fun recognitionIntent(language: String = Locale.getDefault().toLanguageTag()): Intent {
+            return PhoneVoiceInput.intent(language)
+        }
+
         fun errorState(error: Int): VoiceInputState = PhoneVoiceInput.errorState(error)
     }
 }
