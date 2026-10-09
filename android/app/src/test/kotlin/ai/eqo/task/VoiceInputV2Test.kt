@@ -301,7 +301,9 @@ class VoiceInputV2Test {
             file.writeBytes(ByteArray(60))
         }
 
-        override fun stopCapture() { stopped = true }
+        override fun stopCapture() {
+            stopped = true
+        }
 
         override suspend fun finish(): File = file
 

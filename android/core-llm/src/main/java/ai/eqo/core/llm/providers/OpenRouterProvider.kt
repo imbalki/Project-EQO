@@ -61,21 +61,7 @@ class OpenRouterProvider
             val catalogRequest = Request.Builder().url("https://openrouter.ai/api/v1/models").build()
             val supportsAudio =
                 await(catalogRequest).use { response ->
-                    if (!response.isSuccessful) throw IOException("Audio model check failed")
-                    val source = response.body.source()
-                    source.request(OpenRouterModelCatalog.MAX_JSON_CHARS.toLong() + 1)
-                    if (source.buffer.size > OpenRouterModelCatalog.MAX_JSON_CHARS) {
-                        throw IOException("Audio model list too large")
-                    }
-                    val data = gson.fromJson(source.readUtf8(), JsonObject::class.java).getAsJsonArray("data")
-                    data?.any { entry ->
-                        val item = entry.asJsonObject
-                        item.get("id")?.asString == model &&
-                            item
-                                .getAsJsonObject("architecture")
-                                ?.getAsJsonArray("input_modalities")
-                                ?.any { it.asString == "audio" } == true
-                    } == true
+                    audioModelSupported(response, model)
                 }
             if (!supportsAudio) throw AudioUnsupportedException()
             return complete(
@@ -90,6 +76,18 @@ class OpenRouterProvider
                     inputAudio = audio,
                 ),
             ).content
+        }
+
+        private fun audioModelSupported(response: Response, model: String): Boolean {
+            if (!response.isSuccessful) throw IOException("Audio model check failed")
+            // await already buffered a size-bounded response under the call's cancellation owner.
+            val data = gson.fromJson(response.body.string(), JsonObject::class.java).getAsJsonArray("data")
+            return data?.any { entry ->
+                val item = entry.asJsonObject
+                item.get("id")?.asString == model &&
+                    item.getAsJsonObject("architecture")?.getAsJsonArray("input_modalities")
+                        ?.any { it.asString == "audio" } == true
+            } == true
         }
 
         private suspend fun await(request: Request): Response =

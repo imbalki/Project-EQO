@@ -43,9 +43,12 @@ import java.util.concurrent.atomic.AtomicReference
 
 class OpenRouterAudioTest {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val directory = Files.createTempDirectory(
-        java.io.File(System.getenv("TMPDIR") ?: System.getProperty("java.io.tmpdir")).toPath(), "eqo-audio-test",
-    ).toFile()
+    private val directory =
+        Files
+            .createTempDirectory(
+                java.io.File(System.getenv("TMPDIR") ?: System.getProperty("java.io.tmpdir")).toPath(),
+                "eqo-audio-test",
+            ).toFile()
     private var acceptsAudio = true
     private var completionCode = 200
     private var uploads = 0
@@ -165,7 +168,8 @@ class OpenRouterAudioTest {
             try {
                 val job =
                     launch(start = CoroutineStart.UNDISPATCHED) {
-                        OpenRouterProvider(fakeClient, repository).transcribe("test/model", InputAudio("audio"), "en-IN")
+                        val provider = OpenRouterProvider(fakeClient, repository)
+                        provider.transcribe("test/model", InputAudio("audio"), "en-IN")
                     }
                 assertTrue(entered.await(10, TimeUnit.SECONDS))
                 job.cancelAndJoin()
@@ -177,40 +181,65 @@ class OpenRouterAudioTest {
         }
 
     @Test
-    fun cancellationClosesAStalledResponseBodyAfterHeaders() = runBlocking {
-        val entered = CountDownLatch(1)
-        val release = CountDownLatch(1)
-        val closed = AtomicBoolean(false)
-        val blockedBody = object : ResponseBody() {
-            private val input = object : Source {
-                override fun read(sink: Buffer, byteCount: Long): Long {
-                    entered.countDown()
-                    release.await(10, TimeUnit.SECONDS)
-                    throw java.io.IOException("synthetic stalled body")
+    fun cancellationClosesAStalledResponseBodyAfterHeaders() =
+        runBlocking {
+            val entered = CountDownLatch(1)
+            val release = CountDownLatch(1)
+            val closed = AtomicBoolean(false)
+            val blockedBody =
+                object : ResponseBody() {
+                    private val input =
+                        object : Source {
+                            override fun read(
+                                sink: Buffer,
+                                byteCount: Long,
+                            ): Long {
+                                entered.countDown()
+                                release.await(10, TimeUnit.SECONDS)
+                                throw java.io.IOException("synthetic stalled body")
+                            }
+
+                            override fun timeout(): Timeout = Timeout.NONE
+
+                            override fun close() {
+                                closed.set(true)
+                                release.countDown()
+                            }
+                        }.buffer()
+
+                    override fun contentType() = "application/json".toMediaType()
+
+                    override fun contentLength(): Long = -1L
+
+                    override fun source() = input
                 }
-                override fun timeout(): Timeout = Timeout.NONE
-                override fun close() { closed.set(true); release.countDown() }
-            }.buffer()
-            override fun contentType() = "application/json".toMediaType()
-            override fun contentLength(): Long = -1L
-            override fun source() = input
-        }
-        val fakeClient = OkHttpClient.Builder().addInterceptor { chain ->
-            Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).message("synthetic")
-                .body(blockedBody).build()
-        }.build()
-        try {
-            val job = launch(start = CoroutineStart.UNDISPATCHED) {
-                OpenRouterProvider(fakeClient, repository).transcribe("test/model", InputAudio("audio"), "en-IN")
+            val fakeClient =
+                OkHttpClient
+                    .Builder()
+                    .addInterceptor { chain ->
+                        Response
+                            .Builder()
+                            .request(chain.request())
+                            .protocol(Protocol.HTTP_1_1)
+                            .code(200)
+                            .message("synthetic")
+                            .body(blockedBody)
+                            .build()
+                    }.build()
+            try {
+                val job =
+                    launch(start = CoroutineStart.UNDISPATCHED) {
+                        val provider = OpenRouterProvider(fakeClient, repository)
+                        provider.transcribe("test/model", InputAudio("audio"), "en-IN")
+                    }
+                assertTrue(entered.await(10, TimeUnit.SECONDS))
+                job.cancelAndJoin()
+                assertTrue(closed.get())
+            } finally {
+                release.countDown()
+                fakeClient.dispatcher.executorService.shutdown()
             }
-            assertTrue(entered.await(10, TimeUnit.SECONDS))
-            job.cancelAndJoin()
-            assertTrue(closed.get())
-        } finally {
-            release.countDown()
-            fakeClient.dispatcher.executorService.shutdown()
         }
-    }
 
     private class FakeCredentials : ProviderCredentialStore {
         override val recoveryState =
@@ -227,7 +256,10 @@ class OpenRouterAudioTest {
             value: String,
         ): CredentialStoreResult<Unit> = CredentialStoreResult.Success(Unit)
 
-        override fun remove(credential: ProviderCredentialId): CredentialStoreResult<Unit> = CredentialStoreResult.Success(Unit)
+        override fun remove(credential: ProviderCredentialId): CredentialStoreResult<Unit> {
+            val result = CredentialStoreResult.Success(Unit)
+            return result
+        }
 
         override fun migrateLegacyCredentials(): CredentialStoreResult<Unit> = CredentialStoreResult.Success(Unit)
 

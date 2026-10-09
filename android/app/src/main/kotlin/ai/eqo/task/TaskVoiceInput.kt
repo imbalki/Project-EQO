@@ -169,7 +169,8 @@ internal class TaskVoiceInput(
         const val REQUEST_CODE = 6902
 
         fun recognitionIntent(language: String = Locale.getDefault().toLanguageTag()): Intent {
-            return PhoneVoiceInput.intent(language)
+            val intent = PhoneVoiceInput.intent(language)
+            return intent
         }
 
         fun errorState(error: Int): VoiceInputState = PhoneVoiceInput.errorState(error)
