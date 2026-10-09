@@ -78,6 +78,10 @@ internal class SharedStorageCatalog(
     @Suppress("CyclomaticComplexMethod") // Two-level directory discovery plus independently classified media buckets.
     private fun discover(entries: List<SharedMediaEntry>): Map<String, List<String>> {
         val result = linkedMapOf<String, MutableSet<String>>()
+        val deadline = System.nanoTime() + MAX_NANOS
+        var visited = 0
+
+        fun withinBudget(): Boolean = ++visited <= MAX_FOLDERS && System.nanoTime() < deadline
 
         @Suppress("ReturnCount") // Every excluded path exits before its directory metadata is learned.
         fun add(
@@ -102,6 +106,7 @@ internal class SharedStorageCatalog(
             .listFiles()
             .orEmpty()
             .take(MAX_FOLDERS)
+            .takeWhile { withinBudget() }
             .filter { it.isDirectory && !it.name.startsWith('.') }
             .filter { layout.isAllowed(it) && !layout.hasLinkedAncestor(it) }
             .forEach { top ->
@@ -110,13 +115,14 @@ internal class SharedStorageCatalog(
                     .listFiles()
                     .orEmpty()
                     .take(MAX_FOLDERS)
+                    .takeWhile { withinBudget() }
                     .filter { it.isDirectory && !it.name.startsWith('.') }
                     .filter { layout.isAllowed(it) && !layout.hasLinkedAncestor(it) }
                     .forEach {
                         add(top.name + "/" + it.name)
                     }
             }
-        entries.distinctBy { Triple(it.relativePath, it.bucket, it.mime) }.forEach {
+        entries.distinctBy { Triple(it.relativePath, it.bucket, it.mime) }.takeWhile { withinBudget() }.forEach {
             val group =
                 when {
                     it.mime?.startsWith("image/") == true -> "gallery"
@@ -133,5 +139,6 @@ internal class SharedStorageCatalog(
 
     companion object {
         private const val MAX_FOLDERS = 500
+        private const val MAX_NANOS = 2_000_000_000L
     }
 }

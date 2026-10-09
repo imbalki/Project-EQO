@@ -15,7 +15,12 @@ internal class SharedFolderAliases(
         val leaf = normalized.substringAfterLast('/')
         return folders
             .filterValues { names ->
-                names.any { normalize(it) == normalized || normalize(it).substringAfterLast('/') == leaf }
+                names.any {
+                    val alias = normalize(it)
+                    alias == normalized ||
+                        normalized.endsWith("/$alias") ||
+                        ('/' !in normalized && alias.substringAfterLast('/') == leaf)
+                }
             }.keys
     }
 
@@ -62,9 +67,12 @@ internal class SharedFolderAliases(
         val group =
             folders.keys.firstOrNull { normalize(it) == normalize(reference) }
                 ?: groups(reference).firstOrNull()
-                ?: return listOf(File(root, reference))
-        val candidates = (folders[group].orEmpty() + learned[group].orEmpty()).distinct().map { File(root, it) }
-        return candidates.filter { it.isDirectory }.ifEmpty { candidates.take(1) }
+        return if (group == null) {
+            listOf(File(root, reference))
+        } else {
+            val candidates = (folders[group].orEmpty() + learned[group].orEmpty()).distinct().map { File(root, it) }
+            candidates.filter { it.isDirectory }.ifEmpty { candidates.take(1) }
+        }
     }
 
     companion object {

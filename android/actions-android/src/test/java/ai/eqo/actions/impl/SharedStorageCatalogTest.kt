@@ -147,6 +147,21 @@ class SharedStorageCatalogTest {
         assertEquals(store.map, PrefsSharedFolderMapStore(context).read())
     }
 
+    @Test fun discoveryCapsTheWholeFolderMapRatherThanEachParentSeparately() {
+        val entries =
+            (0 until 600).map {
+                SharedMediaEntry("Vendor/Shot$it/", "synthetic.png", "Screenshots", "image/png", day, day)
+            }
+        val store = MemoryMap()
+        SharedStorageCatalog(layout, SharedMediaSource { entries }, store).refresh()
+        assertTrue(
+            store.map
+                .orEmpty()["screenshot"]
+                .orEmpty()
+                .size in 1..500,
+        )
+    }
+
     @Test fun mediaIndexCannotHideSecondFilesystemMatchOrExposeForbiddenFolders() {
         val indexed = file("Documents/a.pdf")
         file("Documents/b.pdf")
