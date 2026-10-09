@@ -9,6 +9,12 @@ Plain-language status, updated after each step. Details and design: `docs/adr/00
 - NOT TESTED WITHOUT THE PHONE: the real Android "All files access" page; reading a real Downloads folder; a real screenshot being saved and shown in Gallery; Gmail, WhatsApp and Messages actually receiving the file and EQO pressing Send (their button names are guesses from known ids); WhatsApp opening the right chat from the number; a protected screen (bank app) refusing a screenshot; the plan-preview wording on screen.
 - NOT RUN IN THIS CLOUD SESSION: the full Gradle build (cloud box cannot reach Google's Maven); CI runs it. Lessons from CI: a constructor's trailing-lambda parameter must stay last; Advanced-category actions must stay out of macros (do not mark file actions READ_ONLY); lint wants KTX `SharedPreferences.edit {}`.
 
+## Explain screen (t_699c0abc, local branch `feat/explain-screen`)
+
+- Implemented separately from automation: Quick Settings tile and optional ongoing-notification action; transient entry finishes before screen reading; bounded active-app text extraction with password/own-window exclusion; sparse/visual-question screenshot fallback through the existing in-memory accessibility JPEG primitive; exact-model image-capability check from the cached public catalog; large translucent accessibility overlay; read-aloud/auto-read; typed follow-ups that retain only the session's original screen context.
+- Screen-sharing consent is OFF by default, with first-use disclosure and an optional settings screen in Setup. No shared vision-locate consent exists on inspected origin/main `4a49832`. Before integration, if vision-locate has landed, replace the separate consent with its shared setting. ADR-0009 documents the permissive `ScreenProtectionPolicy` seam (next phase: protected-screen setting). No action/approval/takeover/own-window guard logic changed.
+- NOT TESTED ON PHONE: tile/shade entry on Android 11/13/14+, notification permission/channel behavior, live screen capture/model answers, overlay/keyboard layout, TTS and device language. See the dedicated phone checklist in PHASE-ONE-TEST-LOG.md. The lead publishes; no push/PR by this worker. Host-check results will be recorded there before review.
+
 ## Goal
 EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-key, accessibility automation, wireless-ADB helper, Chrome control, guided setup, approvals, Pause/Stop/takeover). Owner is non-technical: plain language, real command output, say what was not tested.
 

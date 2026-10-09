@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="explain_title">Explain screen</string>
+    <string name="explain_settings">Explain screen settings</string>
+    <string name="explain_initial_question">Explain this screen and what I can do next.</string>
+    <string name="explain_followup">Ask a follow-up</string>
+    <string name="explain_ask">Ask</string>
+    <string name="explain_close">Close</string>
+    <string name="explain_read">Read aloud</string>
+    <string name="explain_loading">Explaining…</string>
+    <string name="explain_allow">Allow screen sharing</string>
+    <string name="explain_allow_setting">Explain screen: allow sending what is on screen to your AI provider</string>
+    <string name="explain_auto_read">Read explanations aloud automatically</string>
+    <string name="explain_notification_setting">Show ongoing Explain screen notification</string>
+    <string name="explain_notification_hint">Tap Explain screen while another app is open.</string>
+    <string name="explain_consent">Explain screen sends visible screen text, or a screenshot when needed and your model supports images, to your configured AI provider. This may include messages and other private information. Password fields are skipped; screenshots are not sent when a password field is found. EQO keeps this context only while the explanation sheet is open, not in files or logs. Your provider may retain what you send under its own policy. Sharing is off until you allow it. You can switch it off in Explain screen settings.</string>
+    <string name="explain_use_shortcut">Open the app you want explained, then tap the Explain screen Quick Settings tile or the EQO notification action. Add the tile using the pencil or Edit button in Quick Settings. Enable the notification in Setup → Explain screen settings. EQO cannot explain another app while its own window is covering it.</string>
+    <string name="explain_no_accessibility">Turn on EQO in Android Settings → Accessibility to explain screens.</string>
+    <string name="explain_no_internet">Could not reach your AI provider. Check your internet connection and try again.</string>
+    <string name="explain_no_key">Set up your AI key and model in EQO Setup first.</string>
+    <string name="explain_model_refused">Your AI provider could not explain this screen. Check your key, model and provider limits, or try again.</string>
+    <string name="explain_open_app">Open another app first, then tap Explain screen again.</string>
+    <string name="explain_unavailable">Could not read this screen. Check EQO accessibility access, open another app and try again.</string>
+    <string name="explain_text_only_model">Text only: image support is unavailable or unverified for your selected model. Refresh the model list in Setup or choose an image-capable model.\n\n</string>
+    <string name="explain_text_only_password">Text only: a password field was found or the screen tree could not be fully checked, so no screenshot was sent.\n\n</string>
+    <string name="explain_text_only_capture">Text only: a screenshot was unavailable or the screen changed.\n\n</string>
+    <string name="explain_tts_unavailable">Read aloud is not ready. Check the device text-to-speech language and voice settings.</string>
+</resources>
