@@ -66,6 +66,9 @@ class TaskActivity : Activity() {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var controller: StudyTaskController? = null
     private var voiceInput: TaskVoiceInput? = null
+    private val attachmentSelection by lazy {
+        TaskAttachmentSelection(this) { prepareTaskDialog(it, fileChoices = true) }
+    }
     private var waitingPermission: String? = null
     private var displayedStatus = PlanStatus.PENDING
     private var preparationGeneration = 0
@@ -102,11 +105,22 @@ class TaskActivity : Activity() {
         super.onResume()
         voiceInput?.refreshAvailability()
         actionPermissions.onResume()
+        attachmentSelection.foreground()
+        TaskRunSession.attachmentSelection = attachmentSelection
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.task_screen)
+        if (intent.getBooleanExtra(FOCUS_REQUEST, false)) {
+            findViewById<EditText>(R.id.task_request).apply {
+                requestFocus()
+                post {
+                    getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                        .showSoftInput(this, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+                }
+            }
+        }
         voiceInput = TaskVoiceInput(this)
         registerDebugPlanReceiver()
         val startButton = findViewById<Button>(R.id.task_start_button)
@@ -164,6 +178,8 @@ class TaskActivity : Activity() {
     }
 
     override fun onPause() {
+        attachmentSelection.background()
+        if (TaskRunSession.attachmentSelection === attachmentSelection) TaskRunSession.attachmentSelection = null
         voiceInput?.pause()
         actionPermissions.onPause()
         TakeoverDetector.shared.setControlTouchExclusion(null)
@@ -213,7 +229,10 @@ class TaskActivity : Activity() {
     }
 
     /** Exclude only the dialog's explicit confirmation buttons, retaining its touch guard. */
-    private fun prepareTaskDialog(dialog: AlertDialog) {
+    private fun prepareTaskDialog(
+        dialog: AlertDialog,
+        fileChoices: Boolean = false,
+    ) {
         protectConfirmationDialog(dialog)
         val window = dialog.window ?: return
         val callback = window.callback
@@ -224,7 +243,8 @@ class TaskActivity : Activity() {
         ): Boolean =
             listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE).any {
                 containsTouch(dialog.getButton(it), x, y)
-            }
+            } ||
+                (fileChoices && dialog.listView?.let { containsTouch(it, x, y) } == true)
 
         fun registerControls(focused: Boolean) {
             TakeoverDetector.shared.setControlTouchExclusion(
@@ -676,6 +696,12 @@ class TaskActivity : Activity() {
                 setOf(LoopState.RUNNING, LoopState.PAUSED)
         if (planning || active) return
         val request = findViewById<EditText>(R.id.task_request).text.toString().trim()
+        if (ai.eqo.explain.ExplainSession
+                .isScreenRequest(request)
+        ) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.explain_use_shortcut)
+            return
+        }
         if (request.isBlank()) {
             findViewById<TextView>(R.id.task_state).setText(R.string.task_request_empty)
         } else {
@@ -819,6 +845,8 @@ class TaskActivity : Activity() {
     private class MissingTaskKey : Exception()
 
     companion object {
+        const val FOCUS_REQUEST = "ai.eqo.task.FOCUS_REQUEST"
+
         /** Sample-task intent extra: unused for now, reserved for user-submitted plans. */
         const val EXTRA_PLAN = "ai.eqo.task.PLAN"
 

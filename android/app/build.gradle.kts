@@ -7,6 +7,9 @@ plugins {
 android {
     namespace = "ai.eqo"
     compileSdk = 36
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "ai.eqo.app"

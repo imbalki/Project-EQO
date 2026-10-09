@@ -51,7 +51,7 @@ internal class WirelessDiscoveryState {
         val local = networkId != null && network == networkId && address in localAddresses
         val normalizedType = type.trimEnd('.') + "."
         val adbType = normalizedType == PAIRING || normalizedType == CONNECT
-        val validPort = port in WirelessAdbEndpoints.PORT_MIN..WirelessAdbEndpoints.PORT_MAX
+        val validPort = WirelessPairingReply.validPort(port)
         if (!local || !adbType || !validPort) return false
         services[name] = normalizedType to port
         return true
@@ -99,6 +99,7 @@ internal fun pairNotificationReply(
     check(networkStillValid()) { "Wi-Fi changed" }
     runner.pair(input.endpoints, input.code)
     check(networkStillValid()) { "Wi-Fi changed" }
+
     runner.connect(input.endpoints)
     check(networkStillValid()) { "Wi-Fi changed" }
     return ActivationReport(
@@ -115,6 +116,7 @@ internal object WirelessPairingSession {
     var observer: (() -> Unit)? = null
     var busy = false
     var message: String? = null
+    var cancelPendingReply: (() -> Unit)? = null
 
     fun changed() {
         observer?.invoke()

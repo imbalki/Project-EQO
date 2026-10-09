@@ -1,0 +1,31 @@
+{
+  "folders": {
+    "downloads": ["Download", "Downloads"],
+    "camera": ["DCIM/Camera", "Camera"],
+    "screenshot": ["Pictures/Screenshots", "DCIM/Screenshots", "Screenshots", "Pictures/Screenshot", "Screenshot", "Screen captures", "ScreenCapture", "Pictures/EQO"],
+    "gallery": ["Pictures", "DCIM", "Photos", "Picture"],
+    "video": ["Movies", "Videos", "Video"],
+    "audio": ["Music", "Audio", "Recordings"],
+    "documents": ["Documents", "Document"],
+    "whatsapp": ["Android/media/com.whatsapp/WhatsApp/Media", "WhatsApp/Media"],
+    "whatsapp_business": ["Android/media/com.whatsapp.w4b/WhatsApp Business/Media", "WhatsApp Business/Media"],
+    "telegram": ["Android/media/org.telegram.messenger/Telegram", "Telegram"],
+    "instagram": ["Pictures/Instagram", "Instagram"],
+    "bluetooth": ["Bluetooth", "bluetooth"],
+    "eqo": ["Pictures/EQO"]
+  },
+  "extensions": {
+    "image": ["png", "jpg", "jpeg", "webp", "heic", "heif", "gif", "bmp"],
+    "pdf": ["pdf"],
+    "doc": ["doc", "docx", "odt", "rtf", "txt", "csv", "xls", "xlsx", "ppt", "pptx"],
+    "video": ["mp4", "mkv", "webm", "mov", "avi", "3gp", "m4v"],
+    "audio": ["mp3", "m4a", "aac", "wav", "ogg", "opus", "flac", "amr"]
+  },
+  "mimePrefixes": {
+    "image": ["image/"],
+    "pdf": ["application/pdf"],
+    "doc": ["text/", "application/msword", "application/vnd.openxmlformats-officedocument", "application/vnd.oasis.opendocument", "application/rtf", "application/vnd.ms-"],
+    "video": ["video/"],
+    "audio": ["audio/"]
+  }
+}

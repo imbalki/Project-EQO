@@ -1,54 +1,95 @@
-// Origin: EQO-authored Android speech adapter. Never saves audio or logs draft text.
+// Origin: EQO-authored voice UI and permission adapter. Only fills the draft; never submits.
 package ai.eqo.task
 
 import ai.eqo.R
+import ai.eqo.core.llm.InputAudio
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Bundle
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.util.Log
+import android.util.Base64
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.core.widget.doAfterTextChanged
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import java.io.File
 import java.util.Locale
 
 internal class TaskVoiceInput(
     private val activity: Activity,
+    recordingFactory: (File, CoroutineScope) -> VoiceRecording = ::VoiceAudioRecorder,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    transcribe: suspend (File, String) -> String = { file, language ->
+        val model = StudyModelChoice.read(activity) ?: error("Set up a model first")
+        TaskPlanningRuntime.voiceProvider(activity).transcribe(
+            model,
+            InputAudio(Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)),
+            language,
+        )
+    },
 ) {
     private val mic = activity.findViewById<Button>(R.id.task_voice_button)
     private val status = activity.findViewById<TextView>(R.id.task_voice_state)
-    private var recognizer: SpeechRecognizer? = null
+    private val draft = activity.findViewById<EditText>(R.id.task_request)
+    private val settings = VoiceSettings(activity)
     private var rationale: AlertDialog? = null
     private var resumed = true
     private var pendingGrant: Boolean? = null
-    private val presenter =
+    private var writingDraft = false
+    private val presenter: VoiceInputPresenter =
         VoiceInputPresenter(
             render = ::render,
             fillDraft = { text ->
-                activity.findViewById<EditText>(R.id.task_request).apply {
-                    setText(text)
-                    setSelection(length())
+                writingDraft = true
+                try {
+                    draft.setText(text)
+                    draft.setSelection(draft.length())
+                } finally {
+                    writingDraft = false
                 }
             },
             requestPermission = ::requestPermission,
-            startListening = ::startListening,
+            startListening = {
+                if (settings.engine == VoiceEngine.OPENROUTER) audio.start() else phone.start()
+            },
+            readDraft = { draft.text.toString() },
+            stopListening = {
+                if (settings.engine == VoiceEngine.OPENROUTER) audio.stop() else phone.stop()
+            },
         )
+    private val phone: PhoneVoiceInput by lazy { PhoneVoiceInput(activity, presenter) { settings.language } }
+    private val audio: AiVoiceInput by lazy {
+        AiVoiceInput(activity, presenter, settings, recordingFactory, ioDispatcher, transcribe)
+    }
 
     init {
-        presenter.availability(SpeechRecognizer.isRecognitionAvailable(activity))
+        VoiceAudioRecorder.removeStaleFiles(activity.cacheDir)
+        draft.doAfterTextChanged {
+            if (!writingDraft) {
+                presenter.cancel()
+                phone.cancel()
+                audio.cancel()
+            }
+        }
+        presenter.availability(engineAvailable())
         mic.setOnClickListener {
-            presenter.tap(micGranted())
+            if (settings.engine == VoiceEngine.OPENROUTER) {
+                audio.tap { presenter.tap(micGranted()) }
+            } else {
+                presenter.tap(micGranted())
+            }
         }
     }
 
-    private fun micGranted(): Boolean =
-        activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
-            PackageManager.PERMISSION_GRANTED
+    private fun micGranted(): Boolean {
+        val permission = activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+        return permission == PackageManager.PERMISSION_GRANTED
+    }
 
     fun onPermissionResult(requestCode: Int) {
         if (requestCode == REQUEST_CODE) {
@@ -59,22 +100,27 @@ internal class TaskVoiceInput(
 
     fun refreshAvailability() {
         resumed = true
+        audio.activate()
+        if (pendingGrant == null) presenter.availability(engineAvailable())
         pendingGrant?.let { presenter.permissionResult(it) }
         pendingGrant = null
     }
 
     fun pause() {
         resumed = false
-        presenter.cancel()
-        releaseRecognizer()
+        // Android's permission dialog itself can pause the activity. Edits/close invalidate permission intent.
+        presenter.cancel(preservePermission = true)
+        phone.cancel()
+        audio.pause()
     }
 
     fun close() {
         pause()
         pendingGrant = null
-        presenter.permissionResult(false)
+        presenter.cancel()
         rationale?.dismiss()
         rationale = null
+        audio.close()
     }
 
     private fun requestPermission() {
@@ -82,21 +128,34 @@ internal class TaskVoiceInput(
             AlertDialog
                 .Builder(activity)
                 .setTitle(R.string.voice_permission_title)
-                .setMessage(R.string.voice_permission_message)
-                .setPositiveButton(android.R.string.ok) { _, _ ->
+                .setMessage(
+                    if (settings.engine == VoiceEngine.PHONE) {
+                        R.string.voice_permission_message
+                    } else {
+                        R.string.voice_ai_disclosure
+                    },
+                ).setPositiveButton(android.R.string.ok) { _, _ ->
                     activity.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_CODE)
                 }.setNegativeButton(android.R.string.cancel) { _, _ -> presenter.permissionResult(false) }
                 .setOnCancelListener { presenter.permissionResult(false) }
                 .show()
     }
 
+    private fun engineAvailable(): Boolean {
+        val ai = settings.engine == VoiceEngine.OPENROUTER
+        return ai || SpeechRecognizer.isRecognitionAvailable(activity)
+    }
+
     private fun render(state: VoiceInputState) {
         mic.isEnabled = state !in VoiceInputState.BLOCKS_TAP
+        mic.setText(if (state == VoiceInputState.LISTENING) R.string.voice_stop else R.string.voice_button)
+        mic.contentDescription = mic.text
         status.setText(
             when (state) {
                 VoiceInputState.READY -> R.string.voice_ready
                 VoiceInputState.PERMISSION_NEEDED -> R.string.voice_permission_title
                 VoiceInputState.LISTENING -> R.string.voice_listening
+                VoiceInputState.PROCESSING -> R.string.voice_processing
                 VoiceInputState.REVIEW -> R.string.voice_review
                 VoiceInputState.NOT_CAUGHT -> R.string.voice_not_caught
                 VoiceInputState.NOT_ALLOWED -> R.string.voice_not_allowed
@@ -106,88 +165,14 @@ internal class TaskVoiceInput(
         )
     }
 
-    private fun startListening() {
-        if (!SpeechRecognizer.isRecognitionAvailable(activity)) {
-            presenter.error(VoiceInputState.UNAVAILABLE)
-            return
-        }
-        try {
-            val speech = SpeechRecognizer.createSpeechRecognizer(activity)
-            recognizer = speech
-            speech.setRecognitionListener(
-                object : RecognitionListener {
-                    override fun onReadyForSpeech(params: Bundle?) = Unit
-
-                    override fun onBeginningOfSpeech() = Unit
-
-                    override fun onRmsChanged(rmsdB: Float) = Unit
-
-                    override fun onBufferReceived(buffer: ByteArray?) = Unit
-
-                    override fun onEndOfSpeech() = Unit
-
-                    override fun onPartialResults(partialResults: Bundle?) = Unit
-
-                    override fun onEvent(
-                        eventType: Int,
-                        params: Bundle?,
-                    ) = Unit
-
-                    override fun onError(error: Int) {
-                        if (recognizer !== speech) return
-                        Log.i("EqoVoice", "voice error class=$error")
-                        presenter.error(errorState(error))
-                        releaseRecognizer()
-                    }
-
-                    override fun onResults(results: Bundle?) {
-                        if (recognizer !== speech) return
-                        val heard = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                        presenter.result(heard?.firstOrNull())
-                        releaseRecognizer()
-                    }
-                },
-            )
-            Log.i("EqoVoice", "voice started")
-            speech.startListening(recognitionIntent())
-        } catch (_: SecurityException) {
-            fail(VoiceInputState.NOT_ALLOWED)
-        } catch (_: UnsupportedOperationException) {
-            fail(VoiceInputState.UNAVAILABLE)
-        } catch (_: IllegalStateException) {
-            fail(VoiceInputState.ERROR)
-        }
-    }
-
-    private fun fail(state: VoiceInputState) {
-        Log.i("EqoVoice", "voice error class=${state.name}")
-        presenter.error(state)
-        releaseRecognizer()
-    }
-
-    private fun releaseRecognizer() {
-        val speech = recognizer ?: return
-        // Invalidate callbacks before cancel/destroy; late results must not overwrite typing.
-        recognizer = null
-        speech.cancel()
-        speech.destroy()
-        Log.i("EqoVoice", "voice stopped")
-    }
-
     companion object {
         const val REQUEST_CODE = 6902
 
-        fun recognitionIntent(): Intent =
-            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
-                .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
+        fun recognitionIntent(language: String = Locale.getDefault().toLanguageTag()): Intent {
+            val intent = PhoneVoiceInput.intent(language)
+            return intent
+        }
 
-        fun errorState(error: Int): VoiceInputState =
-            when (error) {
-                SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> VoiceInputState.NOT_ALLOWED
-                SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> VoiceInputState.NOT_CAUGHT
-                else -> VoiceInputState.ERROR
-            }
+        fun errorState(error: Int): VoiceInputState = PhoneVoiceInput.errorState(error)
     }
 }

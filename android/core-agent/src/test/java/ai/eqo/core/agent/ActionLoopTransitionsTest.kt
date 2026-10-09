@@ -52,6 +52,38 @@ class ActionLoopTransitionsTest {
      */
     private val pauseBoundMs = 200L + 50L + 250L + 100L
 
+    @Test fun attachmentSendAllowsHumanChoiceButStillHasAHardDeadline() =
+        runTest {
+            val step =
+                LoopStep(
+                    "file",
+                    ExecutedAction("SEND_EMAIL", mapOf("attachment" to "find:bill"), irreversible = true),
+                )
+            val loop =
+                ActionLoop(
+                    steps = listOf(step),
+                    approvalGate = { ApprovalDecision.Approved },
+                    execute = {
+                        kotlinx.coroutines.delay(160_000)
+                        ExecuteResult.Success("unexpected")
+                    },
+                    observe = { "" },
+                )
+            val run = async { loop.run() }
+            runCurrent()
+            advanceTimeBy(6_000)
+            runCurrent()
+            assertFalse(run.isCompleted)
+            advanceUntilIdle()
+            assertTrue(
+                run
+                    .await()
+                    .steps
+                    .single()
+                    .outcome is StepOutcome.PartialApply,
+            )
+        }
+
     private fun loop(
         applyDelayMs: Long,
         stepCount: Int = 2,

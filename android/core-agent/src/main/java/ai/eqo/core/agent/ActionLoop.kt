@@ -364,6 +364,20 @@ class ActionLoop(
 
     private fun applyBudgetTickMs(): Long = if (isPermissionWaiting()) 0L else config.tickMs
 
+    /** File choice and exact-name confirmation each allow a minute, only on approved file sends. */
+    private fun applyTimeoutMs(step: LoopStep): Long =
+        if (step.action.name in AttachmentSpec.ACTIONS &&
+            AttachmentSpec.parse(step.action.params[AttachmentSpec.PARAM]).isNotEmpty()
+        ) {
+            maxOf(config.actionTimeoutMs, ATTACHMENT_TIMEOUT_MS)
+        } else {
+            config.actionTimeoutMs
+        }
+
+    private companion object {
+        const val ATTACHMENT_TIMEOUT_MS = 150_000L
+    }
+
     /** No dispatch while paused or after terminal, including retries and suspended gates. */
     private suspend fun awaitDispatchReady(): Boolean {
         var ready = settleBeforeStep()

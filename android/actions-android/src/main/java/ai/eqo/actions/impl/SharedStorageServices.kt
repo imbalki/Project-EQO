@@ -34,7 +34,19 @@ internal class SharedStorageServices(
             val ownFiles = context.getExternalFilesDir(null)
             val stagingRoot = EqoSharedFileProvider.stagingRoot(context)
             val root = options.storageRoot ?: Environment.getExternalStorageDirectory()
-            val layout = SharedStorageLayout(root, listOfNotNull(ownFiles), listOf(stagingRoot))
+            val layout =
+                SharedStorageLayout(
+                    root,
+                    listOfNotNull(ownFiles),
+                    listOf(stagingRoot),
+                    SharedFolderAliases.load(context),
+                )
+            val catalog =
+                SharedStorageCatalog(
+                    layout,
+                    options.sharedMediaSource ?: AndroidSharedMediaSource(context),
+                    options.sharedFolderMapStore ?: PrefsSharedFolderMapStore(context),
+                )
             val lastScreenshot = options.lastScreenshotStore ?: PrefsLastScreenshotStore(context)
             val writer = options.screenshotWriter ?: serviceWriter
             val pictures = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES) ?: context.filesDir
@@ -42,7 +54,14 @@ internal class SharedStorageServices(
             return SharedStorageServices(
                 browser = SharedFileBrowser(layout, accessGranted),
                 attachments =
-                    AttachmentShare(layout, lastScreenshot, ShareStaging(stagingRoot), accessGranted) {
+                    AttachmentShare(
+                        layout,
+                        lastScreenshot,
+                        ShareStaging(stagingRoot),
+                        accessGranted,
+                        options.attachmentSelection,
+                        catalog,
+                    ) {
                         options.shareUri?.invoke(it) ?: EqoSharedFileProvider.uriFor(context, it)
                     },
                 screenshots =

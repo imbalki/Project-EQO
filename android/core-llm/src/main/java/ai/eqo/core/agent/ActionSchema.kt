@@ -50,7 +50,8 @@ object ActionSchema {
             "attachment",
             ParamType.STRING,
             false,
-            "Optional file to attach: a file path, or last_screenshot for the latest EQO screenshot. " +
+            "Optional file: a user-given path, find:words with name/type/folder/date filters resolved at run time, " +
+                "or last_screenshot for the latest EQO screenshot. " +
                 "Several: separate with |",
         )
 

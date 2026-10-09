@@ -2,6 +2,8 @@
 package ai.eqo.actions.impl
 
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.LinkOption
 import java.util.UUID
 
 /**
@@ -17,7 +19,14 @@ internal class ShareStaging(
         val dir = File(root, UUID.randomUUID().toString())
         check(dir.mkdirs()) { "Could not create the share folder" }
         val target = File(dir, safeName(source.name))
-        source.copyTo(target)
+        try {
+            Files.newInputStream(source.toPath(), LinkOption.NOFOLLOW_LINKS).use { input ->
+                target.outputStream().use { output -> input.copyTo(output) }
+            }
+        } catch (failure: java.io.IOException) {
+            dir.deleteRecursively()
+            throw failure
+        }
         dir.setLastModified(clock())
         return target
     }
