@@ -54,6 +54,7 @@ class SetupHubActivity : Activity() {
         findViewById<TextView>(R.id.row_chrome_consent).setOnClickListener {
             startActivity(Intent(this, ChromeConsentActivity::class.java))
         }
+        findViewById<TextView>(R.id.row_all_files).setOnClickListener { openAllFilesAccessSettings() }
         findViewById<Button>(R.id.setup_recheck_button).setOnClickListener {
             render()
             Toast.makeText(this, R.string.setup_hub_recheck_complete, Toast.LENGTH_SHORT).show()
@@ -106,11 +107,36 @@ class SetupHubActivity : Activity() {
             R.string.setup_hub_row_chrome_consent,
             snapshot.rowFor(CapabilityId.CHROME_CONSENT),
         )
+        renderAllFilesRow()
         rowIds.forEach { (id, viewId) ->
             val view = findViewById<TextView>(viewId)
             view.isSelected = id == next
             view.setTypeface(null, if (id == next) Typeface.BOLD else Typeface.NORMAL)
             if (id == next) view.text = getString(R.string.setup_row_next, view.text)
+        }
+    }
+
+    /** Separate from the readiness rows: optional, owner-granted in Settings, never part of "next step". */
+    private fun renderAllFilesRow() {
+        val granted = AllFilesAccess.isGranted()
+        findViewById<TextView>(R.id.row_all_files).text =
+            getString(
+                R.string.setup_row_format,
+                getString(R.string.setup_hub_row_all_files),
+                getString(stateLabel(AllFilesAccess.state(granted))),
+                getString(if (granted) R.string.all_files_granted else R.string.all_files_explainer),
+            )
+    }
+
+    private fun openAllFilesAccessSettings() {
+        try {
+            startActivity(AllFilesAccess.settingsIntent(this))
+        } catch (_: android.content.ActivityNotFoundException) {
+            try {
+                startActivity(AllFilesAccess.fallbackIntent())
+            } catch (_: android.content.ActivityNotFoundException) {
+                Toast.makeText(this, R.string.all_files_no_settings, Toast.LENGTH_LONG).show()
+            }
         }
     }
 

@@ -200,6 +200,7 @@ class AndroidActionRegistry internal constructor(
             if ("title" !in result) result["name"]?.let { result["title"] = it }
             if ("content" !in result) (result["text"] ?: result["body"])?.let { result["content"] = it }
         }
+        if (name == "LIST_FILES" && "folder" !in result) result["path"]?.let { result["folder"] = it }
         if (name in setOf("READ_NOTES", "RECALL_MEMORY") && "query" !in result) {
             result["topic"]?.let { result["query"] = it }
         }
@@ -240,6 +241,7 @@ class AndroidActionRegistry internal constructor(
             setOf(
                 "READ_FILE",
                 "LIST_FILES",
+                "FIND_FILES",
                 "LIST_INSTALLED_APPS",
                 "GET_CLIPBOARD",
                 "GET_SYSTEM_INFO",
@@ -266,6 +268,7 @@ class AndroidActionRegistry internal constructor(
         ): AndroidActionRegistry {
             val launcher = GatedIntentLauncher(context, automation)
             val contacts = options.contactResolver ?: ContactResolver(context)
+            val files = SharedStorageServices.create(context, automation, options)
             val calls = CallFlowExecutor(options.callVerifier ?: AndroidCallFlowVerifier(), launcher)
             val http = options.informationHttp ?: AndroidInformationHttp(context)
             val memoryStore = options.memoryStore ?: AndroidSensitiveMemoryStore(context)
@@ -277,9 +280,17 @@ class AndroidActionRegistry internal constructor(
             return AndroidActionRegistry(
                 context,
                 listOf(
-                    CommunicationActions(contacts, calls, launcher, automation = automation).getActions(),
+                    CommunicationActions(
+                        contacts,
+                        calls,
+                        launcher,
+                        automation = automation,
+                        attachments = files.attachments,
+                    ).getActions(),
+                    FileActions(files.browser).getActions(),
                     AdvancedControlActions().getActions(),
-                    SystemActions(launcher, permissions, automation, options.screenAnalyzer).getActions(),
+                    SystemActions(launcher, permissions, automation, options.screenAnalyzer, files.screenshots)
+                        .getActions(),
                     CalendarActions(launcher, permissions, automation).getActions(),
                     ProductivityMemoryActions(
                         automation,
@@ -316,6 +327,13 @@ class RegistryOptions(
     internal var memoryStore: SensitiveMemoryStore? = null
     internal var automationDaos: AutomationDaos? = null
     internal var autoReplyConfig: AutoReplyConfigStore? = null
+
+    // Test seams for the file features; production uses Android's real shared storage.
+    internal var allFilesAccess: (() -> Boolean)? = null
+    internal var storageRoot: java.io.File? = null
+    internal var lastScreenshotStore: LastScreenshotStore? = null
+    internal var screenshotWriter: ScreenshotWriter? = null
+    internal var shareUri: ((java.io.File) -> android.net.Uri)? = null
 }
 
 /** Display labels stay local; only steps are passed to the immutable approval snapshot. */

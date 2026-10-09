@@ -131,6 +131,21 @@ class EqoAutomation(
             typeTarget(viewId, content, byViewId = true)
         }
 
+    /**
+     * Gate for taking a screenshot (the capture itself is done by the service). Refused while the takeover
+     * detector has paused the loop, when the service is not bound, when the active window is secure
+     * (FLAG_SECURE: banking, authenticator, password screens) and when EQO's own window is in front.
+     */
+    fun screenshotGate(): A11yResult =
+        runAction {
+            when {
+                isSecureWindow() -> A11yResult.failure(A11yError.SecureWindow)
+                ownWindowBlocked("screenshot") != null ->
+                    A11yResult.failure(A11yError.ActionRejected("screenshot of EQO's own window"))
+                else -> A11yResult.success("A screenshot may be taken.")
+            }
+        }
+
     /** Scrolls the first container that accepts the requested direction. */
     fun scroll(forward: Boolean): A11yResult =
         runAction {

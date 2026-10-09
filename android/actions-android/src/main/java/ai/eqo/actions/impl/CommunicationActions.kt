@@ -11,6 +11,7 @@ import ai.eqo.core.agent.ContactResolver
 import ai.eqo.core.agent.failureMessage
 import android.content.Context
 import android.content.Intent
+import android.provider.Telephony
 import android.util.Log
 import androidx.core.net.toUri
 import java.net.URLEncoder
@@ -29,6 +30,62 @@ internal fun interface EmailComposer {
         body: String,
     ): EmailComposeOutcome
 }
+
+/** Opens an email draft that already carries files. Only Gmail is driven, because only Gmail's Send button is known. */
+internal fun interface AttachmentEmailComposer {
+    fun open(
+        context: Context,
+        to: String,
+        subject: String,
+        body: String,
+        files: List<ShareFile>,
+    ): EmailComposeOutcome
+}
+
+private const val GMAIL_PACKAGE = "com.google.android.gm"
+private const val WHATSAPP_PACKAGE = "com.whatsapp"
+
+private class AndroidAttachmentEmailComposer(
+    private val launcher: GatedIntentLauncher,
+) : AttachmentEmailComposer {
+    override fun open(
+        context: Context,
+        to: String,
+        subject: String,
+        body: String,
+        files: List<ShareFile>,
+    ): EmailComposeOutcome {
+        val intent =
+            FileShareIntents.build(files, GMAIL_PACKAGE).apply {
+                putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+                putExtra(Intent.EXTRA_SUBJECT, subject)
+                putExtra(Intent.EXTRA_TEXT, body)
+            }
+        if (intent.resolveActivity(context.packageManager) == null) return EmailComposeOutcome.UNAVAILABLE
+        grantRead(context, GMAIL_PACKAGE, files)
+        launcher.open(intent)
+        return EmailComposeOutcome.COMPOSED
+    }
+}
+
+/** Gives the receiving app a read grant for exactly these files; the share also carries the grant flag. */
+private fun grantRead(
+    context: Context,
+    packageName: String,
+    files: List<ShareFile>,
+) {
+    files.forEach {
+        try {
+            context.grantUriPermission(packageName, it.uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        } catch (_: RuntimeException) {
+            Log.w("EqoShare", "Could not pre-grant a file; the share flag still applies")
+        }
+    }
+}
+
+private const val NO_ATTACHMENTS = "Attaching files is not available in this build."
+private const val MIN_JID_DIGITS = 7
+private const val SEND_SETTLE_MS = 1500L
 
 private class AndroidEmailComposer(
     private val launcher: GatedIntentLauncher,
@@ -60,6 +117,8 @@ internal class CommunicationActions constructor(
     private val callFlowExecutor: CallFlowExecutor,
     private val launcher: GatedIntentLauncher,
     private val locationSource: LocationSource = AndroidLocationSource(),
+    private val attachments: AttachmentShare? = null,
+    // Keep last: callers and tests pass it as a trailing lambda.
     private val automation: () -> ai.eqo.accessibility.EqoAutomation? = { null },
 ) {
     /** SHARE_CONTACT / SHARE_LOCATION reuse the WhatsApp, SMS and email routes below unchanged. */
@@ -93,7 +152,12 @@ internal class CommunicationActions constructor(
             SendTelegramAction(),
             OpenTelegramAction(),
             SendSmsAction(),
-            SendEmailAction(AndroidEmailComposer(launcher), contactResolver),
+            SendEmailAction(
+                AndroidEmailComposer(launcher),
+                contactResolver,
+                attachments,
+                AndroidAttachmentEmailComposer(launcher),
+            ),
             SendWhatsAppGroupAction(),
             MakeVideoCallAction(),
             ReadMessagesAction(),
@@ -138,7 +202,8 @@ internal class CommunicationActions constructor(
             val message = params["message"] ?: return ActionResult(false, null, "message is missing")
 
             return when (val resolved = contactResolver.resolveWithDisambiguation(contact)) {
-                is ContactResolution.Found -> executeWhatsApp(resolved.contact.phoneNumber, contact, message)
+                is ContactResolution.Found ->
+                    executeWhatsApp(resolved.contact.phoneNumber, contact, message, params["attachment"])
                 else -> ActionResult.Failure(resolved.failureMessage())
             }
         }
@@ -275,7 +340,8 @@ internal class CommunicationActions constructor(
                     ?: return ActionResult(false, null, "message parameter missing")
 
             return when (val resolved = contactResolver.resolveWithDisambiguation(contact)) {
-                is ContactResolution.Found -> executeSms(resolved.contact.phoneNumber, contact, message)
+                is ContactResolution.Found ->
+                    executeSms(resolved.contact.phoneNumber, contact, message, params["attachment"])
                 else -> ActionResult.Failure(resolved.failureMessage())
             }
         }
@@ -292,7 +358,9 @@ internal class CommunicationActions constructor(
         phone: String,
         contactLabel: String,
         message: String,
+        attachment: String? = null,
     ): ActionResult {
+        if (!attachment.isNullOrBlank()) return executeWhatsAppWithFiles(phone, message, attachment)
         return try {
             launcher.openWhatsAppChat(phone, message)
 
@@ -390,7 +458,9 @@ internal class CommunicationActions constructor(
         phone: String,
         contactLabel: String,
         message: String,
+        attachment: String? = null,
     ): ActionResult {
+        if (!attachment.isNullOrBlank()) return executeSmsWithFiles(phone, message, attachment)
         return try {
             val intent =
                 Intent(Intent.ACTION_SENDTO).apply {
@@ -428,11 +498,106 @@ internal class CommunicationActions constructor(
         }
     }
 
+    // ── Sends that carry files ───────────────────────────────
+
+    private suspend fun executeWhatsAppWithFiles(
+        phone: String,
+        message: String,
+        attachment: String,
+    ): ActionResult {
+        val share = attachments ?: return ActionResult.Failure(NO_ATTACHMENTS)
+        val ready =
+            when (val prepared = share.prepareOnIo(attachment)) {
+                is PreparedShare.Refused -> return ActionResult.Failure(prepared.message)
+                is PreparedShare.Ready -> prepared
+            }
+        return try {
+            val digits = phone.filter { it.isDigit() }
+            val intent =
+                FileShareIntents.build(ready.files, WHATSAPP_PACKAGE).apply {
+                    putExtra(Intent.EXTRA_TEXT, message)
+                    // Opens the chat with this number directly; without it WhatsApp asks which chat to use.
+                    if (digits.length >= MIN_JID_DIGITS) putExtra("jid", "$digits@s.whatsapp.net")
+                }
+            grantRead(launcher.context, WHATSAPP_PACKAGE, ready.files)
+            launcher.open(intent)
+            if (ai.eqo.accessibility.WhatsAppAutomator
+                    .automateSendSharedFiles()
+            ) {
+                ActionResult.Success(
+                    mapOf("message" to "WhatsApp Send pressed with ${ready.files.size} file(s); not verified."),
+                )
+            } else {
+                ActionResult.UserActionRequired(
+                    "WhatsApp opened with the file, but EQO could not press Send. Nothing was verified as sent.",
+                )
+            }
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (e: Exception) {
+            share.discard(ready.files)
+            Log.e("SendWhatsApp", "WhatsApp file share failed")
+            ActionResult.Failure("WhatsApp didn't open with the file. Is WhatsApp installed?")
+        }
+    }
+
+    private suspend fun executeSmsWithFiles(
+        phone: String,
+        message: String,
+        attachment: String,
+    ): ActionResult {
+        val share = attachments ?: return ActionResult.Failure(NO_ATTACHMENTS)
+        val smsApp =
+            Telephony.Sms.getDefaultSmsPackage(launcher.context)
+                ?: return ActionResult.Failure("No messaging app is available to compose a text message.")
+        val ready =
+            when (val prepared = share.prepareOnIo(attachment)) {
+                is PreparedShare.Refused -> return ActionResult.Failure(prepared.message)
+                is PreparedShare.Ready -> prepared
+            }
+        return try {
+            val intent =
+                FileShareIntents.build(ready.files, smsApp).apply {
+                    putExtra("address", phone)
+                    putExtra("sms_body", message)
+                    putExtra(Intent.EXTRA_TEXT, message)
+                }
+            grantRead(launcher.context, smsApp, ready.files)
+            launcher.open(intent)
+            kotlinx.coroutines.delay(SEND_SETTLE_MS)
+            val current =
+                ai.eqo.accessibility.EQOAccessibilityService
+                    .getInstance()
+                    ?.rootInActiveWindow
+                    ?.packageName
+                    ?.toString()
+            if (current == smsApp &&
+                ai.eqo.accessibility.SmsAutomator
+                    .automateSend()
+            ) {
+                ActionResult.Success(
+                    mapOf("message" to "Messages Send pressed with ${ready.files.size} file(s); not verified."),
+                )
+            } else {
+                ActionResult.UserActionRequired(
+                    "The message opened with the file, but EQO could not press Send. Nothing was verified as sent.",
+                )
+            }
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (e: Exception) {
+            share.discard(ready.files)
+            ActionResult.Failure("Couldn't open the messaging app with the file.")
+        }
+    }
+
     // ── Non-disambiguated actions (unchanged) ────────────────
 
     internal class SendEmailAction(
         private val emailComposer: EmailComposer,
         private val contactResolver: ContactResolver,
+        private val attachments: AttachmentShare? = null,
+        private val attachmentComposer: AttachmentEmailComposer? = null,
     ) : Action {
         override val name: String = "SEND_EMAIL"
 
@@ -447,8 +612,28 @@ internal class CommunicationActions constructor(
             val to = resolved.contact.phoneNumber
             val subject = params["subject"] ?: ""
             val body = params["body"] ?: ""
+            val attachment = params["attachment"]
+            val composer = attachmentComposer
+            val shared =
+                if (attachment.isNullOrBlank()) {
+                    null
+                } else {
+                    val share = attachments
+                    if (share == null || composer == null) return ActionResult.Failure(NO_ATTACHMENTS)
+                    when (val prepared = share.prepareOnIo(attachment)) {
+                        is PreparedShare.Refused -> return ActionResult.Failure(prepared.message)
+                        is PreparedShare.Ready -> prepared
+                    }
+                }
             return try {
-                when (emailComposer.open(context, to, subject, body)) {
+                val outcome =
+                    if (shared != null && composer != null) {
+                        composer.open(context, to, subject, body, shared.files)
+                    } else {
+                        emailComposer.open(context, to, subject, body)
+                    }
+                if (shared != null && outcome != EmailComposeOutcome.COMPOSED) attachments?.discard(shared.files)
+                when (outcome) {
                     EmailComposeOutcome.VERIFIED_SENT ->
                         ActionResult(true, "Email sent successfully.", null)
                     EmailComposeOutcome.COMPOSED -> {
@@ -469,6 +654,7 @@ internal class CommunicationActions constructor(
                         ActionResult(false, null, "Couldn't open the email app. Is one installed?")
                 }
             } catch (e: Exception) {
+                if (shared != null) attachments?.discard(shared.files)
                 Log.e("SendEmail", "Email compose launch failed")
                 ActionResult(false, null, "Couldn't open the email app. Is one installed?")
             }

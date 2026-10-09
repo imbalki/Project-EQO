@@ -62,7 +62,7 @@ class StudyFlowGateTest {
     }
 
     @Test
-    fun `only the wireless setup screen constructs the pinned activation runner`() {
+    fun `only wireless setup and its notification reply construct the pinned runner`() {
         val users =
             File("src/main")
                 .walkTopDown()
@@ -70,7 +70,16 @@ class StudyFlowGateTest {
                 .filter { file -> codeLines(file).any { it.contains("WirelessAdbActivationRunner(") } }
                 .map { it.name }
                 .toSet()
-        assertEquals("only the setup screen may run the activation", setOf("WirelessAdbSetupActivity.kt"), users)
+        assertEquals(
+            "only setup and its explicit notification reply may use the pinned runner",
+            setOf("WirelessAdbSetupActivity.kt", "WirelessPairingService.kt"),
+            users,
+        )
+        val service = codeLines(File("src/main/kotlin/ai/eqo/onboarding/WirelessPairingService.kt")).joinToString("\n")
+        assertTrue(service.contains("NoHelperConsent"))
+        assertTrue(service.contains("pairNotificationReply("))
+        assertFalse("notification must never authorize or start the helper", service.contains("StudyHelperHooks("))
+        assertFalse("notification must never mark activation complete", service.contains("markActive("))
     }
 
     /**

@@ -11,7 +11,7 @@
  * owner sees one of four plain-language states: not paired, paired and connected,
  * connection lost, needs re-pair. ADB is used only to start the privileged helper.
  *
- * Everything here runs from a button the owner taps; nothing starts at launch.
+ * Opening this setup screen discovers local ports. Pairing and helper consent require user actions.
  */
 package ai.eqo.onboarding
 
@@ -28,14 +28,21 @@ import ai.eqo.adb.pairing.WirelessAdbEndpoints
 import ai.eqo.adb.pairing.WirelessLink
 import ai.eqo.adb.pairing.WirelessLinkState
 import ai.eqo.study.StudyFlowGate
+import android.Manifest
 import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+@Suppress("TooManyFunctions") // Activity lifecycle plus setup UI handlers; transport remains separate.
 class WirelessAdbSetupActivity : Activity() {
     private lateinit var worker: ExecutorService
     private var permissionPrompt: HelperPermissionPrompt? = null
@@ -51,13 +58,28 @@ class WirelessAdbSetupActivity : Activity() {
         findViewById<Button>(R.id.wireless_adb_reconnect_button).setOnClickListener { reconnect() }
         findViewById<Button>(R.id.wireless_adb_forget_button).setOnClickListener { forget() }
         findViewById<Button>(R.id.setup_return_button).setOnClickListener { finish() }
+        findViewById<Button>(R.id.wireless_developer_options).setOnClickListener { openDeveloperOptions() }
+        findViewById<Button>(R.id.wireless_discovery_start).setOnClickListener {
+            startDiscovery(requestNotifications = true)
+        }
         listOf(R.id.pairing_code_input, R.id.pairing_port_input, R.id.connection_port_input).forEach {
             findViewById<EditText>(it).isEnabled = isPermitted
         }
         render()
+        startDiscovery()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        WirelessPairingSession.observer = {
+            render()
+            renderDiscovery()
+        }
+        renderDiscovery()
     }
 
     override fun onStop() {
+        WirelessPairingSession.observer = null
         permissionPrompt?.close()
         super.onStop()
     }
@@ -73,10 +95,11 @@ class WirelessAdbSetupActivity : Activity() {
     private fun keyStore() = StudySetup.keyStore(applicationContext)
 
     private fun pairAndConnect() {
-        if (!isPermitted || busy) return
+        if (!canConnect()) return
         val code = (AdbPairingCode.parse(rawCode()) as? AdbPairingCode.ParseResult.Ok)?.code
-        val pairingPort = portOf(R.id.pairing_port_input)
-        val connectionPort = portOf(R.id.connection_port_input)
+        val state = WirelessPairingSession.state
+        val pairingPort = state.pairingPort ?: portOf(R.id.pairing_port_input)
+        val connectionPort = state.connectionPort ?: portOf(R.id.connection_port_input)
         if (code == null || pairingPort == null || connectionPort == null) {
             showMessage(getString(R.string.wireless_adb_bad_input))
             return
@@ -88,8 +111,8 @@ class WirelessAdbSetupActivity : Activity() {
     }
 
     private fun reconnect() {
-        if (!isPermitted || busy) return
-        val connectionPort = portOf(R.id.connection_port_input)
+        if (!canConnect()) return
+        val connectionPort = WirelessPairingSession.state.connectionPort ?: portOf(R.id.connection_port_input)
         if (connectionPort == null) {
             showMessage(getString(R.string.wireless_adb_bad_port))
             return
@@ -101,8 +124,9 @@ class WirelessAdbSetupActivity : Activity() {
     }
 
     private fun forget() {
-        if (busy) return
+        if (busy || WirelessPairingSession.busy) return
         keyStore().enrollment.clear()
+        WirelessPairingSession.message = null
         StudySetup.wirelessReport = null
         showMessage(getString(R.string.wireless_adb_forgotten))
         render()
@@ -110,6 +134,8 @@ class WirelessAdbSetupActivity : Activity() {
 
     private fun runInBackground(block: (ActivationSequence) -> ActivationReport) {
         busy = true
+        WirelessPairingSession.busy = true
+        WirelessPairingSession.message = null
         showMessage(getString(R.string.wireless_adb_working))
         val keys = keyStore()
         val command =
@@ -123,6 +149,7 @@ class WirelessAdbSetupActivity : Activity() {
             val report = block(ActivationSequence(runner, StudySetup.wirelessAdb))
             runOnUiThread {
                 busy = false
+                WirelessPairingSession.busy = false
                 StudySetup.wirelessReport = report
                 render()
             }
@@ -161,6 +188,59 @@ class WirelessAdbSetupActivity : Activity() {
 
     private fun showMessage(message: String) {
         findViewById<TextView>(R.id.wireless_adb_guidance).text = message
+    }
+
+    private fun canConnect(): Boolean {
+        val wifi = WirelessPairingSession.state.networkId != null
+        if (!wifi) {
+            val message =
+                if (WirelessPairingSession.discovering) {
+                    R.string.wireless_wifi_needed
+                } else {
+                    R.string.wireless_discovery_stopped
+                }
+            showMessage(getString(message))
+        }
+        val idle = !busy && !WirelessPairingSession.busy
+        return isPermitted && idle && wifi
+    }
+
+    private fun startDiscovery(requestNotifications: Boolean = false) {
+        if (!isPermitted) return
+        if (requestNotifications &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_PERMISSION)
+        }
+        startForegroundService(Intent(this, WirelessPairingService::class.java))
+    }
+
+    private fun openDeveloperOptions() {
+        runCatching { startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)) }
+            .onFailure { showMessage(getString(R.string.wireless_settings_unavailable)) }
+    }
+
+    private fun renderDiscovery() {
+        val state = WirelessPairingSession.state
+        val message =
+            when {
+                !WirelessPairingSession.discovering -> R.string.wireless_discovery_stopped
+                state.networkId == null -> R.string.wireless_wifi_needed
+                state.endpoints() != null -> R.string.wireless_ports_found
+                state.timedOut && state.connectionPort == null -> R.string.wireless_debugging_off
+                state.manualFallback -> R.string.wireless_manual_fallback
+                else -> R.string.wireless_discovery_waiting
+            }
+        findViewById<TextView>(R.id.wireless_discovery_status).setText(message)
+        listOf(R.id.pairing_port_input, R.id.connection_port_input).forEach {
+            findViewById<EditText>(it).visibility = if (state.manualFallback) View.VISIBLE else View.GONE
+        }
+        WirelessPairingSession.message?.let { showMessage(it) }
+    }
+
+    private companion object {
+        const val NOTIFICATION_PERMISSION = 80
     }
 }
 

@@ -29,8 +29,26 @@
             android:accessibilityLiveRegion="polite"
             android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/wireless_discovery_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite" />
+        <Button
+            android:id="@+id/wireless_developer_options"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/wireless_developer_options" />
+        <Button
+            android:id="@+id/wireless_discovery_start"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/wireless_discovery_start" />
         <EditText
             android:id="@+id/pairing_code_input"
+            android:saveEnabled="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/wireless_adb_pairing_code_hint"
@@ -40,6 +58,7 @@
 
         <EditText
             android:id="@+id/pairing_port_input"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/wireless_adb_pairing_port_hint"
@@ -49,6 +68,7 @@
 
         <EditText
             android:id="@+id/connection_port_input"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/wireless_adb_connection_port_hint"

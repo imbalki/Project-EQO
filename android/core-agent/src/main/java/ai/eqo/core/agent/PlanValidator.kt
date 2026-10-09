@@ -117,6 +117,7 @@ class PlanValidator
                     "READ_NOTES",
                     "READ_FILE",
                     "LIST_FILES",
+                    "FIND_FILES",
                     "GET_SCREEN_TEXT",
                     "LIST_INSTALLED_APPS",
                     "ASK_USER",
