@@ -1,5 +1,6 @@
 # Current handoff (any agent can take over from this page)
 
+Last updated: 2026-10-09 (edge handle local handoff added). Update this file in the same PR as every merge to `main`.
 Last updated: 2026-10-09 (Explain screen section added). Update this file in the same PR as every merge to `main`.
 
 ## IN PROGRESS: files and attachments (branch `feat/files-attachments`, draft PR, do not merge)
@@ -9,6 +10,39 @@ Plain-language status, updated after each step. Details and design: `docs/adr/00
 - NOT TESTED WITHOUT THE PHONE: the real Android "All files access" page; reading a real Downloads folder; a real screenshot being saved and shown in Gallery; Gmail, WhatsApp and Messages actually receiving the file and EQO pressing Send (their button names are guesses from known ids); WhatsApp opening the right chat from the number; a protected screen (bank app) refusing a screenshot; the plan-preview wording on screen.
 - NOT RUN IN THIS CLOUD SESSION: the full Gradle build (cloud box cannot reach Google's Maven); CI runs it. Lessons from CI: a constructor's trailing-lambda parameter must stay last; Advanced-category actions must stay out of macros (do not mark file actions READ_ONLY); lint wants KTX `SharedPreferences.edit {}`.
 
+## Edge handle (t_a3fa16d0, local-only branch feat/edge-handle)
+- Implemented: opt-in accessibility overlay, dynamic feature registry, persisted switches and Up/Down order,
+  reset/defaults and per-app hiding/restoration. Built-ins Ask EQO, Pause, Stop and Open EQO; future adapters
+  documented only in ADR-0010, not imported from other branches. Ask focuses the existing typed request;
+  that screen has no microphone. Pause/Stop use the existing StudyTaskController public controls.
+- Safety: own-package guard plus coordinate hitboxes and a panel-open automation refusal; overlay touch
+  exclusions compose with the existing task controls and never release takeover. No new resume path,
+  SYSTEM_ALERT_WINDOW permission, runtime dependency, screen-content capture or transmission.
+- Round-1 review correction: opening the panel requests the existing user Pause and waits for the
+  current action to settle before showing the guarded window. This prevents a due action from failing
+  the run before Pause/Stop selection. Closing/Back never resumes; settings explains explicit Resume.
+- Local verification of code commit `205739d` (sequential module-scoped commands, each exits 0):
+  `:platform-a11y:ktlintFormat :platform-a11y:ktlintCheck :platform-a11y:detekt :platform-a11y:testDebugUnitTest :platform-a11y:lintDebug`;
+  then `:app:ktlintFormat :app:ktlintCheck :app:detekt :app:testDebugUnitTest :app:lintDebug`.
+  Both used `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`. Platform: 111 tests; app: 186;
+  297 total, zero failures/errors/skips, including 16 edge-handle regressions. Repo/branding/provenance and
+  `git diff --check` pass; all new/changed Kotlin lines are at most 120 characters.
+- Review-correction verification: repeated both exact module commands above against the final code,
+  sequentially with the same worker/compiler flags; platform BUILD SUCCESSFUL in 2m 19s,
+  app BUILD SUCCESSFUL in 5m 34s. JUnit XML: platform 111, app 189; 300 tests, zero failures/errors/skips,
+  including 19 edge-handle tests. Three new app regressions cover real panel opening during paced work,
+  due-step/Pause/Stop without automation, in-flight settle/one-shot Pause/dismissal without resume,
+  and pending-open cancellation on foreground change/disable. Repo/branding/provenance, diff whitespace
+  and changed Kotlin file line-length checks pass (450 tracked Kotlin files, 450 provenance rows).
+  Initial method-size/return-count detekt findings were corrected; only the single integrated
+  scheduling scenario has a documented method-scoped LongMethod annotation. No new Kotlin files.
+- NOT RUN: root/all-module Gradle `ktlintCheck detekt test`, unit tests of untouched modules,
+  `assembleDebug`/APK install, release tasks, device/emulator instrumentation execution or GitHub CI.
+  Initial detekt findings were fixed. Android lint's physical LEFT/RIGHT docking warnings are intentionally
+  annotated only on two methods (ADR-0010); no lint baseline or global suppression was added.
+- NOT TESTED ON PHONE. Checklist in PHASE-ONE-TEST-LOG.md covers Gmail/Chrome/Settings, drag/edge switch,
+  Back/outside, hidden apps, Pause during a run, agent-tap refusal and OEM keyboard/full-screen behavior.
+  Lead pushes/opens the PR; this worker commits locally only. CI is the full gate.
 ## Explain screen (t_699c0abc, local branch `feat/explain-screen`)
 
 - Implemented separately from automation: Quick Settings tile and optional ongoing-notification action; transient entry finishes before screen reading; bounded active-app text extraction with password/own-window exclusion; sparse/visual-question screenshot fallback through the existing in-memory accessibility JPEG primitive; exact-model image-capability check from the cached public catalog; large translucent accessibility overlay; read-aloud/auto-read; typed follow-ups that retain only the session's original screen context.

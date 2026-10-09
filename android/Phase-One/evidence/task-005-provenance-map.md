@@ -1,5 +1,16 @@
 # TASK-005 per-file provenance map
 
+## Edge-handle additions (t_a3fa16d0)
+
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleShortcutRegistry.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Internal shortcut API and fake-store-testable choice/order |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandlePreferences.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | App-private choices, placement and hidden apps |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleWindowGuard.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Overlay coordinate and own-window guard |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/EdgeHandleOverlay.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | User-only accessibility handle and dynamic panel |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/handle/HandleShortcutRegistryTest.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Fake registry/order/default/availability regressions |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/HandleWindowSafetyTest.kt` | EQO-NEW | `ai.eqo.accessibility` | Underlying-window gesture and takeover exclusions |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/BuiltInHandleShortcuts.kt` | EQO-NEW | `ai.eqo.handle` | Existing controller Pause/Stop and app/task entries |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/EdgeHandleSettingsActivity.kt` | EQO-NEW | `ai.eqo.handle` | Opt-in, shortcut choice, Up/Down, reset and restore |
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleFeaturesTest.kt` | EQO-NEW | `ai.eqo.handle` | Preference, focus and real public controller regressions |
 ## Explain screen additions (t_699c0abc)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSession.kt` | EQO-NEW | `ai.eqo.explain` | Read-only explanation session, privacy bounds and protected-screen policy seam |
