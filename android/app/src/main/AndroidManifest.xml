@@ -82,6 +82,9 @@
             android:name=".onboarding.SetupHubActivity"
             android:exported="false" />
         <activity
+            android:name=".handle.EdgeHandleSettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".onboarding.ModelKeySetupActivity"
             android:exported="false" />
         <activity

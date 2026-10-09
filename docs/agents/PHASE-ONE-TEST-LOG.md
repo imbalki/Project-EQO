@@ -1,5 +1,24 @@
 # Phase One phone test log
 
+## Edge handle (t_a3fa16d0, feat/edge-handle): NOT TESTED ON PHONE
+
+Local verification results are recorded in CURRENT-HANDOFF.md after the module checks finish.
+This feature has not been installed or exercised on a phone by this worker. Full CI remains the gate.
+
+Phone checklist (record build commit and actual results before merge):
+- Enable EQO accessibility; confirm handle is absent until enabled in Edge handle shortcuts.
+- Show handle over Gmail, Chrome and Android Settings; tap/swipe inward, outside dismissal and Back.
+- Drag vertically, switch left/right edge, rotate and restart service/app; check saved placement.
+- Long press, Hide for this app, switch app, then restore hidden apps in settings.
+- Disable/reorder/reset shortcuts; restart app; verify choice/order persist and unavailable controls are absent.
+- Ask EQO opens the task request with focus/keyboard and does not plan/run; Open EQO opens home.
+- Pause during a real run, then Stop while paused; opening/dragging the handle must not trigger takeover.
+- A normal touch outside the collapsed handle during work still triggers takeover; handle never clears it.
+- Try an approved agent coordinate tap at the handle and a node/coordinate tap while the panel is open:
+  no handle/panel button is activated by the agent, even with another app active underneath.
+- Inspect OEM keyboard/full-screen game/video hiding; explanation must match observed limitations.
+- Disable handle, revoke/re-enable accessibility and repeat takeover tests; existing touch probe still works.
+
 Device: Realme RM10, Android 11, serial <DEVICE_SERIAL>. Owner pastes his own OpenRouter key; it is never read or recorded here.
 Rule: start `adb logcat -s EqoRun EqoActions` into a file before the owner tests; record each test below with the build commit.
 

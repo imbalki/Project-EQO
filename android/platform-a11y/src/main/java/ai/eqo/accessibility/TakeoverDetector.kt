@@ -66,7 +66,10 @@ class TakeoverDetector {
     fun isControlTouch(
         x: Int,
         y: Int,
-    ): Boolean = controlTouchExclusion?.invoke(x, y) == true
+    ): Boolean =
+        ai.eqo.accessibility.handle.HandleWindowGuard.shared
+            .contains(x, y) ||
+            controlTouchExclusion?.invoke(x, y) == true
 
     private var lastSelfGestureFinishedAtMs: Long = NO_TIME
 

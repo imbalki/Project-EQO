@@ -9,6 +9,19 @@ Plain-language status, updated after each step. Details and design: `docs/adr/00
 - NOT TESTED WITHOUT THE PHONE: the real Android "All files access" page; reading a real Downloads folder; a real screenshot being saved and shown in Gallery; Gmail, WhatsApp and Messages actually receiving the file and EQO pressing Send (their button names are guesses from known ids); WhatsApp opening the right chat from the number; a protected screen (bank app) refusing a screenshot; the plan-preview wording on screen.
 - NOT RUN IN THIS CLOUD SESSION: the full Gradle build (cloud box cannot reach Google's Maven); CI runs it. Lessons from CI: a constructor's trailing-lambda parameter must stay last; Advanced-category actions must stay out of macros (do not mark file actions READ_ONLY); lint wants KTX `SharedPreferences.edit {}`.
 
+## Edge handle (t_a3fa16d0, local-only branch feat/edge-handle)
+- Implemented: opt-in accessibility overlay, dynamic feature registry, persisted switches and Up/Down order,
+  reset/defaults and per-app hiding/restoration. Built-ins Ask EQO, Pause, Stop and Open EQO; future adapters
+  documented only in ADR-0010, not imported from other branches. Ask focuses the existing typed request;
+  that screen has no microphone. Pause/Stop use the existing StudyTaskController public controls.
+- Safety: own-package guard plus coordinate hitboxes and a panel-open automation refusal; overlay touch
+  exclusions compose with the existing task controls and never release takeover. No new resume path,
+  SYSTEM_ALERT_WINDOW permission, runtime dependency, screen-content capture or transmission.
+- Local checks: pending final module-scoped output; exact results will replace this line before handoff.
+- NOT TESTED ON PHONE. Checklist in PHASE-ONE-TEST-LOG.md covers Gmail/Chrome/Settings, drag/edge switch,
+  Back/outside, hidden apps, Pause during a run, agent-tap refusal and OEM keyboard/full-screen behavior.
+  Lead pushes/opens the PR; this worker commits locally only. CI is the full gate.
+
 ## Goal
 EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-key, accessibility automation, wireless-ADB helper, Chrome control, guided setup, approvals, Pause/Stop/takeover). Owner is non-technical: plain language, real command output, say what was not tested.
 
