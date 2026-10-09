@@ -10,14 +10,23 @@ import android.net.nsd.NsdServiceInfo
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
+import java.net.InetAddress
+import java.util.concurrent.Executors
 
 /** Discover while Settings is foreground; never select another device on the same LAN. */
 @Suppress("DEPRECATION") // API 30 devices require the listener-based resolve API.
 internal class WirelessAdbDiscovery(
     context: Context,
     private val state: WirelessDiscoveryState,
+    private val mdnsLookup: ((Network, String?, String, Set<InetAddress>) -> Pair<InetAddress, Int>?)? = null,
     private val changed: () -> Unit,
 ) : AutoCloseable {
+    private val appContext = context.applicationContext
+    private val worker = Executors.newSingleThreadExecutor()
+    private var mdns: WifiMdnsResolver? = null
+    private var resolveDeadline: Runnable? = null
+    private var attemptId = 0
     private val main = Handler(Looper.getMainLooper())
     private val connectivity = context.getSystemService(ConnectivityManager::class.java)
     private val nsd = context.getSystemService(NsdManager::class.java)
@@ -131,7 +140,7 @@ internal class WirelessAdbDiscovery(
 
                 override fun onServiceFound(info: NsdServiceInfo) {
                     main.post {
-                        if (!closed && epoch == generation) {
+                        if (!closed && epoch == generation && pending.size < MAX_PENDING) {
                             pending.addLast(info to epoch)
                             resolveNext()
                         }
@@ -166,10 +175,71 @@ internal class WirelessAdbDiscovery(
 
     private fun resolveNext() {
         if (closed || resolving || pending.isEmpty()) return
+        val network = wifi ?: return
         val (info, epoch) = pending.removeFirst()
         val key = info.serviceType + info.serviceName
         lostServices.remove(key)
         resolving = true
+        val id = ++attemptId
+        val interfaceName = connectivity.getLinkProperties(network)?.interfaceName
+        val addresses = currentAddresses.map { InetAddress.getByName(it) }.toSet()
+        val resolver = WifiMdnsResolver(appContext)
+        mdns = resolver
+        lateinit var attempt: WirelessResolveAttempt<Pair<InetAddress, Int>>
+        val deadline =
+            Runnable {
+                Log.d("EqoPairing", "resolve: nsd fail")
+                attempt.startFallback()
+            }
+        resolveDeadline = deadline
+        attempt =
+            WirelessResolveAttempt(
+                fallback = {
+                    main.removeCallbacks(deadline)
+                    if (mdnsLookup == null && interfaceName == null) {
+                        Log.d("EqoPairing", "resolve: mdns fail")
+                        attempt.mdns(null)
+                    } else {
+                        worker.execute {
+                            val instance = info.serviceName + "." + info.serviceType.trim('.') + ".local."
+                            val result =
+                                if (mdnsLookup != null) {
+                                    mdnsLookup.invoke(network, interfaceName, instance, addresses)
+                                } else {
+                                    resolver.resolve(network, interfaceName, instance, addresses)
+                                }
+                            main.post {
+                                Log.d("EqoPairing", "resolve: mdns ${if (result != null) "ok" else "fail"}")
+                                attempt.mdns(result)
+                            }
+                        }
+                    }
+                },
+                complete = { result ->
+                    main.removeCallbacks(deadline)
+                    resolver.close()
+                    val eligible = !closed && epoch == generation && key !in lostServices
+                    if (eligible && result != null) {
+                        state.found(key, info.serviceType, result.first.hostAddress, result.second, network.toString())
+                        changed()
+                    }
+                    if (id == attemptId) {
+                        resolving = false
+                        resolveNext()
+                    }
+                },
+            )
+        main.postDelayed(deadline, NSD_TIMEOUT_MS)
+        startFrameworkResolve(info, epoch, network, addresses, attempt)
+    }
+
+    private fun startFrameworkResolve(
+        info: NsdServiceInfo,
+        epoch: Int,
+        network: Network,
+        addresses: Set<InetAddress>,
+        attempt: WirelessResolveAttempt<Pair<InetAddress, Int>>,
+    ) {
         val listener =
             object : NsdManager.ResolveListener {
                 override fun onResolveFailed(
@@ -181,31 +251,34 @@ internal class WirelessAdbDiscovery(
 
                 private fun finished(resolved: NsdServiceInfo?) {
                     main.post {
-                        resolving = false
-                        val eligible = !closed && epoch == generation && key !in lostServices
-                        if (eligible && resolved != null) {
-                            val scopedNetwork =
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) resolved.network else wifi
-                            state.found(
-                                key,
-                                resolved.serviceType,
-                                resolved.host?.hostAddress,
-                                resolved.port,
-                                scopedNetwork?.toString(),
-                            )
-                            changed()
-                        }
-                        resolveNext()
+                        if (closed || epoch != generation) return@post
+                        val sameNetwork =
+                            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                                resolved?.network == network
+                        val host = addresses.firstOrNull { it == resolved?.host }
+                        val result =
+                            if (sameNetwork && host != null && WirelessPairingReply.validPort(resolved?.port)) {
+                                host to resolved!!.port
+                            } else {
+                                null
+                            }
+                        Log.d("EqoPairing", "resolve: nsd ${if (result != null) "ok" else "fail"}")
+                        attempt.nsd(result)
                     }
                 }
             }
         runCatching { nsd.resolveService(info, listener) }.onFailure {
-            resolving = false
-            resolveNext()
+            Log.d("EqoPairing", "resolve: nsd fail")
+            attempt.startFallback()
         }
     }
 
     private fun stopDiscovery() {
+        attemptId++
+        resolving = false
+        resolveDeadline?.let { main.removeCallbacks(it) }
+        mdns?.close()
+        mdns = null
         main.removeCallbacks(timeout)
         listeners.forEach { runCatching { nsd.stopServiceDiscovery(it) } }
         listeners.clear()
@@ -213,10 +286,16 @@ internal class WirelessAdbDiscovery(
         lostServices.clear()
     }
 
+    private companion object {
+        const val MAX_PENDING = 32
+        const val NSD_TIMEOUT_MS = 1_500L
+    }
+
     override fun close() {
         closed = true
         generation++
         stopDiscovery()
+        worker.shutdownNow()
         runCatching { connectivity.unregisterNetworkCallback(callback) }
         runCatching { connectivity.unregisterNetworkCallback(defaultCallback) }
         state.networkChanged(null, emptySet())

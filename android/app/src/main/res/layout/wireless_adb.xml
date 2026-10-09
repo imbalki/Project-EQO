@@ -53,7 +53,8 @@
             android:layout_height="wrap_content"
             android:hint="@string/wireless_adb_pairing_code_hint"
             android:importantForAutofill="no"
-            android:inputType="numberPassword"
+            android:inputType="textPassword|textNoSuggestions"
+            android:imeOptions="flagNoPersonalizedLearning"
             android:minHeight="48dp" />
 
         <EditText
