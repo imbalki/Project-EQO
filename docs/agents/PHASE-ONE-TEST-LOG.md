@@ -183,3 +183,13 @@ Capture note: the live log capture was not running between 12:36 and 19:07; repo
 | ~20:00 | Explain screen, second use | FAIL: could not reopen; notification no longer in the shade; Quick Settings tile never added. | `dumpsys activity services`: only EQOAccessibilityService alive, `ExplainNotificationService` not running although pref `notification=true`; ColorOS stops background foreground services. Tile needs manual add on Android 11 with no in-app guidance. | Card t_e84b3eaa: handle shortcut, accessibility-service re-posts notification, accessibility button, tile guidance, battery row. |
 | ~20:10 | Edge handle | FAIL: no handle visible. | No handle preference exists on the device: the switch (behind a small button on the main screen) was never turned on. `dumpsys window` shows no handle window. | Card t_e84b3eaa: switch in Setup hub, draws immediately, first-time hint. |
 | ~20:10 | Voice v1 | FAIL: listens for under 2 seconds. | Android recogniser default silence timeout. | Card t_e9801e01 (voice v2). |
+
+### Round 2, edge handle after switching it on (2026-10-09, ~21:30, build 732751e)
+
+| Test | Result | Cause / note | Fix |
+|---|---|---|---|
+| Edge handle visible and draggable | PASS: owner saw it and moved it. Preference `handle_enabled=true` confirmed on the device. | The earlier "no handle" was the switch never being turned on: the screen holding it (button "Edge handle shortcuts") is on `MainActivity`, a second launcher entry; the normal EQO icon opens the Setup hub, which has no handle switch. | Card t_e84b3eaa: switch in Setup hub. |
+| Panel: Open EQO | PASS (goes to the main screen). | n/a | n/a |
+| Panel: Ask EQO | FAIL: opens the practice-run (sample task) screen. | Wrong target screen. | Card t_e84b3eaa (comment added): open the real task screen with the request box focused. |
+| Panel: Hide for this app | PARTIAL: hid the handle for EQO itself, no way to bring it back; handle then not seen on EQO screens although enabled. | No "hidden apps" list. | Card t_e84b3eaa (comment added): Hidden apps list with Unhide; never hide inside EQO's own settings. |
+| Panel: Pause / Stop | Not yet tested. | n/a | n/a |
