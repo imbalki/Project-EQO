@@ -13,6 +13,10 @@ Verified XML: app 209 tests, core-llm 277 tests; zero failures/errors, one exist
 All 34 voice/provider tests pass (6 Android adapter, 10 presenter, 13 v2 recording/UI, 5 provider).
 Both module debug lint XML reports contain zero fatal/error/warning issues. Repo/branding/provenance checks
 pass (451 Kotlin files and 451 provenance rows); no changed Kotlin line exceeds 120 characters.
+Resumed-worker confirmation on the unchanged Kotlin source: app/core-llm `ktlintCheck`, `detekt`,
+`testDebugUnitTest` and `lintDebug`, with `--max-workers=2 --console=plain
+-Pkotlin.compiler.execution.strategy=in-process`, exited 0: `BUILD SUCCESSFUL in 28m 3s`
+(370 actionable tasks: 42 executed, 328 up-to-date). Unit tests were up-to-date from the passing frozen-source run.
 CI remains the full merge gate; no APK install or real audio upload was performed.
 
 Phone checklist (owner must record build commit and actual outcome):

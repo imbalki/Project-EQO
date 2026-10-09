@@ -14,6 +14,7 @@ Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every me
   final saved Gradle run reports BUILD SUCCESSFUL in 9m 48s. XML reports: 486 tests, zero failures/errors,
   one existing core-llm skip; all 34 voice/provider tests pass. Both debug lint reports have zero issues.
   Repo/branding/provenance checks pass (451 Kotlin files, 451 rows); changed Kotlin lines are <=120 chars.
+  Resumed-worker confirmation of both modules' static checks, tests and debug lint exited 0 in 28m 3s.
   CI is still the full gate. Design: `docs/adr/0011-voice-input-engines.md`.
 - NOT TESTED ON PHONE: long English/Hindi pauses, installed language packs, AudioRecord, provider audio models,
   permission dialogs, airplane mode, 60-second cap and cancellation. See the phone checklist in the test log.
