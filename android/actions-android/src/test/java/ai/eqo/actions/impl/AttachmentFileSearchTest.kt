@@ -29,28 +29,54 @@ class AttachmentFileSearchTest {
     @Before fun setup() {
         root = Files.createTempDirectory("eqo-find-attachments").toFile().canonicalFile
         staging = File(root, "staged").apply { mkdirs() }
-        layout = SharedStorageLayout(root, stagingAreas = listOf(staging))
+        layout =
+            SharedStorageLayout(
+                root,
+                stagingAreas = listOf(staging),
+                aliases =
+                    SharedFolderAliases.load(
+                        androidx.test.core.app.ApplicationProvider
+                            .getApplicationContext(),
+                    ),
+            )
     }
 
     @After fun cleanup() {
         root.deleteRecursively()
     }
 
-    private fun file(name: String, day: String = "2026-10-07"): File =
+    private fun file(
+        name: String,
+        day: String = "2026-10-07",
+    ): File =
         File(root, name).apply {
             parentFile?.mkdirs()
             writeText("synthetic")
-            setLastModified(LocalDate.parse(day).atStartOfDay(zone).toInstant().toEpochMilli())
+            setLastModified(
+                LocalDate
+                    .parse(day)
+                    .atStartOfDay(zone)
+                    .toInstant()
+                    .toEpochMilli(),
+            )
         }
 
     private fun search(raw: String): List<File> =
-        (AttachmentFileSearch(layout, { true }, zone).search(AttachmentSearch.parse(raw)) as FileSearchResult.Matches).files
+        (AttachmentFileSearch(layout, { true }, zone).search(AttachmentSearch.parse(raw))
+            as FileSearchResult.Matches).files
 
     private fun share(selection: AttachmentSelection? = null): AttachmentShare =
-        AttachmentShare(layout, object : LastScreenshotStore {
-            override fun get(): File? = null
-            override fun record(file: File) = Unit
-        }, ShareStaging(staging), { true }, selection) { Uri.parse("content://synthetic/${it.name}") }
+        AttachmentShare(
+            layout,
+            object : LastScreenshotStore {
+                override fun get(): File? = null
+
+                override fun record(file: File) = Unit
+            },
+            ShareStaging(staging),
+            { true },
+            selection,
+        ) { Uri.parse("content://synthetic/${it.name}") }
 
     @Test fun allWordsTypeAndFolderMustMatchAndNewestComesFirst() {
         file("Download/EBAY-BILL-old.PDF", "2026-10-01")
@@ -58,8 +84,10 @@ class AttachmentFileSearchTest {
         file("Download/ebay-other.pdf")
         file("Download/ebay-bill.png")
         file("Documents/ebay-bill.pdf")
-        assertEquals(listOf("bill-ebay-new.pdf", "EBAY-BILL-old.PDF"),
-            search("find:ebay bill,type=pdf,folder=Download").map { it.name })
+        assertEquals(
+            listOf("bill-ebay-new.pdf", "EBAY-BILL-old.PDF"),
+            search("find:ebay bill,type=pdf,folder=Download").map { it.name },
+        )
     }
 
     @Test fun dateUsesLocalDayAndInclusiveRange() {
@@ -67,8 +95,10 @@ class AttachmentFileSearchTest {
         file("Download/end.pdf")
         file("Download/after.pdf", "2026-10-08")
         assertEquals(listOf("end.pdf"), search("find:type=pdf,date=2026-10-07").map { it.name })
-        assertEquals(listOf("end.pdf", "start.pdf"),
-            search("find:type=pdf,date=2026-10-01..2026-10-07").map { it.name })
+        assertEquals(
+            listOf("end.pdf", "start.pdf"),
+            search("find:type=pdf,date=2026-10-01..2026-10-07").map { it.name },
+        )
     }
 
     @Test fun screenshotMatchesBothGalleryFoldersAndNotOrdinaryPhotos() {
@@ -101,23 +131,34 @@ class AttachmentFileSearchTest {
         assertEquals(listOf(safe), search("find:bill"))
         assertTrue(runCatching { layout.file("Download/bill-link.pdf") }.exceptionOrNull() is SecurityException)
         assertTrue(runCatching { layout.folder("Download/linked") }.exceptionOrNull() is SecurityException)
-        assertTrue(AttachmentFileSearch(layout, { true }).search(
-            AttachmentSearch.parse("find:bill,folder=Android/data/other.app")) is FileSearchResult.Refused)
+        assertTrue(
+            AttachmentFileSearch(layout, { true }).search(
+                AttachmentSearch.parse("find:bill,folder=Android/data/other.app"),
+            ) is FileSearchResult.Refused,
+        )
     }
 
     @Test fun permissionAndTimeCapsFailClosed() {
         file("Download/a.pdf")
-        assertTrue(AttachmentFileSearch(layout, { false }).search(AttachmentSearch.parse("find:a"))
-            is FileSearchResult.Refused)
+        assertTrue(
+            AttachmentFileSearch(layout, { false }).search(AttachmentSearch.parse("find:a"))
+                is FileSearchResult.Refused,
+        )
         var nanos = 0L
-        val bounded = AttachmentFileSearch(layout, { true }, zone) { nanos += 3_000_000_000; nanos }
+        val bounded =
+            AttachmentFileSearch(layout, { true }, zone) {
+                nanos += 3_000_000_000
+                nanos
+            }
         assertTrue(bounded.search(AttachmentSearch.parse("find:a")) is FileSearchResult.Refused)
     }
 
     @Test fun resultCapNeverTurnsPartialSearchIntoAUniqueMatch() {
         repeat(201) { file("Download/bill-$it.pdf") }
-        assertTrue(AttachmentFileSearch(layout, { true }).search(AttachmentSearch.parse("find:bill"))
-            is FileSearchResult.Refused)
+        assertTrue(
+            AttachmentFileSearch(layout, { true }).search(AttachmentSearch.parse("find:bill"))
+                is FileSearchResult.Refused,
+        )
     }
 
     @Test fun oneZeroAndAmbiguousMatchesHaveDistinctOutcomes() {
@@ -136,10 +177,15 @@ class AttachmentFileSearchTest {
         var index: Int? = 1
         var confirm = true
         var beforeConfirm: () -> Unit = {}
-        override suspend fun choose(search: String, files: List<AttachmentChoice>): Int? {
+
+        override suspend fun choose(
+            search: String,
+            files: List<AttachmentChoice>,
+        ): Int? {
             offered = files
             return index
         }
+
         override suspend fun showResolved(files: List<AttachmentChoice>): Boolean {
             shown = files
             beforeConfirm()
@@ -147,45 +193,49 @@ class AttachmentFileSearchTest {
         }
     }
 
-    @Test fun humanPicksFromEightAndExactNameIsShownBeforeStaging() = runBlocking {
-        repeat(10) { file("Download/bill-$it.pdf") }
-        val ui = FakeSelection()
-        ui.beforeConfirm = { assertTrue(staging.listFiles().orEmpty().isEmpty()) }
-        val result = share(ui).prepareOnIo("find:bill") as PreparedShare.Ready
-        assertEquals(8, ui.offered.size)
-        assertEquals("bill-1.pdf", ui.shown.single().name)
-        assertEquals(ui.shown.single().name, result.files.single().displayName)
-        assertTrue(ui.offered.all { it.bytes > 0 && it.modifiedMillis > 0 })
-    }
-
-    @Test fun uniqueResultStillDisclosedAndMissingUiRefusesToSend() = runBlocking {
-        file("Download/bill.pdf")
-        val ui = FakeSelection()
-        assertTrue(share(ui).prepareOnIo("find:bill") is PreparedShare.Ready)
-        assertTrue(ui.offered.isEmpty())
-        assertEquals("bill.pdf", ui.shown.single().name)
-        assertTrue(share().prepareOnIo("find:bill") is PreparedShare.Refused)
-    }
-
-    @Test fun cancelInvalidChoiceAndConfirmationDenialStageNothing() = runBlocking {
-        file("Download/bill.pdf")
-        file("Download/bill-2.pdf")
-        val ui = FakeSelection()
-        for (index in listOf(null, -1, 8)) {
-            ui.index = index
-            assertTrue(share(ui).prepareOnIo("find:bill") is PreparedShare.Refused)
+    @Test fun humanPicksFromEightAndExactNameIsShownBeforeStaging() =
+        runBlocking {
+            repeat(10) { file("Download/bill-$it.pdf") }
+            val ui = FakeSelection()
+            ui.beforeConfirm = { assertTrue(staging.listFiles().orEmpty().isEmpty()) }
+            val result = share(ui).prepareOnIo("find:bill") as PreparedShare.Ready
+            assertEquals(8, ui.offered.size)
+            assertEquals("bill-1.pdf", ui.shown.single().name)
+            assertEquals(ui.shown.single().name, result.files.single().displayName)
+            assertTrue(ui.offered.all { it.bytes > 0 && it.modifiedMillis > 0 })
         }
-        ui.index = 0
-        ui.confirm = false
-        assertTrue(share(ui).prepareOnIo("find:bill") is PreparedShare.Refused)
-        assertFalse(staging.listFiles().orEmpty().isNotEmpty())
-    }
 
-    @Test fun selectedFileIsRecheckedAfterHumanWait() = runBlocking {
-        val selected = file("Download/bill.pdf")
-        val ui = FakeSelection()
-        ui.beforeConfirm = { selected.delete() }
-        assertTrue(share(ui).prepareOnIo("find:bill") is PreparedShare.Refused)
-        assertTrue(staging.listFiles().orEmpty().isEmpty())
-    }
+    @Test fun uniqueResultStillDisclosedAndMissingUiRefusesToSend() =
+        runBlocking {
+            file("Download/bill.pdf")
+            val ui = FakeSelection()
+            assertTrue(share(ui).prepareOnIo("find:bill") is PreparedShare.Ready)
+            assertTrue(ui.offered.isEmpty())
+            assertEquals("bill.pdf", ui.shown.single().name)
+            assertTrue(share().prepareOnIo("find:bill") is PreparedShare.Refused)
+        }
+
+    @Test fun cancelInvalidChoiceAndConfirmationDenialStageNothing() =
+        runBlocking {
+            file("Download/bill.pdf")
+            file("Download/bill-2.pdf")
+            val ui = FakeSelection()
+            for (index in listOf(null, -1, 8)) {
+                ui.index = index
+                assertTrue(share(ui).prepareOnIo("find:bill") is PreparedShare.Refused)
+            }
+            ui.index = 0
+            ui.confirm = false
+            assertTrue(share(ui).prepareOnIo("find:bill") is PreparedShare.Refused)
+            assertFalse(staging.listFiles().orEmpty().isNotEmpty())
+        }
+
+    @Test fun selectedFileIsRecheckedAfterHumanWait() =
+        runBlocking {
+            val selected = file("Download/bill.pdf")
+            val ui = FakeSelection()
+            ui.beforeConfirm = { selected.delete() }
+            assertTrue(share(ui).prepareOnIo("find:bill") is PreparedShare.Refused)
+            assertTrue(staging.listFiles().orEmpty().isEmpty())
+        }
 }

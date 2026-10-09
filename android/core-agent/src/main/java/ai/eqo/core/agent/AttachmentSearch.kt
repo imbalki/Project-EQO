@@ -11,9 +11,23 @@ data class AttachmentSearch(
     val firstDay: LocalDate?,
     val lastDay: LocalDate?,
     val latest: Boolean,
+    val rescan: Boolean = false,
 ) {
     companion object {
-        private val types = setOf("image", "screenshot", "pdf", "doc", "video", "audio")
+        private val types =
+            setOf(
+                "image",
+                "screenshot",
+                "camera",
+                "gallery",
+                "pdf",
+                "doc",
+                "video",
+                "audio",
+                "download",
+                "downloads",
+            )
+        private const val MAX_QUERY = 200
         private val dayPattern = Regex("\\d{4}-\\d{2}-\\d{2}")
 
         fun isSearch(reference: String): Boolean = reference.startsWith("find:", ignoreCase = true)
@@ -22,7 +36,7 @@ data class AttachmentSearch(
         fun parse(reference: String): AttachmentSearch {
             require(isSearch(reference)) { "attachment search must start with find:" }
             val body = reference.substringAfter(':').trim()
-            require(body.isNotEmpty() && body.length <= 200) { "attachment search must be short and non-empty" }
+            require(body.isNotEmpty() && body.length <= MAX_QUERY) { "attachment search must be short and non-empty" }
             require(!body.contains("://") && body.none { it.isISOControl() }) { "invalid attachment search" }
             val filters = linkedMapOf<String, String>()
             val words = mutableListOf<String>()
@@ -38,7 +52,9 @@ data class AttachmentSearch(
                     '=' in token -> {
                         val key = token.substringBefore('=').trim().lowercase()
                         val value = token.substringAfter('=').trim()
-                        require(key in setOf("name", "type", "folder", "date")) { "unknown attachment search filter" }
+                        require(key in setOf("name", "type", "folder", "date", "rescan")) {
+                            "unknown attachment search filter"
+                        }
                         require(value.isNotEmpty() && filters.put(key, value) == null) { "empty or duplicate filter" }
                     }
                     else -> words += token.split(Regex("\\s+"))
@@ -52,14 +68,18 @@ data class AttachmentSearch(
             require(folder == null || folder.split('/', '\\').none { it == ".." }) { "unsafe search folder" }
             val dates = filters["date"]?.split("..")
             require(dates == null || dates.size in 1..2) { "invalid attachment date range" }
-            val parsed = dates?.map {
-                require(dayPattern.matches(it)) { "attachment date must be YYYY-MM-DD" }
-                LocalDate.parse(it)
-            }
+            val parsed =
+                dates?.map {
+                    require(dayPattern.matches(it)) { "attachment date must be YYYY-MM-DD" }
+                    LocalDate.parse(it)
+                }
             val first = parsed?.first()
             val last = parsed?.last()
             require(first == null || !first.isAfter(last)) { "attachment date range is reversed" }
-            return AttachmentSearch(words, type, folder, first, last, latest)
+            require(filters["rescan"] == null || filters["rescan"] in setOf("true", "false")) {
+                "invalid rescan filter"
+            }
+            return AttachmentSearch(words, type, folder, first, last, latest, filters["rescan"] == "true")
         }
     }
 }

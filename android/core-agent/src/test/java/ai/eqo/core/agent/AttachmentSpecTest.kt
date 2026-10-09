@@ -113,9 +113,13 @@ class AttachmentSpecTest {
     }
 
     @Test fun searchFormsParseAndValidate() {
-        listOf("find:ebay bill", "find:type=screenshot,date=2026-10-07",
-            "find:type=pdf,name=invoice,folder=Download", "find:latest,type=image",
-            "find:name=Invoice,date=2026-10-01..2026-10-07").forEach {
+        listOf(
+            "find:ebay bill",
+            "find:type=screenshot,date=2026-10-07",
+            "find:type=pdf,name=invoice,folder=Download",
+            "find:latest,type=image",
+            "find:name=Invoice,date=2026-10-01..2026-10-07",
+        ).forEach {
             assertTrue(it, AttachmentSpec.errors(it).isEmpty())
         }
         val search = AttachmentSearch.parse("find:ebay bill,type=PDF,date=2026-10-01..2026-10-07")
@@ -127,19 +131,32 @@ class AttachmentSpecTest {
     }
 
     @Test fun invalidSearchFiltersAreRejected() {
-        listOf("find:", "find:type=exe", "find:date=today", "find:date=2026-02-30",
-            "find:date=2026-10-07..2026-10-01", "find:folder=../data", "find:name=../private",
-            "find:url=content://x", "find:name=a,name=b", "find:latest,latest", "find:a,",
-            "find:name=x\u0007", "find:date=2026-1-1", "find:unknown=x").forEach {
+        listOf(
+            "find:",
+            "find:type=exe",
+            "find:date=today",
+            "find:date=2026-02-30",
+            "find:date=2026-10-07..2026-10-01",
+            "find:folder=../data",
+            "find:name=../private",
+            "find:url=content://x",
+            "find:name=a,name=b",
+            "find:latest,latest",
+            "find:a,",
+            "find:name=x\u0007",
+            "find:date=2026-1-1",
+            "find:unknown=x",
+        ).forEach {
             assertTrue(it, AttachmentSpec.errors(it).isNotEmpty())
         }
     }
 
     @Test fun searchPreviewNamesTheApprovedQuery() {
-        val steps = RegistryPlanVocabulary.parse(
-            plan("SEND_WHATSAPP", "contact" to phone, "message" to "hi", "attachment" to "find:ebay bill"),
-            enabled,
-        )
+        val steps =
+            RegistryPlanVocabulary.parse(
+                plan("SEND_WHATSAPP", "contact" to phone, "message" to "hi", "attachment" to "find:ebay bill"),
+                enabled,
+            )
         assertTrue(TaskPlanPreview.describe(steps).endsWith("; attach a file matching \"ebay bill\""))
     }
 

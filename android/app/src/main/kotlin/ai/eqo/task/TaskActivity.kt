@@ -210,7 +210,10 @@ class TaskActivity : Activity() {
     }
 
     /** Exclude only the dialog's explicit confirmation buttons, retaining its touch guard. */
-    private fun prepareTaskDialog(dialog: AlertDialog, fileChoices: Boolean = false) {
+    private fun prepareTaskDialog(
+        dialog: AlertDialog,
+        fileChoices: Boolean = false,
+    ) {
         protectConfirmationDialog(dialog)
         val window = dialog.window ?: return
         val callback = window.callback
@@ -221,7 +224,8 @@ class TaskActivity : Activity() {
         ): Boolean =
             listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE).any {
                 containsTouch(dialog.getButton(it), x, y)
-            } || (fileChoices && dialog.listView?.let { containsTouch(it, x, y) } == true)
+            } ||
+                (fileChoices && dialog.listView?.let { containsTouch(it, x, y) } == true)
 
         fun registerControls(focused: Boolean) {
             TakeoverDetector.shared.setControlTouchExclusion(

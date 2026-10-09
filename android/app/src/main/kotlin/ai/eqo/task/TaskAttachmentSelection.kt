@@ -2,7 +2,7 @@
 package ai.eqo.task
 
 import ai.eqo.R
-import ai.eqo.accessibility.TakeoverDetector
+
 import ai.eqo.actions.impl.AttachmentChoice
 import ai.eqo.actions.impl.AttachmentSelection
 import ai.eqo.core.agent.TaskDisplayText
@@ -34,8 +34,10 @@ internal class TaskAttachmentSelection(
         dialog = null
     }
 
-    override suspend fun choose(search: String, files: List<AttachmentChoice>): Int? =
-        ask("Choose the file to attach", files.take(MAX_CHOICES).map(::label), TaskDisplayText.escape(search))
+    override suspend fun choose(
+        search: String,
+        files: List<AttachmentChoice>,
+    ): Int? = ask("Choose the file to attach", files.take(MAX_CHOICES).map(::label), TaskDisplayText.escape(search))
 
     override suspend fun showResolved(files: List<AttachmentChoice>): Boolean {
         val names = files.joinToString(", ") { TaskDisplayText.escape(it.name) }
@@ -48,12 +50,17 @@ internal class TaskAttachmentSelection(
 
     private fun available(): Boolean = foreground && !activity.isFinishing && !activity.isDestroyed
 
-    private suspend fun ask(title: String, items: List<String>?, message: String): Int? =
+    private suspend fun ask(
+        title: String,
+        items: List<String>?,
+        message: String,
+    ): Int? =
         withContext(Dispatchers.Main.immediate) {
             if (!available()) return@withContext null
             withTimeoutOrNull(CHOICE_TIMEOUT_MS) {
                 suspendCancellableCoroutine { continuation ->
                     val builder = AlertDialog.Builder(activity).setTitle(title)
+
                     fun finish(index: Int?) {
                         if (continuation.isActive) continuation.resume(index)
                     }
@@ -62,17 +69,15 @@ internal class TaskAttachmentSelection(
                     } else {
                         builder.setItems(items.toTypedArray()) { _, index -> finish(index) }
                     }
-                    val shown = builder.setNegativeButton(android.R.string.cancel) { _, _ -> finish(null) }
-                        .setOnCancelListener { finish(null) }.create()
+                    val shown =
+                        builder
+                            .setNegativeButton(android.R.string.cancel) { _, _ -> finish(null) }
+                            .setOnCancelListener { finish(null) }
+                            .create()
                     dialog = shown
                     continuation.invokeOnCancellation { activity.runOnUiThread { shown.dismiss() } }
                     shown.show()
                     prepareDialog(shown)
-                    shown.setOnDismissListener {
-                        if (dialog === shown) dialog = null
-                        TakeoverDetector.shared.setControlTouchExclusion(null)
-                        finish(null)
-                    }
                 }
             }
         }

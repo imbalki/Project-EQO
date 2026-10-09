@@ -8,23 +8,42 @@ import java.time.Instant
 import java.time.ZoneId
 
 internal sealed interface FileSearchResult {
-    data class Matches(val files: List<File>) : FileSearchResult
-    data class Refused(val message: String) : FileSearchResult
+    data class Matches(
+        val files: List<File>,
+    ) : FileSearchResult
+
+    data class Refused(
+        val message: String,
+    ) : FileSearchResult
 }
 
 internal class AttachmentFileSearch(
     private val layout: SharedStorageLayout,
     private val accessGranted: () -> Boolean,
     private val zone: ZoneId = ZoneId.systemDefault(),
+    private val catalog: SharedStorageCatalog? = null,
     private val clockNanos: () -> Long = System::nanoTime,
 ) {
-    @Suppress("ReturnCount") // Permission, location and incomplete scans fail closed independently.
     fun search(query: AttachmentSearch): FileSearchResult {
-        val start = try {
-            layout.folder(query.folder)
-        } catch (_: SecurityException) {
-            return FileSearchResult.Refused(SharedFileBrowser.OUTSIDE)
+        if (accessGranted()) catalog?.refresh(query.rescan)
+        val result = scan(query)
+        val empty = (result as? FileSearchResult.Matches)?.files?.isEmpty() == true
+        return if (empty && catalog != null && !query.rescan) {
+            search(query.copy(rescan = true))
+        } else {
+            result
         }
+    }
+
+    @Suppress("ReturnCount", "CyclomaticComplexMethod", "NestedBlockDepth")
+    // Bounded BFS with independent permission, entry, depth, deadline and result-count guards.
+    private fun scan(query: AttachmentSearch): FileSearchResult {
+        val start =
+            try {
+                layout.folder(query.folder)
+            } catch (_: SecurityException) {
+                return FileSearchResult.Refused(SharedFileBrowser.OUTSIDE)
+            }
         if (!accessGranted() && !layout.isOwnArea(start)) {
             return FileSearchResult.Refused(SharedFileBrowser.NEEDS_ACCESS)
         }
@@ -32,7 +51,15 @@ internal class AttachmentFileSearch(
         val deadline = clockNanos() + MAX_NANOS
         val queue = ArrayDeque<Pair<File, Int>>()
         queue.add(start to 0)
-        val found = mutableListOf<File>()
+        // MediaStore is primary for MIME, bucket and time metadata. The filesystem fallback also
+        // checks uniqueness: an incomplete/stale media index must never make multiple files look like one.
+        val found = linkedSetOf<File>()
+        catalog
+            ?.indexedFiles()
+            ?.filter { it.isFile && layout.isAllowed(it) && !layout.hasLinkedAncestor(it) }
+            ?.filter { it.toPath().startsWith(start.toPath()) && matches(it, query) }
+            ?.forEach { found += it }
+        if (found.size > MAX_MATCHES) return FileSearchResult.Refused(TOO_MANY)
         var visited = 0
         while (queue.isNotEmpty()) {
             val (dir, depth) = queue.removeFirst()
@@ -41,7 +68,7 @@ internal class AttachmentFileSearch(
                 if (++visited > MAX_VISITED || clockNanos() >= deadline) {
                     return FileSearchResult.Refused(INCOMPLETE)
                 }
-                if (file.name.startsWith('.') || Files.isSymbolicLink(file.toPath()) || !layout.isAllowed(file)) continue
+                if (!searchable(file)) continue
                 if (file.isDirectory) {
                     if (depth >= MAX_DEPTH) return FileSearchResult.Refused(INCOMPLETE)
                     queue.add(file to depth + 1)
@@ -51,36 +78,51 @@ internal class AttachmentFileSearch(
                 }
             }
         }
-        return FileSearchResult.Matches(found.sortedWith(compareByDescending<File> { it.lastModified() }.thenBy { it.name }))
+        return FileSearchResult.Matches(found.sortedWith(compareByDescending<File> { modified(it) }.thenBy { it.name }))
     }
 
-    private fun matches(file: File, query: AttachmentSearch): Boolean {
+    private fun searchable(file: File): Boolean =
+        !file.name.startsWith('.') && !Files.isSymbolicLink(file.toPath()) && layout.isAllowed(file)
+
+    private fun matches(
+        file: File,
+        query: AttachmentSearch,
+    ): Boolean {
         val name = file.name.lowercase()
-        if (query.words.any { !name.contains(it.lowercase()) }) return false
-        if (!matchesType(file, query.type)) return false
-        val day = Instant.ofEpochMilli(file.lastModified()).atZone(zone).toLocalDate()
+        if (query.words.any { !name.contains(it.lowercase()) } || !matchesType(file, query.type)) return false
+        val day = Instant.ofEpochMilli(modified(file)).atZone(zone).toLocalDate()
         return query.firstDay == null || (!day.isBefore(query.firstDay) && !day.isAfter(query.lastDay))
     }
 
-    private fun matchesType(file: File, type: String?): Boolean {
-        val extension = file.extension.lowercase()
+    private fun matchesType(
+        file: File,
+        type: String?,
+    ): Boolean {
+        val mime = catalog?.metadata(file)?.mime
         return when (type) {
             null -> true
-            "screenshot" -> extension in IMAGES && file.parentFile?.let {
-                it == File(layout.root, "Pictures/Screenshots") || it == File(layout.root, "DCIM/Screenshots") ||
-                    it == File(layout.root, SharedStorageLayout.SCREENSHOT_FOLDER)
-            } == true
-            "image" -> extension in IMAGES
-            "pdf" -> extension == "pdf"
-            "doc" -> extension in setOf("doc", "docx", "odt", "rtf", "txt", "xls", "xlsx", "ppt", "pptx")
-            "video" -> extension in setOf("mp4", "mkv", "webm", "mov", "avi", "3gp", "m4v")
-            "audio" -> extension in setOf("mp3", "m4a", "aac", "wav", "ogg", "opus", "flac", "amr")
-            else -> false
+            "screenshot", "camera" -> layout.aliases.matchesType("image", file, mime) && belongs(file, type)
+            "gallery" -> layout.aliases.matchesType("image", file, mime)
+            "download", "downloads" -> belongs(file, "downloads")
+            else -> layout.aliases.matchesType(type, file, mime)
         }
     }
 
+    private fun modified(file: File): Long {
+        val metadata = catalog?.metadata(file)
+        return metadata?.modifiedMillis?.takeIf { it > 0 }
+            ?: metadata?.addedMillis?.takeIf { it > 0 } ?: file.lastModified()
+    }
+
+    private fun belongs(
+        file: File,
+        group: String,
+    ): Boolean =
+        catalog?.belongs(file, group) ?: layout.aliases.folders[group].orEmpty().any {
+            file.relativeTo(layout.root).invariantSeparatorsPath.startsWith(it.trimEnd('/') + "/", ignoreCase = true)
+        }
+
     companion object {
-        private val IMAGES = setOf("png", "jpg", "jpeg", "webp", "heic", "heif", "gif", "bmp")
         private const val MAX_VISITED = 50_000
         private const val MAX_DEPTH = 8
         private const val MAX_MATCHES = 200

@@ -33,7 +33,16 @@ class SharedStorageTest {
         root = File(base, "storage").apply { mkdirs() }
         ownFiles = File(root, "Android/data/ai.eqo.app/files").apply { mkdirs() }
         stagingRoot = File(root, "Android/data/ai.eqo.app/cache/shares").apply { mkdirs() }
-        layout = SharedStorageLayout(root, listOf(ownFiles), listOf(stagingRoot))
+        layout =
+            SharedStorageLayout(
+                root,
+                listOf(ownFiles),
+                listOf(stagingRoot),
+                SharedFolderAliases.load(
+                    androidx.test.core.app.ApplicationProvider
+                        .getApplicationContext(),
+                ),
+            )
         access = true
         now = 1_000_000L
     }
@@ -161,6 +170,14 @@ class SharedStorageTest {
         assertEquals("pdf-bytes", staged.readText())
         assertEquals(stagingRoot.path, staged.parentFile!!.parentFile!!.path)
         assertTrue(source.exists())
+    }
+
+    @Test fun `staging refuses a linked source and removes failed partial shares`() {
+        val safe = file("Download/source.pdf")
+        val linked = File(root, "Download/linked.pdf")
+        Files.createSymbolicLink(linked.toPath(), safe.toPath())
+        assertTrue(runCatching { ShareStaging(stagingRoot).stage(linked) }.isFailure)
+        assertTrue(stagingRoot.listFiles().orEmpty().isEmpty())
     }
 
     @Test fun `safe names cannot escape or hide`() {

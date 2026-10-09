@@ -1,5 +1,19 @@
 # Phase One phone test log
 
+## Files v2 — t_ecfe91de — NOT TESTED ON PHONE
+
+- Local branch `feat/files-v2`; no push/PR or phone contact. Synthetic files and fake selection callbacks only. Host verification pending while other worktrees run Gradle; checkpoint `dee2dd7` is not a passing gate.
+- Phone round-1 failure motivating this card (task-supplied evidence): All files access ON, FIND_FILES succeeded, then SEND_WHATSAPP/SEND_EMAIL with an attachment failed in the 12:28–12:31 test window. The pre-run planner could not know a file path; use `find:` directly on the send action rather than a made-up FIND_FILES output path.
+- [ ] "send my eBay bill to <test contact> on WhatsApp": approved search in preview, exact chosen name in run status before Continue, correct attachment/chat, Send pressed only after disclosure.
+- [ ] "email the screenshot from 7 October to me": planner emits `find:type=screenshot,date=YYYY-10-07` using the intended year; gallery screenshot from Pictures/Screenshots or DCIM/Screenshots, correct attachment, disclosure before Send.
+- [ ] Several matches -> chooser: at most eight names with date/size, newest first; tapping a non-first match attaches only that file. `latest` still requires choice.
+- [ ] Zero matches: plain searched-query message, no compose/send. No foreground UI: multiple-match name list and refusal.
+- [ ] Cancel, background, rotation, timeout, Stop/takeover: no unintended attachment or send; ordinary task controls/takeover still work.
+- [ ] Exact date/local midnight and inclusive range; words in different order/case; folder/type restrictions; All files access denied; hidden/other-app/staging/private/link paths excluded.
+- [ ] TAKE_SCREENSHOT + last_screenshot remains working; staged copies swept on age/failure; logs contain only counts/kinds/codes, not names/paths/searches.
+- [ ] Realme/Samsung/Xiaomi (where available): MediaStore screenshot/camera/gallery buckets, vendor-specific directories and Download/Downloads synonyms; modern and legacy WhatsApp/Business, Telegram, Instagram, Bluetooth and Documents.
+- [ ] Discovery is reused across runs/restart; `rescan=true` refreshes on demand, zero matches refresh automatically; no filename or search saved in the folder-map preferences. MediaStore denied/incompatible/stale -> safe filesystem fallback, without guessing among matches or visiting Android/data/obb.
+
 ## Voice input — 2026-10-08 — NOT TESTED ON PHONE
 
 - Branch `feat/voice-input`, card t_e9ef0f95. Mic fills the editable request only; the user must still tap the normal task button. Permission is requested on Mic, not startup. No EQO audio storage or transcript logging.

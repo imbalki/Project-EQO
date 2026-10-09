@@ -4,7 +4,10 @@ package ai.eqo.task
 import ai.eqo.R
 import ai.eqo.accessibility.EQOAccessibilityService
 import ai.eqo.actions.impl.AndroidActionRegistry
+import ai.eqo.actions.impl.AttachmentChoice
+import ai.eqo.actions.impl.AttachmentSelection
 import ai.eqo.actions.impl.PermissionRequester
+import ai.eqo.actions.impl.RegistryOptions
 import ai.eqo.core.agent.ActionLoop
 import ai.eqo.core.agent.ApprovedTaskPlan
 import ai.eqo.data.models.PlanStatus
@@ -33,7 +36,7 @@ internal object TaskRunSession {
     val progress = linkedMapOf<String, StepProgress>()
     var observer: (() -> Unit)? = null
     var permissionRequester: PermissionRequester? = null
-    var attachmentSelection: ai.eqo.actions.impl.AttachmentSelection? = null
+    var attachmentSelection: AttachmentSelection? = null
 
     fun changed() {
         observer?.invoke()
@@ -118,17 +121,19 @@ class TaskRunService : Service() {
                         }
                     granted || (TaskRunSession.permissionRequester?.request(permission) ?: false)
                 },
-                options = ai.eqo.actions.impl.RegistryOptions().also {
-                    it.attachmentSelection = object : ai.eqo.actions.impl.AttachmentSelection {
-                        override suspend fun choose(
-                            search: String,
-                            files: List<ai.eqo.actions.impl.AttachmentChoice>,
-                        ): Int? = TaskRunSession.attachmentSelection?.choose(search, files)
+                options =
+                    RegistryOptions().also {
+                        it.attachmentSelection =
+                            object : AttachmentSelection {
+                                override suspend fun choose(
+                                    search: String,
+                                    files: List<AttachmentChoice>,
+                                ): Int? = TaskRunSession.attachmentSelection?.choose(search, files)
 
-                        override suspend fun showResolved(files: List<ai.eqo.actions.impl.AttachmentChoice>): Boolean =
-                            TaskRunSession.attachmentSelection?.showResolved(files) ?: false
-                    }
-                },
+                                override suspend fun showResolved(files: List<AttachmentChoice>): Boolean =
+                                    TaskRunSession.attachmentSelection?.showResolved(files) ?: false
+                            }
+                    },
             )
         val executor =
             StudyActionExecutor(
