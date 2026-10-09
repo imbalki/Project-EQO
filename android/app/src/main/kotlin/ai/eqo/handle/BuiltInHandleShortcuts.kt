@@ -6,6 +6,7 @@ import ai.eqo.R
 import ai.eqo.accessibility.handle.HandlePreferences
 import ai.eqo.accessibility.handle.HandleShortcut
 import ai.eqo.accessibility.handle.HandleShortcutRegistry
+import ai.eqo.core.agent.LoopState
 import ai.eqo.task.TaskActivity
 import ai.eqo.task.TaskRunSession
 import android.content.Context
@@ -29,6 +30,14 @@ internal object LiveHandleRunControls : HandleRunControls {
     override fun stop() {
         TaskRunSession.controller?.stop()
     }
+}
+
+/** A real user panel-open gesture requests Pause; closing the panel never resumes work. */
+internal fun prepareHandlePanel(requestPause: Boolean): Boolean {
+    val controller = TaskRunSession.controller ?: return true
+    val state = controller.currentState()
+    if (requestPause && state == LoopState.RUNNING) controller.pause()
+    return state != LoopState.RUNNING && !controller.isActionInFlight()
 }
 
 internal class BuiltInHandleShortcut(

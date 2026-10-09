@@ -242,7 +242,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="run_failed_unknown">This step could not finish. EQO did not receive a specific reason. Check the current screen before trying again.</string>
     <string name="run_model_slow">The model took too long to answer. Try Plan again. Nothing ran.</string>
     <string name="handle_settings_title">Edge handle shortcuts</string>
-    <string name="handle_settings_explanation">Optional EQO shortcuts on other screens; requires EQO Accessibility. Tap or swipe inward to open. Drag vertically to move, or across the screen to switch edge. Long press for Hide for this app. The keyboard or full-screen videos and games may hide the handle. It never reads or sends the screen. Unavailable shortcuts are omitted from the panel; your choices are kept.</string>
+    <string name="handle_settings_explanation">Optional EQO shortcuts on other screens; requires EQO Accessibility. Tap or swipe inward to open. Opening the panel pauses an active run after its current action finishes. Closing it does not resume: use the task screen to confirm Resume. Drag vertically to move, or across the screen to switch edge. Long press for Hide for this app. The keyboard or full-screen videos and games may hide the handle. It never reads or sends the screen. Unavailable shortcuts are omitted from the panel; your choices are kept.</string>
     <string name="handle_enable">Enable edge handle</string>
     <string name="handle_ask">Ask EQO</string>
     <string name="handle_open">Open EQO</string>

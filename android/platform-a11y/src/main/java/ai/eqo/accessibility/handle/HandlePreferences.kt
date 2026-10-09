@@ -63,7 +63,15 @@ object EdgeHandleFeatures {
     var registry: HandleShortcutRegistry<Context>? = null
         private set
 
-    fun install(registry: HandleShortcutRegistry<Context>) {
+    /** First call requests user Pause; later calls only check whether the run has settled. */
+    var preparePanel: (requestPause: Boolean) -> Boolean = { true }
+        private set
+
+    fun install(
+        registry: HandleShortcutRegistry<Context>,
+        preparePanel: (Boolean) -> Boolean = { true },
+    ) {
         this.registry = registry
+        this.preparePanel = preparePanel
     }
 }

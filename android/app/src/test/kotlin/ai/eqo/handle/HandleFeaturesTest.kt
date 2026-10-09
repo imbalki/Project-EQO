@@ -116,6 +116,158 @@ class HandleFeaturesTest {
         }
 
     @Test
+    @Suppress("LongMethod") // One integrated real-panel/due-step/Pause/Stop scheduling regression.
+    fun `opening real panel during pacing preserves controls past due step without automation`() =
+        runTest {
+            val detector = TakeoverDetector()
+            var rootReads = 0
+            val automation =
+                ai.eqo.accessibility.EqoAutomation(
+                    {
+                        rootReads++
+                        null
+                    },
+                    { ai.eqo.accessibility.EqoAutomation.ServiceState.AVAILABLE },
+                    detector,
+                    ownPackage = context.packageName,
+                )
+            val port = EqoAutomationPort({ automation }, { _, _ -> false }, { true })
+            val controller =
+                StudyTaskController(
+                    steps =
+                        listOf(
+                            LoopStep("open", ExecutedAction("open_app", mapOf("app" to "test"))),
+                            LoopStep("click", ExecutedAction("click_text", mapOf("text" to "Send"))),
+                        ),
+                    permissionCheck = StudyPermissionCheck({ true }, { true }, { true }),
+                    approvalGate = StudyApprovalGate(StudyApprovalSurface { ApprovalOutcome.Approved }, { 0L }),
+                    executor = StudyActionExecutor(port),
+                    observe = { "" },
+                    config = ActionLoop.Config(interStepDelayMs = 8000),
+                    takeoverDetector = detector,
+                )
+            TaskRunSession.controller = controller
+            EdgeHandleFeatures.install(createHandleRegistry(context), ::prepareHandlePanel)
+            HandlePreferences(context).enabled = true
+            val overlay =
+                ai.eqo.accessibility.handle.EdgeHandleOverlay(
+                    context,
+                    context.getSystemService(android.view.WindowManager::class.java),
+                )
+            try {
+                overlay.setProbeAvailable(true)
+                shadowOf(android.os.Looper.getMainLooper()).idle()
+                val run = async { controller.run() }
+                runCurrent()
+                overlayView(overlay)!!.performClick()
+                assertFalse(HandleWindowGuard.shared.panelOpen)
+                advanceTimeBy(100)
+                runCurrent()
+                shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(100))
+                assertTrue(HandleWindowGuard.shared.panelOpen)
+                advanceTimeBy(9000)
+                runCurrent()
+                assertFalse(run.isCompleted)
+                assertEquals(LoopState.PAUSED, controller.currentState())
+                assertFalse(detector.isPaused)
+                assertEquals(0, rootReads)
+                assertEquals(null, port.lastFailure)
+                assertFalse(automation.tap("Pause").isSuccess)
+                assertFalse(automation.tap("Send").isSuccess)
+                assertEquals(0, rootReads)
+                panelButton(overlay, R.string.task_pause).performClick()
+                assertFalse(HandleWindowGuard.shared.panelOpen)
+                advanceTimeBy(9000)
+                runCurrent()
+                assertEquals(LoopState.PAUSED, controller.currentState())
+                assertEquals(0, rootReads)
+                overlayView(overlay)!!.performClick()
+                panelButton(overlay, R.string.task_stop).performClick()
+                advanceUntilIdle()
+                assertEquals("STOPPED", run.await().terminal)
+                assertEquals(0, rootReads)
+                assertFalse(detector.isPaused)
+            } finally {
+                overlay.destroy()
+            }
+        }
+
+    @Test
+    fun `panel waits for in flight action to settle and dismissal never resumes`() =
+        runTest {
+            val detector = TakeoverDetector()
+            val feedback = mutableListOf<ai.eqo.task.TaskControlFeedback>()
+            var applied = false
+            val executor =
+                StudyActionExecutor(
+                    EqoAutomationPort({ null }, { _, _ -> false }),
+                    registryExecute = { _, _ ->
+                        kotlinx.coroutines.delay(500)
+                        assertFalse(HandleWindowGuard.shared.panelOpen)
+                        applied = true
+                        ai.eqo.actions.base.ActionResult
+                            .Success()
+                    },
+                )
+            val controller =
+                StudyTaskController(
+                    steps = listOf(LoopStep("work", ExecutedAction("WAIT"))),
+                    permissionCheck = StudyPermissionCheck({ true }, { true }, { true }),
+                    approvalGate = StudyApprovalGate(StudyApprovalSurface { ApprovalOutcome.Approved }, { 0L }),
+                    executor = executor,
+                    observe = { "" },
+                    onControlFeedback = feedback::add,
+                    takeoverDetector = detector,
+                )
+            TaskRunSession.controller = controller
+            EdgeHandleFeatures.install(createHandleRegistry(context), ::prepareHandlePanel)
+            HandlePreferences(context).enabled = true
+            val overlay = createOverlay()
+            try {
+                overlay.setProbeAvailable(true)
+                shadowOf(android.os.Looper.getMainLooper()).idle()
+                val run = async { controller.run() }
+                runCurrent()
+                assertTrue(controller.isActionInFlight())
+                overlayView(overlay)!!.performClick()
+                shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(100))
+                assertFalse(HandleWindowGuard.shared.panelOpen)
+                assertEquals(1, feedback.count { it == ai.eqo.task.TaskControlFeedback.PAUSE_REQUESTED })
+                advanceTimeBy(600)
+                runCurrent()
+                assertTrue(applied)
+                assertFalse(controller.isActionInFlight())
+                shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(100))
+                assertTrue(HandleWindowGuard.shared.panelOpen)
+                overlayView(overlay)!!.performClick()
+                advanceTimeBy(9000)
+                runCurrent()
+                assertEquals(LoopState.PAUSED, controller.currentState())
+                assertFalse(run.isCompleted)
+                assertFalse(detector.isPaused)
+                assertTrue(controller.stop())
+                advanceUntilIdle()
+                assertEquals("STOPPED", run.await().terminal)
+            } finally {
+                overlay.destroy()
+            }
+        }
+
+    private fun createOverlay(): ai.eqo.accessibility.handle.EdgeHandleOverlay =
+        ai.eqo.accessibility.handle.EdgeHandleOverlay(
+            context,
+            context.getSystemService(android.view.WindowManager::class.java),
+        )
+
+    private fun panelButton(
+        overlay: ai.eqo.accessibility.handle.EdgeHandleOverlay,
+        label: Int,
+    ): android.widget.Button =
+        descendants(overlayView(overlay)!!).filterIsInstance<android.widget.Button>().first {
+            it.text == context.getString(label)
+        }
+
+    @Test
     fun `Ask opens the request screen with focus and never plans or runs a request`() {
         val registry = createHandleRegistry(context)
         registry.ordered().first { it.id == "ask_eqo" }.run(context)
@@ -195,6 +347,39 @@ class HandleFeaturesTest {
             shadowOf(android.os.Looper.getMainLooper()).idle()
             assertEquals(null, overlayView(overlay))
             assertEquals(null, HandleWindowGuard.shared.bounds)
+        } finally {
+            overlay.destroy()
+        }
+    }
+
+    @Test
+    fun `pending panel opening is cancelled on foreground change and disable`() {
+        var ready = false
+        EdgeHandleFeatures.install(createHandleRegistry(context)) { ready }
+        HandlePreferences(context).enabled = true
+        val overlay =
+            ai.eqo.accessibility.handle.EdgeHandleOverlay(
+                context,
+                context.getSystemService(android.view.WindowManager::class.java),
+            )
+        try {
+            overlay.setProbeAvailable(true)
+            val main = shadowOf(android.os.Looper.getMainLooper())
+            main.idle()
+            overlayView(overlay)!!.performClick()
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+            overlay.updateForeground("other.app")
+            ready = true
+            main.idleFor(java.time.Duration.ofMillis(100))
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+            ready = false
+            overlayView(overlay)!!.performClick()
+            HandlePreferences(context).enabled = false
+            main.idle()
+            ready = true
+            main.idleFor(java.time.Duration.ofMillis(100))
+            assertEquals(null, overlayView(overlay))
+            assertFalse(HandleWindowGuard.shared.panelOpen)
         } finally {
             overlay.destroy()
         }

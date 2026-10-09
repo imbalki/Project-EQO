@@ -11,6 +11,18 @@ edge-handle tests use fake registry storage/nodes/operations to check defaults/u
 own-overlay refusal and takeover exclusion. Exact commands and checks not run are in CURRENT-HANDOFF.md.
 This feature has not been installed or exercised on a phone by this worker. Full CI remains the gate.
 
+Round-1 review correction (local-only): panel opening now requests the existing user Pause once and
+waits for no in-flight action before showing the guarded window. Closing never resumes or clears
+takeover. Final sequential scoped commands in CURRENT-HANDOFF.md both exit 0: platform 2m 19s,
+app 5m 34s. JUnit XML totals: platform 111, app 189; 300 tests, zero failures/errors/skips, including
+19 edge-handle tests. Added real-overlay/controller regressions cover a due step during paced work
+followed by panel Pause/Stop, in-flight settle with one Pause request and no resume on dismissal,
+and cancellation of a deferred panel after foreground change/disable. Underlying/panel automation
+remains blocked. Repo/branding/provenance, whitespace and changed Kotlin line-length checks pass.
+Initial detekt method-size/return-count findings were fixed before the final passing runs.
+NOT RUN: all-module/root Gradle checks, untouched-module unit suites, assembleDebug/APK install,
+release tasks, device/emulator instrumentation, phone testing or GitHub CI.
+
 Phone checklist (record build commit and actual results before merge):
 - Enable EQO accessibility; confirm handle is absent until enabled in Edge handle shortcuts.
 - Show handle over Gmail, Chrome and Android Settings; tap/swipe inward, outside dismissal and Back.
@@ -18,7 +30,10 @@ Phone checklist (record build commit and actual results before merge):
 - Long press, Hide for this app, switch app, then restore hidden apps in settings.
 - Disable/reorder/reset shortcuts; restart app; verify choice/order persist and unavailable controls are absent.
 - Ask EQO opens the task request with focus/keyboard and does not plan/run; Open EQO opens home.
-- Pause during a real run, then Stop while paused; opening/dragging the handle must not trigger takeover.
+- Open the panel during pacing, wait past the next step's due time, select Pause then Stop: no FAILED
+  terminal, underlying tap or takeover. Opening requests user Pause; dismissal must not resume.
+- Open during an in-flight action: the action settles before the panel appears; Stop stays usable.
+- Dragging the collapsed handle must not trigger takeover or pause the run.
 - A normal touch outside the collapsed handle during work still triggers takeover; handle never clears it.
 - Try an approved agent coordinate tap at the handle and a node/coordinate tap while the panel is open:
   no handle/panel button is activated by the agent, even with another app active underneath.

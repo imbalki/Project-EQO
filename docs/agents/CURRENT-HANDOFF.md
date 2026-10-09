@@ -17,12 +17,24 @@ Plain-language status, updated after each step. Details and design: `docs/adr/00
 - Safety: own-package guard plus coordinate hitboxes and a panel-open automation refusal; overlay touch
   exclusions compose with the existing task controls and never release takeover. No new resume path,
   SYSTEM_ALERT_WINDOW permission, runtime dependency, screen-content capture or transmission.
+- Round-1 review correction: opening the panel requests the existing user Pause and waits for the
+  current action to settle before showing the guarded window. This prevents a due action from failing
+  the run before Pause/Stop selection. Closing/Back never resumes; settings explains explicit Resume.
 - Local verification of code commit `205739d` (sequential module-scoped commands, each exits 0):
   `:platform-a11y:ktlintFormat :platform-a11y:ktlintCheck :platform-a11y:detekt :platform-a11y:testDebugUnitTest :platform-a11y:lintDebug`;
   then `:app:ktlintFormat :app:ktlintCheck :app:detekt :app:testDebugUnitTest :app:lintDebug`.
   Both used `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`. Platform: 111 tests; app: 186;
   297 total, zero failures/errors/skips, including 16 edge-handle regressions. Repo/branding/provenance and
   `git diff --check` pass; all new/changed Kotlin lines are at most 120 characters.
+- Review-correction verification: repeated both exact module commands above against the final code,
+  sequentially with the same worker/compiler flags; platform BUILD SUCCESSFUL in 2m 19s,
+  app BUILD SUCCESSFUL in 5m 34s. JUnit XML: platform 111, app 189; 300 tests, zero failures/errors/skips,
+  including 19 edge-handle tests. Three new app regressions cover real panel opening during paced work,
+  due-step/Pause/Stop without automation, in-flight settle/one-shot Pause/dismissal without resume,
+  and pending-open cancellation on foreground change/disable. Repo/branding/provenance, diff whitespace
+  and changed Kotlin file line-length checks pass (450 tracked Kotlin files, 450 provenance rows).
+  Initial method-size/return-count detekt findings were corrected; only the single integrated
+  scheduling scenario has a documented method-scoped LongMethod annotation. No new Kotlin files.
 - NOT RUN: root/all-module Gradle `ktlintCheck detekt test`, unit tests of untouched modules,
   `assembleDebug`/APK install, release tasks, device/emulator instrumentation execution or GitHub CI.
   Initial detekt findings were fixed. Android lint's physical LEFT/RIGHT docking warnings are intentionally

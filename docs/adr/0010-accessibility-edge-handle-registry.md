@@ -52,7 +52,15 @@ UNDER the overlay, so package checks alone are insufficient: HandleWindowGuard a
 hitbox check to GatedServiceActions and the raw gesture dispatcher. While the panel is visible,
 typed automation (including content observation) is refused, not allowed to interact with an underlying
 app or the panel. Global Back/Home cannot be used by an agent to dismiss this own surface while open.
-Already-dispatched work cannot be recalled; phone testing must check opening the panel mid-run.
+Opening the panel is a user pause gesture: the application-installed `preparePanel` callback requests
+the existing StudyTaskController.pause() and waits for PAUSED (or a terminal/absent run) with no action
+in flight. The overlay polls this settle readiness every 50ms before replacing the handle with the
+panel and installing its full-window guard. Thus a due step is held by the existing loop pause,
+not converted into a permanent accessibility rejection. Already-dispatched work finishes before
+the panel appears; no action is cancelled or silently reported successful. Pause/Stop remain available
+while paused. Dismissal never resumes; only the existing explicit user confirmation may do so.
+The detector's takeover latch is neither created nor cleared by this pause. Removal/disable/destroy
+cancels a pending panel-open callback. Phone testing must still check real scheduling and OEM behavior.
 
 Touch-probe exclusion combines (does not replace) task-screen control hitboxes with overlay hitboxes.
 Only the real handle footprint is excluded when collapsed; the open panel owns its full-screen window,

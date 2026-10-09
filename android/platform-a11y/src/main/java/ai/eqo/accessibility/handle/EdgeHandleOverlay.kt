@@ -36,6 +36,7 @@ class EdgeHandleOverlay(
     private var pendingLongPress: Runnable? = null
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> refresh() }
     private val refreshTask = Runnable { render() }
+    private val openPanelTask = Runnable { showPanel(requestPause = false) }
 
     init {
         preferences.preferences.registerOnSharedPreferenceChangeListener(listener)
@@ -188,10 +189,21 @@ class EdgeHandleOverlay(
         }
     }
 
+    private fun panelReady(requestPause: Boolean): Boolean {
+        // Pause through the app's public controls before installing the guard. An in-flight
+        // action must settle first rather than fail against a newly installed own window.
+        handler.removeCallbacks(openPanelTask)
+        val ready = EdgeHandleFeatures.preparePanel(requestPause)
+        if (!ready) {
+            handler.postDelayed(openPanelTask, PANEL_SETTLE_POLL_MS)
+        }
+        return ready && removeWindow()
+    }
+
     @android.annotation.SuppressLint("RtlHardcoded") // Keep the panel at the user's physical dock edge in RTL too.
-    private fun showPanel() {
+    private fun showPanel(requestPause: Boolean = true) {
         if (!preferences.enabled || !probeAvailable || preferences.isHidden(foregroundPackage)) return
-        if (!removeWindow()) return
+        if (!panelReady(requestPause)) return
         guard.panelOpen = true
         val root = PanelView()
         root.setBackgroundColor(BACKDROP_COLOR)
@@ -244,6 +256,7 @@ class EdgeHandleOverlay(
     }
 
     private fun closePanel() {
+        handler.removeCallbacks(openPanelTask)
         if (!guard.panelOpen) return
         removeWindow()
         render()
@@ -281,6 +294,7 @@ class EdgeHandleOverlay(
     }
 
     private fun removeWindow(): Boolean {
+        handler.removeCallbacks(openPanelTask)
         pendingLongPress?.let(handler::removeCallbacks)
         pendingLongPress = null
         view?.let { target ->
@@ -307,6 +321,7 @@ class EdgeHandleOverlay(
     }
 
     private companion object {
+        const val PANEL_SETTLE_POLL_MS = 50L
         const val TOUCH_WIDTH_DP = 48
         const val TOUCH_HEIGHT_DP = 72
         const val BAR_WIDTH_DP = 8
