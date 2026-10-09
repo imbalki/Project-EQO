@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- files-attachments: paths served by ai.eqo.app.sharedfiles. Only the staging folder "shares" that EQO
+     fills with temporary copies for one send; never the owner's real folders. Swept after an hour. -->
+<paths>
+    <external-cache-path name="eqo_shares_external" path="shares/" />
+    <cache-path name="eqo_shares_internal" path="shares/" />
+</paths>

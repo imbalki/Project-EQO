@@ -26,6 +26,8 @@ internal class SystemActions(
     private val permissions: PermissionRequester,
     private val automation: () -> EqoAutomation?,
     private val screenAnalyzer: ScreenAnalyzer?,
+    private val screenshots: ScreenshotCapture? = null,
+    // Keep last: callers and tests pass it as a trailing lambda.
     private val globalAction: (Int) -> Boolean = { EQOAccessibilityService.getInstance()?.performGlobalAction(it) == true },
 ) {
     private var isFlashlightOn = false
@@ -54,7 +56,7 @@ internal class SystemActions(
             PanelAction("TOGGLE_HOTSPOT", Settings.Panel.ACTION_WIFI, "android.settings.TETHER_SETTINGS"),
             PanelAction("TOGGLE_BLUETOOTH", Settings.ACTION_BLUETOOTH_SETTINGS, Settings.ACTION_BLUETOOTH_SETTINGS),
             GlobalAction("LOCK_SCREEN", AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN),
-            GlobalAction("TAKE_SCREENSHOT", AccessibilityService.GLOBAL_ACTION_TAKE_SCREENSHOT),
+            TakeScreenshotAction(),
             GlobalAction("RESTART_DEVICE", AccessibilityService.GLOBAL_ACTION_POWER_DIALOG),
             GlobalAction("CLOSE_APP", AccessibilityService.GLOBAL_ACTION_HOME),
             RecordScreenAction(),
@@ -162,6 +164,46 @@ internal class SystemActions(
                     )
                 "CLOSE_APP" -> ActionResult.Success(mapOf("message" to "Home screen requested; app was not force-stopped."))
                 else -> outcome.toActionResult()
+            }
+        }
+    }
+
+    /**
+     * Saves a picture of the screen into EQO's own folder and records it as `last_screenshot`. Refused on
+     * protected windows, in EQO's own windows and while the owner has taken over.
+     */
+    private inner class TakeScreenshotAction : Action {
+        override val name = "TAKE_SCREENSHOT"
+
+        override suspend fun execute(
+            params: Map<String, String>,
+            context: Context,
+        ): ActionResult = requireRegistryExecution() ?: takeScreenshot(context)
+
+        private suspend fun takeScreenshot(context: Context): ActionResult {
+            val capture = screenshots
+            val gate = automation()?.screenshotGate() ?: A11yResult.failure(A11yError.AccessibilityDisabled)
+            return when {
+                capture == null -> ActionResult.Failure("Screenshots are not available in this build.")
+                !gate.isSuccess -> gate.toActionResult()
+                else ->
+                    capture.capture()?.let { saved ->
+                        scanIntoGallery(context, saved)
+                        ActionResult.Success(
+                            mapOf("message" to "Screenshot saved as ${saved.name}. It is the latest EQO screenshot."),
+                        )
+                    } ?: ActionResult.Failure("EQO did not save a screenshot. The screen may be protected.")
+            }
+        }
+
+        private fun scanIntoGallery(
+            context: Context,
+            saved: java.io.File,
+        ) {
+            try {
+                android.media.MediaScannerConnection.scanFile(context, arrayOf(saved.path), arrayOf("image/png"), null)
+            } catch (_: RuntimeException) {
+                // Only the Gallery listing is affected; the file is saved.
             }
         }
     }

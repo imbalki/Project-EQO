@@ -1,6 +1,13 @@
 # Current handoff (any agent can take over from this page)
 
-Last updated: 2026-10-07. Update this file in the same PR as every merge to `main`.
+Last updated: 2026-10-08 (files and attachments section added). Update this file in the same PR as every merge to `main`.
+
+## IN PROGRESS: files and attachments (branch `feat/files-attachments`, draft PR, do not merge)
+Plain-language status, updated after each step. Details and design: `docs/adr/0007-shared-files-and-attachments.md`.
+- DONE (code + unit tests with fakes): setup row "All files access"; `FIND_FILES` / `LIST_FILES`; `attachment` parameter on SEND_EMAIL / SEND_WHATSAPP / SEND_SMS (file path or `last_screenshot`); the non-exported share provider and share-intent builder; `TAKE_SCREENSHOT` saves into `Pictures/EQO` and records `last_screenshot` (protected windows still refused); plan preview lists attached file names; staged copies are cleaned up (one hour, or at once on failure); planner vocabulary updated.
+- LEFT: phone test on the Realme (see list below). PR #6 is a draft; never merge it. CI (`android`, `android-branding`, `repo-checks`) is green on 3608d0a with `main` b7e8af2 already merged in; merge `main` again before reporting green if it moves.
+- NOT TESTED WITHOUT THE PHONE: the real Android "All files access" page; reading a real Downloads folder; a real screenshot being saved and shown in Gallery; Gmail, WhatsApp and Messages actually receiving the file and EQO pressing Send (their button names are guesses from known ids); WhatsApp opening the right chat from the number; a protected screen (bank app) refusing a screenshot; the plan-preview wording on screen.
+- NOT RUN IN THIS CLOUD SESSION: the full Gradle build (cloud box cannot reach Google's Maven); CI runs it. Lessons from CI: a constructor's trailing-lambda parameter must stay last; Advanced-category actions must stay out of macros (do not mark file actions READ_ONLY); lint wants KTX `SharedPreferences.edit {}`.
 
 ## Goal
 EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-key, accessibility automation, wireless-ADB helper, Chrome control, guided setup, approvals, Pause/Stop/takeover). Owner is non-technical: plain language, real command output, say what was not tested.

@@ -37,6 +37,7 @@ Merged to main 2026-10-07: #74 (65a884f), #77 (29bad15). Open: #78 parked, #81 a
 
 ## Not tested on a phone yet
 - Wireless pairing (#77), Chrome control (#78), notifications/macros/routines (#81), voice input.
+- Files and attachments (`feat/files-attachments`): All files access row, FIND_FILES / LIST_FILES, `attachment` on email / WhatsApp / SMS, screenshots into `Pictures/EQO`.
 
 ## One-step wireless pairing — t_681e8ea6
 

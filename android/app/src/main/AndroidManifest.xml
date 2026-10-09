@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -12,6 +13,10 @@
     <!-- TASK-069: verify a new call entered Telecom; intent launch is not success. -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
+    <!-- files-attachments: the owner switches this on in Android Settings (guided row "All files access").
+         It lets FIND_FILES/LIST_FILES look through shared storage and lets a task attach a file the owner approved.
+         EQO is not distributed through Google Play, whose policy restricts this permission. -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
 
     <!-- Resolve only the communication app intents used by these executors. -->
     <queries>
@@ -21,6 +26,7 @@
         <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="tg" /></intent>
         <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>
         <package android:name="com.whatsapp" />
+        <package android:name="com.google.android.gm" />
         <package android:name="org.telegram.messenger" />
         <package android:name="org.telegram.messenger.web" />
         <package android:name="org.telegram.plus" />
@@ -116,6 +122,17 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_provider_paths" />
+        </provider>
+        <!-- files-attachments: serves only the short-lived copies EQO stages for a send. Not exported;
+             a receiving app reads a file only through a per-URI read grant EQO gives it. -->
+        <provider
+            android:name="ai.eqo.actions.impl.EqoSharedFileProvider"
+            android:authorities="ai.eqo.app.sharedfiles"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/eqo_shared_paths" />
         </provider>
     </application>
 </manifest>
