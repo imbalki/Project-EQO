@@ -92,6 +92,12 @@ class AttachmentFileSearchTest {
         )
     }
 
+    @Test fun coexistingDownloadAliasesCannotHideAnAmbiguousMatch() {
+        file("Download/bill.pdf")
+        file("Downloads/bill-2.pdf")
+        assertEquals(setOf("bill.pdf", "bill-2.pdf"), search("find:bill,folder=downloads").map { it.name }.toSet())
+    }
+
     @Test fun dateUsesLocalDayAndInclusiveRange() {
         file("Download/start.pdf", "2026-10-01")
         file("Download/end.pdf")

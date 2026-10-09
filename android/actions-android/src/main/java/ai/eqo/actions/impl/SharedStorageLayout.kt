@@ -35,6 +35,14 @@ internal class SharedStorageLayout(
     /** Resolves a file reference (full path, or a path starting with a well-known folder name). */
     fun file(reference: String): File = checked(locate(reference.trim()))
 
+    fun searchFolders(name: String?): List<File> {
+        val reference = name?.trim().orEmpty().trimEnd('/')
+        // Validate traversal and absolute-path boundaries before expanding aliases.
+        val exact = folder(name)
+        if (reference.isEmpty() || reference == ".") return listOf(exact)
+        return aliases.searchFolders(root, reference, learnedFolders).map(::checked).ifEmpty { listOf(exact) }
+    }
+
     /** True for places EQO itself writes to, which need no All files access to read. */
     fun isOwnArea(file: File): Boolean = ownAreas.any { inside(canonical(file), it) }
 

@@ -37,26 +37,25 @@ internal class AttachmentFileSearch(
     @Suppress("ReturnCount", "CyclomaticComplexMethod", "NestedBlockDepth")
     // Bounded BFS with independent permission, entry, depth, deadline and result-count guards.
     private fun scan(query: AttachmentSearch): FileSearchResult {
-        val start =
+        val starts =
             try {
-                layout.folder(query.folder)
+                layout.searchFolders(query.folder)
             } catch (_: SecurityException) {
                 return FileSearchResult.Refused(SharedFileBrowser.OUTSIDE)
             }
-        if (!accessGranted() && !layout.isOwnArea(start)) {
+        if (!accessGranted() && starts.any { !layout.isOwnArea(it) }) {
             return FileSearchResult.Refused(SharedFileBrowser.NEEDS_ACCESS)
         }
-        if (!start.isDirectory) return FileSearchResult.Matches(emptyList())
         val deadline = clockNanos() + MAX_NANOS
         val queue = ArrayDeque<Pair<File, Int>>()
-        queue.add(start to 0)
+        starts.filter { it.isDirectory }.forEach { queue.add(it to 0) }
         // MediaStore is primary for MIME, bucket and time metadata. The filesystem fallback also
         // checks uniqueness: an incomplete/stale media index must never make multiple files look like one.
         val found = linkedSetOf<File>()
         catalog
             ?.indexedFiles()
             ?.filter { it.isFile && layout.isAllowed(it) && !layout.hasLinkedAncestor(it) }
-            ?.filter { it.toPath().startsWith(start.toPath()) && matches(it, query) }
+            ?.filter { file -> starts.any { file.toPath().startsWith(it.toPath()) } && matches(file, query) }
             ?.forEach { found += it }
         if (found.size > MAX_MATCHES) return FileSearchResult.Refused(TOO_MANY)
         var visited = 0
@@ -80,7 +79,10 @@ internal class AttachmentFileSearch(
         return FileSearchResult.Matches(found.sortedWith(compareByDescending<File> { modified(it) }.thenBy { it.name }))
     }
 
-    private fun searchable(file: File): Boolean = !file.name.startsWith('.') && !layout.hasLinkedAncestor(file) && layout.isAllowed(file)
+    private fun searchable(file: File): Boolean {
+        val visible = !file.name.startsWith('.') && !layout.hasLinkedAncestor(file)
+        return visible && layout.isAllowed(file)
+    }
 
     private fun matches(
         file: File,

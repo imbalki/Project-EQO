@@ -179,7 +179,7 @@ class SharedStorageCatalogTest {
             )
         paths.forEach(::file)
         val catalog = SharedStorageCatalog(layout, SharedMediaSource { emptyList() }, MemoryMap())
-        assertTrue(find("find:type=pdf,folder=whatsapp", catalog).single().name in setOf("a.pdf", "b.pdf"))
+        assertEquals(setOf("a.pdf", "b.pdf"), find("find:type=pdf,folder=whatsapp", catalog).map { it.name }.toSet())
         assertEquals(
             "a.pdf",
             find(

@@ -50,6 +50,23 @@ internal class SharedFolderAliases(
             extensions[type].orEmpty().any { it.equals(file.extension, ignoreCase = true) }
         }
 
+    /** Search every existing alias, not just the first: modern and legacy media can coexist. */
+    fun searchFolders(
+        root: File,
+        reference: String,
+        learned: Map<String, List<String>>,
+    ): List<File> {
+        if ('/' in reference || '\\' in reference || File(reference).isAbsolute) {
+            return listOf(folder(root, reference, learned) ?: File(root, reference))
+        }
+        val group =
+            folders.keys.firstOrNull { normalize(it) == normalize(reference) }
+                ?: groups(reference).firstOrNull()
+                ?: return listOf(File(root, reference))
+        val candidates = (folders[group].orEmpty() + learned[group].orEmpty()).distinct().map { File(root, it) }
+        return candidates.filter { it.isDirectory }.ifEmpty { candidates.take(1) }
+    }
+
     companion object {
         val EMPTY = SharedFolderAliases(emptyMap(), emptyMap(), emptyMap())
         private const val ASSET = "shared-storage-aliases.json"
