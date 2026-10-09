@@ -8,22 +8,14 @@ import org.junit.Test
 import java.io.File
 
 class EqoServiceRuntimeTest {
-    @Test fun onlyPendingTrustedPermissionDialogTouchesAreExcluded() {
-        fun allowed(
-            pending: Boolean = true,
-            pkg: String? = "com.android.permissioncontroller",
-            system: Boolean = true,
-            active: Boolean = true,
-            inside: Boolean = true,
-        ) = EQOAccessibilityService.permissionTouchAllowed(pending, pkg, system, active, inside)
-        assertTrue(allowed())
-        assertFalse(allowed(pending = false))
-        assertFalse(allowed(pkg = "com.android.settings"))
-        assertFalse(allowed(pkg = "evil.permissioncontroller"))
-        assertFalse(allowed(pkg = null))
-        assertFalse(allowed(system = false))
-        assertFalse(allowed(active = false))
-        assertFalse(allowed(inside = false))
+    @Test fun permissionWindowsNeverBypassTakeoverDuringAnAction() {
+        val detector = TakeoverDetector.shared
+        detector.startNewRun()
+        detector.onAgentActionStarted()
+        detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 500L)
+        assertTrue(detector.isPaused)
+        detector.onAgentActionFinished()
+        detector.startNewRun()
     }
 
     @Test
@@ -87,6 +79,8 @@ class EqoServiceRuntimeTest {
         ).forEach { assertFalse("Unsupported service seam: $it", source.contains(it)) }
         assertTrue(source.contains("private val nodeTraversal = AccessibilityNodeTraversal()"))
         assertTrue(source.contains("EqoServiceRuntime("))
+        assertFalse(source.contains("runtimePermissionPending"))
+        assertFalse(source.contains("isPermissionDialogTouch"))
         val config = File(root, "platform-a11y/src/main/res/xml/accessibility_service_config.xml").readText()
         assertTrue(
             "Screenshots require the declared service capability",

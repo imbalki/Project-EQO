@@ -27,6 +27,7 @@ import kotlinx.coroutines.withContext
  * and their lists are module-internal. Later batches add families in create(), not another
  * dispatcher or vocabulary. The caller must still obtain contextual action approval.
  */
+@Suppress("TooManyFunctions") // Single execution boundary also owns its shared prerequisite inventory.
 class AndroidActionRegistry internal constructor(
     private val context: Context,
     families: List<List<Action>>,
@@ -65,13 +66,18 @@ class AndroidActionRegistry internal constructor(
         return try {
             if (needsSharedAccess(actionName, ready) && !requestAllFilesAccess()) {
                 android.util.Log.w("EqoRun", "action=$actionName reason=needs_all_files_access")
-                return ActionResult.UserActionRequired(ALL_FILES_INSTRUCTION)
+                return ActionResult.UserActionRequired(
+                    "Turn on All files access for EQO. This step did not run. Stop and explicitly restart this plan.",
+                )
             }
             for (permission in requiredPermissions(actionName, ready)) {
                 android.util.Log.i("EqoRun", "action=$actionName permission=${permission.name} check=request")
                 if (!permissions.request(permission)) {
                     android.util.Log.w("EqoRun", "action=$actionName permission=${permission.name} denied")
-                    return ActionResult.Failure("${permission.explanation} Permission was not granted; this step did not run.")
+                    return ActionResult.UserActionRequired(
+                        "${permission.explanation} This step did not run. " +
+                            "Stop and explicitly restart the plan to grant access.",
+                    )
                 }
             }
             val result = executeRegistered(action, ready, context)
@@ -132,6 +138,15 @@ class AndroidActionRegistry internal constructor(
     suspend fun prepareFileAccess(steps: List<LoopStep>): Boolean =
         steps.none { needsSharedAccess(it.action.name, it.action.params) } || requestAllFilesAccess()
 
+    /** One shared inventory for preview, preflight and execution; literal recipients need no lookup grant. */
+    fun plannedRuntimePermissions(steps: List<LoopStep>): List<ActionPermission.Runtime> =
+        steps.flatMap { requiredPermissions(it.action.name, it.action.params) }.distinctBy { it.name }
+
+    suspend fun prepareRuntimeAccess(steps: List<LoopStep>): Boolean {
+        val required = plannedRuntimePermissions(steps)
+        return required.all { permissions.request(it) }
+    }
+
     private fun needsSharedAccess(
         name: String,
         params: Map<String, String>,
@@ -171,12 +186,37 @@ class AndroidActionRegistry internal constructor(
                 )
         }
         required += sharePermissions(name, params)
+        extraPermission(name, params)?.let { required += it }
         if (name == "MAKE_CALL" && DeviceCapabilities.canMakeCalls(context)) {
             required += ActionPermission.Runtime(Manifest.permission.CALL_PHONE, "Allow phone access to place this call.")
             required +=
                 ActionPermission.Runtime(Manifest.permission.READ_PHONE_STATE, "Allow phone state access to verify that the call started.")
         }
         return required
+    }
+
+    private fun extraPermission(
+        name: String,
+        params: Map<String, String>,
+    ): ActionPermission.Runtime? {
+        val extra =
+            when (name) {
+                "TOGGLE_FLASHLIGHT" -> Manifest.permission.CAMERA to "Allow camera access to control the flashlight."
+                "GET_WEATHER" ->
+                    if (params["location"].isNullOrBlank() || params["location"] == "current location") {
+                        Manifest.permission.ACCESS_COARSE_LOCATION to "Allow approximate location for local weather."
+                    } else {
+                        null
+                    }
+                "CREATE_CALENDAR_EVENT" ->
+                    if (isDirectCalendarInsert(params)) {
+                        Manifest.permission.WRITE_CALENDAR to "Allow calendar access to save this event."
+                    } else {
+                        null
+                    }
+                else -> null
+            }
+        return extra?.let { ActionPermission.Runtime(it.first, it.second) }
     }
 
     /** Contacts access to find a named recipient or contact; precise location only to read the position. */

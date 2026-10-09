@@ -23,6 +23,7 @@ internal class TaskPermissionRequester(
     private val activity: Activity,
     private val prepareDialog: (AlertDialog) -> Unit = {},
     private val onWaiting: (String?) -> Unit = {},
+    private val canRequest: () -> Boolean = { true },
 ) : PermissionRequester {
     private val mutex = Mutex()
 
@@ -39,6 +40,7 @@ internal class TaskPermissionRequester(
         withContext(Dispatchers.Main.immediate) {
             mutex.withLock {
                 if (granted(permission)) return@withLock true
+                if (!canRequest()) return@withLock false
                 if (activity.isFinishing || activity.isDestroyed) return@withLock false
                 withTimeoutOrNull(PERMISSION_WAIT_TIMEOUT_MS) {
                     suspendCancellableCoroutine { continuation ->
@@ -55,11 +57,7 @@ internal class TaskPermissionRequester(
                         }
                         when (permission) {
                             is ActionPermission.Runtime -> {
-                                if (activity.shouldShowRequestPermissionRationale(permission.name)) {
-                                    showInstructions(permission.explanation) {
-                                        launchRuntime(permission)
-                                    }
-                                } else {
+                                showInstructions(permission.explanation, "Allow now") {
                                     launchRuntime(permission)
                                 }
                             }
@@ -106,9 +104,6 @@ internal class TaskPermissionRequester(
     }
 
     private fun launchRuntime(permission: ActionPermission.Runtime) {
-        ai.eqo.accessibility.EQOAccessibilityService
-            .getInstance()
-            ?.runtimePermissionPending = true
         try {
             val code = nextRequestCode++
             activeRequestCode = code
@@ -126,6 +121,7 @@ internal class TaskPermissionRequester(
 
     private fun showInstructions(
         message: String,
+        positiveLabel: String = activity.getString(android.R.string.ok),
         proceed: () -> Unit,
     ) {
         val owner = pending
@@ -135,7 +131,7 @@ internal class TaskPermissionRequester(
                 .setTitle("Android access needed")
                 .setMessage(message)
                 .setCancelable(true)
-                .setPositiveButton(android.R.string.ok, null)
+                .setPositiveButton(positiveLabel, null)
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
         dialog.setOnCancelListener { if (pending === owner) settle(false) }
@@ -145,9 +141,11 @@ internal class TaskPermissionRequester(
         // Direct button listeners, wired synchronously right after show: no AlertDialog
         // internal handler dispatch sits between the owner's tap and the outcome.
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-            if (pending === owner && owner?.isActive == true) {
+            if (pending === owner && owner?.isActive == true && canRequest()) {
                 runCatching { dialog.dismiss() }
                 proceed()
+            } else if (pending === owner) {
+                settle(false)
             }
         }
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { if (pending === owner) settle(false) }
@@ -158,9 +156,7 @@ internal class TaskPermissionRequester(
         pending = null
         requested = null
         activeRequestCode = null
-        ai.eqo.accessibility.EQOAccessibilityService
-            .getInstance()
-            ?.runtimePermissionPending = false
+
         onWaiting(null)
         leftForSettings = false
         settingsLaunched = false

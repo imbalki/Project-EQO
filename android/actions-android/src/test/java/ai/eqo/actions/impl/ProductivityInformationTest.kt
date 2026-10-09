@@ -211,7 +211,9 @@ class ProductivityInformationTest {
             http.connected = false
             assertFalse(registry.execute("WEB_SEARCH", mapOf("query" to "q")).success)
             assertFalse(registry.execute("GET_WEATHER", emptyMap()).success)
-            assertTrue(requested.isEmpty())
+            val offlinePermission = requested.single() as ActionPermission.Runtime
+            assertEquals(Manifest.permission.ACCESS_COARSE_LOCATION, offlinePermission.name)
+            requested.clear()
             http.connected = true
             assertFalse(registry.execute("GET_WEATHER", emptyMap()).success)
             val permission = requested.single() as ActionPermission.Runtime

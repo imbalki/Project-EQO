@@ -115,7 +115,8 @@ class TaskRunService : Service() {
                                     android.content.pm.PackageManager.PERMISSION_GRANTED
                             is ai.eqo.actions.impl.ActionPermission.SpecialAccess -> permission.isGranted()
                         }
-                    granted || (TaskRunSession.permissionRequester?.request(permission) ?: false)
+                    // Never launch system UI from an active approved run. Revocation needs explicit restart.
+                    granted
                 },
             )
         val executor =

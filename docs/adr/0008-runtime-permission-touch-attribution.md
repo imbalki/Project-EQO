@@ -1,8 +1,8 @@
 # ADR-0008: Runtime-permission touch attribution on Android 11
 
-- Status: proposed; owner decision required before implementation
+- Status: accepted by lead/owner on 2026-10-10; implemented, awaiting review/phone validation
 - Date: 2026-10-10
-- Deciders: lead/owner (pending), round-1 implementer and reviewer
+- Deciders: lead/owner, round-1 implementer and reviewer
 - Task: `t_7a91b291`
 
 ## Context
@@ -34,9 +34,9 @@ Dropping pending anonymous touches when a click/result later arrives would also
 risk dropping unrelated touches. A successful permission callback is proof of the
 answer, not proof that every observed touch belonged to that dialog.
 
-## Decision requested
+## Accepted decision
 
-Recommended: obtain the planned runtime prerequisites before starting the action
+Obtain the planned runtime prerequisites before starting the action
 loop, following the existing All files access preflight pattern. Human permission
 interaction then happens outside an active approved action. Approval still occurs
 once for the unchanged plan; no sending, typing or other execution happens before
@@ -44,10 +44,26 @@ approval. Runtime checks remain mandatory. If access is revoked after preflight,
 hand back with clear Needs-you text and require explicit restart/reapproval; never
 clear takeover or auto-resume.
 
-This changes the requested mid-run permission flow and needs owner approval.
-Implementation must also prove late permission/input events cannot affect a new
-run and that Stop cancels a pending preflight. Preflight is a proposal, not code
-already delivered by this rework.
+The lead approved this replacement for the requested mid-run flow in the card
+comment on 2026-10-10. The shared registry inventory lists runtime prerequisites in
+the preview; missing access uses an Allow now button before Android's dialog.
+Granted permissions are checked, not requested again; Android remembers grants.
+No actions execute until the unchanged plan reaches its existing approval boundary.
+
+The inventory covers named Contacts lookup, sharing Location, current-location
+weather, Camera for flashlight, direct Calendar insertion and supported phone calls.
+Literal numbers/email addresses, supplied weather cities and Calendar drafts avoid
+unnecessary lookup/location/calendar requests. All files Settings preflight remains.
+
+Stop cancels the pending request and invalidates preparation; stale callbacks cannot
+approve/start that preparation. The activity requester refuses new missing grants
+during a run. The foreground service uses a check-only requester: revocation stops
+the step with Needs-you copy requiring Stop and explicit restart/reapproval.
+No system permission dialog or Settings is launched from an active run.
+
+The attempted permission-controller touch exemption is removed entirely. All
+unknown/redacted/system-window touches retain the ordinary takeover path. EQO never
+presses Allow or clears a takeover latch in response to the permission result.
 
 Alternative: retain the strict mid-run flow only if a trusted input-attribution
 surface can identify the actual touched window on the supported Android 11/OEM
@@ -62,11 +78,13 @@ These weaken the card's unrelated-touch/no-auto-resume requirements.
 
 ## Consequences
 
-- The card remains blocked, not complete and not ready for final review.
-- The 120-second wait, Stop handling and stale request-code isolation remain, but
-  runtime Allow can still pause the run on the real cross-UID Android 11 path.
-- Permission/takeover production code is unchanged by this rework. The failure is
-  documented instead of hidden behind an unsafe exemption or invented test proof.
+- The card can proceed to implementation review using the accepted pre-run flow.
+- The 120-second wait, Stop handling and stale request-code isolation remain.
+- Fake/Robolectric tests cover inventory/deduplication, no read/send before approval,
+  actual task-screen preview/Allow-now, Stop/late grant, explicit retry reaching
+  approval without execution, active-run refusal, and stale/timeout behavior.
+- Source regressions assert absence of the permission-touch bypass. No reliable
+  cross-UID attribution or same-step mid-run permission continuation is claimed.
 - The independent Keep planner regression is fixed and host-tested separately.
-- After the owner selects a flow, implementation and explicit regressions are
-  required before final review and lead-owned phone testing/publication.
+- NOT TESTED ON PHONE: actual OEM prompts, delayed input/lifecycle ordering, denial,
+  Settings return and mid-run revocation require lead-owned phone testing and CI.

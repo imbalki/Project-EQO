@@ -68,11 +68,17 @@ class TaskActivity : Activity() {
     private var voiceInput: TaskVoiceInput? = null
     private var waitingPermission: String? = null
     private var displayedStatus = PlanStatus.PENDING
+    private var preparationGeneration = 0
     private val actionPermissions by lazy {
-        TaskPermissionRequester(this, ::prepareTaskDialog) { permission ->
-            waitingPermission = permission
-            renderPlanStatus(displayedStatus)
-        }
+        TaskPermissionRequester(
+            this,
+            ::prepareTaskDialog,
+            onWaiting = { permission ->
+                waitingPermission = permission
+                renderPlanStatus(displayedStatus)
+            },
+            canRequest = { TaskRunSession.controller == null && TaskRunSession.pending == null && controller == null },
+        )
     }
 
     // TASK-069: foundation entry point for ported steps. Typed-request flow remains
@@ -112,7 +118,11 @@ class TaskActivity : Activity() {
             planRequest()
         }
         findViewById<Button>(R.id.task_pause_button).setOnClickListener { control { it.pause() } }
-        findViewById<Button>(R.id.task_stop_button).setOnClickListener { control { it.stop() } }
+        findViewById<Button>(R.id.task_stop_button).setOnClickListener {
+            preparationGeneration++
+            actionPermissions.cancelWaiting()
+            control { it.stop() }
+        }
         findViewById<Button>(R.id.task_takeover_button).setOnClickListener { control { it.takeover() } }
         val resumeButton = findViewById<Button>(R.id.task_resume_button)
         protectConfirmationTouches(resumeButton)
@@ -628,6 +638,9 @@ class TaskActivity : Activity() {
     private fun registerDebugPlanReceiver() {
         val receiver =
             DebugPlanReceiver { json ->
+                if (planning || actionPermissions.isWaiting() || TaskRunSession.controller != null) {
+                    return@DebugPlanReceiver
+                }
                 scope.launch {
                     try {
                         val steps =
@@ -732,17 +745,26 @@ class TaskActivity : Activity() {
         }
     }
 
-    private suspend fun prepareAndShowPlan(
+    internal suspend fun prepareAndShowPlan(
         steps: List<ai.eqo.core.agent.LoopStep>,
         missing: List<String> = emptyList(),
     ) {
-        findViewById<TextView>(R.id.task_preview).text = TaskPlanPreview.describe(steps)
+        val generation = preparationGeneration
+        findViewById<TextView>(R.id.task_preview).text =
+            TaskPlanPreview.describe(steps) + permissionPreview(steps)
+        if (!portedActions.prepareRuntimeAccess(steps)) {
+            findViewById<TextView>(R.id.task_state).text =
+                "Permission was not granted. No run started. Tap Start to explicitly try this plan again."
+            return
+        }
         if (!portedActions.prepareFileAccess(steps)) {
             findViewById<TextView>(R.id.task_state).text = "Turn on All files access for EQO, then try this plan again."
             return
         }
         val prepared = portedActions.prepareRecipients(steps)
-        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing)
+        if (generation == preparationGeneration && !isFinishing && !isDestroyed) {
+            showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing)
+        }
     }
 
     private fun showPlan(
@@ -760,7 +782,7 @@ class TaskActivity : Activity() {
                     .escape(missing.joinToString(", ")) +
                     " is not installed on this phone, so this plan uses Chrome instead.\n\n"
             }
-        val preview = notice + TaskPlanPreview.describe(steps, recipientNames)
+        val preview = notice + TaskPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
         if (!PlanApprovalSettings.requiredFor(this, steps)) {
@@ -771,6 +793,15 @@ class TaskActivity : Activity() {
     }
 
     private fun planningError(failure: LLMException): Int = RunStatusMapping.planning(failure.error, failure.timedOut)
+
+    private fun permissionPreview(steps: List<ai.eqo.core.agent.LoopStep>): String {
+        val permissions = portedActions.plannedRuntimePermissions(steps)
+        return if (permissions.isEmpty()) {
+            ""
+        } else {
+            permissions.joinToString("\n", prefix = "\n\nAccess needed before this plan runs:\n") { it.explanation }
+        }
+    }
 
     override fun onDestroy() {
         voiceInput?.close()
