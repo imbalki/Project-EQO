@@ -777,14 +777,13 @@ class TaskActivity : Activity() {
     ) {
         val generation = preparationGeneration
         findViewById<TextView>(R.id.task_preview).text =
-            TaskPlanPreview.describe(steps) + permissionPreview(steps)
+            getString(R.string.task_preview_with_permissions, TaskPlanPreview.describe(steps), permissionPreview(steps))
         if (!portedActions.prepareRuntimeAccess(steps)) {
-            findViewById<TextView>(R.id.task_state).text =
-                "Permission was not granted. No run started. Tap Start to explicitly try this plan again."
+            findViewById<TextView>(R.id.task_state).setText(R.string.task_permission_not_granted)
             return
         }
         if (!portedActions.prepareFileAccess(steps)) {
-            findViewById<TextView>(R.id.task_state).text = "Turn on All files access for EQO, then try this plan again."
+            findViewById<TextView>(R.id.task_state).setText(R.string.task_files_access_needed)
             return
         }
         val prepared = portedActions.prepareRecipients(steps)
