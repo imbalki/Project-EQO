@@ -1,5 +1,7 @@
 package ai.eqo
 
+import ai.eqo.accessibility.handle.EdgeHandleFeatures
+import ai.eqo.explain.ExplainNotificationService
 import ai.eqo.handle.prepareHandlePanel
 import android.app.Application
 
@@ -7,7 +9,8 @@ import android.app.Application
 class EqoApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        ai.eqo.accessibility.handle.EdgeHandleFeatures.refreshEntries = ai.eqo.explain.ExplainNotificationService::refresh
+        EdgeHandleFeatures.refreshEntries = ExplainNotificationService::refresh
+        EdgeHandleFeatures.configurationChanged = ai.eqo.explain.ExplainOverlay::refreshLayout
         ai.eqo.accessibility.handle.EdgeHandleFeatures.explain = { context, source ->
             ai.eqo.explain.ExplainEntryActivity
                 .launch(context, source)

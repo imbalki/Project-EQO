@@ -53,17 +53,27 @@ class EdgeHandleSettingsActivity : Activity() {
         column.addView(
             Button(this).apply {
                 setText(R.string.handle_unhide_all)
-                setOnClickListener { preferences.clearHiddenApps(); render() }
+                setOnClickListener {
+                    preferences.clearHiddenApps()
+                    render()
+                }
             },
         )
-        column.addView(TextView(this).apply {
-            text = getString(R.string.handle_hidden_count, preferences.hiddenApps().size)
-        })
+        column.addView(
+            TextView(this).apply {
+                text = getString(R.string.handle_hidden_count, preferences.hiddenApps().size)
+            },
+        )
         preferences.hiddenApps().sorted().forEach { app ->
-            column.addView(Button(this).apply {
-                text = getString(R.string.handle_unhide_app, app)
-                setOnClickListener { preferences.unhide(app); render() }
-            })
+            column.addView(
+                Button(this).apply {
+                    text = getString(R.string.handle_unhide_app, app)
+                    setOnClickListener {
+                        preferences.unhide(app)
+                        render()
+                    }
+                },
+            )
         }
         setContentView(ScrollView(this).apply { addView(column) })
     }

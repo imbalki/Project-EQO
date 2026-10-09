@@ -134,7 +134,11 @@ class ExplainNotificationService : Service() {
 
         private fun notification(context: Context): Notification {
             context.getSystemService(NotificationManager::class.java).createNotificationChannel(
-                NotificationChannel(CHANNEL, context.getString(R.string.explain_title), NotificationManager.IMPORTANCE_LOW),
+                NotificationChannel(
+                    CHANNEL,
+                    context.getString(R.string.explain_title),
+                    NotificationManager.IMPORTANCE_LOW,
+                ),
             )
             val action = ExplainEntryActivity.pending(context)
             return Notification
@@ -143,13 +147,17 @@ class ExplainNotificationService : Service() {
                 .setContentTitle(context.getString(R.string.explain_title))
                 .setContentText(context.getString(R.string.explain_notification_hint))
                 .setOngoing(true)
+                .setOnlyAlertOnce(true)
                 .setContentIntent(action)
                 .addAction(Notification.Action.Builder(null, context.getString(R.string.explain_title), action).build())
                 .build()
         }
 
-        /** Repost without starting a background FGS: works even after an OEM kills that service. */
-        @android.annotation.SuppressLint("MissingPermission") // User preference and notification grant are both checked.
+        /**
+         * Repost without a background FGS, including after OEM service death.
+         * User preference and notification grant are both checked.
+         */
+        @android.annotation.SuppressLint("MissingPermission")
         fun refresh(context: Context) {
             val manager = context.getSystemService(NotificationManager::class.java)
             if (ExplainSettings.notification(context) && manager.areNotificationsEnabled()) {
@@ -163,6 +171,7 @@ class ExplainNotificationService : Service() {
                 context.startForegroundService(intent)
             } else {
                 context.stopService(intent)
+                context.getSystemService(NotificationManager::class.java).cancel(NOTIFICATION)
             }
         }
     }

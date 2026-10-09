@@ -1,5 +1,58 @@
 # Current handoff (any agent can take over from this page)
 
+## Explain/handle UX polish (t_e84b3eaa, feat/explain-handle-polish): NOT TESTED ON PHONE
+
+- Compact Explain panel defaults to 25% of screen height; drag/tap the resize bar for a one-line
+  collapsed header, medium or large (35% maximum). The body scrolls, with 22sp answer text,
+  85%-opaque background, Read aloud, consent and follow-ups retained. Outside touches pass through.
+  See screen hides the keyboard and makes the entire panel 5%-opaque and non-touchable for five
+  seconds, then restores it. FLAG_SECURE is unchanged; no screen context is logged or persisted.
+- Explain screen is the first default edge shortcut on a fresh registry (saved user ordering is
+  preserved on upgrade). Accessibility connect/window-state callbacks repost the optional notification
+  directly, without trying to start a background foreground service; enabled handles refresh too.
+  This repairs a lost notification even if the OEM killed ExplainNotificationService. This is recovery
+  on the next observed window change, not a claim that EQO or its service can never be killed.
+- Accessibility button declared and routed through the transient Explain entry. API 31+ declares
+  isAccessibilityTool. Android 11 QS guidance has three plain steps and an editor hint; API 33+ has
+  the platform Add tile confirmation. There is no public direct Android 11 QS-editor intent.
+- Setup hub exposes the default-OFF Edge handle switch, accessibility-off wording, shortcut settings
+  and a background-running battery-settings row with Realme/ColorOS, Xiaomi and Samsung guidance.
+  First successful handle attachment shows “Drag me up or down. Tap to open.” once.
+- Owner follow-up: Ask already targets the real request planner with focus and optional voice button;
+  its shared layout incorrectly said “Practice run”. That heading now says “Your task”. No sample run
+  is started by Ask. Hidden apps settings now show the count and per-package Unhide / Unhide all;
+  EQO itself cannot be hidden, including legacy saved own-package choices.
+- Local verification: both final sequential scoped commands exit 0 (platform 1m 11s; app 6m 10s):
+  `:platform-a11y:ktlintFormat :platform-a11y:ktlintCheck :platform-a11y:detekt :platform-a11y:testDebugUnitTest :platform-a11y:lintDebug`;
+  then `:app:ktlintFormat :app:ktlintCheck :app:detekt :app:testDebugUnitTest :app:lintDebug`.
+  Both use `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process --console=plain`.
+  JUnit XML: platform 111 + app 251 = 362 tests, zero failures/errors/skips; 22 new API-30/33
+  polish cases. Repo/branding/provenance/secret checks, changed Kotlin <=120-character lines,
+  changed XML parsing and whitespace checks pass. No new permission or runtime dependency.
+  Native hub Switch has a narrowly documented XML lint exception to match platform Activity/StudyTheme.
+- Verification corrections: the peek deadline uses a close-cancelled main Handler (distinct name
+  avoids Button.handler receiver shadowing). Removed premature attachment-state reconciliation that
+  cancelled deferred handle panels; existing paced/in-flight Pause/Stop regressions now pass too.
+- NOT RUN: all-module/root Gradle gate, release/assemble APK, device/emulator instrumentation,
+  installation, real provider/speech/OEM behavior or GitHub CI. CI remains the full gate; commits local only.
+- Phone checklist (record actual results and build commit):
+  1. Realme Android 11: switch handle on in Setup, verify immediate drawing, first-use hint, drag and
+     Explain shortcut; switch off and confirm disappearance. With accessibility off, verify plain hint.
+  2. Explain a real other app twice: open, Close, open; exercise Read aloud and typed follow-up.
+     Check default height, all resize states, portrait/landscape, large font, keyboard and body scroll.
+  3. Tap See screen: verify background app receives taps inside and outside the faded panel and
+     full panel returns after five seconds. Check outside touches pass through normally too.
+  4. Enable notification, stop only ExplainNotificationService, change foreground window and verify
+     notification returns without starting that service; tap it twice. Deny notification permission
+     and switch preference off: it must not reappear. Check accessibility reconnect restores entries.
+  5. Add QS tile with the three manual steps; test Android accessibility button and configured
+     volume-key shortcut. On Android 13+, confirm Add tile request succeeds or cancels cleanly.
+  6. Open background-running row; inspect OEM battery/auto-start choices manually. No new permission.
+  7. Ask opens focused real request box with mic if available, never a practice/sample execution.
+     Hide another app, unhide it individually, then Unhide all; check count and immediate drawing.
+     Verify EQO settings always retain the handle even with a legacy own-package hidden preference.
+
+
 Last updated: 2026-10-09 (edge handle local handoff added). Update this file in the same PR as every merge to `main`.
 Last updated: 2026-10-09 (Explain screen section added). Update this file in the same PR as every merge to `main`.
 

@@ -42,6 +42,8 @@ class ExplainOverlay private constructor(
     private var speechReady = false
     private var answer = ""
     private val panel = ExplainPanelState(android.os.SystemClock::elapsedRealtime)
+    private val peekHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val restorePanel = Runnable { if (!closed) applyPanel() }
     private val body = ScrollView(service)
     private val content =
         LinearLayout(service).apply {
@@ -157,29 +159,20 @@ class ExplainOverlay private constructor(
             Button(service).apply {
                 setText(R.string.explain_resize)
                 setOnClickListener {
-                    panel.size = ExplainPanelState.Size.entries[(panel.size.ordinal + 1) % 3]
+                    val sizes = ExplainPanelState.Size.entries
+                    panel.size = sizes[(panel.size.ordinal + 1) % sizes.size]
                     applyPanel()
                 }
             }
-        var down = 0f
-        drag.setOnTouchListener { view, event ->
-            when (event.actionMasked) {
-                android.view.MotionEvent.ACTION_DOWN -> down = event.rawY
-                android.view.MotionEvent.ACTION_UP -> {
-                    val distance = down - event.rawY
-                    if (kotlin.math.abs(distance) > DRAG_THRESHOLD_DP * service.resources.displayMetrics.density) {
-                        val change = if (distance > 0) 1 else -1
-                        panel.size = ExplainPanelState.Size.entries[(panel.size.ordinal + change).coerceIn(0, 2)]
-                        applyPanel()
-                    } else {
-                        view.performClick()
-                    }
-                }
-            }
-            true
-        }
-        header.addView(drag, LinearLayout.LayoutParams(0,
-            (CHIP_HEIGHT_DP * service.resources.displayMetrics.density).toInt(), 1f))
+        bindResize(drag)
+        header.addView(
+            drag,
+            LinearLayout.LayoutParams(
+                0,
+                (CHIP_HEIGHT_DP * service.resources.displayMetrics.density).toInt(),
+                1f,
+            ),
+        )
         header.addView(
             Button(service).apply {
                 setText(R.string.explain_see_screen)
@@ -190,10 +183,8 @@ class ExplainOverlay private constructor(
                         .getSystemService(android.view.inputmethod.InputMethodManager::class.java)
                         .hideSoftInputFromWindow(sheet.windowToken, 0)
                     applyPanel()
-                    scope.launch {
-                        delay(ExplainPanelState.SEE_MS)
-                        if (!closed) applyPanel()
-                    }
+                    peekHandler.removeCallbacks(restorePanel)
+                    peekHandler.postDelayed(restorePanel, ExplainPanelState.SEE_MS)
                 }
             },
         )
@@ -225,6 +216,27 @@ class ExplainOverlay private constructor(
             }
         body.visibility = if (panel.size == ExplainPanelState.Size.SMALL) View.GONE else View.VISIBLE
         if (attached) manager.updateViewLayout(sheet, params)
+    }
+
+    private fun bindResize(drag: View) {
+        var down = 0f
+        drag.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                android.view.MotionEvent.ACTION_DOWN -> down = event.rawY
+                android.view.MotionEvent.ACTION_UP -> {
+                    val distance = down - event.rawY
+                    if (kotlin.math.abs(distance) > DRAG_THRESHOLD_DP * service.resources.displayMetrics.density) {
+                        val change = if (distance > 0) 1 else -1
+                        val sizes = ExplainPanelState.Size.entries
+                        panel.size = sizes[(panel.size.ordinal + change).coerceIn(0, sizes.lastIndex)]
+                        applyPanel()
+                    } else {
+                        view.performClick()
+                    }
+                }
+            }
+            true
+        }
     }
 
     private fun button(
@@ -340,6 +352,7 @@ class ExplainOverlay private constructor(
         if (closed) return
         closed = true
         android.util.Log.i("EqoExplain", "closed")
+        peekHandler.removeCallbacks(restorePanel)
         scope.cancel()
         session?.close()
         session = null
@@ -364,6 +377,10 @@ class ExplainOverlay private constructor(
         private const val DRAG_THRESHOLD_DP = 24
         private const val SERVICE_CHECK_MS = 1000L
         private const val DETACH_DELAY_MS = 350L
+
+        fun refreshLayout() {
+            current?.get()?.applyPanel()
+        }
 
         fun open(service: EQOAccessibilityService) {
             current?.get()?.close()

@@ -72,6 +72,7 @@ class HandlePreferences(
 object EdgeHandleFeatures {
     // App callbacks keep this library independent of app notification/Explain classes.
     var refreshEntries: (Context) -> Unit = {}
+    var configurationChanged: () -> Unit = {}
     var explain: (Context, String) -> Unit = { _, _ -> }
     var registry: HandleShortcutRegistry<Context>? = null
         private set

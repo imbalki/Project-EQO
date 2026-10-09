@@ -40,8 +40,13 @@ class ExplainPolishTest {
         current()?.let { invoke(it, "close") }
         ExplainSettings.set(context, "notification", false)
         ExplainSettings.set(context, "allow_provider", false)
-        HandlePreferences(context).preferences.edit().clear().commit()
+        HandlePreferences(context)
+            .preferences
+            .edit()
+            .clear()
+            .commit()
         EdgeHandleFeatures.refreshEntries = ExplainNotificationService::refresh
+        EdgeHandleFeatures.explain = ExplainEntryActivity::launch
     }
 
     @Test fun `panel sizes are capped and peek expires with fake clock`() {
@@ -67,12 +72,24 @@ class ExplainPolishTest {
 
     @Test fun `open close open creates fresh attached overlay and peek restores touches`() {
         val service = Robolectric.buildService(EQOAccessibilityService::class.java).create()
-        service.get().onServiceConnected()
+        invoke(service.get(), "onServiceConnected")
         try {
             ExplainOverlay.open(service.get())
             val first = current()!!
             val sheet = field(first, "sheet") as ViewGroup
             val params = field(first, "params") as WindowManager.LayoutParams
+            val manager = service.get().getSystemService(WindowManager::class.java)
+            assertTrue(params.height <= (manager.currentWindowMetrics.bounds.height() * 0.35f).toInt())
+            val content = field(first, "content") as View
+            val background = content.background as android.graphics.drawable.GradientDrawable
+            assertEquals(217, (background.color!!.defaultColor ushr 24))
+            val resize = buttons(sheet).first { it.text == context.getString(R.string.explain_resize) }
+            resize.performClick()
+            assertEquals(ExplainPanelState.Size.LARGE, (field(first, "panel") as ExplainPanelState).size)
+            resize.performClick()
+            assertEquals(ExplainPanelState.Size.SMALL, (field(first, "panel") as ExplainPanelState).size)
+            resize.performClick()
+            assertEquals(ExplainPanelState.Size.MEDIUM, (field(first, "panel") as ExplainPanelState).size)
             assertTrue(params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL != 0)
             assertTrue(params.flags and WindowManager.LayoutParams.FLAG_SECURE != 0)
             buttons(sheet).first { it.text == context.getString(R.string.explain_see_screen) }.performClick()
@@ -113,6 +130,11 @@ class ExplainPolishTest {
         manager.cancel(701)
         ExplainNotificationService.refresh(context)
         assertNotNull(shadowOf(manager).getNotification(701))
+        ExplainSettings.set(context, "notification", false)
+        ExplainNotificationService.update(context)
+        assertNull(shadowOf(manager).getNotification(701))
+        ExplainNotificationService.refresh(context)
+        assertNull(shadowOf(manager).getNotification(701))
     }
 
     @Test fun `service connect and window changes refresh but content changes do not`() {
@@ -120,13 +142,31 @@ class ExplainPolishTest {
         EdgeHandleFeatures.refreshEntries = { refreshes++ }
         val controller = Robolectric.buildService(EQOAccessibilityService::class.java).create()
         try {
-            controller.get().onServiceConnected()
+            invoke(controller.get(), "onServiceConnected")
             assertEquals(1, refreshes)
             controller.get().onAccessibilityEvent(AccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED))
             assertEquals(2, refreshes)
             controller.get().onAccessibilityEvent(AccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED))
             assertEquals(2, refreshes)
-        } finally { controller.destroy() }
+        } finally {
+            controller.destroy()
+        }
+    }
+
+    @Test fun `accessibility button routes explicit Explain entry source`() {
+        var source: String? = null
+        EdgeHandleFeatures.explain = { _, entry -> source = entry }
+        val controller = Robolectric.buildService(EQOAccessibilityService::class.java).create()
+        try {
+            invoke(controller.get(), "onServiceConnected")
+            val callback =
+                field(controller.get(), "explainButton") as
+                    android.accessibilityservice.AccessibilityButtonController.AccessibilityButtonCallback
+            callback.onClicked(controller.get().accessibilityButtonController)
+            assertEquals("accessibility_button", source)
+        } finally {
+            controller.destroy()
+        }
     }
 
     @Test fun `hub switch persists opt in and background row opens battery settings`() {
@@ -140,9 +180,71 @@ class ExplainPolishTest {
             toggle.isChecked = false
             assertFalse(HandlePreferences(context).enabled)
             activity.findViewById<Button>(R.id.hub_background).performClick()
-            assertEquals(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS,
-                shadowOf(activity).nextStartedActivity.action)
-        } finally { lifecycle.pause().stop().destroy() }
+            assertEquals(
+                android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS,
+                shadowOf(activity).nextStartedActivity.action,
+            )
+        } finally {
+            lifecycle.pause().stop().destroy()
+        }
+    }
+
+    @Test fun `hub opt in draws handle immediately and EQO panel cannot hide itself`() {
+        val service = Robolectric.buildService(EQOAccessibilityService::class.java).create()
+        invoke(service.get(), "onServiceConnected")
+        val lifecycle = Robolectric.buildActivity(SetupHubActivity::class.java).setup()
+        try {
+            val edge = field(service.get(), "edgeHandle")!!
+            val main = shadowOf(Looper.getMainLooper())
+            main.idle()
+            assertNull(field(edge, "view"))
+            lifecycle.get().findViewById<Switch>(R.id.hub_edge_handle).isChecked = true
+            main.idle()
+            val handle = field(edge, "view") as View
+            assertTrue(handle.isAttachedToWindow)
+            assertTrue(HandlePreferences(context).hintShown)
+            handle.performClick()
+            val panel = field(edge, "view") as ViewGroup
+            assertFalse(
+                buttons(panel).any {
+                    it.text == context.getString(ai.eqo.platform.R.string.edge_handle_hide_app)
+                },
+            )
+            lifecycle.get().findViewById<Switch>(R.id.hub_edge_handle).isChecked = false
+            main.idle()
+            assertNull(field(edge, "view"))
+        } finally {
+            lifecycle.pause().stop().destroy()
+            service.destroy()
+        }
+    }
+
+    @Test fun `Explain shortcut is first for fresh registry and routes edge source`() {
+        val registry = ai.eqo.handle.createHandleRegistry(context)
+        val shortcut = registry.ordered().first()
+        assertEquals("explain_screen", shortcut.id)
+        assertTrue(registry.enabled(shortcut.id))
+        shortcut.run(context)
+        val intent = shadowOf(context as android.app.Application).nextStartedActivity
+        assertEquals(ExplainEntryActivity::class.java.name, intent.component?.className)
+        assertEquals("edge_handle", intent.getStringExtra("entry_source"))
+    }
+
+    @Test fun `entry without accessibility logs no service and never opens panel`() {
+        val lifecycle =
+            Robolectric
+                .buildActivity(
+                    ExplainEntryActivity::class.java,
+                    ExplainEntryActivity.entryIntent(context, "edge_handle"),
+                ).create()
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
+        assertNull(current())
+        assertTrue(
+            org.robolectric.shadows.ShadowLog.getLogsForTag("EqoExplain").any {
+                it.msg == "no-service source=edge_handle"
+            },
+        )
+        lifecycle.destroy()
     }
 
     @Test fun `hidden app list supports individual and all unhide and cannot hide EQO`() {
@@ -150,33 +252,64 @@ class ExplainPolishTest {
         prefs.hide(context.packageName)
         assertFalse(prefs.isHidden(context.packageName))
         assertFalse(context.packageName in prefs.hiddenApps())
-        prefs.preferences.edit().putStringSet("hidden_apps", setOf(context.packageName, "test.one", "test.two")).commit()
+        prefs.preferences
+            .edit()
+            .putStringSet("hidden_apps", setOf(context.packageName, "test.one", "test.two"))
+            .commit()
         assertFalse(prefs.isHidden(context.packageName))
         val lifecycle = Robolectric.buildActivity(EdgeHandleSettingsActivity::class.java).setup()
         try {
             val activity = lifecycle.get()
+
             fun root() = activity.findViewById<ViewGroup>(android.R.id.content)
-            buttons(root()).first { it.text == context.getString(R.string.handle_unhide_app, "test.one") }.performClick()
+            assertTrue(texts(root()).any { it.text == context.getString(R.string.handle_hidden_count, 3) })
+            buttons(root())
+                .first { it.text == context.getString(R.string.handle_unhide_app, "test.one") }
+                .performClick()
             assertFalse(prefs.isHidden("test.one"))
+            assertTrue(texts(root()).any { it.text == context.getString(R.string.handle_hidden_count, 2) })
             assertTrue(prefs.isHidden("test.two"))
             buttons(root()).first { it.text == context.getString(R.string.handle_unhide_all) }.performClick()
             assertTrue(prefs.hiddenApps().isEmpty())
-        } finally { lifecycle.pause().stop().destroy() }
+            assertTrue(texts(root()).any { it.text == context.getString(R.string.handle_hidden_count, 0) })
+        } finally {
+            lifecycle.pause().stop().destroy()
+        }
     }
+
+    private fun texts(view: View): List<android.widget.TextView> =
+        (if (view is android.widget.TextView) listOf(view) else emptyList()) +
+            (if (view is ViewGroup) (0 until view.childCount).flatMap { texts(view.getChildAt(it)) } else emptyList())
 
     private fun buttons(view: View): List<Button> =
         (if (view is Button) listOf(view) else emptyList()) +
             (if (view is ViewGroup) (0 until view.childCount).flatMap { buttons(view.getChildAt(it)) } else emptyList())
 
-    private fun field(target: Any, name: String): Any? =
-        target.javaClass.getDeclaredField(name).apply { isAccessible = true }.get(target)
+    private fun field(
+        target: Any,
+        name: String,
+    ): Any? =
+        target.javaClass
+            .getDeclaredField(name)
+            .apply { isAccessible = true }
+            .get(target)
 
-    private fun invoke(target: Any, name: String) {
-        target.javaClass.getDeclaredMethod(name).apply { isAccessible = true }.invoke(target)
+    private fun invoke(
+        target: Any,
+        name: String,
+    ) {
+        target.javaClass
+            .getDeclaredMethod(name)
+            .apply { isAccessible = true }
+            .invoke(target)
     }
 
     private fun current(): Any? {
-        val ref = ExplainOverlay::class.java.getDeclaredField("current").apply { isAccessible = true }.get(null)
+        val ref =
+            ExplainOverlay::class.java
+                .getDeclaredField("current")
+                .apply { isAccessible = true }
+                .get(null)
         return (ref as? WeakReference<*>)?.get()
     }
 }

@@ -277,9 +277,11 @@ class HandleFeaturesTest {
         val lifecycle = Robolectric.buildActivity(TaskActivity::class.java, intent).setup()
         assertTrue(lifecycle.get().findViewById<EditText>(R.id.task_request).hasFocus())
         assertTrue(lifecycle.get().findViewById<android.widget.Button>(R.id.task_voice_button).isShown)
-        assertFalse(descendants(lifecycle.get().window.decorView).filterIsInstance<android.widget.TextView>().any {
-            it.text == context.getString(R.string.task_practice_title)
-        })
+        assertFalse(
+            descendants(lifecycle.get().window.decorView).filterIsInstance<android.widget.TextView>().any {
+                it.text == context.getString(R.string.task_practice_title)
+            },
+        )
         assertEquals(null, TaskRunSession.controller)
         lifecycle.pause().stop().destroy()
     }
@@ -309,15 +311,19 @@ class HandleFeaturesTest {
                         )
                 }
             move.performClick()
-            assertEquals(listOf("explain_screen", "ask_eqo", "pause", "open_eqo", "stop"),
-                registry.ordered().map { it.id })
+            assertEquals(
+                listOf("explain_screen", "ask_eqo", "pause", "open_eqo", "stop"),
+                registry.ordered().map { it.id },
+            )
             descendants(activity.window.decorView)
                 .filterIsInstance<android.widget.Button>()
                 .first {
                     it.text == context.getString(R.string.handle_reset)
                 }.performClick()
-            assertEquals(listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo"),
-                registry.ordered().map { it.id })
+            assertEquals(
+                listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo"),
+                registry.ordered().map { it.id },
+            )
             assertTrue(registry.enabled("ask_eqo"))
             assertTrue(HandlePreferences(context).enabled)
         } finally {

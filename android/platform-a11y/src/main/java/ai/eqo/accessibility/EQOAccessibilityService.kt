@@ -165,6 +165,7 @@ class EQOAccessibilityService :
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         edgeHandle?.configurationChanged()
+        EdgeHandleFeatures.configurationChanged()
     }
 
     override fun onDestroy() {

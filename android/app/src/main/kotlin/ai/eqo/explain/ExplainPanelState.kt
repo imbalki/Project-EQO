@@ -10,7 +10,7 @@ internal class ExplainPanelState(
     private var seeUntil = 0L
 
     val seeThrough: Boolean get() = now() < seeUntil
-    val alpha: Float get() = if (seeThrough) 0.05f else 1f
+    val alpha: Float get() = if (seeThrough) SEE_ALPHA else 1f
 
     fun seeScreen() {
         seeUntil = now() + SEE_MS
@@ -28,6 +28,7 @@ internal class ExplainPanelState(
 
     companion object {
         const val SEE_MS = 5000L
+        const val SEE_ALPHA = 0.05f
         const val MAX_FRACTION = 0.35f
         const val MEDIUM_FRACTION = 0.25f
         const val BACKGROUND_ALPHA = 217 // 85% of 255, text stays fully opaque.
