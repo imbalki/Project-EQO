@@ -43,7 +43,12 @@ class GatedServiceActions(
         y: Float,
     ): A11yResult =
         automation.runAction {
-            automation.ownWindowBlocked("gesture") ?: if (ops.clickCoordinates(x, y)) {
+            automation.ownWindowBlocked("gesture") ?: if (
+                ai.eqo.accessibility.handle.HandleWindowGuard.shared
+                    .blocksGesture(x, y)
+            ) {
+                A11yResult.failure(A11yError.ActionRejected("EQO edge handle"))
+            } else if (ops.clickCoordinates(x, y)) {
                 A11yResult.success("gesture tap ($x,$y)")
             } else {
                 A11yResult.failure(A11yError.ActionRejected("gesture tap"))

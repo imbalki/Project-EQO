@@ -2,4 +2,9 @@
 <resources>
     <string name="eqo_accessibility_service_label">EQO</string>
     <string name="eqo_accessibility_service_description">EQO observes the screen, taps, scrolls and types only to carry out tasks you ask for. The moment you touch the screen during a task, EQO pauses and hands control back to you. EQO never grants itself this permission: you turn it on in Android\'s Accessibility settings.</string>
+    <string name="edge_handle_title">EQO edge handle</string>
+    <string name="edge_handle_open">Open EQO shortcuts. Drag to move; long press for Hide for this app.</string>
+    <string name="edge_handle_hide_app">Hide for this app</string>
+    <string name="edge_handle_close">Close</string>
+    <string name="edge_handle_hint">Drag me up or down. Tap to open.</string>
 </resources>

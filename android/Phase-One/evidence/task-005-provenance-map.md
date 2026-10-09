@@ -9,6 +9,41 @@
 | :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceAudioRecorder.kt` | EQO-NEW | `ai.eqo.task` | Bounded ephemeral PCM/WAV capture and file cleanup |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceInputV2Test.kt` | EQO-NEW | `ai.eqo.task` | Fake recorder/provider draft-only consent and cleanup regressions |
 | :core-llm | `android/core-llm/src/test/java/ai/eqo/core/llm/providers/OpenRouterAudioTest.kt` | EQO-NEW | `ai.eqo.core.llm.providers` | Synthetic input_audio and capability tests; no network |
+## Explain/handle UX polish (t_e84b3eaa)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainPanelState.kt` | EQO-NEW | `ai.eqo.explain` | Bounded panel sizes and clock-testable five-second touch-through state |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainPolishTest.kt` | EQO-NEW | `ai.eqo.explain` | Panel, reopen, notification refresh, entry routes, hub and hidden-app regressions |
+## Pairing discovery fix (t_9a512691)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/MdnsMessage.kt` | EQO-NEW | `ai.eqo.onboarding` | Bounded DNS SRV/A/AAAA parser, compression loop guard and own-address validation |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WifiMdnsResolver.kt` | EQO-NEW | `ai.eqo.onboarding` | Wi-Fi-bound multicast query with bounded retry and one-winner framework fallback |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WirelessPairingReply.kt` | EQO-NEW | `ai.eqo.onboarding` | Strict transient code and optional explicit ports; revision-bound wait when connect port is unknown |
+| :app | `android/app/src/debug/kotlin/ai/eqo/onboarding/DebugPairReceiver.kt` | EQO-NEW | `ai.eqo.onboarding` | Debug source-set lab receiver, DEBUG guard, DUMP-protected manifest and shared pairing service |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/MdnsMessageTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Synthetic DNS packets, compression, truncation, bounds and own-host safety |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/WirelessResolveAttemptTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Fake framework success/failure/timeout, fallback order and late callbacks |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/WirelessPairingReplyTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Reply validation and fake pair/connect runner without helper authorization |
+| :app | `android/app/src/testDebug/kotlin/ai/eqo/onboarding/DebugPairReceiverTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Debug receiver forwarding, malformed extras and release-source-set exclusion guard |
+
+## Edge-handle additions (t_a3fa16d0)
+
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleShortcutRegistry.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Internal shortcut API and fake-store-testable choice/order |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandlePreferences.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | App-private choices, placement and hidden apps |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleWindowGuard.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Overlay coordinate and own-window guard |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/EdgeHandleOverlay.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | User-only accessibility handle and dynamic panel |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/handle/HandleShortcutRegistryTest.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Fake registry/order/default/availability regressions |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/HandleWindowSafetyTest.kt` | EQO-NEW | `ai.eqo.accessibility` | Underlying-window gesture and takeover exclusions |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/BuiltInHandleShortcuts.kt` | EQO-NEW | `ai.eqo.handle` | Existing controller Pause/Stop and app/task entries |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/EdgeHandleSettingsActivity.kt` | EQO-NEW | `ai.eqo.handle` | Opt-in, shortcut choice, Up/Down, reset and restore |
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleFeaturesTest.kt` | EQO-NEW | `ai.eqo.handle` | Preference, focus and real public controller regressions |
+## Explain screen additions (t_699c0abc)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSession.kt` | EQO-NEW | `ai.eqo.explain` | Read-only explanation session, privacy bounds and protected-screen policy seam |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainRuntime.kt` | EQO-NEW | `ai.eqo.explain` | Foreground tree extraction, memory-only capture and configured provider adapter |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainEntry.kt` | EQO-NEW | `ai.eqo.explain` | Tile, transient entry, notification shortcut and Boolean preferences |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainOverlay.kt` | EQO-NEW | `ai.eqo.explain` | Accessibility result sheet, typed follow-ups and device speech |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSettingsActivity.kt` | EQO-NEW | `ai.eqo.explain` | Screen-sharing consent, auto-read and notification settings |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainSessionTest.kt` | EQO-NEW | `ai.eqo.explain` | Fake-source/model decision, privacy and lifetime regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainAndroidTest.kt` | EQO-NEW | `ai.eqo.explain` | Android extractor, capability metadata and explicit notification routing regressions |
 
 ## Voice-input additions (t_e9ef0f95)
 

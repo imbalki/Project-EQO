@@ -104,8 +104,8 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
 
     <!-- TASK-015: guided wireless ADB (UF-04/UF-05, S-08..S-11). Two ports, two names (REQ-ADB-05). -->
     <string name="wireless_adb_title">Wireless debugging</string>
-    <string name="wireless_adb_explanation">1. Connect this phone to Wi-Fi. Tap Find ports to enable the code notification.\n2. Open Developer options, turn on Wireless debugging, then tap Pair device with pairing code.\n3. Keep that dialog open. Reply to the EQO notification with the six-digit code.\n4. Return to EQO, tap Connect again, then tap Allow in EQO\'s helper prompt.\nIf notifications are blocked, enter the code here using split screen. EQO finds both ports for you.</string>
-    <string name="wireless_adb_pairing_code_hint">Pairing code (six digits)</string>
+    <string name="wireless_adb_explanation">1. Connect this phone to Wi-Fi. Tap Find ports to enable the code notification.\n2. Open Developer options, turn on Wireless debugging, then tap Pair device with pairing code.\n3. Keep that dialog open. Reply to the EQO notification with the six-digit code. If ports are not found, type code and pairing port, optionally followed by the connection port, separated by spaces or commas. With no connection port yet, EQO waits up to one minute before pairing.\n4. Return to EQO, tap Connect again, then tap Allow in EQO\'s helper prompt.\nThe code box here accepts the same format. Supplying both ports does not need discovery.</string>
+    <string name="wireless_adb_pairing_code_hint">Code, optionally pairing port and connection port</string>
     <string name="wireless_adb_pairing_port_hint">Pairing port</string>
     <string name="wireless_adb_connection_port_hint">Connection port</string>
     <string name="wireless_adb_run_checks">Pair and connect</string>
@@ -117,7 +117,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="wireless_link_lost">Paired, but not connected right now. Turn on Wireless debugging, then tap Connect again.</string>
     <string name="wireless_link_repair">Needs re-pair. This phone no longer matches the pairing EQO recorded. Open Wireless debugging, tap Pair device with pairing code, and pair again.</string>
     <string name="wireless_adb_working">Working… keep the pairing dialog open.</string>
-    <string name="wireless_adb_bad_input">Enter the six-digit code. Wait for EQO to find both ports, or fill in the fallback port boxes.</string>
+    <string name="wireless_adb_bad_input">Enter a six-digit code, optionally followed by the pairing port and connection port, separated by spaces or commas. Ports must be 1024–65535 and different.</string>
     <string name="wireless_wifi_needed">Wi-Fi needed. Connect this phone to Wi-Fi before pairing. On Android 11–12, turn off a VPN while finding ports.</string>
     <string name="wireless_developer_options">Open Developer options</string>
     <string name="wireless_discovery_start">Find ports / enable code notification</string>
@@ -131,9 +131,10 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="wireless_notification_channel">EQO wireless pairing</string>
     <string name="wireless_notification_title">EQO is finding wireless debugging</string>
     <string name="wireless_notification_ready">Enter the pairing code for EQO</string>
-    <string name="wireless_notification_waiting">Open Wireless debugging and its pairing-code dialog. Tap here to return to EQO.</string>
+    <string name="wireless_notification_waiting">Open the pairing-code dialog. Reply with the code, or code and pairing port (optionally connection port), separated by spaces.</string>
     <string name="wireless_notification_reply">Enter code</string>
-    <string name="wireless_reply_invalid">Enter exactly six digits. Keep the pairing dialog open while EQO finds both ports.</string>
+    <string name="wireless_reply_invalid">Use six-digit code, pairing port, then optional connection port, separated by spaces or commas. Ports must be 1024–65535 and different. Connect to Wi-Fi first.</string>
+    <string name="wireless_reply_connection_needed">Code accepted for up to one minute. Keep the pairing dialog open while EQO finds the connection port, or reply again with code, pairing port and connection port. Pairing has not started yet.</string>
     <string name="wireless_reply_paired">Paired securely. Return to EQO and tap Connect again to start the helper and approve its prompt.</string>
     <string name="wireless_reply_failed">Could not pair securely. Reopen the pairing dialog and try its new code. Return to EQO if ports need to be entered.</string>
     <string name="wireless_adb_bad_port">Enter the connection port (the IP address and port value on the Wireless debugging screen).</string>
@@ -280,4 +281,16 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="run_action_rejected">The app did not accept the tap or text entry. Check the current screen, then try again.</string>
     <string name="run_failed_unknown">This step could not finish. EQO did not receive a specific reason. Check the current screen before trying again.</string>
     <string name="run_model_slow">The model took too long to answer. Try Plan again. Nothing ran.</string>
+    <string name="handle_settings_title">Edge handle shortcuts</string>
+    <string name="handle_settings_explanation">Optional EQO shortcuts on other screens; requires EQO Accessibility. Tap or swipe inward to open. Opening the panel pauses an active run after its current action finishes. Closing it does not resume: use the task screen to confirm Resume. Drag vertically to move, or across the screen to switch edge. Long press for Hide for this app. The keyboard or full-screen videos and games may hide the handle. It never reads or sends the screen. Unavailable shortcuts are omitted from the panel; your choices are kept.</string>
+    <string name="handle_enable">Enable edge handle</string>
+    <string name="handle_ask">Ask EQO</string>
+    <string name="handle_open">Open EQO</string>
+    <string name="handle_no_run">Unavailable: no active run.</string>
+    <string name="handle_move_up">Move up</string>
+    <string name="handle_move_down">Move down</string>
+    <string name="handle_move_up_named">Move %1$s up</string>
+    <string name="handle_move_down_named">Move %1$s down</string>
+    <string name="handle_reset">Reset to default</string>
+
 </resources>

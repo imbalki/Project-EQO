@@ -19,6 +19,96 @@ Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every me
 - NOT TESTED ON PHONE: long English/Hindi pauses, installed language packs, AudioRecord, provider audio models,
   permission dialogs, airplane mode, 60-second cap and cancellation. See the phone checklist in the test log.
 - Local commits only; lead owns push/PR. This card goes to same-card review, not self-completion.
+## Explain/handle UX polish (t_e84b3eaa, feat/explain-handle-polish): NOT TESTED ON PHONE
+
+- Compact Explain panel defaults to 25% of screen height; drag/tap the resize bar for a one-line
+  collapsed header, medium or large (35% maximum). The body scrolls, with 22sp answer text,
+  85%-opaque background, Read aloud, consent and follow-ups retained. Outside touches pass through.
+  See screen hides the keyboard and makes the entire panel 5%-opaque and non-touchable for five
+  seconds, then restores it. FLAG_SECURE is unchanged; no screen context is logged or persisted.
+- Explain screen is the first default edge shortcut on a fresh registry (saved user ordering is
+  preserved on upgrade). Accessibility connect/window-state callbacks repost the optional notification
+  directly, without trying to start a background foreground service; enabled handles refresh too.
+  This repairs a lost notification even if the OEM killed ExplainNotificationService. This is recovery
+  on the next observed window change, not a claim that EQO or its service can never be killed.
+- Accessibility button declared and routed through the transient Explain entry. API 31+ declares
+  isAccessibilityTool. Android 11 QS guidance has three plain steps and an editor hint; API 33+ has
+  the platform Add tile confirmation. There is no public direct Android 11 QS-editor intent.
+- Setup hub exposes the default-OFF Edge handle switch, accessibility-off wording, shortcut settings
+  and a background-running battery-settings row with Realme/ColorOS, Xiaomi and Samsung guidance.
+  First successful handle attachment shows “Drag me up or down. Tap to open.” once.
+- Owner follow-up: Ask already targets the real request planner with focus and optional voice button;
+  its shared layout incorrectly said “Practice run”. That heading now says “Your task”. No sample run
+  is started by Ask. Hidden apps settings now show the count and per-package Unhide / Unhide all;
+  EQO itself cannot be hidden, including legacy saved own-package choices.
+- Local verification: both final sequential scoped commands exit 0 (platform 1m 11s; app 6m 10s):
+  `:platform-a11y:ktlintFormat :platform-a11y:ktlintCheck :platform-a11y:detekt :platform-a11y:testDebugUnitTest :platform-a11y:lintDebug`;
+  then `:app:ktlintFormat :app:ktlintCheck :app:detekt :app:testDebugUnitTest :app:lintDebug`.
+  Both use `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process --console=plain`.
+  JUnit XML: platform 111 + app 251 = 362 tests, zero failures/errors/skips; 22 new API-30/33
+  polish cases. Repo/branding/provenance/secret checks, changed Kotlin <=120-character lines,
+  changed XML parsing and whitespace checks pass. No new permission or runtime dependency.
+  Native hub Switch has a narrowly documented XML lint exception to match platform Activity/StudyTheme.
+- Verification corrections: the peek deadline uses a close-cancelled main Handler (distinct name
+  avoids Button.handler receiver shadowing). Removed premature attachment-state reconciliation that
+  cancelled deferred handle panels; existing paced/in-flight Pause/Stop regressions now pass too.
+- NOT RUN: all-module/root Gradle gate, release/assemble APK, device/emulator instrumentation,
+  installation, real provider/speech/OEM behavior or GitHub CI. CI remains the full gate; commits local only.
+- Phone checklist (record actual results and build commit):
+  1. Realme Android 11: switch handle on in Setup, verify immediate drawing, first-use hint, drag and
+     Explain shortcut; switch off and confirm disappearance. With accessibility off, verify plain hint.
+  2. Explain a real other app twice: open, Close, open; exercise Read aloud and typed follow-up.
+     Check default height, all resize states, portrait/landscape, large font, keyboard and body scroll.
+  3. Tap See screen: verify background app receives taps inside and outside the faded panel and
+     full panel returns after five seconds. Check outside touches pass through normally too.
+  4. Enable notification, stop only ExplainNotificationService, change foreground window and verify
+     notification returns without starting that service; tap it twice. Deny notification permission
+     and switch preference off: it must not reappear. Check accessibility reconnect restores entries.
+  5. Add QS tile with the three manual steps; test Android accessibility button and configured
+     volume-key shortcut. On Android 13+, confirm Add tile request succeeds or cancels cleanly.
+  6. Open background-running row; inspect OEM battery/auto-start choices manually. No new permission.
+  7. Ask opens focused real request box with mic if available, never a practice/sample execution.
+     Hide another app, unhide it individually, then Unhide all; check count and immediate drawing.
+     Verify EQO settings always retain the handle even with a legacy own-package hidden preference.
+
+## Pairing discovery fix (t_9a512691, local-only fix/pairing-discovery)
+
+- Implemented: NSD still finds service instances. One bounded framework resolve attempt is preferred;
+  failure or no callback within 1.5 seconds invokes an independent Wi-Fi-interface-bound multicast
+  SRV query, then A/AAAA queries for its target. The socket uses mDNS multicast membership and a
+  WifiManager multicast lock; retries stop after four seconds. Network changes/close cancel sockets,
+  invalidate callbacks and release the lock. Parser limits packets, record counts, names and pointer
+  traversal; malformed/truncated/compression-loop replies yield no records. Only this phone's Wi-Fi
+  addresses are eligible, including IPv6 scope preservation. Logs contain only resolve method/status.
+- Notification Reply is available even with no discovered ports. Both reply and the in-app password
+  field accept CODE, CODE PAIRPORT, or CODE PAIRPORT CONNECTPORT, with spaces/commas, six ASCII code
+  digits and ports 1024–65535. Explicit ports override discovery; equal ports are refused. Three fields
+  require no discovery. Two fields use a known connection port, or wait in memory for up to one minute
+  for it; the owner can replace the pending reply with three fields. Waiting never starts PAIR, guesses
+  a connection port or reports enrollment. Codes are not saved in view state, logs or durable storage.
+- Security: no adb-pairing/authentication changes. Fresh CONNECT enrollment stays bound to its real
+  endpoint, PAIR and pinned CONNECT share the existing runner, and background replies never start or
+  authorize the helper. Return to EQO and tap Connect again; ADR-0006's own-process human Allow tap
+  remains required. Pending replies are discarded on timeout, Wi-Fi revision change, service close,
+  Forget and a new foreground pairing/reconnect run (synchronous main-thread cancellation).
+- Debug lab: `ai.eqo.debug.PAIR`, only in debug source/manifest, additionally checks BuildConfig.DEBUG
+  and requires sender permission android.permission.DUMP. Extras: string `code`, integer `pairing_port`
+  and integer `connection_port`. An explicit broadcast to ai.eqo.app/ai.eqo.onboarding.DebugPairReceiver
+  forwards validated extras to the same non-exported pairing service; it does not approve the helper.
+  Never paste real codes, addresses or ports into docs/logs. Tests cover release source-set exclusion.
+- Verified code commit `c8d6d2ad98ee912f57e3ed2bd3fc19e814a7b40b`: sequential app ktlintFormat,
+  ktlintCheck/detekt/testDebugUnitTest, then lintDebug/assembleDebug/processReleaseMainManifest all exit 0,
+  with `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`. Final JUnit XML: 255 app tests,
+  including 50 pairing regressions, zero failures/errors/skips. Repo/branding/provenance and whitespace/
+  changed-Kotlin line-length checks pass; all eight new Kotlin files are mapped (469 files/469 rows).
+  Actual merged debug manifest has the DUMP-protected receiver/action; actual merged release manifest
+  has neither. Debug APK exists, includes the receiver DEX and all four helper starter ABIs. Exact
+  commands, checksum and phone checklist are in PHASE-ONE-TEST-LOG.md. NOT TESTED ON PHONE; full root/
+  other-module unit suites, release APK/lint/unit tests and device instrumentation/CI were not run.
+  Lead owns install/device checklist, push/PR and the full CI merge gate. Worker requests same-card review.
+
+Last updated: 2026-10-09 (edge handle local handoff added). Update this file in the same PR as every merge to `main`.
+Last updated: 2026-10-09 (Explain screen section added). Update this file in the same PR as every merge to `main`.
 
 ## IN PROGRESS: files and attachments (branch `feat/files-attachments`, draft PR, do not merge)
 Plain-language status, updated after each step. Details and design: `docs/adr/0007-shared-files-and-attachments.md`.
@@ -26,6 +116,47 @@ Plain-language status, updated after each step. Details and design: `docs/adr/00
 - LEFT: phone test on the Realme (see list below). PR #6 is a draft; never merge it. CI (`android`, `android-branding`, `repo-checks`) is green on 3608d0a with `main` b7e8af2 already merged in; merge `main` again before reporting green if it moves.
 - NOT TESTED WITHOUT THE PHONE: the real Android "All files access" page; reading a real Downloads folder; a real screenshot being saved and shown in Gallery; Gmail, WhatsApp and Messages actually receiving the file and EQO pressing Send (their button names are guesses from known ids); WhatsApp opening the right chat from the number; a protected screen (bank app) refusing a screenshot; the plan-preview wording on screen.
 - NOT RUN IN THIS CLOUD SESSION: the full Gradle build (cloud box cannot reach Google's Maven); CI runs it. Lessons from CI: a constructor's trailing-lambda parameter must stay last; Advanced-category actions must stay out of macros (do not mark file actions READ_ONLY); lint wants KTX `SharedPreferences.edit {}`.
+
+## Edge handle (t_a3fa16d0, local-only branch feat/edge-handle)
+- Implemented: opt-in accessibility overlay, dynamic feature registry, persisted switches and Up/Down order,
+  reset/defaults and per-app hiding/restoration. Built-ins Ask EQO, Pause, Stop and Open EQO; future adapters
+  documented only in ADR-0010, not imported from other branches. Ask focuses the existing typed request;
+  that screen has no microphone. Pause/Stop use the existing StudyTaskController public controls.
+- Safety: own-package guard plus coordinate hitboxes and a panel-open automation refusal; overlay touch
+  exclusions compose with the existing task controls and never release takeover. No new resume path,
+  SYSTEM_ALERT_WINDOW permission, runtime dependency, screen-content capture or transmission.
+- Round-1 review correction: opening the panel requests the existing user Pause and waits for the
+  current action to settle before showing the guarded window. This prevents a due action from failing
+  the run before Pause/Stop selection. Closing/Back never resumes; settings explains explicit Resume.
+- Local verification of code commit `205739d` (sequential module-scoped commands, each exits 0):
+  `:platform-a11y:ktlintFormat :platform-a11y:ktlintCheck :platform-a11y:detekt :platform-a11y:testDebugUnitTest :platform-a11y:lintDebug`;
+  then `:app:ktlintFormat :app:ktlintCheck :app:detekt :app:testDebugUnitTest :app:lintDebug`.
+  Both used `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`. Platform: 111 tests; app: 186;
+  297 total, zero failures/errors/skips, including 16 edge-handle regressions. Repo/branding/provenance and
+  `git diff --check` pass; all new/changed Kotlin lines are at most 120 characters.
+- Review-correction verification: repeated both exact module commands above against the final code,
+  sequentially with the same worker/compiler flags; platform BUILD SUCCESSFUL in 2m 19s,
+  app BUILD SUCCESSFUL in 5m 34s. JUnit XML: platform 111, app 189; 300 tests, zero failures/errors/skips,
+  including 19 edge-handle tests. Three new app regressions cover real panel opening during paced work,
+  due-step/Pause/Stop without automation, in-flight settle/one-shot Pause/dismissal without resume,
+  and pending-open cancellation on foreground change/disable. Repo/branding/provenance, diff whitespace
+  and changed Kotlin file line-length checks pass (450 tracked Kotlin files, 450 provenance rows).
+  Initial method-size/return-count detekt findings were corrected; only the single integrated
+  scheduling scenario has a documented method-scoped LongMethod annotation. No new Kotlin files.
+- NOT RUN: root/all-module Gradle `ktlintCheck detekt test`, unit tests of untouched modules,
+  `assembleDebug`/APK install, release tasks, device/emulator instrumentation execution or GitHub CI.
+  Initial detekt findings were fixed. Android lint's physical LEFT/RIGHT docking warnings are intentionally
+  annotated only on two methods (ADR-0010); no lint baseline or global suppression was added.
+- NOT TESTED ON PHONE. Checklist in PHASE-ONE-TEST-LOG.md covers Gmail/Chrome/Settings, drag/edge switch,
+  Back/outside, hidden apps, Pause during a run, agent-tap refusal and OEM keyboard/full-screen behavior.
+  Lead pushes/opens the PR; this worker commits locally only. CI is the full gate.
+## Explain screen (t_699c0abc, local branch `feat/explain-screen`)
+
+- Implemented separately from automation: Quick Settings tile and optional ongoing-notification action; transient entry finishes before screen reading; bounded active-app text extraction with password/own-window exclusion; sparse/visual-question screenshot fallback through the existing in-memory accessibility JPEG primitive; exact-model image-capability check from the cached public catalog; large translucent accessibility overlay; read-aloud/auto-read; typed follow-ups that retain only the session's original screen context.
+- Screen-sharing consent is OFF by default, with first-use disclosure and an optional settings screen in Setup. No shared vision-locate consent exists on inspected origin/main `4a49832`. Before integration, if vision-locate has landed, replace the separate consent with its shared setting. ADR-0009 documents the permissive `ScreenProtectionPolicy` seam (next phase: protected-screen setting). No action/approval/takeover/own-window guard logic changed.
+- Remote main was rechecked and fetched during verification: `92802e7` adds draft-only voice input, not vision-locate consent. This branch retains its original base `4a49832`; the lead owns integration with the voice commit. A voice-drafted screen question, once submitted through the same task input, receives the shortcut guidance; the explanation sheet itself does not depend on voice input. Its controls scroll when space is limited, and follow-ups can also submit from the keyboard Send action. The input requests no personalized IME learning using the platform flag; the device keyboard must respect it.
+- Verified code commit `96220ce`: app-scoped `ktlintFormat`, `ktlintCheck`, `detekt`, `testDebugUnitTest`, `lintDebug` and `assembleDebug` all exit 0 (run one at a time, max two workers); 209 app tests, including 29 Explain executions, zero failures/errors/skips. Repo branding/provenance gate passes (448 Kotlin paths/rows); real debug APK built. Exact commands, output and APK checksum are in PHASE-ONE-TEST-LOG.md.
+- NOT TESTED ON PHONE: tile/shade entry on Android 11/13/14+, notification permission/channel behavior, live screen capture/model answers, overlay/keyboard layout, TTS and device language. Full-repository Gradle checks, other modules' unit tests, release checks and device instrumentation were not run. See the dedicated phone checklist in PHASE-ONE-TEST-LOG.md. The lead publishes; no push/PR by this worker. CI remains the full merge gate.
 
 ## Goal
 EQO Phase One: Android assistant app (OpenDroid base, OpenRouter bring-your-own-key, accessibility automation, wireless-ADB helper, Chrome control, guided setup, approvals, Pause/Stop/takeover). Owner is non-technical: plain language, real command output, say what was not tested.
