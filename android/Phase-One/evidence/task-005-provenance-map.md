@@ -1,5 +1,15 @@
 # TASK-005 per-file provenance map
 
+## Explain screen additions (t_699c0abc)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSession.kt` | EQO-NEW | `ai.eqo.explain` | Read-only explanation session, privacy bounds and protected-screen policy seam |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainRuntime.kt` | EQO-NEW | `ai.eqo.explain` | Foreground tree extraction, memory-only capture and configured provider adapter |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainEntry.kt` | EQO-NEW | `ai.eqo.explain` | Tile, transient entry, notification shortcut and Boolean preferences |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainOverlay.kt` | EQO-NEW | `ai.eqo.explain` | Accessibility result sheet, typed follow-ups and device speech |
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSettingsActivity.kt` | EQO-NEW | `ai.eqo.explain` | Screen-sharing consent, auto-read and notification settings |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainSessionTest.kt` | EQO-NEW | `ai.eqo.explain` | Fake-source/model decision, privacy and lifetime regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainAndroidTest.kt` | EQO-NEW | `ai.eqo.explain` | Android extractor, capability metadata and explicit notification routing regressions |
+
 ## Voice-input additions (t_e9ef0f95)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceInputPresenter.kt` | EQO-NEW | `ai.eqo.task` | Draft-only speech presentation, no submission capability |
