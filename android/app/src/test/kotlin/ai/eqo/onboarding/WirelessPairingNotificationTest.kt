@@ -99,12 +99,12 @@ class WirelessPairingNotificationTest {
     }
 
     @Test
-    fun noPairingAdvertisementMeansNoReplyAction() {
+    fun noPairingAdvertisementStillOffersManualReplyAction() {
         val controller = Robolectric.buildService(WirelessPairingService::class.java).create()
         try {
             val manager = controller.get().getSystemService(NotificationManager::class.java)
             val notification = shadowOf(manager).getNotification(80)
-            assertTrue(notification.actions.all { it.remoteInputs.isNullOrEmpty() })
+            assertEquals(1, notification.actions.count { !it.remoteInputs.isNullOrEmpty() })
             assertFalse(WirelessPairingSession.busy)
         } finally {
             controller.destroy()

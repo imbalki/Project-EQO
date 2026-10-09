@@ -1,8 +1,8 @@
 package ai.eqo.onboarding
 
 import ai.eqo.R
+import ai.eqo.adb.pairing.AdbPairingCode
 import ai.eqo.adb.pairing.HelperHooks
-import ai.eqo.adb.pairing.PairingInput
 import ai.eqo.adb.pairing.WirelessAdbActivationRunner
 import ai.eqo.study.StudyFlowGate
 import android.app.Notification
@@ -61,18 +61,28 @@ class WirelessPairingService : Service() {
         when (intent?.action) {
             STOP -> if (!WirelessPairingSession.busy) stopSelf()
             REPLY -> acceptReply(intent)
+            SUBMIT -> {
+                val reply = WirelessPairingReply.parse(intent.getStringExtra(CODE))
+                intent.removeExtra(CODE)
+                main.post { beginReply(reply) } // onCreate's Wi-Fi refresh must run first.
+            }
             else -> changed()
         }
         return START_NOT_STICKY
     }
 
     private fun acceptReply(intent: Intent) {
-        val code = consumeNotificationCode(intent)
+        val reply = consumeNotificationReply(intent)
+        if (intent.getStringExtra(TOKEN) != token) return
+        beginReply(reply)
+    }
+
+    private fun beginReply(reply: WirelessPairingReply?) {
         val permitted = StudyFlowGate.permits(StudyFlowGate.StudyTransport.WIRELESS_CONNECT_PLANE)
-        if (intent.getStringExtra(TOKEN) != token || WirelessPairingSession.busy || !permitted) return
+        if (WirelessPairingSession.busy || !permitted || closed) return
         val state = WirelessPairingSession.state
-        val endpoints = state.endpoints()
-        if (code == null || endpoints == null) {
+        val request = reply?.request(state.pairingPort, state.connectionPort)
+        if (request == null || state.networkId == null) {
             WirelessPairingSession.message = getString(R.string.wireless_reply_invalid)
             changed()
             return
@@ -87,16 +97,25 @@ class WirelessPairingService : Service() {
             val report =
                 runCatching {
                     val runner = WirelessAdbActivationRunner(StudySetup.keyStore(applicationContext), NoHelperConsent)
-                    pairNotificationReply(runner, PairingInput(endpoints, code)) {
-                        !closed && state.revision == revision
-                    }
+                    pairNotificationReply(
+                        runner,
+                        request.input,
+                        request.connect,
+                        { !closed && state.revision == revision },
+                    )
                 }.getOrNull()
             main.post {
                 WirelessPairingSession.busy = false
                 if (closed) return@post
                 StudySetup.wirelessReport = report
                 WirelessPairingSession.message =
-                    getString(if (report != null) R.string.wireless_reply_paired else R.string.wireless_reply_failed)
+                    getString(
+                        when {
+                            report == null -> R.string.wireless_reply_failed
+                            request.connect -> R.string.wireless_reply_paired
+                            else -> R.string.wireless_reply_pair_only
+                        },
+                    )
                 changed()
             }
         }
@@ -135,7 +154,7 @@ class WirelessPairingService : Service() {
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .addAction(Notification.Action.Builder(null, getString(R.string.wireless_discovery_stop), stop).build())
-        if (ready) {
+        if (!WirelessPairingSession.busy) {
             val reply =
                 PendingIntent.getService(
                     this,
@@ -185,13 +204,17 @@ class WirelessPairingService : Service() {
         internal const val CODE = "pairing_code"
         private const val REPLY = "ai.eqo.onboarding.PAIRING_REPLY"
         const val STOP = "ai.eqo.onboarding.PAIRING_STOP"
+        internal const val SUBMIT = "ai.eqo.onboarding.PAIRING_SUBMIT"
     }
 }
 
 /** The RemoteInput envelope is consumed in place, including malformed replies. No persistence. */
-internal fun consumeNotificationCode(intent: Intent): ai.eqo.adb.pairing.AdbPairingCode? =
+internal fun consumeNotificationCode(intent: Intent): AdbPairingCode? = consumeNotificationReply(intent)?.code
+
+internal fun consumeNotificationReply(intent: Intent): WirelessPairingReply? =
     try {
-        notificationPairingCode(RemoteInput.getResultsFromIntent(intent)?.getCharSequence(WirelessPairingService.CODE))
+        val raw = RemoteInput.getResultsFromIntent(intent)?.getCharSequence(WirelessPairingService.CODE)
+        WirelessPairingReply.parse(raw)
     } finally {
         intent.clipData = null
     }

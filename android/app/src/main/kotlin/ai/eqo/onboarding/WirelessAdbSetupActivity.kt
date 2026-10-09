@@ -19,10 +19,8 @@ import ai.eqo.R
 import ai.eqo.adb.pairing.ActivationCheck
 import ai.eqo.adb.pairing.ActivationReport
 import ai.eqo.adb.pairing.ActivationSequence
-import ai.eqo.adb.pairing.AdbPairingCode
 import ai.eqo.adb.pairing.CheckOutcome
 import ai.eqo.adb.pairing.HelperStartCommand
-import ai.eqo.adb.pairing.PairingInput
 import ai.eqo.adb.pairing.WirelessAdbActivationRunner
 import ai.eqo.adb.pairing.WirelessAdbEndpoints
 import ai.eqo.adb.pairing.WirelessLink
@@ -96,18 +94,31 @@ class WirelessAdbSetupActivity : Activity() {
 
     private fun pairAndConnect() {
         if (!canConnect()) return
-        val code = (AdbPairingCode.parse(rawCode()) as? AdbPairingCode.ParseResult.Ok)?.code
+        val reply = WirelessPairingReply.parse(rawCode())
         val state = WirelessPairingSession.state
-        val pairingPort = state.pairingPort ?: portOf(R.id.pairing_port_input)
-        val connectionPort = state.connectionPort ?: portOf(R.id.connection_port_input)
-        if (code == null || pairingPort == null || connectionPort == null) {
+        val request =
+            reply?.request(
+                state.pairingPort ?: portOf(R.id.pairing_port_input),
+                state.connectionPort ?: portOf(R.id.connection_port_input),
+            )
+        if (request == null) {
             showMessage(getString(R.string.wireless_adb_bad_input))
             return
         }
-        val endpoints = WirelessAdbEndpoints(pairingPort, connectionPort)
         // The code is single-use: do not keep it on screen or in the view state.
         findViewById<EditText>(R.id.pairing_code_input).setText("")
-        runInBackground { sequence -> sequence.run(PairingInput(endpoints, code)) }
+        if (request.connect) {
+            runInBackground { sequence -> sequence.run(request.input) }
+        } else {
+            startForegroundService(
+                Intent(this, WirelessPairingService::class.java)
+                    .setAction(WirelessPairingService.SUBMIT)
+                    .putExtra(
+                        WirelessPairingService.CODE,
+                        reply.code.digits + " " + request.input.endpoints.pairingPort,
+                    ),
+            )
+        }
     }
 
     private fun reconnect() {

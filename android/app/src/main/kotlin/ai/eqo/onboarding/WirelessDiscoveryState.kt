@@ -94,11 +94,13 @@ internal fun notificationPairingCode(raw: CharSequence?): AdbPairingCode? =
 internal fun pairNotificationReply(
     runner: ActivationStepRunner,
     input: PairingInput,
+    connect: Boolean = true,
     networkStillValid: () -> Boolean,
 ): ActivationReport {
     check(networkStillValid()) { "Wi-Fi changed" }
     runner.pair(input.endpoints, input.code)
     check(networkStillValid()) { "Wi-Fi changed" }
+    if (!connect) return ActivationReport(listOf(CheckRecord(ActivationCheck.PAIR, CheckOutcome.Passed)))
     runner.connect(input.endpoints)
     check(networkStillValid()) { "Wi-Fi changed" }
     return ActivationReport(
