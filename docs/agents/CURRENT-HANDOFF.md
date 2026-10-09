@@ -17,7 +17,16 @@ Plain-language status, updated after each step. Details and design: `docs/adr/00
 - Safety: own-package guard plus coordinate hitboxes and a panel-open automation refusal; overlay touch
   exclusions compose with the existing task controls and never release takeover. No new resume path,
   SYSTEM_ALERT_WINDOW permission, runtime dependency, screen-content capture or transmission.
-- Local checks: pending final module-scoped output; exact results will replace this line before handoff.
+- Local verification of code commit `205739d` (sequential module-scoped commands, each exits 0):
+  `:platform-a11y:ktlintFormat :platform-a11y:ktlintCheck :platform-a11y:detekt :platform-a11y:testDebugUnitTest :platform-a11y:lintDebug`;
+  then `:app:ktlintFormat :app:ktlintCheck :app:detekt :app:testDebugUnitTest :app:lintDebug`.
+  Both used `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`. Platform: 111 tests; app: 186;
+  297 total, zero failures/errors/skips, including 16 edge-handle regressions. Repo/branding/provenance and
+  `git diff --check` pass; all new/changed Kotlin lines are at most 120 characters.
+- NOT RUN: root/all-module Gradle `ktlintCheck detekt test`, unit tests of untouched modules,
+  `assembleDebug`/APK install, release tasks, device/emulator instrumentation execution or GitHub CI.
+  Initial detekt findings were fixed. Android lint's physical LEFT/RIGHT docking warnings are intentionally
+  annotated only on two methods (ADR-0010); no lint baseline or global suppression was added.
 - NOT TESTED ON PHONE. Checklist in PHASE-ONE-TEST-LOG.md covers Gmail/Chrome/Settings, drag/edge switch,
   Back/outside, hidden apps, Pause during a run, agent-tap refusal and OEM keyboard/full-screen behavior.
   Lead pushes/opens the PR; this worker commits locally only. CI is the full gate.

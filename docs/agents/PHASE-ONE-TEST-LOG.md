@@ -2,7 +2,13 @@
 
 ## Edge handle (t_a3fa16d0, feat/edge-handle): NOT TESTED ON PHONE
 
-Local verification results are recorded in CURRENT-HANDOFF.md after the module checks finish.
+Local code commit `205739d`: sequential platform-a11y and app ktlintFormat, ktlintCheck, detekt,
+testDebugUnitTest and lintDebug commands exit 0 (`--max-workers=2`, Kotlin compiler in-process).
+JUnit XML totals: platform 111, app 186; 297 tests, no failures/errors/skips. Six app edge-handle
+tests exercise real preference/widgets/overlay objects with fake run execution, including existing
+controller Pause/Stop, focus, drag/edge switch, hide-app and settings choice/order/reset. Ten platform
+edge-handle tests use fake registry storage/nodes/operations to check defaults/upgrades/availability,
+own-overlay refusal and takeover exclusion. Exact commands and checks not run are in CURRENT-HANDOFF.md.
 This feature has not been installed or exercised on a phone by this worker. Full CI remains the gate.
 
 Phone checklist (record build commit and actual results before merge):
