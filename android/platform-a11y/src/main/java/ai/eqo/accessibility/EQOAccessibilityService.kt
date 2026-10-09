@@ -1,6 +1,7 @@
 // Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/accessibility/OpenDroidAccessibilityService.kt
 package ai.eqo.accessibility
 
+import ai.eqo.accessibility.handle.EdgeHandleFeatures
 import ai.eqo.accessibility.handle.EdgeHandleOverlay
 import ai.eqo.accessibility.handle.HandleWindowGuard
 import android.accessibilityservice.AccessibilityService
@@ -44,6 +45,12 @@ class EQOAccessibilityService :
 
     private var touchProbeView: TouchProbeView? = null
     private var edgeHandle: EdgeHandleOverlay? = null
+    private val explainButton =
+        object : android.accessibilityservice.AccessibilityButtonController.AccessibilityButtonCallback() {
+            override fun onClicked(controller: android.accessibilityservice.AccessibilityButtonController) {
+                EdgeHandleFeatures.explain(this@EQOAccessibilityService, "accessibility_button")
+            }
+        }
 
     /**
      * Typed observe/tap/scroll/type layer over this service's node tree. Surfaces
@@ -96,6 +103,8 @@ class EQOAccessibilityService :
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
+        accessibilityButtonController.registerAccessibilityButtonCallback(explainButton)
+        EdgeHandleFeatures.refreshEntries(this)
         // Only Phase-One takeover observation; no donor work is started on binding.
         addTouchProbe()
         windowManager?.let { manager ->
@@ -106,6 +115,8 @@ class EQOAccessibilityService :
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            EdgeHandleFeatures.refreshEntries(this)
+            edgeHandle?.refresh()
             val targetPackage = event.packageName?.toString()
             val windowClass = event.className?.toString().orEmpty()
             val appWindow = targetPackage != packageName || windowClass.endsWith("Activity")
@@ -154,10 +165,12 @@ class EQOAccessibilityService :
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         edgeHandle?.configurationChanged()
+        EdgeHandleFeatures.configurationChanged()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        accessibilityButtonController.unregisterAccessibilityButtonCallback(explainButton)
         edgeHandle?.destroy()
         edgeHandle = null
         removeTouchProbe()

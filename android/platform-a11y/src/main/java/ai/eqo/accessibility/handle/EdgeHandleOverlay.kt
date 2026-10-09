@@ -59,7 +59,7 @@ class EdgeHandleOverlay(
         refresh()
     }
 
-    private fun refresh() {
+    fun refresh() {
         handler.removeCallbacks(refreshTask)
         handler.post(refreshTask)
     }
@@ -128,6 +128,12 @@ class EdgeHandleOverlay(
         }
         bindDrag(handle, params)
         attach(handle, params)
+        if (view === handle && !preferences.hintShown) {
+            android.widget.Toast
+                .makeText(context, R.string.edge_handle_hint, android.widget.Toast.LENGTH_LONG)
+                .show()
+            preferences.hintShown = true
+        }
     }
 
     @Suppress("CyclomaticComplexMethod") // One DOWN/MOVE/UP/CANCEL state machine with tap and long-press attribution.
@@ -221,9 +227,11 @@ class EdgeHandleOverlay(
                 if (shortcut.unavailableReason(context) == null) shortcut.run(context)
             }
         }
-        addButton(column, R.string.edge_handle_hide_app) {
-            preferences.hide(foregroundPackage)
-            removeWindow()
+        if (foregroundPackage != context.packageName) {
+            addButton(column, R.string.edge_handle_hide_app) {
+                preferences.hide(foregroundPackage)
+                removeWindow()
+            }
         }
         addButton(column, R.string.edge_handle_close) { closePanel() }
         val scroll = ScrollView(context)

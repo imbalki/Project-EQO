@@ -1,5 +1,9 @@
 # TASK-005 per-file provenance map
 
+## Explain/handle UX polish (t_e84b3eaa)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainPanelState.kt` | EQO-NEW | `ai.eqo.explain` | Bounded panel sizes and clock-testable five-second touch-through state |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainPolishTest.kt` | EQO-NEW | `ai.eqo.explain` | Panel, reopen, notification refresh, entry routes, hub and hidden-app regressions |
 ## Pairing discovery fix (t_9a512691)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/onboarding/MdnsMessage.kt` | EQO-NEW | `ai.eqo.onboarding` | Bounded DNS SRV/A/AAAA parser, compression loop guard and own-address validation |

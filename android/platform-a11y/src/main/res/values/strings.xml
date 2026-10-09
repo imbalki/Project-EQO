@@ -6,4 +6,5 @@
     <string name="edge_handle_open">Open EQO shortcuts. Drag to move; long press for Hide for this app.</string>
     <string name="edge_handle_hide_app">Hide for this app</string>
     <string name="edge_handle_close">Close</string>
+    <string name="edge_handle_hint">Drag me up or down. Tap to open.</string>
 </resources>

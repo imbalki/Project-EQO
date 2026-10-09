@@ -264,5 +264,5 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="handle_move_up_named">Move %1$s up</string>
     <string name="handle_move_down_named">Move %1$s down</string>
     <string name="handle_reset">Reset to default</string>
-    <string name="handle_restore_apps">Show handle in hidden apps again</string>
+
 </resources>

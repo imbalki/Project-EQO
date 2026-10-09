@@ -13,6 +13,22 @@ Status: implemented locally; host checks and phone validation recorded in PHASE-
 - `ScreenProtectionPolicy` is an explicit permissive-default seam: next phase: protected-screen setting. This flow does not add a secure-window policy refusal. Android may itself refuse a protected screenshot; that falls back to text. Skipping password fields and limiting image transmission are separate privacy hygiene, not a protected-app denylist.
 - Diagnostics are only source type and success/error class; never screen text, image, question, answer, provider response body or credential. Screen context is not serialized, saved in view state, persisted to preferences, files or conversation stores. Read aloud uses the device's configured TTS engine, which may require network voice data; the phone checklist must verify its behavior.
 
-## Validation limits
+## UX recovery amendment (t_e84b3eaa)
 
+Owner phone testing showed that a killed notification foreground service made the second Explain
+entry disappear. The optional notification is now also posted directly from app callbacks invoked
+by the accessibility service on connection and window-state changes. This deliberately avoids
+restarting an FGS from every background event on recent Android. The accessibility service is still
+subject to OS/user termination; recovery is opportunistic, not a keep-alive guarantee. Edge handle
+Explain is the recommended primary entry, with accessibility button and QS/notification alternatives.
+All routes still finish the transient activity before capture and log only fixed entry-source labels.
+
+Panel sizes are collapsed header, 25% and 35% of display height. The body background is 85%-opaque,
+not the text. See screen temporarily sets the whole overlay to 5% opacity and FLAG_NOT_TOUCHABLE
+for five seconds; the timer restores interaction. No dim/full-screen input window is added and
+FLAG_SECURE remains set. Timer-only restoration is intentional: a non-touchable panel cannot accept
+the same tap without defeating the touch-through requirement. Android 11 tile installation uses
+manual editor guidance; API 33+ additionally offers requestAddTileService with system confirmation.
+
+## Validation limits
 Fake model/source tests cover decisions, consent, privacy bounds, capability fallback, session reuse and late-result rejection. Robolectric checks exercise Android root extraction, screenshot revalidation, preferences, catalog metadata and notification target routing without network. OEM shade-collapse timing, actual accessibility overlay/keyboard layout, background entry restrictions, screenshots, provider answers and speech require the phone checklist. CI remains the full gate.

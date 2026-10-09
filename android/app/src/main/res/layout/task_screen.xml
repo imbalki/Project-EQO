@@ -12,7 +12,7 @@
         android:paddingTop="@dimen/study_space_small"
         android:textSize="@dimen/study_text_heading"
         android:textStyle="bold"
-        android:text="@string/task_practice_title"
+        android:text="@string/task_title"
         android:accessibilityHeading="true" />
     <TextView
         android:id="@+id/task_practice_countdown"

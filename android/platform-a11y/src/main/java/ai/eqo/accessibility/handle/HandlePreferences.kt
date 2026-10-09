@@ -8,11 +8,16 @@ import androidx.core.content.edit
 class HandlePreferences(
     context: Context,
 ) : HandleChoiceStore {
+    private val ownPackage = context.packageName
     val preferences: SharedPreferences = context.getSharedPreferences("edge_handle", Context.MODE_PRIVATE)
 
     var enabled: Boolean
         get() = preferences.getBoolean("handle_enabled", false)
         set(value) = preferences.edit { putBoolean("handle_enabled", value) }
+
+    var hintShown: Boolean
+        get() = preferences.getBoolean("hint_shown", false)
+        set(value) = preferences.edit { putBoolean("hint_shown", value) }
 
     var rightEdge: Boolean
         get() = preferences.getBoolean("right_edge", true)
@@ -22,17 +27,22 @@ class HandlePreferences(
         get() = preferences.getFloat("vertical_fraction", DEFAULT_VERTICAL_FRACTION).coerceIn(0f, 1f)
         set(value) = preferences.edit { putFloat("vertical_fraction", value.coerceIn(0f, 1f)) }
 
-    fun isHidden(packageName: String): Boolean = packageName in hiddenApps()
+    fun isHidden(packageName: String): Boolean = packageName != ownPackage && packageName in hiddenApps()
 
     fun hide(packageName: String) {
+        if (packageName == ownPackage) return
         preferences.edit { putStringSet("hidden_apps", hiddenApps() + packageName) }
+    }
+
+    fun unhide(packageName: String) {
+        preferences.edit { putStringSet("hidden_apps", hiddenApps() - packageName) }
     }
 
     fun clearHiddenApps() {
         preferences.edit { remove("hidden_apps") }
     }
 
-    private fun hiddenApps(): Set<String> = preferences.getStringSet("hidden_apps", emptySet()).orEmpty().toSet()
+    fun hiddenApps(): Set<String> = preferences.getStringSet("hidden_apps", emptySet()).orEmpty().toSet()
 
     override fun load(): HandleChoice =
         HandleChoice(
@@ -60,6 +70,10 @@ class HandlePreferences(
 
 /** Application installs feature registrations; service and settings render the same registry. */
 object EdgeHandleFeatures {
+    // App callbacks keep this library independent of app notification/Explain classes.
+    var refreshEntries: (Context) -> Unit = {}
+    var configurationChanged: () -> Unit = {}
+    var explain: (Context, String) -> Unit = { _, _ -> }
     var registry: HandleShortcutRegistry<Context>? = null
         private set
 

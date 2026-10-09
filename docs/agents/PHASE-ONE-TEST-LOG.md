@@ -1,5 +1,30 @@
 # Phase One phone test log
 
+## Explain/handle UX polish (t_e84b3eaa): NOT TESTED ON PHONE
+
+This worker has not installed or exercised this change on a phone or emulator. Owner-reported
+earlier-phone behavior is the motivation, not verification of this revision. Full CI is the gate.
+Fake-clock tests cover all panel sizes/background alpha and the five-second peek deadline;
+Robolectric tests cover overlay close/reopen, touch flags, source intents, notification repost,
+accessibility refresh events, hub opt-in/background intent and hidden-app recovery. Existing Ask
+tests now assert a real focused request screen, voice control and no misleading Practice run title.
+Final local checks: sequential scoped platform/app ktlintFormat, ktlintCheck, detekt,
+testDebugUnitTest and lintDebug commands from CURRENT-HANDOFF.md exit 0 (1m 11s and 6m 10s).
+Both use max-workers=2 and the in-process Kotlin compiler. JUnit XML confirms platform 111,
+app 251, total 362 tests; no failures/errors/skips. The 22 new API-30/33 cases all pass.
+Initial failures exposed premature deferred-panel cancellation, timer scheduling and Button.handler
+receiver shadowing; corrected before the final full scoped runs. Removed an obsolete string and
+documented the single native Switch XML lint exception (platform Activity/StudyTheme, no new dependency).
+Repo/branding/provenance/secret, added/changed Kotlin line length, XML parse and whitespace checks pass.
+NOT RUN: full all-module/root Gradle gate, APK assembly/install, release tasks, device/emulator
+instrumentation, real provider/speech/OEM behavior or GitHub CI.
+
+Phone checklist: follow the seven steps in CURRENT-HANDOFF.md's UX polish section. Record
+build commit, OS/OEM, panel/large-font/rotation/keyboard behavior, peek touch-through and timing,
+open-close-open from each entry, notification recovery after service death and preference-off,
+QS editor/manual install (API 30) and platform add request (API 33+), accessibility/volume shortcut,
+hub handle immediate rendering/off hint, battery settings, real Ask focus/mic and per-app/all unhide.
+
 ## Pairing discovery fix (t_9a512691, fix/pairing-discovery): NOT TESTED ON PHONE
 
 Local-only implementation; no device was contacted or changed. No model/provider request was made.

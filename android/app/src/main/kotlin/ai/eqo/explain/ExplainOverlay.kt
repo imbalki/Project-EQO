@@ -41,6 +41,10 @@ class ExplainOverlay private constructor(
     private var busy = false
     private var speechReady = false
     private var answer = ""
+    private val panel = ExplainPanelState(android.os.SystemClock::elapsedRealtime)
+    private val peekHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val restorePanel = Runnable { if (!closed) applyPanel() }
+    private val body = ScrollView(service)
     private val content =
         LinearLayout(service).apply {
             orientation = LinearLayout.VERTICAL
@@ -48,14 +52,14 @@ class ExplainOverlay private constructor(
             setPadding(padding, padding, padding, padding)
             background =
                 GradientDrawable().apply {
-                    setColor("#F2181C24".toColorInt())
+                    setColor("#D9181C24".toColorInt())
                     cornerRadius = PADDING_DP * resources.displayMetrics.density
                 }
             isSaveEnabled = false
         }
     private val sheet =
-        ScrollView(service).apply {
-            addView(content)
+        LinearLayout(service).apply {
+            orientation = LinearLayout.VERTICAL
             isSaveEnabled = false
         }
     private val output =
@@ -95,11 +99,11 @@ class ExplainOverlay private constructor(
             }
 
     private fun start() {
+        android.util.Log.i("EqoExplain", "opened")
+        buildPanel()
         (output.parent as? android.view.ViewGroup)?.removeView(output)
         val scroll = ScrollView(service).apply { addView(output) }
-        val textHeight = (service.resources.displayMetrics.heightPixels * SCREEN_TEXT_FRACTION).toInt()
-        content.addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, textHeight))
-        button(R.string.explain_close) { close() }
+        content.addView(scroll)
         if (!ExplainSettings.allowed(service)) {
             output.setText(R.string.explain_consent)
             button(R.string.explain_allow) {
@@ -143,6 +147,95 @@ class ExplainOverlay private constructor(
                     close()
                 }
             }
+        }
+    }
+
+    private fun buildPanel() {
+        sheet.removeAllViews()
+        (content.parent as? android.view.ViewGroup)?.removeView(content)
+        val header = LinearLayout(service)
+        header.setBackgroundColor("#D9181C24".toColorInt())
+        val drag =
+            Button(service).apply {
+                setText(R.string.explain_resize)
+                setOnClickListener {
+                    val sizes = ExplainPanelState.Size.entries
+                    panel.size = sizes[(panel.size.ordinal + 1) % sizes.size]
+                    applyPanel()
+                }
+            }
+        bindResize(drag)
+        header.addView(
+            drag,
+            LinearLayout.LayoutParams(
+                0,
+                (CHIP_HEIGHT_DP * service.resources.displayMetrics.density).toInt(),
+                1f,
+            ),
+        )
+        header.addView(
+            Button(service).apply {
+                setText(R.string.explain_see_screen)
+                setOnClickListener {
+                    panel.seeScreen()
+                    question.clearFocus()
+                    service
+                        .getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                        .hideSoftInputFromWindow(sheet.windowToken, 0)
+                    applyPanel()
+                    peekHandler.removeCallbacks(restorePanel)
+                    peekHandler.postDelayed(restorePanel, ExplainPanelState.SEE_MS)
+                }
+            },
+        )
+        header.addView(
+            Button(service).apply {
+                setText(R.string.explain_close)
+                setOnClickListener { close() }
+            },
+        )
+        sheet.addView(header)
+        body.removeAllViews()
+        body.addView(content)
+        sheet.addView(body, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        applyPanel()
+    }
+
+    private fun applyPanel() {
+        params.height =
+            panel.height(
+                manager.currentWindowMetrics.bounds.height(),
+                (CHIP_HEIGHT_DP * service.resources.displayMetrics.density).toInt(),
+            )
+        params.alpha = panel.alpha
+        params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_SECURE or
+            if (panel.seeThrough) {
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            } else {
+                0
+            }
+        body.visibility = if (panel.size == ExplainPanelState.Size.SMALL) View.GONE else View.VISIBLE
+        if (attached) manager.updateViewLayout(sheet, params)
+    }
+
+    private fun bindResize(drag: View) {
+        var down = 0f
+        drag.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                android.view.MotionEvent.ACTION_DOWN -> down = event.rawY
+                android.view.MotionEvent.ACTION_UP -> {
+                    val distance = down - event.rawY
+                    if (kotlin.math.abs(distance) > DRAG_THRESHOLD_DP * service.resources.displayMetrics.density) {
+                        val change = if (distance > 0) 1 else -1
+                        val sizes = ExplainPanelState.Size.entries
+                        panel.size = sizes[(panel.size.ordinal + change).coerceIn(0, sizes.lastIndex)]
+                        applyPanel()
+                    } else {
+                        view.performClick()
+                    }
+                }
+            }
+            true
         }
     }
 
@@ -258,6 +351,8 @@ class ExplainOverlay private constructor(
     private fun close() {
         if (closed) return
         closed = true
+        android.util.Log.i("EqoExplain", "closed")
+        peekHandler.removeCallbacks(restorePanel)
         scope.cancel()
         session?.close()
         session = null
@@ -278,9 +373,14 @@ class ExplainOverlay private constructor(
         private const val QUESTION_SP = 20f
         private const val BUTTON_SP = 18f
         private const val TOUCH_TARGET_DP = 56
-        private const val SCREEN_TEXT_FRACTION = 0.4f
+        private const val CHIP_HEIGHT_DP = 64
+        private const val DRAG_THRESHOLD_DP = 24
         private const val SERVICE_CHECK_MS = 1000L
         private const val DETACH_DELAY_MS = 350L
+
+        fun refreshLayout() {
+            current?.get()?.applyPanel()
+        }
 
         fun open(service: EQOAccessibilityService) {
             current?.get()?.close()
