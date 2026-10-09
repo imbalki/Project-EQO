@@ -96,26 +96,30 @@ class WirelessAdbSetupActivity : Activity() {
         if (!canConnect()) return
         val reply = WirelessPairingReply.parse(rawCode())
         val state = WirelessPairingSession.state
+        val pair = reply?.pairingPort ?: state.pairingPort ?: portOf(R.id.pairing_port_input)
+        val connect = reply?.connectionPort ?: state.connectionPort ?: portOf(R.id.connection_port_input)
         val request =
             reply?.request(
-                state.pairingPort ?: portOf(R.id.pairing_port_input),
-                state.connectionPort ?: portOf(R.id.connection_port_input),
+                pair,
+                connect,
             )
-        if (request == null) {
+        val waiting = reply != null && WirelessPairingReply.validPort(pair) && connect == null
+        if (request == null && !waiting) {
             showMessage(getString(R.string.wireless_adb_bad_input))
             return
         }
         // The code is single-use: do not keep it on screen or in the view state.
         findViewById<EditText>(R.id.pairing_code_input).setText("")
-        if (request.connect) {
-            runInBackground { sequence -> sequence.run(request.input) }
+        if (request != null) {
+            cancelPendingReply()
+            runInBackground { sequence -> sequence.run(request) }
         } else {
             startForegroundService(
                 Intent(this, WirelessPairingService::class.java)
                     .setAction(WirelessPairingService.SUBMIT)
                     .putExtra(
                         WirelessPairingService.CODE,
-                        reply.code.digits + " " + request.input.endpoints.pairingPort,
+                        reply!!.code.digits + " " + pair,
                     ),
             )
         }
@@ -129,6 +133,7 @@ class WirelessAdbSetupActivity : Activity() {
             return
         }
         val enrolled = keyStore().enrollment.current() != null
+        cancelPendingReply()
         runInBackground { sequence ->
             sequence.reconnect(WirelessAdbEndpoints.forReconnect(connectionPort), enrolled)
         }
@@ -136,11 +141,16 @@ class WirelessAdbSetupActivity : Activity() {
 
     private fun forget() {
         if (busy || WirelessPairingSession.busy) return
+        cancelPendingReply()
         keyStore().enrollment.clear()
         WirelessPairingSession.message = null
         StudySetup.wirelessReport = null
         showMessage(getString(R.string.wireless_adb_forgotten))
         render()
+    }
+
+    private fun cancelPendingReply() {
+        WirelessPairingSession.cancelPendingReply?.invoke() // Same main thread: clear before Forget or a new run.
     }
 
     private fun runInBackground(block: (ActivationSequence) -> ActivationReport) {
@@ -259,7 +269,7 @@ private fun parsePort(raw: String): Int? =
     raw
         .trim()
         .toIntOrNull()
-        ?.takeIf { it in WirelessAdbEndpoints.PORT_MIN..WirelessAdbEndpoints.PORT_MAX }
+        ?.takeIf { WirelessPairingReply.validPort(it) }
 
 private fun checkLabel(check: ActivationCheck): Int =
     when (check) {

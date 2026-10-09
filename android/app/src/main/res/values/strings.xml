@@ -76,7 +76,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
 
     <!-- TASK-015: guided wireless ADB (UF-04/UF-05, S-08..S-11). Two ports, two names (REQ-ADB-05). -->
     <string name="wireless_adb_title">Wireless debugging</string>
-    <string name="wireless_adb_explanation">1. Connect this phone to Wi-Fi. Tap Find ports to enable the code notification.\n2. Open Developer options, turn on Wireless debugging, then tap Pair device with pairing code.\n3. Keep that dialog open. Reply to the EQO notification with the six-digit code.\n4. Return to EQO, tap Connect again, then tap Allow in EQO\'s helper prompt.\nIf notifications are blocked, enter the code here using split screen. EQO finds both ports for you.</string>
+    <string name="wireless_adb_explanation">1. Connect this phone to Wi-Fi. Tap Find ports to enable the code notification.\n2. Open Developer options, turn on Wireless debugging, then tap Pair device with pairing code.\n3. Keep that dialog open. Reply to the EQO notification with the six-digit code. If ports are not found, type code and pairing port, optionally followed by the connection port, separated by spaces or commas. With no connection port yet, EQO waits up to one minute before pairing.\n4. Return to EQO, tap Connect again, then tap Allow in EQO\'s helper prompt.\nThe code box here accepts the same format. Supplying both ports does not need discovery.</string>
     <string name="wireless_adb_pairing_code_hint">Code, optionally pairing port and connection port</string>
     <string name="wireless_adb_pairing_port_hint">Pairing port</string>
     <string name="wireless_adb_connection_port_hint">Connection port</string>
@@ -106,7 +106,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="wireless_notification_waiting">Open the pairing-code dialog. Reply with the code, or code and pairing port (optionally connection port), separated by spaces.</string>
     <string name="wireless_notification_reply">Enter code</string>
     <string name="wireless_reply_invalid">Use six-digit code, pairing port, then optional connection port, separated by spaces or commas. Ports must be 1024–65535 and different. Connect to Wi-Fi first.</string>
-    <string name="wireless_reply_pair_only">Paired securely. Return to EQO, enter the connection port from Wireless debugging if needed, then tap Connect again. Helper approval still needs your tap.</string>
+    <string name="wireless_reply_connection_needed">Code accepted for up to one minute. Keep the pairing dialog open while EQO finds the connection port, or reply again with code, pairing port and connection port. Pairing has not started yet.</string>
     <string name="wireless_reply_paired">Paired securely. Return to EQO and tap Connect again to start the helper and approve its prompt.</string>
     <string name="wireless_reply_failed">Could not pair securely. Reopen the pairing dialog and try its new code. Return to EQO if ports need to be entered.</string>
     <string name="wireless_adb_bad_port">Enter the connection port (the IP address and port value on the Wireless debugging screen).</string>

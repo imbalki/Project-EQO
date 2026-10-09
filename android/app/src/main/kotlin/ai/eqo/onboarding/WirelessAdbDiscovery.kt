@@ -19,6 +19,7 @@ import java.util.concurrent.Executors
 internal class WirelessAdbDiscovery(
     context: Context,
     private val state: WirelessDiscoveryState,
+    private val mdnsLookup: ((Network, String?, String, Set<InetAddress>) -> Pair<InetAddress, Int>?)? = null,
     private val changed: () -> Unit,
 ) : AutoCloseable {
     private val appContext = context.applicationContext
@@ -195,12 +196,22 @@ internal class WirelessAdbDiscovery(
             WirelessResolveAttempt(
                 fallback = {
                     main.removeCallbacks(deadline)
-                    worker.execute {
-                        val instance = info.serviceName + "." + info.serviceType.trim('.') + ".local."
-                        val result = resolver.resolve(network, interfaceName, instance, addresses)
-                        main.post {
-                            Log.d("EqoPairing", "resolve: mdns ${if (result != null) "ok" else "fail"}")
-                            attempt.mdns(result)
+                    if (mdnsLookup == null && interfaceName == null) {
+                        Log.d("EqoPairing", "resolve: mdns fail")
+                        attempt.mdns(null)
+                    } else {
+                        worker.execute {
+                            val instance = info.serviceName + "." + info.serviceType.trim('.') + ".local."
+                            val result =
+                                if (mdnsLookup != null) {
+                                    mdnsLookup.invoke(network, interfaceName, instance, addresses)
+                                } else {
+                                    resolver.resolve(network, interfaceName, instance, addresses)
+                                }
+                            main.post {
+                                Log.d("EqoPairing", "resolve: mdns ${if (result != null) "ok" else "fail"}")
+                                attempt.mdns(result)
+                            }
                         }
                     }
                 },
@@ -218,6 +229,17 @@ internal class WirelessAdbDiscovery(
                     }
                 },
             )
+        main.postDelayed(deadline, NSD_TIMEOUT_MS)
+        startFrameworkResolve(info, epoch, network, addresses, attempt)
+    }
+
+    private fun startFrameworkResolve(
+        info: NsdServiceInfo,
+        epoch: Int,
+        network: Network,
+        addresses: Set<InetAddress>,
+        attempt: WirelessResolveAttempt<Pair<InetAddress, Int>>,
+    ) {
         val listener =
             object : NsdManager.ResolveListener {
                 override fun onResolveFailed(
@@ -236,7 +258,7 @@ internal class WirelessAdbDiscovery(
                         val host = addresses.firstOrNull { it == resolved?.host }
                         val result =
                             if (sameNetwork && host != null && WirelessPairingReply.validPort(resolved?.port)) {
-                                host!! to resolved!!.port
+                                host to resolved!!.port
                             } else {
                                 null
                             }
@@ -245,7 +267,6 @@ internal class WirelessAdbDiscovery(
                     }
                 }
             }
-        main.postDelayed(deadline, NSD_TIMEOUT_MS)
         runCatching { nsd.resolveService(info, listener) }.onFailure {
             Log.d("EqoPairing", "resolve: nsd fail")
             attempt.startFallback()

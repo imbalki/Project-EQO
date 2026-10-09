@@ -32,6 +32,8 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowNetworkInfo
 import java.net.InetAddress
 import java.time.Duration
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30, 33])
@@ -43,6 +45,7 @@ class WirelessPairingNotificationTest {
         WirelessPairingSession.discovering = false
         WirelessPairingSession.busy = false
         WirelessPairingSession.message = null
+        WirelessPairingSession.cancelPendingReply = null
         WirelessPairingSession.observer = null
     }
 
@@ -202,6 +205,99 @@ class WirelessPairingNotificationTest {
         } finally {
             discovery.close()
         }
+    }
+
+    @Test
+    fun failedFrameworkResolutionUsesInjectedMdnsAndIgnoresLateNsdSuccess() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val network = fakeWifi(context)
+        val state = WirelessDiscoveryState()
+        val queried = CountDownLatch(1)
+        val discovery =
+            WirelessAdbDiscovery(context, state, mdnsLookup = { scoped, _, instance, addresses ->
+                assertEquals(network, scoped)
+                assertTrue(instance.endsWith("._adb-tls-pairing._tcp.local."))
+                assertTrue(InetAddress.getByName("192.0.2.1") in addresses)
+                queried.countDown()
+                InetAddress.getByName("192.0.2.1") to 30_001
+            }) {}
+        discovery.start()
+        try {
+            shadowOf(Looper.getMainLooper()).idle()
+            val nsd = shadowOf(context.getSystemService(NsdManager::class.java))
+            val info =
+                NsdServiceInfo().apply {
+                    serviceName = "fixture"
+                    serviceType = WirelessDiscoveryState.PAIRING
+                }
+            nsd.getDiscoveryListeners(info.serviceType)!!.single().onServiceFound(info)
+            shadowOf(Looper.getMainLooper()).idle()
+            val callback = nsd.getResolveListeners(info)!!.single()
+            callback.onResolveFailed(info, 0)
+            shadowOf(Looper.getMainLooper()).idle()
+            assertTrue(queried.await(5, TimeUnit.SECONDS))
+            awaitPairingPort(state, 30_001)
+            info.host = InetAddress.getByName("192.0.2.1")
+            info.port = 30_003
+            if (Build.VERSION.SDK_INT >= 33) info.network = network
+            callback.onServiceResolved(info)
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(30_001, state.pairingPort)
+        } finally {
+            discovery.close()
+        }
+    }
+
+    @Test
+    fun missingFrameworkCallbackStartsMdnsAfterBoundedTimeout() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        fakeWifi(context)
+        val state = WirelessDiscoveryState()
+        val queried = CountDownLatch(1)
+        val discovery =
+            WirelessAdbDiscovery(context, state, mdnsLookup = { _, _, _, _ ->
+                queried.countDown()
+                InetAddress.getByName("192.0.2.1") to 30_001
+            }) {}
+        discovery.start()
+        try {
+            shadowOf(Looper.getMainLooper()).idle()
+            val nsd = shadowOf(context.getSystemService(NsdManager::class.java))
+            val info =
+                NsdServiceInfo().apply {
+                    serviceName = "fixture"
+                    serviceType = WirelessDiscoveryState.PAIRING
+                }
+            nsd.getDiscoveryListeners(info.serviceType)!!.single().onServiceFound(info)
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(1L, queried.count)
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(1_500))
+            assertTrue(queried.await(5, TimeUnit.SECONDS))
+            awaitPairingPort(state, 30_001)
+        } finally {
+            discovery.close()
+        }
+    }
+
+    @Test
+    fun threeFieldRemoteInputIsConsumedWithoutDependingOnDiscovery() {
+        val intent = reply("001234,30001,30002")
+        val request = consumeNotificationReply(intent)!!.request(null, null)!!
+        assertEquals(30_001, request.endpoints.pairingPort)
+        assertEquals(30_002, request.endpoints.connectionPort)
+        assertNull(intent.clipData)
+    }
+
+    private fun awaitPairingPort(
+        state: WirelessDiscoveryState,
+        expected: Int,
+    ) {
+        val end = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+        while (state.pairingPort == null && System.nanoTime() < end) {
+            shadowOf(Looper.getMainLooper()).idle()
+            Thread.sleep(10)
+        }
+        assertEquals(expected, state.pairingPort)
     }
 
     private fun fakeWifi(context: Context): Network {

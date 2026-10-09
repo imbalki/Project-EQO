@@ -26,6 +26,13 @@ class WirelessPairingService : Service() {
     private val worker = Executors.newSingleThreadExecutor()
     private var discovery: WirelessAdbDiscovery? = null
     private var token = UUID.randomUUID().toString()
+    private val pending = WirelessPendingReply { android.os.SystemClock.elapsedRealtime() }
+    private val pendingExpiry =
+        Runnable {
+            pending.clear()
+            WirelessPairingSession.message = getString(R.string.wireless_reply_invalid)
+            changed()
+        }
 
     @Volatile
     private var closed = false
@@ -49,7 +56,12 @@ class WirelessPairingService : Service() {
         }
         WirelessPairingSession.message = null
         WirelessPairingSession.discovering = true
-        discovery = WirelessAdbDiscovery(this, WirelessPairingSession.state, ::changed).also { it.start() }
+        WirelessPairingSession.cancelPendingReply = {
+            pending.clear()
+            main.removeCallbacks(pendingExpiry)
+            WirelessPairingSession.message = null
+        }
+        discovery = WirelessAdbDiscovery(this, WirelessPairingSession.state, changed = ::changed).also { it.start() }
         main.postDelayed(expiry, SESSION_MS)
     }
 
@@ -61,6 +73,7 @@ class WirelessPairingService : Service() {
         when (intent?.action) {
             STOP -> if (!WirelessPairingSession.busy) stopSelf()
             REPLY -> acceptReply(intent)
+
             SUBMIT -> {
                 val reply = WirelessPairingReply.parse(intent.getStringExtra(CODE))
                 intent.removeExtra(CODE)
@@ -82,8 +95,15 @@ class WirelessPairingService : Service() {
         if (WirelessPairingSession.busy || !permitted || closed) return
         val state = WirelessPairingSession.state
         val request = reply?.request(state.pairingPort, state.connectionPort)
+        pending.clear()
+        main.removeCallbacks(pendingExpiry)
         if (request == null || state.networkId == null) {
-            WirelessPairingSession.message = getString(R.string.wireless_reply_invalid)
+            val waiting = pending.stage(reply, state)
+            WirelessPairingSession.message =
+                getString(
+                    if (waiting) R.string.wireless_reply_connection_needed else R.string.wireless_reply_invalid,
+                )
+            if (waiting) main.postDelayed(pendingExpiry, WirelessPendingReply.WAIT_MS)
             changed()
             return
         }
@@ -99,8 +119,7 @@ class WirelessPairingService : Service() {
                     val runner = WirelessAdbActivationRunner(StudySetup.keyStore(applicationContext), NoHelperConsent)
                     pairNotificationReply(
                         runner,
-                        request.input,
-                        request.connect,
+                        request,
                         { !closed && state.revision == revision },
                     )
                 }.getOrNull()
@@ -112,8 +131,7 @@ class WirelessPairingService : Service() {
                     getString(
                         when {
                             report == null -> R.string.wireless_reply_failed
-                            request.connect -> R.string.wireless_reply_paired
-                            else -> R.string.wireless_reply_pair_only
+                            else -> R.string.wireless_reply_paired
                         },
                     )
                 changed()
@@ -122,6 +140,7 @@ class WirelessPairingService : Service() {
     }
 
     private fun changed() {
+        if (!closed) pending.takeReady(WirelessPairingSession.state)?.let { beginReply(it) }
         WirelessPairingSession.changed()
         if (!closed) getSystemService(NotificationManager::class.java).notify(NOTIFICATION, notification())
     }
@@ -179,9 +198,12 @@ class WirelessPairingService : Service() {
 
     override fun onDestroy() {
         closed = true
+        WirelessPairingSession.cancelPendingReply = null
         WirelessPairingSession.discovering = false
         WirelessPairingSession.message = null
         main.removeCallbacks(expiry)
+        main.removeCallbacks(pendingExpiry)
+        pending.clear()
         discovery?.close()
         worker.shutdownNow()
         stopForeground(STOP_FOREGROUND_REMOVE)

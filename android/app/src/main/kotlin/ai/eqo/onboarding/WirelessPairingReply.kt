@@ -13,22 +13,19 @@ internal class WirelessPairingReply(
     fun request(
         knownPairingPort: Int?,
         knownConnectionPort: Int?,
-    ): WirelessPairingRequest? {
+    ): PairingInput? {
         val pair = pairingPort ?: knownPairingPort
         val connect = connectionPort ?: knownConnectionPort
-        val valid = validPort(pair) && (connect == null || validPort(connect))
+        val valid = validPort(pair) && validPort(connect)
         if (!valid || pair == connect) return null
-        // ADB's pair operation does not use connectionPort. Do not guess a connection endpoint.
-        val unused = if (pair == MIN_PORT) MIN_PORT + 1 else MIN_PORT
-        val input = PairingInput(WirelessAdbEndpoints(pair!!, connect ?: unused), code)
-        return WirelessPairingRequest(input, connect != null)
+        return PairingInput(WirelessAdbEndpoints(pair!!, connect!!), code)
     }
 
     companion object {
         const val MIN_PORT = 1024
         const val MAX_PORT = 65_535
         private const val MAX_REPLY_LENGTH = 32
-        private val syntax = Regex("[0-9]{6}(?:[ ,]+[0-9]{4,5}){0,2}")
+        private val syntax = Regex("[0-9]{6}(?:(?: +| *, *)[0-9]{4,5}){0,2}")
 
         fun validPort(port: Int?): Boolean = port != null && port in MIN_PORT..MAX_PORT
 
@@ -45,7 +42,39 @@ internal class WirelessPairingReply(
     }
 }
 
-internal class WirelessPairingRequest(
-    val input: PairingInput,
-    val connect: Boolean,
-)
+/** Waiting is before PAIR: fresh CONNECT enrollment must stay bound to the real connection port. */
+internal class WirelessPendingReply(
+    private val clockMs: () -> Long,
+) {
+    private var reply: WirelessPairingReply? = null
+    private var revision = -1L
+    private var expires = 0L
+
+    fun stage(
+        value: WirelessPairingReply?,
+        state: WirelessDiscoveryState,
+    ): Boolean {
+        val pair = value?.pairingPort ?: state.pairingPort
+        val eligible = value != null && state.networkId != null && WirelessPairingReply.validPort(pair)
+        if (!eligible || value?.connectionPort != null || state.connectionPort != null) return false
+        reply = WirelessPairingReply(value!!.code, pair, null)
+        revision = state.revision
+        expires = clockMs() + WAIT_MS
+        return true
+    }
+
+    fun takeReady(state: WirelessDiscoveryState): WirelessPairingReply? {
+        if (state.revision != revision || clockMs() >= expires) clear()
+        val value = reply?.takeIf { it.request(state.pairingPort, state.connectionPort) != null }
+        if (value != null) clear()
+        return value
+    }
+
+    fun clear() {
+        reply = null
+    }
+
+    companion object {
+        const val WAIT_MS = 60_000L
+    }
+}
