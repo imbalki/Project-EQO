@@ -66,6 +66,9 @@ class TaskActivity : Activity() {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var controller: StudyTaskController? = null
     private var voiceInput: TaskVoiceInput? = null
+    private val attachmentSelection by lazy {
+        TaskAttachmentSelection(this) { prepareTaskDialog(it, fileChoices = true) }
+    }
     private var waitingPermission: String? = null
     private var displayedStatus = PlanStatus.PENDING
     private val actionPermissions by lazy {
@@ -96,6 +99,8 @@ class TaskActivity : Activity() {
         super.onResume()
         voiceInput?.refreshAvailability()
         actionPermissions.onResume()
+        attachmentSelection.foreground()
+        TaskRunSession.attachmentSelection = attachmentSelection
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -154,6 +159,8 @@ class TaskActivity : Activity() {
     }
 
     override fun onPause() {
+        attachmentSelection.background()
+        if (TaskRunSession.attachmentSelection === attachmentSelection) TaskRunSession.attachmentSelection = null
         voiceInput?.pause()
         actionPermissions.onPause()
         TakeoverDetector.shared.setControlTouchExclusion(null)
@@ -203,7 +210,7 @@ class TaskActivity : Activity() {
     }
 
     /** Exclude only the dialog's explicit confirmation buttons, retaining its touch guard. */
-    private fun prepareTaskDialog(dialog: AlertDialog) {
+    private fun prepareTaskDialog(dialog: AlertDialog, fileChoices: Boolean = false) {
         protectConfirmationDialog(dialog)
         val window = dialog.window ?: return
         val callback = window.callback
@@ -214,7 +221,7 @@ class TaskActivity : Activity() {
         ): Boolean =
             listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE).any {
                 containsTouch(dialog.getButton(it), x, y)
-            }
+            } || (fileChoices && dialog.listView?.let { containsTouch(it, x, y) } == true)
 
         fun registerControls(focused: Boolean) {
             TakeoverDetector.shared.setControlTouchExclusion(

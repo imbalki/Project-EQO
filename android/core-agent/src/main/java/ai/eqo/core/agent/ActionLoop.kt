@@ -317,6 +317,10 @@ class ActionLoop(
             var timedOut = false
             var cancelledMidApply = false
             var waitedMs = 0L
+            // File choice and exact-name confirmation each allow a minute, only on approved file sends.
+            val timeoutMs = if (step.action.name in AttachmentSpec.ACTIONS &&
+                AttachmentSpec.parse(step.action.params[AttachmentSpec.PARAM]).isNotEmpty()
+            ) maxOf(config.actionTimeoutMs, 150_000L) else config.actionTimeoutMs
             try {
                 while (job.isActive) {
                     delay(config.tickMs)
@@ -335,7 +339,7 @@ class ActionLoop(
                                 cancelledMidApply = true
                             }
                         command is CmdPause || command is CmdTakeover -> enqueue(command)
-                        waitedMs >= config.actionTimeoutMs -> {
+                        waitedMs >= timeoutMs -> {
                             job.cancel()
                             timedOut = true
                         }
@@ -346,7 +350,7 @@ class ActionLoop(
                 } catch (e: CancellationException) {
                     when {
                         timedOut ->
-                            ExecuteResult.Interrupted("apply timed out mid-apply after ${config.actionTimeoutMs}ms")
+                            ExecuteResult.Interrupted("apply timed out mid-apply after ${timeoutMs}ms")
                         cancelledMidApply ->
                             ExecuteResult.Interrupted("apply cancelled mid-apply by the user; effect unknown")
                         else -> throw e

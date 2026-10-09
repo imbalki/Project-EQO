@@ -42,7 +42,8 @@ internal class SharedStorageServices(
             return SharedStorageServices(
                 browser = SharedFileBrowser(layout, accessGranted),
                 attachments =
-                    AttachmentShare(layout, lastScreenshot, ShareStaging(stagingRoot), accessGranted) {
+                    AttachmentShare(layout, lastScreenshot, ShareStaging(stagingRoot), accessGranted,
+                        options.attachmentSelection) {
                         options.shareUri?.invoke(it) ?: EqoSharedFileProvider.uriFor(context, it)
                     },
                 screenshots =

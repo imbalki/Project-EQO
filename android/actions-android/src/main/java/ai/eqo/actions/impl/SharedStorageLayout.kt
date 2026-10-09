@@ -2,6 +2,7 @@
 package ai.eqo.actions.impl
 
 import java.io.File
+import java.nio.file.Files
 
 /**
  * Maps the folder names an owner or planner uses ("Downloads", "Documents/Taxes", a full path) onto real
@@ -41,6 +42,11 @@ internal class SharedStorageLayout(
     }
 
     private fun checked(file: File): File {
+        var segment: File? = file.absoluteFile
+        while (segment != null) {
+            if (Files.isSymbolicLink(segment.toPath())) throw SecurityException("Links cannot be shared.")
+            segment = segment.parentFile
+        }
         val path = canonical(file)
         if (!isAllowed(path)) throw SecurityException("That location is not part of shared storage EQO may use.")
         return path
@@ -48,6 +54,7 @@ internal class SharedStorageLayout(
 
     private fun locate(reference: String): File {
         require(reference.isNotEmpty()) { "Empty path" }
+        if (reference.split('/', '\\').any { it == ".." }) throw SecurityException("Traversal cannot be shared.")
         if (reference.startsWith("/")) return File(reference)
         val segments = reference.split('/').filter { it.isNotEmpty() }
         val first = segments.first().lowercase()

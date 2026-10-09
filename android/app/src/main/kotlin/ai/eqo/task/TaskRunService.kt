@@ -33,6 +33,7 @@ internal object TaskRunSession {
     val progress = linkedMapOf<String, StepProgress>()
     var observer: (() -> Unit)? = null
     var permissionRequester: PermissionRequester? = null
+    var attachmentSelection: ai.eqo.actions.impl.AttachmentSelection? = null
 
     fun changed() {
         observer?.invoke()
@@ -116,6 +117,17 @@ class TaskRunService : Service() {
                             is ai.eqo.actions.impl.ActionPermission.SpecialAccess -> permission.isGranted()
                         }
                     granted || (TaskRunSession.permissionRequester?.request(permission) ?: false)
+                },
+                options = ai.eqo.actions.impl.RegistryOptions().also {
+                    it.attachmentSelection = object : ai.eqo.actions.impl.AttachmentSelection {
+                        override suspend fun choose(
+                            search: String,
+                            files: List<ai.eqo.actions.impl.AttachmentChoice>,
+                        ): Int? = TaskRunSession.attachmentSelection?.choose(search, files)
+
+                        override suspend fun showResolved(files: List<ai.eqo.actions.impl.AttachmentChoice>): Boolean =
+                            TaskRunSession.attachmentSelection?.showResolved(files) ?: false
+                    }
                 },
             )
         val executor =
