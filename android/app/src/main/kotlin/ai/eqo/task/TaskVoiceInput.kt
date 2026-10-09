@@ -42,13 +42,17 @@ internal class TaskVoiceInput(
     init {
         presenter.availability(SpeechRecognizer.isRecognitionAvailable(activity))
         mic.setOnClickListener {
-            presenter.tap(activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
+            presenter.tap(micGranted())
         }
     }
 
+    private fun micGranted(): Boolean =
+        activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+
     fun onPermissionResult(requestCode: Int) {
         if (requestCode == REQUEST_CODE) {
-            val granted = activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+            val granted = micGranted()
             if (resumed) presenter.permissionResult(granted) else pendingGrant = granted
         }
     }
@@ -87,7 +91,7 @@ internal class TaskVoiceInput(
     }
 
     private fun render(state: VoiceInputState) {
-        mic.isEnabled = state !in setOf(VoiceInputState.UNAVAILABLE, VoiceInputState.LISTENING, VoiceInputState.PERMISSION_NEEDED)
+        mic.isEnabled = state !in VoiceInputState.BLOCKS_TAP
         status.setText(
             when (state) {
                 VoiceInputState.READY -> R.string.voice_ready
@@ -138,7 +142,8 @@ internal class TaskVoiceInput(
 
                     override fun onResults(results: Bundle?) {
                         if (recognizer !== speech) return
-                        presenter.result(results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull())
+                        val heard = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        presenter.result(heard?.firstOrNull())
                         releaseRecognizer()
                     }
                 },

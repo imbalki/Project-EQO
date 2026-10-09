@@ -60,7 +60,8 @@ class TaskVoiceInputTest {
         shadowOf(Looper.getMainLooper()).idle()
         assertEquals(TaskVoiceInput.REQUEST_CODE, shadowOf(activity).lastRequestedPermission.requestCode)
         voice.onPermissionResult(TaskVoiceInput.REQUEST_CODE)
-        assertEquals(activity.getString(R.string.voice_not_allowed), activity.findViewById<TextView>(R.id.task_voice_state).text)
+        val stateText = activity.findViewById<TextView>(R.id.task_voice_state).text
+        assertEquals(activity.getString(R.string.voice_not_allowed), stateText)
         assertTrue(activity.findViewById<EditText>(R.id.task_request).isEnabled)
         voice.close()
         controller.pause().stop().destroy()
@@ -110,7 +111,8 @@ class TaskVoiceInputTest {
 
     @Test
     fun speechErrorsHavePlainStates() {
-        assertEquals(VoiceInputState.NOT_ALLOWED, TaskVoiceInput.errorState(SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS))
+        val denied = TaskVoiceInput.errorState(SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS)
+        assertEquals(VoiceInputState.NOT_ALLOWED, denied)
         assertEquals(VoiceInputState.NOT_CAUGHT, TaskVoiceInput.errorState(SpeechRecognizer.ERROR_NO_MATCH))
         assertEquals(VoiceInputState.NOT_CAUGHT, TaskVoiceInput.errorState(SpeechRecognizer.ERROR_SPEECH_TIMEOUT))
         assertEquals(VoiceInputState.ERROR, TaskVoiceInput.errorState(SpeechRecognizer.ERROR_NETWORK))
@@ -126,7 +128,8 @@ class TaskVoiceInputTest {
         assertNull(shadowOf(activity).lastRequestedPermission)
         assertEquals(PackageManager.PERMISSION_DENIED, activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO))
         assertFalse(activity.findViewById<Button>(R.id.task_voice_button).isEnabled)
-        assertEquals(activity.getString(R.string.voice_unavailable), activity.findViewById<TextView>(R.id.task_voice_state).text)
+        val unavailableText = activity.findViewById<TextView>(R.id.task_voice_state).text
+        assertEquals(activity.getString(R.string.voice_unavailable), unavailableText)
         assertTrue(activity.findViewById<EditText>(R.id.task_request).isEnabled)
         voice.close()
         controller.pause().stop().destroy()

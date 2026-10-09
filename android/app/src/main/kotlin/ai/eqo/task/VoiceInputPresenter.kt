@@ -10,6 +10,11 @@ internal enum class VoiceInputState {
     NOT_ALLOWED,
     UNAVAILABLE,
     ERROR,
+    ;
+
+    companion object {
+        val BLOCKS_TAP = setOf(UNAVAILABLE, LISTENING, PERMISSION_NEEDED)
+    }
 }
 
 /** The only result side effect is filling the editable draft. No submit callback exists. */
@@ -24,7 +29,7 @@ internal class VoiceInputPresenter(
     fun availability(available: Boolean) = update(if (available) VoiceInputState.READY else VoiceInputState.UNAVAILABLE)
 
     fun tap(permissionGranted: Boolean) {
-        if (state in setOf(VoiceInputState.UNAVAILABLE, VoiceInputState.LISTENING, VoiceInputState.PERMISSION_NEEDED)) return
+        if (state in VoiceInputState.BLOCKS_TAP) return
         if (permissionGranted) {
             listen()
         } else {
