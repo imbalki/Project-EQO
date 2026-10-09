@@ -10,6 +10,8 @@ The handle defaults OFF. The home screen's "Edge handle shortcuts" settings page
 chooses shortcuts, reorders them with Up/Down, resets defaults and restores hidden apps.
 A 48dp-wide touch target contains a thin translucent bar; vertical dragging stores a normalized
 position and crossing the screen changes edge. Tap or an inward swipe opens the shortcut panel.
+Docking uses physical left/right coordinates regardless of reading direction; the two layout methods
+carry a targeted RtlHardcoded lint annotation for this intentional behavior, not a global suppression.
 Outside tap, Back or Close dismisses it. Long press opens the same panel with "Hide for this app".
 The app-private preference stores only IDs, choices, dock placement and hidden package names.
 

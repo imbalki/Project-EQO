@@ -130,11 +130,41 @@ class HandleFeaturesTest {
 
     @Test
     fun `settings renders every registered entry without enabling the handle`() {
-        EdgeHandleFeatures.install(createHandleRegistry(context))
+        val registry = createHandleRegistry(context)
+        EdgeHandleFeatures.install(registry)
         val lifecycle = Robolectric.buildActivity(EdgeHandleSettingsActivity::class.java).setup()
-        assertEquals(context.getString(R.string.handle_settings_title), lifecycle.get().title)
-        assertFalse(HandlePreferences(context).enabled)
-        lifecycle.pause().stop().destroy()
+        try {
+            val activity = lifecycle.get()
+            assertEquals(context.getString(R.string.handle_settings_title), activity.title)
+            assertFalse(HandlePreferences(context).enabled)
+            val switches = descendants(activity.window.decorView).filterIsInstance<android.widget.Switch>()
+            val labels = listOf(R.string.handle_enable) + registry.ordered().map { it.labelRes }
+            assertEquals(labels.map(context::getString), switches.map { it.text.toString() })
+            switches.first().isChecked = true
+            switches.first { it.text == context.getString(R.string.handle_ask) }.isChecked = false
+            assertTrue(HandlePreferences(context).enabled)
+            assertFalse(registry.enabled("ask_eqo"))
+            val move =
+                descendants(activity.window.decorView).filterIsInstance<android.widget.Button>().first {
+                    it.contentDescription ==
+                        context.getString(
+                            R.string.handle_move_up_named,
+                            context.getString(R.string.handle_open),
+                        )
+                }
+            move.performClick()
+            assertEquals(listOf("ask_eqo", "pause", "open_eqo", "stop"), registry.ordered().map { it.id })
+            descendants(activity.window.decorView)
+                .filterIsInstance<android.widget.Button>()
+                .first {
+                    it.text == context.getString(R.string.handle_reset)
+                }.performClick()
+            assertEquals(listOf("ask_eqo", "pause", "stop", "open_eqo"), registry.ordered().map { it.id })
+            assertTrue(registry.enabled("ask_eqo"))
+            assertTrue(HandlePreferences(context).enabled)
+        } finally {
+            lifecycle.pause().stop().destroy()
+        }
     }
 
     @Test
@@ -170,9 +200,86 @@ class HandleFeaturesTest {
         }
     }
 
+    @Test
+    fun `drag across the screen switches edge rather than opening the panel and inward swipe opens it`() {
+        EdgeHandleFeatures.install(createHandleRegistry(context))
+        HandlePreferences(context).enabled = true
+        val manager = context.getSystemService(android.view.WindowManager::class.java)
+        val overlay =
+            ai.eqo.accessibility.handle
+                .EdgeHandleOverlay(context, manager)
+        try {
+            overlay.setProbeAvailable(true)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            val handle = overlayView(overlay)!!
+            val width =
+                manager.currentWindowMetrics.bounds
+                    .width()
+                    .toFloat()
+            drag(handle, width - 10, 10f, 200f)
+            assertFalse(HandlePreferences(context).rightEdge)
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+            drag(handle, 10f, width - 10, 200f)
+            assertTrue(HandlePreferences(context).rightEdge)
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+            drag(handle, width - 10, width - 110, 200f)
+            assertTrue(HandleWindowGuard.shared.panelOpen)
+            overlayView(overlay)!!.performClick()
+            val returned = overlayView(overlay)!!
+            val oldPosition = HandlePreferences(context).verticalFraction
+            drag(returned, width - 10, width - 10, 200f, 300f)
+            assertTrue(HandlePreferences(context).verticalFraction > oldPosition)
+            overlay.configurationChanged()
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertTrue(overlayView(overlay) != null)
+            overlay.updateForeground("test.app")
+            HandlePreferences(context).hide("test.app")
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertEquals(null, overlayView(overlay))
+            overlay.updateForeground("other.app")
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertTrue(overlayView(overlay) != null)
+            overlayView(overlay)!!.performLongClick()
+            val panel = overlayView(overlay) as android.view.ViewGroup
+            val scroll = panel.getChildAt(0) as android.view.ViewGroup
+            val column = scroll.getChildAt(0) as android.view.ViewGroup
+            column.getChildAt(column.childCount - 2).performClick()
+            assertTrue(HandlePreferences(context).isHidden("other.app"))
+            assertEquals(null, overlayView(overlay))
+        } finally {
+            overlay.destroy()
+        }
+    }
+
+    private fun drag(
+        view: android.view.View,
+        fromX: Float,
+        toX: Float,
+        fromY: Float,
+        toY: Float = fromY,
+    ) {
+        listOf(
+            Triple(android.view.MotionEvent.ACTION_DOWN, fromX, fromY),
+            Triple(android.view.MotionEvent.ACTION_MOVE, toX, toY),
+            Triple(android.view.MotionEvent.ACTION_UP, toX, toY),
+        ).forEach { (action, x, y) ->
+            val event = android.view.MotionEvent.obtain(0, 0, action, x, y, 0)
+            view.dispatchTouchEvent(event)
+            event.recycle()
+        }
+    }
+
     private fun overlayView(overlay: ai.eqo.accessibility.handle.EdgeHandleOverlay): android.view.View? {
         val field = overlay.javaClass.getDeclaredField("view")
         field.isAccessible = true
         return field.get(overlay) as android.view.View?
     }
+
+    private fun descendants(view: android.view.View): List<android.view.View> =
+        buildList {
+            add(view)
+            if (view is android.view.ViewGroup) {
+                for (index in 0 until view.childCount) addAll(descendants(view.getChildAt(index)))
+            }
+        }
 }

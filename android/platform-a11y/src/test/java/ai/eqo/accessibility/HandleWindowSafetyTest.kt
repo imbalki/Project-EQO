@@ -35,6 +35,8 @@ class HandleWindowSafetyTest {
         assertFalse(automation.observe().isSuccess)
         val ops = FakeServiceActionOps()
         assertFalse(GatedServiceActions(automation, ops).clickCoordinates(90f, 130f).isSuccess)
+        assertFalse(GatedServiceActions(automation, ops).pressBack().isSuccess)
+        assertFalse(GatedServiceActions(automation, ops).pressHome().isSuccess)
         assertTrue(ops.calls.isEmpty())
     }
 

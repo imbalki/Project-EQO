@@ -84,6 +84,7 @@ class EdgeHandleOverlay(
 
     private fun dp(value: Int): Int = (value * context.resources.displayMetrics.density).toInt()
 
+    @android.annotation.SuppressLint("RtlHardcoded") // Dock coordinates are physical left/right, not reading direction.
     private fun params(
         width: Int,
         height: Int,
@@ -172,7 +173,9 @@ class EdgeHandleOverlay(
                     handler.removeCallbacks(longPress)
                     val inward = if (preferences.rightEdge) downX - event.rawX else event.rawX - downX
                     val swipeIn = inward > dp(SWIPE_IN_DP) && abs(event.rawY - downY) < dp(SWIPE_IN_DP)
-                    if (!longPressed && (!moving || swipeIn)) {
+                    val switchedEdge = (params.x > 0) != preferences.rightEdge
+                    val openRequested = !moving || (swipeIn && !switchedEdge)
+                    if (!longPressed && openRequested) {
                         target.performClick()
                     } else if (moving && view === handle) {
                         preferences.rightEdge = params.x > 0
@@ -185,6 +188,7 @@ class EdgeHandleOverlay(
         }
     }
 
+    @android.annotation.SuppressLint("RtlHardcoded") // Keep the panel at the user's physical dock edge in RTL too.
     private fun showPanel() {
         if (!preferences.enabled || !probeAvailable || preferences.isHidden(foregroundPackage)) return
         if (!removeWindow()) return

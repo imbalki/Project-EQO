@@ -1,6 +1,6 @@
 # Current handoff (any agent can take over from this page)
 
-Last updated: 2026-10-08 (files and attachments section added). Update this file in the same PR as every merge to `main`.
+Last updated: 2026-10-09 (edge handle local handoff added). Update this file in the same PR as every merge to `main`.
 
 ## IN PROGRESS: files and attachments (branch `feat/files-attachments`, draft PR, do not merge)
 Plain-language status, updated after each step. Details and design: `docs/adr/0007-shared-files-and-attachments.md`.
