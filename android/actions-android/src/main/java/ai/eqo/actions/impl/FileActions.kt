@@ -54,7 +54,7 @@ internal class FileActions(
         }
     }
 
-    private companion object {
+    companion object {
         private val SHARED_NAMES =
             setOf(
                 "download",

@@ -28,6 +28,36 @@ import kotlin.time.Duration.Companion.seconds
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
 class ProductivityInformationTest {
+    @Test fun titleOnlyNoteSavesTheTitleAsContentWithAFakeStore() =
+        runTest {
+            val saved = mutableListOf<ProductivityMemory>()
+            val store =
+                object : ProductivityStore by UnavailableProductivityStore {
+                    override val availability = ProductivityAvailability.Ready
+
+                    override suspend fun saveSemantic(memory: ProductivityMemory) {
+                        saved += memory
+                    }
+                }
+            val notes =
+                AndroidActionRegistry.create(
+                    context,
+                    PermissionRequester { true },
+                    options = RegistryOptions(productivityStore = store),
+                )
+            assertTrue(notes.execute("ADD_NOTE", mapOf("title" to "Test")).success)
+            assertEquals(1, saved.size)
+            assertTrue(saved.single().value.endsWith("Test"))
+        }
+
+    @Test fun titleOnlyNoteReachesTheStoreRatherThanFailingValidation() =
+        runTest {
+            val result = registry.execute("ADD_NOTE", mapOf("title" to "Test"))
+            assertTrue(result is ActionResult.Failure)
+            assertEquals("needs_database_batch_2", (result as ActionResult.Failure).fallback)
+            assertFalse(result.error.orEmpty().contains("empty"))
+        }
+
     private lateinit var context: Context
     private lateinit var takeover: TakeoverDetector
     private lateinit var registry: AndroidActionRegistry
@@ -239,6 +269,20 @@ class ProductivityInformationTest {
         runTest(timeout = 10.seconds) {
             assertEquals(5.0, SimpleCalculation.evaluate("2 + 3"))
             assertEquals(-6.0, SimpleCalculation.evaluate("-2 * 3"))
+            listOf("238 times 8", "what is 238 multiplied by 8?", "238 x 8").forEach {
+                assertEquals(1904.0, SimpleCalculation.evaluate(it))
+                assertTrue(registry.execute("CALCULATE", mapOf("expression" to it)).success)
+                assertNull(shadowOf(context as android.app.Application).nextStartedActivity)
+            }
+            assertEquals(10.0, SimpleCalculation.evaluate("7 plus 3"))
+            assertEquals(4.0, SimpleCalculation.evaluate("7 minus 3"))
+            assertEquals(3.0, SimpleCalculation.evaluate("12 divided by 4"))
+            assertEquals(3.0, SimpleCalculation.evaluate("12 over 4"))
+            assertEquals(25.0, SimpleCalculation.evaluate("10 percent of 250"))
+            assertNull(SimpleCalculation.evaluate("cost of taxi"))
+            assertNull(SimpleCalculation.evaluate("7 divided by 0"))
+            assertFalse(registry.execute("CALCULATE", mapOf("expression" to "7 divided by 0")).success)
+            assertNull(shadowOf(context as android.app.Application).nextStartedActivity)
             for (invalid in listOf("1+2+3", "1/0", "NaN")) assertNull(SimpleCalculation.evaluate(invalid))
             http.connected = false
             assertTrue(registry.execute("CALCULATE", mapOf("expression" to "2*3")).success)

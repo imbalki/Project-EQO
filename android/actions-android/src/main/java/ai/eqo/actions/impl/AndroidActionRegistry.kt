@@ -33,6 +33,7 @@ class AndroidActionRegistry internal constructor(
     private val permissions: PermissionRequester,
     private val unknownActions: UnknownActionSink,
     private val contactResolver: ContactResolver = ContactResolver(context),
+    private val allFilesAccess: () -> Boolean = { android.os.Environment.isExternalStorageManager() },
 ) {
     private val executors: Map<String, Action> = families.flatten().associateBy { it.name }
     val enabledActionNames: Set<String> get() = executors.keys.toSet()
@@ -62,6 +63,10 @@ class AndroidActionRegistry internal constructor(
             return ActionResult.Failure("Required parameters must not be empty: ${blankRequired.joinToString { it.name }}.")
         }
         return try {
+            if (needsSharedAccess(actionName, ready) && !requestAllFilesAccess()) {
+                android.util.Log.w("EqoRun", "action=$actionName reason=needs_all_files_access")
+                return ActionResult.UserActionRequired(ALL_FILES_INSTRUCTION)
+            }
             for (permission in requiredPermissions(actionName, ready)) {
                 android.util.Log.i("EqoRun", "action=$actionName permission=${permission.name} check=request")
                 if (!permissions.request(permission)) {
@@ -100,13 +105,19 @@ class AndroidActionRegistry internal constructor(
                 if (permission != null && !permissions.request(permission)) {
                     throw RecipientPreparationException(ContactResolution.PermissionDenied.failureMessage())
                 }
+                if (name == "SEND_EMAIL") {
+                    val recipients = withContext(Dispatchers.IO) { resolveEmailRecipients(input, contactResolver) }
+                    names[step.stepId] = recipients.labels.joinToString(", ")
+                    return@map step.copy(
+                        action =
+                            step.action.copy(
+                                params = step.action.params + (key to recipients.addresses.joinToString(", ")),
+                            ),
+                    )
+                }
                 val resolved =
                     withContext(Dispatchers.IO) {
-                        if (name == "SEND_EMAIL") {
-                            contactResolver.resolveEmailWithDisambiguation(input)
-                        } else {
-                            contactResolver.resolveWithDisambiguation(input)
-                        }
+                        contactResolver.resolveWithDisambiguation(input)
                     }
                 if (resolved !is ContactResolution.Found) throw RecipientPreparationException(resolved.failureMessage())
                 names[step.stepId] = resolved.contact.name
@@ -117,6 +128,28 @@ class AndroidActionRegistry internal constructor(
         return RecipientPlan(prepared, names.toMap())
     }
 
+    /** Settings is human-driven before a run starts, never an automation/takeover exemption. */
+    suspend fun prepareFileAccess(steps: List<LoopStep>): Boolean =
+        steps.none { needsSharedAccess(it.action.name, it.action.params) } || requestAllFilesAccess()
+
+    private fun needsSharedAccess(
+        name: String,
+        params: Map<String, String>,
+    ): Boolean = name == "FIND_FILES" || name == "LIST_FILES" && !FileActions.usesWorkspace(params["folder"].orEmpty())
+
+    private suspend fun requestAllFilesAccess(): Boolean {
+        if (allFilesAccess()) return true
+        return permissions.request(
+            ActionPermission.SpecialAccess(
+                android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                true,
+                ALL_FILES_INSTRUCTION,
+                allFilesAccess,
+            ),
+        ) &&
+            allFilesAccess()
+    }
+
     private fun requiredPermissions(
         name: String,
         params: Map<String, String>,
@@ -125,7 +158,7 @@ class AndroidActionRegistry internal constructor(
         val contact = params[if (name == "SEND_EMAIL") "to" else "contact"].orEmpty().trim()
         val direct =
             if (name == "SEND_EMAIL") {
-                isLiteralEmail(contact)
+                splitEmailRecipients(contact).all { isLiteralEmail(it) }
             } else {
                 isLiteralPhone(contact) ||
                     (name == "SEND_TELEGRAM" && contact.startsWith("@"))
@@ -199,6 +232,7 @@ class AndroidActionRegistry internal constructor(
         if (name == "ADD_NOTE") {
             if ("title" !in result) result["name"]?.let { result["title"] = it }
             if ("content" !in result) (result["text"] ?: result["body"])?.let { result["content"] = it }
+            if (result["content"].isNullOrBlank()) result["title"]?.let { result["content"] = it }
         }
         if (name == "LIST_FILES" && "folder" !in result) result["path"]?.let { result["folder"] = it }
         if (name in setOf("READ_NOTES", "RECALL_MEMORY") && "query" !in result) {
@@ -226,6 +260,8 @@ class AndroidActionRegistry internal constructor(
     }
 
     companion object {
+        private const val ALL_FILES_INSTRUCTION =
+            "Turn on All files access for EQO, then return here to continue with this plan."
         private val CONTACT_ACTIONS =
             setOf(
                 "SEND_SMS",
@@ -307,6 +343,7 @@ class AndroidActionRegistry internal constructor(
                 permissions,
                 unknownActions,
                 contacts,
+                options.allFilesAccess ?: { android.os.Environment.isExternalStorageManager() },
             ).also { registry = it }
         }
     }

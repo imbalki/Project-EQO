@@ -1,5 +1,15 @@
 # Phase One phone test log
 
+## Fixes for round 1 — t_7a91b291 — NOT TESTED ON PHONE
+
+- Branch `fix/round1-phone-tests`, based on `92802e7`. The checked-in log did not contain a "Phone round 1" section; this card's supplied phone findings are the inputs, not new device test results.
+- Added fake/unit regressions for the permission apply-budget exclusion and 120-second wait, Stop/stale callbacks, narrowly scoped permission-dialog touch attribution, typed-number location permissions, All files Settings grant/recheck, title-only notes, calculator words/no-web-on-invalid-arithmetic, draft-only WhatsApp/no-send planning, explicit channel clarification, multiple email recipients and plain permission/failure copy.
+- Screenshot investigation: `canTakeScreenshot=true` is already declared. All files access is not needed for EQO's private screenshot fallback. Own-window refusal is intentional; the failure now tells the owner to open the app to capture, without weakening that guard.
+- All files Settings is normally completed before a run starts, after showing the preview warning. Returning with access granted continues the same plan; the owner still approves its actions. Settings is not a takeover exception. A real takeover or mid-run revocation never auto-resumes.
+- Initial `:actions-android:testDebugUnitTest --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`: 145 tests, five failures (untouched `AutomationExecutorsTest` macro timeout and four `SharedStorageTest` Windows link/path cases). This is not a passing full gate. Initial compile also found a hidden Android permission-controller API; implementation now uses allowlisted system packages plus verified dialog/control bounds.
+- Focused final host checks: in progress; results to be added after execution. Full repository Gradle gate and device instrumentation NOT RUN. No device was contacted or changed. CI and lead-owned phone tests remain required.
+- Phone checks remaining: hold Allow for more than five seconds, grant/deny Location and Contacts, Stop while permission is pending, touch outside a permission dialog and verify takeover, missing All files access then grant/return, protected/own-app screenshot refusal, real WhatsApp draft preserving text with no Send, multiple Gmail recipients, Keep title creation, and arithmetic answers.
+
 ## Voice input — 2026-10-08 — NOT TESTED ON PHONE
 
 - Branch `feat/voice-input`, card t_e9ef0f95. Mic fills the editable request only; the user must still tap the normal task button. Permission is requested on Mic, not startup. No EQO audio storage or transcript logging.

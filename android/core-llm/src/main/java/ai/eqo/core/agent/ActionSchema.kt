@@ -431,6 +431,13 @@ object ActionSchema {
                     listOf(
                         ParamDefinition("contact", ParamType.STRING, true, "Contact name or number"),
                         ParamDefinition("message", ParamType.STRING, true, "Message to send"),
+                        ParamDefinition(
+                            "draftOnly",
+                            ParamType.BOOLEAN,
+                            false,
+                            "Only fill the chat; user presses Send",
+                            defaultValue = false,
+                        ),
                         ATTACHMENT_PARAM,
                     ),
                 examples = listOf("send hi to dad on whatsapp", "whatsapp mom I'm coming home"),

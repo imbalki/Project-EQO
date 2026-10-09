@@ -34,7 +34,10 @@ internal class ProductivityMemoryActions(
 
     private suspend fun addNote(params: Map<String, String>): ActionResult {
         val title = params["title"] ?: params["name"] ?: "Quick Note"
-        val content = params["content"] ?: params["text"] ?: params["body"] ?: ""
+        val content =
+            (params["content"] ?: params["text"] ?: params["body"])
+                .orEmpty()
+                .ifBlank { params["title"] ?: params["name"].orEmpty() }
         return if (content.isBlank()) {
             ActionResult.Failure("Note content is empty.")
         } else {
