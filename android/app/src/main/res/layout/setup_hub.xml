@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- TASK-015 (issue #20): capability readiness dashboard (UF-08, S-19). -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -24,6 +25,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/setup_hub_subtitle" />
+
+        <!-- Deliberate native widget: this screen uses a platform Activity/StudyTheme,
+             like EdgeHandleSettingsActivity; do not add AppCompat solely for this switch. -->
+        <Switch android:id="@+id/hub_edge_handle"
+            tools:ignore="UseSwitchCompatOrMaterialXml"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="52dp" android:text="@string/hub_edge_handle"
+            android:textSize="@dimen/study_text_body" />
+        <TextView android:id="@+id/hub_handle_hint" style="@style/StudyBody"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/hub_handle_hint" />
+        <Button android:id="@+id/hub_handle_settings" style="@style/StudySecondaryButton"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="52dp" android:text="@string/handle_settings_title" />
 
         <TextView
             style="@style/StudyStatus"
@@ -136,5 +151,14 @@
             android:layout_height="wrap_content"
             android:minHeight="52dp"
             android:text="@string/require_plan_approval" />
+        <Button android:id="@+id/explain_settings" style="@style/StudySecondaryButton"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="52dp" android:text="@string/explain_settings" />
+        <Button android:id="@+id/hub_background" style="@style/StudySecondaryButton"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="52dp" android:text="@string/hub_background" />
+        <TextView style="@style/StudyBody"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/background_hints" />
     </LinearLayout>
 </ScrollView>

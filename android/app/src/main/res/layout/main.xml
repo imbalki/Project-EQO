@@ -43,6 +43,13 @@
             android:text="@string/setup_hub_open_task" />
         <Button
             style="@style/StudySecondaryButton"
+            android:id="@+id/edge_handle_settings_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:text="@string/handle_settings_title" />
+        <Button
+            style="@style/StudySecondaryButton"
             android:id="@+id/notices_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
