@@ -5,12 +5,40 @@
     <string name="voice_ready">Type your request or tap Mic to speak.</string>
     <string name="voice_permission_title">Allow microphone for voice input?</string>
     <string name="voice_permission_message">EQO needs microphone access only to turn your speech into an editable request. EQO does not save audio. Your phone’s speech service may send audio to its provider. You can keep typing instead.</string>
-    <string name="voice_listening">Listening…</string>
-    <string name="voice_review">Review or edit your words, then tap the normal task button. Nothing has been submitted.</string>
-    <string name="voice_not_caught">Did not catch that - try again</string>
+    <string name="voice_listening">Listening… tap Stop listening to finish. You can pause between words.</string>
+    <string name="voice_stop">Stop listening</string>
+    <string name="voice_processing">Transcribing… tap Mic to cancel.</string>
+    <string name="voice_engine_title">Voice engine</string>
+    <string-array name="voice_engines">
+        <item>Phone (default)</item>
+        <item>AI model via OpenRouter</item>
+    </string-array>
+    <string name="voice_language_title">Voice language</string>
+    <string name="voice_language_default">Device default</string>
+    <string name="voice_ai_disclosure">
+        Optional AI voice sends up to 60 seconds of audio to your configured model via OpenRouter, using your saved key.
+        Your provider may charge for it. The temporary audio file is deleted after transcription, error or cancellation.
+        Phone is the default. Cancelling cannot recall audio already sent; your provider controls its retention.
+    </string>
+    <string name="voice_ai_consent_title">Send voice audio to your AI provider?</string>
+    <string name="voice_ai_unsupported">
+        Your configured model does not accept audio. Use Phone voice or choose an audio-capable model in setup.
+    </string>
+    <string name="voice_use_phone">Use Phone voice</string>
+    <string name="voice_ai_error">
+        Audio transcription failed. Check your internet connection (including airplane mode), key and model,
+        or use Phone voice. Your words have not been submitted.
+    </string>
+    <string name="voice_review">
+        Review or edit your words. Tap Mic again to add more, or the normal task button when ready.
+        Nothing has been submitted.
+    </string>
+    <string name="voice_not_caught">Did not catch more. Words are kept; tap Mic to try again.</string>
     <string name="voice_not_allowed">Microphone not allowed. You can keep typing.</string>
     <string name="voice_unavailable">Voice input is not available on this phone. You can keep typing.</string>
-    <string name="voice_error">Voice input could not finish. Try again or keep typing.</string>
+    <string name="voice_error">
+        Voice input stopped. Your words are kept; tap Mic to add more. Check your connection or keep typing.
+    </string>
     <string name="setup_wireless_failed_check">%1$s failed. %2$s</string>
     <string name="helper_permission_title">Allow EQO to use its helper?</string>
     <string name="helper_permission_allow">Allow</string>

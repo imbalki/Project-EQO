@@ -28,6 +28,8 @@ class SetupHubActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.setup_hub)
+        ai.eqo.task.VoiceSettings
+            .bind(this)
         configureHandle()
         findViewById<Button>(R.id.hub_background).setOnClickListener {
             try {
