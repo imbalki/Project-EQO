@@ -35,10 +35,11 @@ import java.util.Locale
 @Config(sdk = [30])
 class TaskVoiceInputTest {
     private fun installRecognizer(activity: Activity) {
-        val service = ServiceInfo().apply {
-            packageName = "test.speech"
-            name = "test.speech.RecognitionService"
-        }
+        val service =
+            ServiceInfo().apply {
+                packageName = "test.speech"
+                name = "test.speech.RecognitionService"
+            }
         shadowOf(activity.packageManager).addResolveInfoForIntent(
             Intent(RecognitionService.SERVICE_INTERFACE),
             ResolveInfo().apply { serviceInfo = service },

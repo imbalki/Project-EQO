@@ -17,7 +17,9 @@ import android.widget.EditText
 import android.widget.TextView
 import java.util.Locale
 
-internal class TaskVoiceInput(private val activity: Activity) {
+internal class TaskVoiceInput(
+    private val activity: Activity,
+) {
     private val mic = activity.findViewById<Button>(R.id.task_voice_button)
     private val status = activity.findViewById<TextView>(R.id.task_voice_state)
     private var recognizer: SpeechRecognizer? = null
@@ -122,7 +124,10 @@ internal class TaskVoiceInput(private val activity: Activity) {
 
                     override fun onPartialResults(partialResults: Bundle?) = Unit
 
-                    override fun onEvent(eventType: Int, params: Bundle?) = Unit
+                    override fun onEvent(
+                        eventType: Int,
+                        params: Bundle?,
+                    ) = Unit
 
                     override fun onError(error: Int) {
                         if (recognizer !== speech) return
