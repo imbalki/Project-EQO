@@ -42,7 +42,8 @@ internal class TaskAttachmentSelection(
         val names = files.joinToString(", ") { TaskDisplayText.escape(it.name) }
         return withContext(Dispatchers.Main.immediate) {
             if (!available()) return@withContext false
-            activity.findViewById<TextView>(R.id.task_control_feedback).text = activity.getString(R.string.attach_ready_feedback, names)
+            val feedback = activity.findViewById<TextView>(R.id.task_control_feedback)
+            feedback.text = activity.getString(R.string.attach_ready_feedback, names)
             ask("Ready to attach", null, "$names\n\nContinue with these files? EQO will then try to press Send.") == 0
         }
     }
