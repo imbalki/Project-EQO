@@ -78,14 +78,19 @@ class OpenRouterProvider
             ).content
         }
 
-        private fun audioModelSupported(response: Response, model: String): Boolean {
+        private fun audioModelSupported(
+            response: Response,
+            model: String,
+        ): Boolean {
             if (!response.isSuccessful) throw IOException("Audio model check failed")
             // await already buffered a size-bounded response under the call's cancellation owner.
             val data = gson.fromJson(response.body.string(), JsonObject::class.java).getAsJsonArray("data")
             return data?.any { entry ->
                 val item = entry.asJsonObject
                 item.get("id")?.asString == model &&
-                    item.getAsJsonObject("architecture")?.getAsJsonArray("input_modalities")
+                    item
+                        .getAsJsonObject("architecture")
+                        ?.getAsJsonArray("input_modalities")
                         ?.any { it.asString == "audio" } == true
             } == true
         }
