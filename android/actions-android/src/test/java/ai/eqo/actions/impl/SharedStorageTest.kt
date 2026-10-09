@@ -8,6 +8,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeNoException
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,7 +34,16 @@ class SharedStorageTest {
         root = File(base, "storage").apply { mkdirs() }
         ownFiles = File(root, "Android/data/ai.eqo.app/files").apply { mkdirs() }
         stagingRoot = File(root, "Android/data/ai.eqo.app/cache/shares").apply { mkdirs() }
-        layout = SharedStorageLayout(root, listOf(ownFiles), listOf(stagingRoot))
+        layout =
+            SharedStorageLayout(
+                root,
+                listOf(ownFiles),
+                listOf(stagingRoot),
+                SharedFolderAliases.load(
+                    androidx.test.core.app.ApplicationProvider
+                        .getApplicationContext(),
+                ),
+            )
         access = true
         now = 1_000_000L
     }
@@ -88,7 +98,7 @@ class SharedStorageTest {
         val secret = File(base, "private").apply { mkdirs() }
         File(secret, "token.txt").writeText("secret")
         val link = File(root, "Download/innocent").apply { parentFile?.mkdirs() }
-        Files.createSymbolicLink(link.toPath(), secret.toPath())
+        link(link, secret)
         assertTrue(runCatching { layout.file("Download/innocent/token.txt") }.exceptionOrNull() is SecurityException)
     }
 
@@ -145,7 +155,7 @@ class SharedStorageTest {
         repeat(60) { file("Download/photo-$it.jpg") }
         val outside = File(base, "private").apply { mkdirs() }
         File(outside, "photo-secret.jpg").writeText("s")
-        Files.createSymbolicLink(File(root, "Download/linked").toPath(), outside.toPath())
+        link(File(root, "Download/linked"), outside)
         val result = browser().find("photo", "Download") as BrowseResult.Listing
         assertTrue(result.text.contains("Found 50 match(es)"))
         assertFalse(result.text.contains("photo-secret"))
@@ -155,12 +165,21 @@ class SharedStorageTest {
 
     @Test fun `staging copies the file under a safe name in its own folder`() {
         val staging = ShareStaging(stagingRoot) { now }
-        val source = file("Download/My:report?.pdf", "pdf-bytes")
+        val source = file("Download/My report.pdf", "pdf-bytes")
         val staged = staging.stage(source)
-        assertEquals("My_report_.pdf", staged.name)
+        assertEquals("My report.pdf", staged.name)
+        assertEquals("My_report_.pdf", ShareStaging.safeName("My:report?.pdf"))
         assertEquals("pdf-bytes", staged.readText())
         assertEquals(stagingRoot.path, staged.parentFile!!.parentFile!!.path)
         assertTrue(source.exists())
+    }
+
+    @Test fun `staging refuses a linked source and removes failed partial shares`() {
+        val safe = file("Download/source.pdf")
+        val linked = File(root, "Download/linked.pdf")
+        link(linked, safe)
+        assertTrue(runCatching { ShareStaging(stagingRoot).stage(linked) }.isFailure)
+        assertTrue(stagingRoot.listFiles().orEmpty().isEmpty())
     }
 
     @Test fun `safe names cannot escape or hide`() {
@@ -191,6 +210,20 @@ class SharedStorageTest {
         assertTrue(two.exists())
         staging.discard(listOf(File(base, "elsewhere/x.txt")))
         assertTrue(two.exists())
+    }
+
+    private fun link(
+        source: File,
+        target: File,
+    ) {
+        try {
+            Files.createSymbolicLink(source.toPath(), target.toPath())
+        } catch (unavailable: java.nio.file.FileSystemException) {
+            // Windows without Developer Mode cannot create links; deterministic fake-link tests still run.
+            assumeNoException("Host cannot create symbolic links", unavailable)
+        } catch (unavailable: UnsupportedOperationException) {
+            assumeNoException("Host filesystem does not support symbolic links", unavailable)
+        }
     }
 
     // ── attachment preparation ──────────────────────────────

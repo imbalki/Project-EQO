@@ -19,7 +19,9 @@ class TaskPlanner(
     ): List<LoopStep> {
         require(request.isNotBlank() && request.length <= MAX_TEXT)
         val input = Json.encodeToString(PlannerInput(request, screenData.take(MAX_TEXT)))
-        val prompt = enabledActions?.let(RegistryPlanVocabulary::prompt) ?: PROMPT
+        val prompt =
+            (enabledActions?.let(RegistryPlanVocabulary::prompt) ?: PROMPT) +
+                "\nLocal calendar date: ${java.time.LocalDate.now()}; timezone: ${java.time.ZoneId.systemDefault()}."
         val response =
             provider.complete(
                 LLMRequest(
@@ -215,7 +217,11 @@ object TaskPlanPreview {
     private fun attachmentSuffix(raw: String?): String {
         val names = AttachmentSpec.displayNames(raw)
         if (names.isEmpty()) return ""
-        return "; attaching ${names.size} file${if (names.size == 1) "" else "s"}: " + names.joinToString(", ")
+        return if (names.size == 1 && AttachmentSearch.isSearch(AttachmentSpec.parse(raw).single())) {
+            "; attach ${names.single()}"
+        } else {
+            "; attaching ${names.size} file${if (names.size == 1) "" else "s"}: " + names.joinToString(", ")
+        }
     }
 
     private fun quote(value: String): String = "\"" + TaskDisplayText.escape(value).replace("\"", "\\\"") + "\""

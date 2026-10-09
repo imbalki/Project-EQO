@@ -5,7 +5,7 @@ package ai.eqo.core.agent
  * The optional `attachment` parameter of SEND_EMAIL, SEND_WHATSAPP and SEND_SMS.
  *
  * One value holds one or more references separated by `|` or a new line. A reference is either a
- * file path or the word `last_screenshot`. The planner validator, the plan preview and the Android
+ * file path, a validated `find:` search, or the word `last_screenshot`. The planner and the Android
  * executors all read it through here so the owner approves exactly what is later attached.
  */
 object AttachmentSpec {
@@ -39,6 +39,11 @@ object AttachmentSpec {
                 when {
                     reference.length > MAX_REFERENCE -> add("attachment path too long")
                     isLastScreenshot(reference) -> Unit
+                    AttachmentSearch.isSearch(reference) -> {
+                        if (runCatching { AttachmentSearch.parse(reference) }.isFailure) {
+                            add("invalid attachment search (use name, type, folder and YYYY-MM-DD date filters)")
+                        }
+                    }
                     reference.contains("://") -> add("attachment must be a file path, not a link")
                     reference.split('/', '\\').any { it == ".." } -> add("attachment path must not contain '..'")
                     reference.any { it.isISOControl() } -> add("attachment path has control characters")
@@ -51,6 +56,8 @@ object AttachmentSpec {
     fun displayName(reference: String): String =
         if (isLastScreenshot(reference)) {
             "your latest EQO screenshot"
+        } else if (AttachmentSearch.isSearch(reference)) {
+            "a file matching \"${TaskDisplayText.escape(reference.substringAfter(':'))}\""
         } else {
             val name = reference.trimEnd('/', '\\').substringAfterLast('/').substringAfterLast('\\')
             "\"" + TaskDisplayText.escape(name) + "\""

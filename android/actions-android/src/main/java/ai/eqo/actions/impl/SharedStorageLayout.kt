@@ -2,6 +2,7 @@
 package ai.eqo.actions.impl
 
 import java.io.File
+import java.nio.file.Files
 
 /**
  * Maps the folder names an owner or planner uses ("Downloads", "Documents/Taxes", a full path) onto real
@@ -15,7 +16,10 @@ internal class SharedStorageLayout(
     root: File,
     ownAppAreas: List<File> = emptyList(),
     stagingAreas: List<File> = emptyList(),
+    val aliases: SharedFolderAliases = SharedFolderAliases.EMPTY,
+    private val isLink: (File) -> Boolean = { Files.isSymbolicLink(it.toPath()) },
 ) {
+    var learnedFolders: Map<String, List<String>> = emptyMap()
     val root: File = canonical(root)
     private val ownAreas = ownAppAreas.map(::canonical)
     private val staging = stagingAreas.map(::canonical)
@@ -31,6 +35,14 @@ internal class SharedStorageLayout(
     /** Resolves a file reference (full path, or a path starting with a well-known folder name). */
     fun file(reference: String): File = checked(locate(reference.trim()))
 
+    fun searchFolders(name: String?): List<File> {
+        val reference = name?.trim().orEmpty().trimEnd('/')
+        // Validate traversal and absolute-path boundaries before expanding aliases.
+        val exact = folder(name)
+        if (reference.isEmpty() || reference == ".") return listOf(exact)
+        return aliases.searchFolders(root, reference, learnedFolders).map(::checked).ifEmpty { listOf(exact) }
+    }
+
     /** True for places EQO itself writes to, which need no All files access to read. */
     fun isOwnArea(file: File): Boolean = ownAreas.any { inside(canonical(file), it) }
 
@@ -40,7 +52,17 @@ internal class SharedStorageLayout(
         return inside(path, root) && staging.none { inside(path, it) } && !insideOtherApp
     }
 
+    fun hasLinkedAncestor(file: File): Boolean {
+        var segment: File? = file.absoluteFile
+        while (segment != null) {
+            if (isLink(segment)) return true
+            segment = segment.parentFile
+        }
+        return false
+    }
+
     private fun checked(file: File): File {
+        if (hasLinkedAncestor(file)) throw SecurityException("Links cannot be shared.")
         val path = canonical(file)
         if (!isAllowed(path)) throw SecurityException("That location is not part of shared storage EQO may use.")
         return path
@@ -48,37 +70,16 @@ internal class SharedStorageLayout(
 
     private fun locate(reference: String): File {
         require(reference.isNotEmpty()) { "Empty path" }
-        if (reference.startsWith("/")) return File(reference)
+        if (reference.split('/', '\\').any { it == ".." }) throw SecurityException("Traversal cannot be shared.")
+        if (File(reference).isAbsolute || reference.startsWith("/")) return File(reference)
         val segments = reference.split('/').filter { it.isNotEmpty() }
-        val first = segments.first().lowercase()
-        val mapped = NAMED_FOLDERS[first]
-        val rest = segments.drop(1)
-        return when {
-            mapped != null -> rest.fold(File(root, mapped)) { dir, part -> File(dir, part) }
-            else -> segments.fold(root) { dir, part -> File(dir, part) }
-        }
+        return aliases.folder(root, reference, learnedFolders)
+            ?: segments.fold(root) { dir, part -> File(dir, part) }
     }
 
     companion object {
         /** Folder the dedicated EQO screenshots go into, relative to shared storage. */
         const val SCREENSHOT_FOLDER = "Pictures/EQO"
-
-        private val NAMED_FOLDERS =
-            mapOf(
-                "download" to "Download",
-                "downloads" to "Download",
-                "document" to "Documents",
-                "documents" to "Documents",
-                "picture" to "Pictures",
-                "pictures" to "Pictures",
-                "photos" to "DCIM",
-                "dcim" to "DCIM",
-                "camera" to "DCIM/Camera",
-                "screenshots" to "Pictures/Screenshots",
-                "eqo" to SCREENSHOT_FOLDER,
-                "movies" to "Movies",
-                "music" to "Music",
-            )
 
         fun canonical(file: File): File =
             try {

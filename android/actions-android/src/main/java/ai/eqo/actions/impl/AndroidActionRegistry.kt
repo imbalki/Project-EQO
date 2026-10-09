@@ -321,6 +321,9 @@ class RegistryOptions(
     val productivityStore: ProductivityStore = UnavailableProductivityStore,
     val screenMemoryExtractor: ScreenMemoryExtractor? = null,
 ) {
+    var attachmentSelection: AttachmentSelection? = null
+    internal var sharedMediaSource: SharedMediaSource? = null
+    internal var sharedFolderMapStore: SharedFolderMapStore? = null
     internal var contactResolver: ContactResolver? = null
     internal var callVerifier: CallFlowVerifier? = null
     internal var informationHttp: InformationHttp? = null
