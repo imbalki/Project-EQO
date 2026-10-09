@@ -186,4 +186,63 @@ class ExplainSessionTest {
         assertTrue(ExplainSession.isScreenRequest("Explain this screen"))
         assertFalse(ExplainSession.isScreenRequest("Open calculator"))
     }
+
+    @Test fun `incomplete privacy traversal cannot send an image`() =
+        runTest {
+            val source = Source(ExplainScreen("test.app", "bounded", 1, completeTree = false))
+            val session = ExplainSession(source, Model(), { true })
+            session.ask("Explain image")
+            assertEquals(0, source.captures)
+            assertEquals("password", session.textOnlyReason)
+        }
+
+    @Test fun `close during capture discards late image without calling model`() =
+        runTest {
+            val waiting = CompletableDeferred<Unit>()
+            val started = CompletableDeferred<Unit>()
+            val source =
+                object : ExplainSource {
+                    override fun read() = ExplainScreen("test.app", "few", 1)
+
+                    override suspend fun screenshot(): String {
+                        started.complete(Unit)
+                        waiting.await()
+                        return "late-image"
+                    }
+                }
+            val model = Model()
+            val session = ExplainSession(source, model, { true })
+            val work = async { runCatching { session.ask("Explain image") } }
+            started.await()
+            session.close()
+            waiting.complete(Unit)
+            assertTrue(work.await().isFailure)
+            assertEquals("text", session.sourceType)
+            assertEquals(0, model.calls)
+        }
+
+    @Test fun `close releases adapters and prevents upload from ready callback`() =
+        runTest {
+            val baseModel = Model()
+            var sourceClosed = false
+            var modelClosed = false
+            val source =
+                object : ExplainSource by Source() {
+                    override fun close() {
+                        sourceClosed = true
+                    }
+                }
+            val model =
+                object : ExplainModel by baseModel {
+                    override fun close() {
+                        modelClosed = true
+                    }
+                }
+            lateinit var session: ExplainSession
+            session = ExplainSession(source, model, { true }, ready = { session.close() })
+            assertTrue(runCatching { session.ask("Explain") }.isFailure)
+            assertTrue(sourceClosed)
+            assertTrue(modelClosed)
+            assertEquals(0, baseModel.calls)
+        }
 }

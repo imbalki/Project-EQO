@@ -42,17 +42,18 @@ class ExplainOverlay private constructor(
     private val content =
         LinearLayout(service).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(24, 24, 24, 24)
+            val padding = (PADDING_DP * resources.displayMetrics.density).toInt()
+            setPadding(padding, padding, padding, padding)
             background =
                 GradientDrawable().apply {
-                    setColor(Color.argb(242, 24, 28, 36))
-                    cornerRadius = 24f
+                    setColor(Color.parseColor("#F2181C24"))
+                    cornerRadius = PADDING_DP * resources.displayMetrics.density
                 }
             isSaveEnabled = false
         }
     private val output =
         TextView(service).apply {
-            textSize = 22f
+            textSize = ANSWER_SP
             setTextColor(Color.WHITE)
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
             isSaveEnabled = false
@@ -60,10 +61,10 @@ class ExplainOverlay private constructor(
     private val question =
         EditText(service).apply {
             setHint(R.string.explain_followup)
-            textSize = 20f
+            textSize = QUESTION_SP
             setTextColor(Color.WHITE)
             setHintTextColor(Color.LTGRAY)
-            minHeight = 64
+            minHeight = (TOUCH_TARGET_DP * resources.displayMetrics.density).toInt()
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
             importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
             isSaveEnabled = false
@@ -86,7 +87,8 @@ class ExplainOverlay private constructor(
     private fun start() {
         (output.parent as? android.view.ViewGroup)?.removeView(output)
         val scroll = ScrollView(service).apply { addView(output) }
-        content.addView(scroll, LinearLayout.LayoutParams(-1, (service.resources.displayMetrics.heightPixels * 0.4).toInt()))
+        val textHeight = (service.resources.displayMetrics.heightPixels * SCREEN_TEXT_FRACTION).toInt()
+        content.addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, textHeight))
         button(R.string.explain_close) { close() }
         if (!ExplainSettings.allowed(service)) {
             output.setText(R.string.explain_consent)
@@ -106,7 +108,8 @@ class ExplainOverlay private constructor(
                     speechReady = status == TextToSpeech.SUCCESS
                     if (speechReady) {
                         val language = speech?.setLanguage(Locale.getDefault())
-                        speechReady = language != TextToSpeech.LANG_MISSING_DATA && language != TextToSpeech.LANG_NOT_SUPPORTED
+                        speechReady = language != TextToSpeech.LANG_MISSING_DATA &&
+                            language != TextToSpeech.LANG_NOT_SUPPORTED
                         if (ExplainSettings.autoRead(service) && answer.isNotBlank()) speak()
                     }
                 }
@@ -115,8 +118,12 @@ class ExplainOverlay private constructor(
         // Accessibility disabled while sheet is open: discard the entire in-memory session.
         scope.launch {
             while (!closed) {
-                delay(1000)
-                if (EQOAccessibilityService.getInstance() !== service) close()
+                delay(SERVICE_CHECK_MS)
+                if (EQOAccessibilityService.getInstance() !== service ||
+                    (session != null && !ExplainSettings.allowed(service))
+                ) {
+                    close()
+                }
             }
         }
     }
@@ -128,8 +135,8 @@ class ExplainOverlay private constructor(
         content.addView(
             Button(service).apply {
                 setText(label)
-                textSize = 18f
-                minHeight = (56 * service.resources.displayMetrics.density).toInt()
+                textSize = BUTTON_SP
+                minHeight = (TOUCH_TARGET_DP * service.resources.displayMetrics.density).toInt()
                 setOnClickListener { action() }
             },
         )
@@ -137,15 +144,27 @@ class ExplainOverlay private constructor(
 
     private fun attach() {
         if (!attached && !closed) {
-            manager.addView(content, params)
-            attached = true
+            try {
+                manager.addView(content, params)
+                attached = true
+            } catch (_: WindowManager.BadTokenException) {
+                android.util.Log.i("EqoExplain", "explain: text, error BadTokenException")
+                close()
+            } catch (_: WindowManager.InvalidDisplayException) {
+                android.util.Log.i("EqoExplain", "explain: text, error InvalidDisplayException")
+                close()
+            }
         }
     }
 
     private fun detach() {
         if (attached) {
-            manager.removeViewImmediate(content)
             attached = false
+            try {
+                manager.removeViewImmediate(content)
+            } catch (_: IllegalArgumentException) {
+                // Android already removed the overlay when the accessibility service disconnected.
+            }
         }
     }
 
@@ -158,7 +177,7 @@ class ExplainOverlay private constructor(
         detach()
         scope.launch {
             try {
-                delay(350)
+                delay(DETACH_DELAY_MS)
                 val active =
                     session ?: ExplainSession(
                         AndroidExplainSource(service),
@@ -185,7 +204,8 @@ class ExplainOverlay private constructor(
                 throw failure
             } catch (failure: Exception) {
                 output.setText(errorMessage(failure))
-                android.util.Log.i("EqoExplain", "explain: text, error ${failure.javaClass.simpleName}")
+                val source = session?.sourceType ?: "text"
+                android.util.Log.i("EqoExplain", "explain: $source, error ${failure.javaClass.simpleName}")
                 attach()
             } finally {
                 busy = false
@@ -211,7 +231,8 @@ class ExplainOverlay private constructor(
                 .show()
         } else if (answer.isNotBlank()) {
             answer.chunked(TextToSpeech.getMaxSpeechInputLength()).forEachIndexed { index, chunk ->
-                speech?.speak(chunk, if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, "explain-$index")
+                val queue = if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
+                speech?.speak(chunk, queue, null, "explain-$index")
             }
         }
     }
@@ -234,6 +255,14 @@ class ExplainOverlay private constructor(
 
     companion object {
         private var current: ExplainOverlay? = null
+        private const val PADDING_DP = 24
+        private const val ANSWER_SP = 22f
+        private const val QUESTION_SP = 20f
+        private const val BUTTON_SP = 18f
+        private const val TOUCH_TARGET_DP = 56
+        private const val SCREEN_TEXT_FRACTION = 0.4f
+        private const val SERVICE_CHECK_MS = 1000L
+        private const val DETACH_DELAY_MS = 350L
 
         fun open(service: EQOAccessibilityService) {
             current?.close()

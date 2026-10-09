@@ -13,10 +13,14 @@ interface ExplainSource {
     fun read(): ExplainScreen
 
     suspend fun screenshot(): String?
+
+    fun close() = Unit
 }
 
 interface ExplainModel {
     suspend fun supportsImages(): Boolean
+
+    fun close() = Unit
 
     suspend fun answer(
         screen: ExplainScreen,
@@ -57,12 +61,15 @@ class ExplainSession(
             } else if (context.hasPassword || !context.completeTree) {
                 textOnlyReason = "password"
             } else {
-                image = source.screenshot()
-                if (image == null) textOnlyReason = "capture"
+                val captured = source.screenshot()
+                check(!closed && allowed())
+                image = captured
+                textOnlyReason = if (image == null) "capture" else null
             }
         }
         check(!closed && allowed())
         ready()
+        check(!closed && allowed())
         val answer = model.answer(context, image, question.take(MAX_QUESTION))
         check(!closed && allowed())
         return answer.take(MAX_ANSWER)
@@ -73,6 +80,8 @@ class ExplainSession(
         screen = null
         image = null
         textOnlyReason = null
+        source.close()
+        model.close()
     }
 
     companion object {
@@ -132,5 +141,8 @@ class ExplainTextCollector(
 
     fun hasCapacity(): Boolean = visited < ExplainSession.MAX_NODES && text.length < ExplainSession.MAX_TEXT
 
-    fun result(app: String): ExplainScreen = ExplainScreen(app, text.toString(), labels, password, complete && hasCapacity())
+    fun result(app: String): ExplainScreen {
+        val fullyChecked = complete && hasCapacity()
+        return ExplainScreen(app, text.toString(), labels, password, fullyChecked)
+    }
 }

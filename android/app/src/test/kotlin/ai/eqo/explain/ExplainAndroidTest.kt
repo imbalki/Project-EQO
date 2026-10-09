@@ -92,6 +92,9 @@ class ExplainAndroidTest {
             val source = AndroidExplainSource(service, { node("test.app", "screen") }, { "synthetic-image" })
             source.read()
             assertEquals("synthetic-image", source.screenshot())
+            source.close()
+            assertNull(source.screenshot())
+            assertTrue(runCatching { source.read() }.isFailure)
         }
 
     @Test fun `notification action targets only transient entry not main UI`() {

@@ -19,12 +19,13 @@ class ExplainSettingsActivity : Activity() {
         val layout =
             LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(24, 24, 24, 24)
+                val padding = (PAGE_PADDING_DP * resources.displayMetrics.density).toInt()
+                setPadding(padding, padding, padding, padding)
             }
         layout.addView(
             TextView(this).apply {
                 setText(R.string.explain_consent)
-                textSize = 20f
+                textSize = BODY_SP
             },
         )
         layout.addView(option(R.string.explain_allow_setting, "allow_provider", ExplainSettings.allowed(this)))
@@ -34,7 +35,7 @@ class ExplainSettingsActivity : Activity() {
         layout.addView(
             TextView(this).apply {
                 setText(R.string.explain_use_shortcut)
-                textSize = 20f
+                textSize = BODY_SP
             },
         )
         setContentView(ScrollView(this).apply { addView(layout) })
@@ -47,14 +48,13 @@ class ExplainSettingsActivity : Activity() {
     ): CheckBox =
         CheckBox(this).apply {
             setText(label)
-            textSize = 20f
-            minHeight = (56 * resources.displayMetrics.density).toInt()
+            textSize = BODY_SP
+            minHeight = (TOUCH_TARGET_DP * resources.displayMetrics.density).toInt()
             isChecked = checked
             setOnCheckedChangeListener { _, enabled ->
                 if (key == "notification" &&
                     enabled &&
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                    needsNotificationPermission()
                 ) {
                     isChecked = false
                     requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_REQUEST)
@@ -64,6 +64,10 @@ class ExplainSettingsActivity : Activity() {
                 }
             }
         }
+
+    private fun needsNotificationPermission(): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -78,5 +82,8 @@ class ExplainSettingsActivity : Activity() {
 
     companion object {
         private const val NOTIFICATION_REQUEST = 701
+        private const val PAGE_PADDING_DP = 24
+        private const val BODY_SP = 20f
+        private const val TOUCH_TARGET_DP = 56
     }
 }

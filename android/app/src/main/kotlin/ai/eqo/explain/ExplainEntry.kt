@@ -55,11 +55,12 @@ class ExplainEntryActivity : Activity() {
 
     companion object {
         private const val ENTRY_DELAY_MS = 900L
+        private const val ENTRY_REQUEST = 701
 
         fun pending(context: Context): PendingIntent =
             PendingIntent.getActivity(
                 context,
-                701,
+                ENTRY_REQUEST,
                 Intent(context, ExplainEntryActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
@@ -67,6 +68,14 @@ class ExplainEntryActivity : Activity() {
 }
 
 class ExplainTileService : TileService() {
+    override fun onStartListening() {
+        super.onStartListening()
+        qsTile?.apply {
+            state = android.service.quicksettings.Tile.STATE_ACTIVE
+            updateTile()
+        }
+    }
+
     override fun onClick() {
         super.onClick()
         unlockAndRun {
@@ -74,7 +83,9 @@ class ExplainTileService : TileService() {
                 startActivityAndCollapse(ExplainEntryActivity.pending(this))
             } else {
                 @Suppress("DEPRECATION")
-                startActivityAndCollapse(Intent(this, ExplainEntryActivity::class.java))
+                startActivityAndCollapse(
+                    Intent(this, ExplainEntryActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                )
             }
         }
     }
@@ -115,7 +126,11 @@ class ExplainNotificationService : Service() {
 
         fun update(context: Context) {
             val intent = Intent(context, ExplainNotificationService::class.java)
-            if (ExplainSettings.notification(context)) context.startForegroundService(intent) else context.stopService(intent)
+            if (ExplainSettings.notification(context)) {
+                context.startForegroundService(intent)
+            } else {
+                context.stopService(intent)
+            }
         }
     }
 }
