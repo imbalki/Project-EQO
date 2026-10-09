@@ -19,6 +19,8 @@ object RegistryPlanVocabulary {
             allowTrailingComma = true
         }
 
+    // The planner prompt is one long, flat list of instruction lines by design.
+    @Suppress("LongMethod")
     fun prompt(enabled: Set<String>): String =
         buildString {
             appendLine("You are EQO's task planner. Return ONLY JSON:")
