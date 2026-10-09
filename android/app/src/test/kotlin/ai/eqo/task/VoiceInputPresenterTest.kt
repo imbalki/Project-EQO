@@ -1,0 +1,79 @@
+// Origin: EQO-authored draft-only voice presenter regressions.
+package ai.eqo.task
+
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class VoiceInputPresenterTest {
+    private val states = mutableListOf<VoiceInputState>()
+    private val drafts = mutableListOf<String>()
+    private var permissions = 0
+    private var starts = 0
+    private val presenter = VoiceInputPresenter(states::add, drafts::add, { permissions++ }, { starts++ })
+
+    @Test
+    fun deniedPermissionLeavesTypingDraftAlone() {
+        presenter.tap(false)
+        assertEquals(1, permissions)
+        assertEquals(0, starts)
+        presenter.permissionResult(false)
+        assertEquals(VoiceInputState.NOT_ALLOWED, states.last())
+        assertEquals(emptyList<String>(), drafts)
+    }
+
+    @Test
+    fun noRecognizerDoesNotRequestPermissionOrStart() {
+        presenter.availability(false)
+        presenter.tap(false)
+        assertEquals(VoiceInputState.UNAVAILABLE, states.last())
+        assertEquals(0, permissions)
+        assertEquals(0, starts)
+    }
+
+    @Test
+    fun permissionGrantStartsOnlyOnceAndResultOnlyFillsDraft() {
+        presenter.tap(false)
+        presenter.tap(false)
+        presenter.permissionResult(true)
+        presenter.permissionResult(true)
+        assertEquals(1, starts)
+        assertEquals(1, permissions)
+        assertEquals(VoiceInputState.LISTENING, states.last())
+        presenter.result("Open notes")
+        assertEquals(listOf("Open notes"), drafts)
+        assertEquals(VoiceInputState.REVIEW, states.last())
+        presenter.result("late result")
+        assertEquals(listOf("Open notes"), drafts)
+    }
+
+    @Test
+    fun errorsKeepDraftUntouchedAndAllowRetry() {
+        listOf(VoiceInputState.NOT_CAUGHT, VoiceInputState.NOT_ALLOWED, VoiceInputState.ERROR).forEach {
+            presenter.tap(true)
+            presenter.error(it)
+            assertEquals(it, states.last())
+        }
+        assertEquals(3, starts)
+        assertEquals(emptyList<String>(), drafts)
+    }
+
+    @Test
+    fun emptyResultsAskForRetry() {
+        listOf(null, "", "  ").forEach {
+            presenter.tap(true)
+            presenter.result(it)
+            assertEquals(VoiceInputState.NOT_CAUGHT, states.last())
+        }
+        assertEquals(emptyList<String>(), drafts)
+    }
+
+    @Test
+    fun leavingScreenIgnoresLateResultsAndErrors() {
+        presenter.tap(true)
+        presenter.cancel()
+        presenter.result("late text")
+        presenter.error(VoiceInputState.ERROR)
+        assertEquals(VoiceInputState.READY, states.last())
+        assertEquals(emptyList<String>(), drafts)
+    }
+}
