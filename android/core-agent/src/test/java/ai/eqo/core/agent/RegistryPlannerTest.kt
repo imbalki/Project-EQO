@@ -50,6 +50,60 @@ class RegistryPlannerTest {
             assertTrue(prompt.contains("Do not ASK_USER for an unambiguous contact"))
         }
 
+    @Test fun namedNotesEditingCanNavigateAndTypeBeforeApproval() =
+        runTest {
+            val output =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"New note"}},""" +
+                    """{"action":"TYPE_TEXT","params":{"searchText":"Title","content":"Test"}}]}"""
+            val requests =
+                listOf(
+                    "write a note called Test in Keep",
+                    "type a note in Google Keep",
+                    "draft a Notes note",
+                )
+            for (request in requests) {
+                val fake = Fake(listOf(output))
+                val steps = TaskPlanner(fake, enabled).plan(request)
+                assertEquals(listOf("OPEN_APP", "CLICK_TEXT", "TYPE_TEXT"), steps.map { it.action.name })
+                assertEquals(1, fake.requests.size)
+                val approved = ApprovedTaskPlan(steps)
+                assertTrue(approved.matches(steps))
+                assertTrue(SensitivityApprovalPolicy.requiresApproval(steps[1].action))
+            }
+        }
+
+    @Test fun notesEditingExceptionCannotHideAnOutwardActionOrUnknownTap() =
+        runTest {
+            val note = "write a note called Test in Keep"
+            for (target in listOf("Send", "Share", "Publish", "Submit", "Example recipient", "New note and Send")) {
+                val output = """{"steps":[{"action":"CLICK_TEXT","params":{"text":"$target"}}]}"""
+                try {
+                    TaskPlanner(Fake(listOf(output)), enabled).plan(note)
+                    error("Unknown note tap must be rejected: $target")
+                } catch (_: IllegalArgumentException) {
+                }
+            }
+            val send = """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"hi"}}]}"""
+            try {
+                TaskPlanner(Fake(listOf(send)), setOf("SEND_WHATSAPP")).plan(note)
+                error("Notes route must not acquire a communication action")
+            } catch (_: IllegalArgumentException) {
+            }
+        }
+
+    @Test fun communicationDraftsStillRejectEvenNoteCreationTaps() =
+        runTest {
+            val output = """{"steps":[{"action":"CLICK_TEXT","params":{"text":"New note"}}]}"""
+            for (request in listOf("write a WhatsApp message about Keep notes", "write a note in Keep, don't send")) {
+                try {
+                    TaskPlanner(Fake(listOf(output)), enabled).plan(request)
+                    error("Explicit communication draft must not allow taps")
+                } catch (_: IllegalArgumentException) {
+                }
+            }
+        }
+
     private val enabled = setOf("OPEN_APP", "TYPE_TEXT", "CLICK_TEXT")
     private val valid = """{"steps":[{"action":"OPEN_APP","params":{"appName":"gmail"}}]}"""
 

@@ -75,6 +75,15 @@ class TaskPlanner(
     ): List<LoopStep> {
         val draft = Regex("\\b(type|write|draft)\\b|don['’]?t send|do not send", RegexOption.IGNORE_CASE)
         if (!draft.containsMatchIn(request)) return steps
+        return if (isNamedNoteEditingRequest(request)) {
+            require(steps.all(::isNoteEditingStep)) { "Note editing cannot include communication or submit steps" }
+            steps
+        } else {
+            respectCommunicationDraft(steps)
+        }
+    }
+
+    private fun respectCommunicationDraft(steps: List<LoopStep>): List<LoopStep> {
         val safe =
             setOf(
                 "OPEN_APP",
@@ -97,6 +106,30 @@ class TaskPlanner(
             } else {
                 step
             }
+        }
+    }
+
+    /** A notes-app edit is not a communication draft. Unknown routes still use the stricter draft guard. */
+    private fun isNamedNoteEditingRequest(request: String): Boolean =
+        Regex("\\bnotes?\\b", RegexOption.IGNORE_CASE).containsMatchIn(request) &&
+            Regex("\\b(keep|notes)\\b", RegexOption.IGNORE_CASE).containsMatchIn(request) &&
+            !Regex(
+                "\\b(send|message|whatsapp|sms|email|telegram|share|publish|post)\\b",
+                RegexOption.IGNORE_CASE,
+            ).containsMatchIn(request)
+
+    /** Only known local note navigation is allowed; arbitrary taps/IDs can hide a sending action. */
+    private fun isNoteEditingStep(step: LoopStep): Boolean {
+        val params = step.action.params
+        return when (step.action.name) {
+            "OPEN_APP", "open_app" ->
+                (params["appName"] ?: params["app"]).orEmpty().trim().lowercase() in
+                    setOf("keep", "google keep", "keep notes", "notes", "google keep notes")
+            "CLICK_TEXT", "tap_text" ->
+                params["text"].orEmpty().trim().lowercase() in
+                    setOf("new note", "create note", "take a note", "take a note…", "title", "note", "body")
+            "WAIT", "TYPE_TEXT", "type_text", "paste", "observe" -> true
+            else -> false
         }
     }
 
