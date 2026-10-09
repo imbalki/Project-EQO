@@ -186,7 +186,7 @@ class AndroidActionRegistryTest {
             grant = false
             val result = registry.execute("SEND_WHATSAPP", mapOf("contact" to "Alice Smith", "message" to "hi"))
             assertFalse(result.success)
-            assertTrue(result.error!!.contains("Permission was not granted"))
+            assertTrue(result.error!!.contains("This step did not run"))
             assertEquals(Manifest.permission.READ_CONTACTS, (requested.single() as ActionPermission.Runtime).name)
             assertNull(shadowOf(context as android.app.Application).nextStartedActivity)
         }
