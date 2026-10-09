@@ -127,6 +127,40 @@ class TaskVoiceInputTest {
     }
 
     @Test
+    fun partialSpeechAndEarlyEndKeepDraftAndNextTapContinues() {
+        val controller = Robolectric.buildActivity(Activity::class.java).setup()
+        val activity = controller.get()
+        activity.setContentView(R.layout.task_screen)
+        installRecognizer(activity)
+        shadowOf(activity.application).grantPermissions(Manifest.permission.RECORD_AUDIO)
+        val draft = activity.findViewById<EditText>(R.id.task_request)
+        draft.setText("typed")
+        val mic = activity.findViewById<Button>(R.id.task_voice_button)
+        val voice = TaskVoiceInput(activity)
+        mic.performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        val speech = shadowOf(ShadowSpeechRecognizer.getLatestSpeechRecognizer())
+        assertTrue(mic.isEnabled)
+        assertEquals(activity.getString(R.string.voice_stop), mic.text)
+        speech.triggerOnPartialResults(
+            Bundle().apply { putStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION, arrayListOf("long sentence")) },
+        )
+        assertEquals("typed long sentence", draft.text.toString())
+        speech.triggerOnEndOfSpeech()
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(5))
+        assertTrue(speech.isDestroyed)
+        assertEquals("typed long sentence", draft.text.toString())
+        mic.performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        shadowOf(ShadowSpeechRecognizer.getLatestSpeechRecognizer()).triggerOnResults(
+            Bundle().apply { putStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION, arrayListOf("with pauses")) },
+        )
+        assertEquals("typed long sentence with pauses", draft.text.toString())
+        voice.close()
+        controller.pause().stop().destroy()
+    }
+
+    @Test
     fun unavailableRecognizerDisablesMicWithoutStartupPermissionRequest() {
         val controller = Robolectric.buildActivity(Activity::class.java).setup()
         val activity = controller.get()

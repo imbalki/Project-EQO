@@ -102,7 +102,7 @@ class VoiceInputPresenterTest {
     @Test
     fun processingCanBeCancelledAndLateTranscriptIsIgnored() {
         var cancelled = false
-        val voice = VoiceInputPresenter(states::add, drafts::add, {}, {}, cancelProcessing = { cancelled = true })
+        val voice = VoiceInputPresenter(states::add, drafts::add, {}, {}, stopListening = { cancelled = true })
         voice.tap(true)
         voice.processing()
         voice.tap(true)

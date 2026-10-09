@@ -1,4 +1,5 @@
-// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/LLMProvider.kt
+// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51
+// Upstream path: app/src/main/java/com/opendroid/ai/core/llm/LLMProvider.kt
 package ai.eqo.core.llm
 
 import ai.eqo.data.models.ChatMessage

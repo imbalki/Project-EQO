@@ -4,6 +4,7 @@ package ai.eqo.task
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.annotation.SuppressLint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,6 +35,8 @@ internal class VoiceAudioRecorder(
     private var writer: Job? = null
     private var failure = false
 
+    // TaskVoiceInput checks the user-granted permission before invoking start; revocation is caught there.
+    @SuppressLint("MissingPermission")
     override fun start(onLimit: () -> Unit) {
         val minimum = AudioRecord.getMinBufferSize(RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         check(minimum > 0)
@@ -43,7 +46,7 @@ internal class VoiceAudioRecorder(
                 RATE,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT,
-                maxOf(minimum, 4096),
+                maxOf(minimum, BUFFER_BYTES),
             )
         recorder = audio
         check(audio.state == AudioRecord.STATE_INITIALIZED)
@@ -52,8 +55,8 @@ internal class VoiceAudioRecorder(
             scope.launch(Dispatchers.IO) {
                 try {
                     RandomAccessFile(file, "rw").use { output ->
-                        output.write(ByteArray(44))
-                        val buffer = ByteArray(4096)
+                        output.write(ByteArray(WAV_HEADER_BYTES))
+                        val buffer = ByteArray(BUFFER_BYTES)
                         var written = 0
                         while (!stopping && written < MAX_BYTES) {
                             val count = audio.read(buffer, 0, minOf(buffer.size, MAX_BYTES - written))
@@ -61,9 +64,10 @@ internal class VoiceAudioRecorder(
                                 check(stopping)
                                 break
                             }
-                            if (count == 0) continue
-                            output.write(buffer, 0, count)
-                            written += count
+                            if (count > 0) {
+                                output.write(buffer, 0, count)
+                                written += count
+                            }
                         }
                         output.seek(0)
                         output.write(wavHeader(written))
@@ -79,9 +83,8 @@ internal class VoiceAudioRecorder(
     override suspend fun finish(): File {
         stopAudio()
         writer?.join()
-        recorder?.release()
-        recorder = null
-        check(!failure && file.length() > 44) { "Audio recording failed" }
+        releaseAudio()
+        check(!failure && file.length() > WAV_HEADER_BYTES) { "Audio recording failed" }
         return file
     }
 
@@ -90,20 +93,43 @@ internal class VoiceAudioRecorder(
         // The worker releases its own file handle before the final deletion as well.
         writer?.invokeOnCompletion { file.delete() }
         writer?.cancel()
-        recorder?.release()
-        recorder = null
+        releaseAudio()
         file.delete()
     }
 
+    @Synchronized
     private fun stopAudio() {
         stopping = true
         runCatching { recorder?.stop() }
     }
 
+    @Synchronized
+    private fun releaseAudio() {
+        recorder?.release()
+        recorder = null
+    }
+
     companion object {
         const val RATE = 16000
         const val MAX_BYTES = RATE * 2 * 60
+        const val MAX_DURATION_MILLIS = 60000L
+        private const val STALE_AGE_MILLIS = 300000L
+        private const val WAV_HEADER_BYTES = 44
+        private const val BUFFER_BYTES = 4096
 
+        fun removeStaleFiles(
+            cache: File,
+            now: Long = System.currentTimeMillis(),
+        ) {
+            cache
+                .listFiles()
+                ?.filter {
+                    it.name.startsWith("eqo-voice-") && it.extension == "wav" && now - it.lastModified() > STALE_AGE_MILLIS
+                }?.forEach { it.delete() }
+        }
+
+        // Fixed RIFF/WAV binary format field sizes and PCM constants, not tunable policy.
+        @Suppress("MagicNumber")
         fun wavHeader(bytes: Int): ByteArray =
             ByteBuffer
                 .allocate(44)

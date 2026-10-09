@@ -6,9 +6,7 @@ import ai.eqo.core.llm.providers.AudioUnsupportedException
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
-import android.os.Bundle
 import android.os.Looper
-import android.speech.SpeechRecognizer
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -16,6 +14,8 @@ import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -68,12 +68,13 @@ class VoiceInputV2Test {
     }
 
     private fun create(transcribe: suspend (File, String) -> String = { _, _ -> "spoken words" }) {
-        voice = TaskVoiceInput(
-            activity,
-            recordingFactory = { cache, _ -> FakeRecording(cache).also { clip = it } },
-            ioDispatcher = dispatcher,
-            transcribe = transcribe,
-        )
+        voice =
+            TaskVoiceInput(
+                activity,
+                recordingFactory = { cache, _ -> FakeRecording(cache).also { clip = it } },
+                ioDispatcher = dispatcher,
+                transcribe = transcribe,
+            )
     }
 
     private fun tap() = activity.findViewById<Button>(R.id.task_voice_button).performClick()
@@ -92,77 +93,93 @@ class VoiceInputV2Test {
         tap()
         assertFalse(::clip.isInitialized)
         ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
         assertFalse(settings.consent)
         tap()
         ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
         assertTrue(settings.consent)
         assertTrue(clip.started)
-        assertEquals(activity.getString(R.string.voice_stop), activity.findViewById<Button>(R.id.task_voice_button).text)
-    }
-
-    @Test
-    fun successDeletesAudioAndAppendsOnlyToDraft() = runTest(dispatcher) {
-        ai()
-        settings.language = "hi-IN"
-        activity.findViewById<EditText>(R.id.task_request).setText("typed")
-        create { file, language ->
-            assertTrue(file.exists())
-            assertEquals("hi-IN", language)
-            "spoken words"
-        }
-        tap()
-        tap()
-        advanceUntilIdle()
-        assertFalse(clip.file.exists())
-        assertEquals("typed spoken words", activity.findViewById<EditText>(R.id.task_request).text.toString())
-        assertFalse(submitted)
-    }
-
-    @Test
-    fun failureDeletesAudioAndPreservesDraft() = runTest(dispatcher) {
-        ai()
-        activity.findViewById<EditText>(R.id.task_request).setText("keep me")
-        create { _, _ -> error("synthetic failure") }
-        tap()
-        tap()
-        advanceUntilIdle()
-        assertFalse(clip.file.exists())
-        assertEquals("keep me", activity.findViewById<EditText>(R.id.task_request).text.toString())
-        assertEquals(activity.getString(R.string.voice_ai_error), activity.findViewById<TextView>(R.id.task_voice_state).text)
-        assertFalse(submitted)
-    }
-
-    @Test
-    fun unsupportedModelOffersPhoneEngineAndDeletesAudio() = runTest(dispatcher) {
-        ai()
-        create { _, _ -> throw AudioUnsupportedException() }
-        tap()
-        tap()
-        advanceUntilIdle()
-        assertFalse(clip.file.exists())
         assertEquals(
-            activity.getString(R.string.voice_ai_unsupported),
-            activity.findViewById<TextView>(R.id.task_voice_state).text,
+            activity.getString(R.string.voice_stop),
+            activity.findViewById<Button>(R.id.task_voice_button).text,
         )
-        ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
-        assertEquals(VoiceEngine.PHONE, settings.engine)
     }
 
     @Test
-    fun cancellationDuringUploadDeletesFileAndDoesNotFillDraft() = runTest(dispatcher) {
-        ai()
-        var called = false
-        create { _, _ -> called = true; awaitCancellation() }
-        tap()
-        tap()
-        advanceUntilIdle()
-        assertTrue(called)
-        tap()
-        advanceUntilIdle()
-        assertFalse(clip.file.exists())
-        assertEquals("", activity.findViewById<EditText>(R.id.task_request).text.toString())
-        assertFalse(submitted)
-    }
+    fun successDeletesAudioAndAppendsOnlyToDraft() =
+        runTest(dispatcher) {
+            ai()
+            settings.language = "hi-IN"
+            activity.findViewById<EditText>(R.id.task_request).setText("typed")
+            create { file, language ->
+                assertTrue(file.exists())
+                assertEquals("hi-IN", language)
+                "spoken words"
+            }
+            tap()
+            tap()
+            advanceUntilIdle()
+            assertFalse(clip.file.exists())
+            assertEquals("typed spoken words", activity.findViewById<EditText>(R.id.task_request).text.toString())
+            assertFalse(submitted)
+        }
+
+    @Test
+    fun failureDeletesAudioAndPreservesDraft() =
+        runTest(dispatcher) {
+            ai()
+            activity.findViewById<EditText>(R.id.task_request).setText("keep me")
+            create { _, _ -> error("synthetic failure") }
+            tap()
+            tap()
+            advanceUntilIdle()
+            assertFalse(clip.file.exists())
+            assertEquals("keep me", activity.findViewById<EditText>(R.id.task_request).text.toString())
+            assertEquals(
+                activity.getString(R.string.voice_ai_error),
+                activity.findViewById<TextView>(R.id.task_voice_state).text,
+            )
+            assertFalse(submitted)
+        }
+
+    @Test
+    fun unsupportedModelOffersPhoneEngineAndDeletesAudio() =
+        runTest(dispatcher) {
+            ai()
+            create { _, _ -> throw AudioUnsupportedException() }
+            tap()
+            tap()
+            advanceUntilIdle()
+            assertFalse(clip.file.exists())
+            assertEquals(
+                activity.getString(R.string.voice_ai_unsupported),
+                activity.findViewById<TextView>(R.id.task_voice_state).text,
+            )
+            ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(VoiceEngine.PHONE, settings.engine)
+        }
+
+    @Test
+    fun cancellationDuringUploadDeletesFileAndDoesNotFillDraft() =
+        runTest(dispatcher) {
+            ai()
+            var called = false
+            create { _, _ ->
+                called = true
+                awaitCancellation()
+            }
+            tap()
+            tap()
+            advanceUntilIdle()
+            assertTrue(called)
+            tap()
+            advanceUntilIdle()
+            assertFalse(clip.file.exists())
+            assertEquals("", activity.findViewById<EditText>(R.id.task_request).text.toString())
+            assertFalse(submitted)
+        }
 
     @Test
     fun leavingWhileRecordingDeletesFileWithoutUpload() {
@@ -174,16 +191,31 @@ class VoiceInputV2Test {
     }
 
     @Test
-    fun captureLimitFinishesRecording() = runTest(dispatcher) {
+    fun editingDuringTranscriptionCancelsItAndKeepsUserText() = runTest(dispatcher) {
         ai()
-        create()
+        create { _, _ -> awaitCancellation() }
         tap()
-        clip.onLimit()
-        shadowOf(Looper.getMainLooper()).idle()
+        tap()
+        advanceUntilIdle()
+        activity.findViewById<EditText>(R.id.task_request).setText("my edit")
         advanceUntilIdle()
         assertFalse(clip.file.exists())
-        assertEquals("spoken words", activity.findViewById<EditText>(R.id.task_request).text.toString())
+        assertEquals("my edit", activity.findViewById<EditText>(R.id.task_request).text.toString())
+        assertFalse(submitted)
     }
+
+    @Test
+    fun captureLimitFinishesRecording() =
+        runTest(dispatcher) {
+            ai()
+            create()
+            tap()
+            clip.onLimit()
+            shadowOf(Looper.getMainLooper()).idle()
+            advanceUntilIdle()
+            assertFalse(clip.file.exists())
+            assertEquals("spoken words", activity.findViewById<EditText>(R.id.task_request).text.toString())
+        }
 
     @Test
     fun wavHeaderIs16KhzMonoAndCapIs60Seconds() {
@@ -195,16 +227,67 @@ class VoiceInputV2Test {
         assertEquals(1920000, VoiceAudioRecorder.MAX_BYTES)
     }
 
-    private class FakeRecording(cache: File) : VoiceRecording {
+    @Test
+    fun temporaryAudioBoundaryDeletesOnSuccessErrorAndCancellation() = runTest(dispatcher) {
+        val success = File.createTempFile("boundary-voice-", ".wav", activity.cacheDir)
+        assertEquals("words", transcribeTemporaryAudio(success) { "words" })
+        assertFalse(success.exists())
+        val failure = File.createTempFile("boundary-voice-", ".wav", activity.cacheDir)
+        try {
+            transcribeTemporaryAudio(failure) { throw java.io.IOException("synthetic") }
+        } catch (_: java.io.IOException) {
+            assertFalse(failure.exists())
+        }
+        val cancelled = File.createTempFile("boundary-voice-", ".wav", activity.cacheDir)
+        val job = launch { transcribeTemporaryAudio(cancelled) { awaitCancellation() } }
+        advanceUntilIdle()
+        job.cancelAndJoin()
+        assertFalse(cancelled.exists())
+    }
+
+    @Test
+    fun wallClockCaptureLimitStopsEvenIfRecorderDoesNotSignal() = runTest(dispatcher) {
+        ai()
+        create()
+        tap()
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(60))
+        advanceUntilIdle()
+        assertFalse(clip.file.exists())
+        assertEquals("spoken words", activity.findViewById<EditText>(R.id.task_request).text.toString())
+    }
+
+    @Test
+    fun staleCleanupDeletesOnlyOldOwnedAudio() {
+        val stale = File.createTempFile("eqo-voice-", ".wav", activity.cacheDir)
+        val recent = File.createTempFile("eqo-voice-", ".wav", activity.cacheDir)
+        val other = File.createTempFile("other-", ".wav", activity.cacheDir)
+        val now = System.currentTimeMillis()
+        stale.setLastModified(now - 300001)
+        VoiceAudioRecorder.removeStaleFiles(activity.cacheDir, now)
+        assertFalse(stale.exists())
+        assertTrue(recent.exists())
+        assertTrue(other.exists())
+        recent.delete()
+        other.delete()
+    }
+
+    private class FakeRecording(
+        cache: File,
+    ) : VoiceRecording {
         override val file = File.createTempFile("fake-voice-", ".wav", cache)
         var started = false
         lateinit var onLimit: () -> Unit
+
         override fun start(onLimit: () -> Unit) {
             started = true
             this.onLimit = onLimit
             file.writeBytes(ByteArray(60))
         }
+
         override suspend fun finish(): File = file
-        override fun cancel() { file.delete() }
+
+        override fun cancel() {
+            file.delete()
+        }
     }
 }

@@ -1,4 +1,5 @@
-// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51, path: app/src/main/java/com/opendroid/ai/core/llm/providers/OpenRouterProvider.kt
+// Origin: yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51
+// Upstream path: app/src/main/java/com/opendroid/ai/core/llm/providers/OpenRouterProvider.kt
 package ai.eqo.core.llm.providers
 
 import ai.eqo.core.llm.InputAudio
@@ -41,7 +42,11 @@ class OpenRouterProvider
     ) : LLMProvider {
         override val name: String = "OpenRouter"
         override val availableModels: List<String> =
-            listOf("google/gemini-2.0-flash-exp:free", "meta-llama/llama-3-8b-instruct:free", "gryphe/mythomax-l2-13b:free")
+            listOf(
+                "google/gemini-2.0-flash-exp:free",
+                "meta-llama/llama-3-8b-instruct:free",
+                "gryphe/mythomax-l2-13b:free",
+            )
 
         private val gson = Gson()
         private val mediaType = "application/json; charset=utf-8".toMediaType()
@@ -55,7 +60,12 @@ class OpenRouterProvider
             val supportsAudio =
                 await(catalogRequest).use { response ->
                     if (!response.isSuccessful) throw IOException("Audio model check failed")
-                    val data = gson.fromJson(response.body.string(), JsonObject::class.java).getAsJsonArray("data")
+                    val source = response.body.source()
+                    source.request(OpenRouterModelCatalog.MAX_JSON_CHARS.toLong() + 1)
+                    if (source.buffer.size > OpenRouterModelCatalog.MAX_JSON_CHARS) {
+                        throw IOException("Audio model list too large")
+                    }
+                    val data = gson.fromJson(source.readUtf8(), JsonObject::class.java).getAsJsonArray("data")
                     data?.any { entry ->
                         val item = entry.asJsonObject
                         item.get("id")?.asString == model &&
@@ -90,7 +100,9 @@ class OpenRouterProvider
                             call: Call,
                             e: IOException,
                         ) {
-                            if (continuation.isActive) continuation.resumeWithException(IOException("Audio connection failed"))
+                            if (continuation.isActive) {
+                                continuation.resumeWithException(IOException("Audio connection failed"))
+                            }
                         }
 
                         override fun onResponse(
@@ -121,29 +133,12 @@ class OpenRouterProvider
         ): LLMResponse {
             val startTime = System.currentTimeMillis()
 
-            val messagesList = request.messages.toOpenAIMessages(request.systemPrompt).toMutableList()
-            request.inputAudio?.let { audio ->
-                messagesList.add(
-                    mapOf(
-                        "role" to "user",
-                        "content" to
-                            listOf(
-                                mapOf(
-                                    "type" to "input_audio",
-                                    "input_audio" to
-                                        mapOf("data" to audio.base64, "format" to "wav"),
-                                ),
-                            ),
-                    ),
-                )
-            }
-
             val selectedModel = request.model?.takeIf { it.isNotBlank() } ?: "google/gemini-2.0-flash-exp:free"
 
             val requestBodyMap =
                 mutableMapOf<String, Any>(
                     "model" to selectedModel,
-                    "messages" to messagesList,
+                    "messages" to messagesFor(request),
                     "temperature" to request.temperature,
                     "max_tokens" to request.maxTokens,
                 )
@@ -166,14 +161,7 @@ class OpenRouterProvider
                 (if (request.inputAudio != null) await(httpRequest) else client.newCall(httpRequest).execute())
                     .use { response ->
                         if (!response.isSuccessful) {
-                            if (request.inputAudio != null) {
-                                throw IOException("Audio provider request failed with HTTP ${response.code}")
-                            }
-                            throw response.toSafeProviderException(
-                                provider = ProviderErrorDetail.Provider.OPENROUTER,
-                                request = request,
-                                knownSecrets = listOf(apiKey),
-                            )
+                            reject(response, request, apiKey)
                         }
                         val responseBody = response.body.string()
                         if (responseBody.isBlank()) throw IOException("Empty response body from OpenRouter")
@@ -194,6 +182,29 @@ class OpenRouterProvider
                         )
                     }
             } // withContext
+        }
+
+        private fun messagesFor(request: LLMRequest): List<Map<String, Any>> {
+            val messages = request.messages.toOpenAIMessages(request.systemPrompt).toMutableList()
+            request.inputAudio?.let { audio ->
+                messages.add(mapOf(
+                    "role" to "user",
+                    "content" to listOf(mapOf(
+                        "type" to "input_audio",
+                        "input_audio" to mapOf("data" to audio.base64, "format" to "wav"),
+                    )),
+                ))
+            }
+            return messages
+        }
+
+        private fun reject(response: Response, request: LLMRequest, key: String): Nothing {
+            if (request.inputAudio != null) throw IOException("Audio provider request failed with HTTP ${response.code}")
+            throw response.toSafeProviderException(
+                provider = ProviderErrorDetail.Provider.OPENROUTER,
+                request = request,
+                knownSecrets = listOf(key),
+            )
         }
 
         override fun streamComplete(request: LLMRequest): Flow<String> =

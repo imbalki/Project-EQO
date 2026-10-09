@@ -1,5 +1,26 @@
 # Phase One phone test log
 
+## Voice v2 — 2026-10-09 — NOT TESTED ON PHONE
+
+Branch `feat/voice-v2`, card t_e9801e01. No phone was contacted or modified. No real provider audio was uploaded.
+Initial `:app:ktlintFormat :core-llm:ktlintFormat :app:compileDebugUnitTestKotlin --max-workers=2
+-Pkotlin.compiler.execution.strategy=in-process` succeeded in 8m 27s (Gradle daemon log verified after tool timeout).
+Final module checks are recorded here when complete. CI remains the full merge gate.
+
+Phone checklist (owner must record build commit and actual outcome):
+- [ ] Phone engine: long English sentence with multiple 3–4 second pauses; partials appear live, stop control works.
+- [ ] Phone engine: hi-IN long Hindi sentence with pauses; en-IN, device default and provider-reported languages.
+- [ ] If the service still ends early, already-heard words remain; next mic tap adds rather than wipes.
+- [ ] Grant, deny, cancel and permanently deny microphone permission; no request at startup, typing still works.
+- [ ] Edit recognized words; nothing submits until the normal task button is tapped, preview/approval unchanged.
+- [ ] AI engine: first-use consent accept/decline; only accepted consent allows capture and provider upload.
+- [ ] Audio-capable configured model: English and Hindi verbatim transcripts; stop tap, 60-second cap, repeat append.
+- [ ] Text-only model: plain audio-unsupported explanation and Use Phone voice fallback; no audio upload.
+- [ ] Airplane mode on both engines: understandable failure, words kept, no automatic network retry.
+- [ ] Leave screen while recording/transcribing, or tap mic during transcription: no late draft overwrite,
+      microphone released and EQO voice cache file deleted. Test failures/cancellation as well as success.
+- [ ] Compare phone vs AI accuracy and latency; verify offline language packs separately in the phone provider.
+
 ## Voice input — 2026-10-08 — NOT TESTED ON PHONE
 
 - Branch `feat/voice-input`, card t_e9ef0f95. Mic fills the editable request only; the user must still tap the normal task button. Permission is requested on Mic, not startup. No EQO audio storage or transcript logging.

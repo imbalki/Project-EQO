@@ -1,6 +1,21 @@
 # Current handoff (any agent can take over from this page)
 
-Last updated: 2026-10-08 (files and attachments section added). Update this file in the same PR as every merge to `main`.
+Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every merge to `main`.
+
+## Voice v2 (t_e9801e01, local-only branch `feat/voice-v2`)
+- Phone remains the default: 4/3/5-second speech-intent pause hints, live partials, Stop listening control,
+  preserved early-end text and append-on-next-tap. Providers may ignore pause hints; no automatic restarts.
+- Setup: Voice engine (Phone / AI model via OpenRouter), Voice language (device default / en-IN / hi-IN /
+  additional tags reported by the phone speech service). AI requires first-use consent before permission/capture.
+- AI records a cache WAV (16 kHz mono, 60-second cap), then uses the existing BYOK OpenRouter provider and shared
+  planning client. Public model metadata must advertise audio before upload. A text-only model is refused with
+  plain guidance and a Phone voice option. Success/error/cancel deletes audio; no words/audio logging or auto-submit.
+- Verification in progress: initial module-scoped format and unit-test compilation succeeded (daemon reported
+  BUILD SUCCESSFUL in 8m 27s after the terminal timed out). Final checks and fake-provider tests recorded below
+  when complete. CI is still the full gate. Design: `docs/adr/0011-voice-input-engines.md`.
+- NOT TESTED ON PHONE: long English/Hindi pauses, installed language packs, AudioRecord, provider audio models,
+  permission dialogs, airplane mode, 60-second cap and cancellation. See the phone checklist in the test log.
+- Local commits only; lead owns push/PR. This card goes to same-card review, not self-completion.
 
 ## IN PROGRESS: files and attachments (branch `feat/files-attachments`, draft PR, do not merge)
 Plain-language status, updated after each step. Details and design: `docs/adr/0007-shared-files-and-attachments.md`.

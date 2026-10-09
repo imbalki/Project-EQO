@@ -2,6 +2,9 @@
 
 ## Voice v2 additions (t_e9801e01)
 
+| :app | `android/app/src/main/kotlin/ai/eqo/task/PhoneVoiceInput.kt` | EQO-NEW | `ai.eqo.task` | Pause-tolerant phone recognizer session and stale callback guards |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/AiVoiceInput.kt` | EQO-NEW | `ai.eqo.task` | Opt-in AI recording/transcription session and cancellation |
+
 | :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceSettings.kt` | EQO-NEW | `ai.eqo.task` | Non-secret engine/language/consent preferences and setup controls |
 | :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceAudioRecorder.kt` | EQO-NEW | `ai.eqo.task` | Bounded ephemeral PCM/WAV capture and file cleanup |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceInputV2Test.kt` | EQO-NEW | `ai.eqo.task` | Fake recorder/provider draft-only consent and cleanup regressions |
