@@ -12,9 +12,14 @@
   replanning/re-sending text. Remaining steps need fresh approval even with approval OFF.
   Unknown effects/manual drafts do not offer permission retry; no persistent exactly-once claim.
 - Existing Google Maps link and redacted LocationFix remain unchanged; coordinates stay unlogged.
-- Verification blocked by concurrent sibling Gradle wrappers; required Android gates
-  have NOT passed and this change is not review-ready or committed. Repo/provenance gate
-  passes (489 Kotlin files/rows). NOT TESTED ON PHONE; checklist is in PHASE-ONE-TEST-LOG.md.
+- Lead authorized a local WIP checkpoint and review without Android gates on a busy host.
+  Code checkpoint: `ee5a66a` (correct commit identity; no raw logs). Resumed verification
+  found four sibling Gradle wrappers both before and after a three-minute wait, so no
+  new Gradle command was launched. App/actions ktlintFormat, ktlintCheck, detekt, lintDebug
+  and unit tests remain unverified; CI/lead must run them before accepting the fix.
+  Repo/provenance gate passes (489 Kotlin files/rows); commit whitespace check passes.
+  NOT TESTED ON PHONE; checklist is in PHASE-ONE-TEST-LOG.md. Same-card review requested
+  under the lead's revised policy, not a claim of passing Android checks.
   No push, PR or gh action. Lead owns publication and full CI.
 
 Last updated: 2026-10-10 (round-1 accepted permission preflight implemented; awaiting review). Update this file in the same PR as every merge to `main`.

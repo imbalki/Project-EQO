@@ -3,7 +3,8 @@
 ## Location fix — `t_9fd2d126` — NOT TESTED ON PHONE
 
 Lead approved check-only mid-run refusal, not a permission-dialog takeover exemption.
-Host verification is blocked. No phone was contacted; no real location or recipient
+Android verification remains unverified; lead permits review with the busy-host caveat.
+No phone was contacted; no real location or recipient
 was saved. Existing Google Maps message generation and redacted position handling are unchanged.
 
 Host attempt (2026-10-10): app/actions ktlintFormat began, but the tool transport timed
@@ -11,15 +12,26 @@ out at 420 seconds. A corrected process probe found several sibling Gradle wrapp
 (`-jar gradle-wrapper.jar`, not `GradleWrapperMain`). Only this worktree's wrapper was
 cancelled to obey one Gradle at a time. Two subsequent five-minute bounded waits still
 found sibling wrappers; no second build was launched. No Android lint/static/unit gate
-has passed. No local commit, push, PR, APK or device test. `scripts/check.sh` passes:
-489 tracked Kotlin files and 489 provenance rows. New files are staged for that check.
+has passed. No local commit existed at that attempt; no push, PR, APK or device test.
+`scripts/check.sh` passed with 489 tracked Kotlin files and 489 provenance rows.
 
-Next worker: obtain an exclusive host slot, then from `android/` run app/actions
-ktlintFormat, followed by both modules' lintDebug, ktlintCheck, detekt and unit tests
-with `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process --console=plain`.
-The initial command included app's full debug suite plus actions ContactRecipientsTest
-and ShareActionsTest. Finish all failures and update this evidence BEFORE committing.
-Code/tests are unverified WIP, not a completed fix. Commit locally only, then same-card review.
+Resumed host verification (2026-10-10, lead's revised busy-host policy):
+- Existing local WIP checkpoint `ee5a66a` contains the saved code/tests/docs, uses
+  `imbalki <imbalki@users.noreply.github.com>` and includes no raw logs. Worktree was clean.
+- Four sibling Gradle wrappers were active on both probes separated by three minutes.
+  No new Gradle command was started; no sibling process was changed.
+- Fresh `bash scripts/check.sh` PASS (489 files/rows), checkpoint whitespace check PASS.
+- NOT RUN in this resumed attempt: app/actions ktlintFormat, ktlintCheck, detekt,
+  lintDebug and testDebugUnitTest (full app and focused/full actions suites).
+  The earlier cancelled formatter is NOT a successful formatting or build gate.
+- NOT RUN: root/all-module Gradle, APK/release tasks, instrumentation, phone tests or CI.
+- Code/tests remain unverified WIP. Same-card review is requested under the lead's policy;
+  lead owns full CI and local lint/ktlint/detekt follow-up. No push/PR/gh by this worker.
+
+Required next Android verification from `android/`: app/actions ktlintFormat, then both
+modules' lintDebug, ktlintCheck, detekt and testDebugUnitTest with `--max-workers=2
+-Pkotlin.compiler.execution.strategy=in-process --console=plain`. Focused actions
+ContactRecipientsTest and ShareActionsTest should run as well; do not claim them passed.
 
 Phone checklist (lead/owner; record build commit and pass/fail, no real identifiers):
 - [ ] Named WhatsApp text + location: Contacts and Location shown/requested BEFORE
