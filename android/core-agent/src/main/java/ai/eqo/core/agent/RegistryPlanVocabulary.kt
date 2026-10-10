@@ -64,8 +64,20 @@ object RegistryPlanVocabulary {
             }
             appendLine("To send a file, set the optional attachment parameter of SEND_EMAIL,")
             appendLine("SEND_WHATSAPP or SEND_SMS.")
+            appendLine("For a file-only send, keep message/body/subject empty; never invent message text.")
             appendLine("Its value is a file path the user gave (several separated by |),")
-            appendLine("or last_screenshot after TAKE_SCREENSHOT.")
+            appendLine("or last_screenshot only after an explicit request to TAKE_SCREENSHOT now.")
+            appendLine("'my latest/last screenshot' means attachment=find:latest,type=screenshot, NOT TAKE_SCREENSHOT.")
+            appendLine("'the screenshot from <date>' means find:type=screenshot,date=YYYY-MM-DD.")
+            appendLine("'my latest photo/picture' means find:latest,type=image; latest PDF means find:latest,type=pdf.")
+            appendLine("'my latest file' means find:latest. 'the eBay bill' means find:ebay bill.")
+            appendLine("'WhatsApp it to <contact>' uses SEND_WHATSAPP with the referenced file search.")
+            appendLine("'email it to me' uses SEND_EMAIL with that search; ASK_USER if the own email is unknown.")
+            appendLine("Never invent what 'it' refers to; ASK_USER if the file reference is missing.")
+            appendLine("'take a screenshot and send it' means TAKE_SCREENSHOT of the CURRENT app,")
+            appendLine("then attachment=last_screenshot.")
+            appendLine("The preview must say: open the app to capture first; EQO cannot capture its own screen.")
+            appendLine("If EQO is foreground, ASK_USER to open that app first; never bypass the own-window guard.")
             appendLine("For a file whose path is unknown, use a run-time attachment search, not a FIND_FILES step:")
             appendLine("find:ebay bill ; find:type=screenshot,date=2026-10-07 ;")
             appendLine("find:type=pdf,name=invoice,folder=Download ; find:latest,type=image.")
@@ -113,7 +125,11 @@ object RegistryPlanVocabulary {
                             if (definition.required) add("${action.name}: missing ${definition.name}")
                         } else if (value.length > MAX_TEXT ||
                             value.any { it.isISOControl() && it !in setOf('\n', '\t') } ||
-                            (definition.required && value.isBlank()) ||
+                            (
+                                definition.required &&
+                                    value.isBlank() &&
+                                    !AttachmentSpec.allowsEmptyText(action.name, definition.name, params)
+                            ) ||
                             !validType(definition, value)
                         ) {
                             add("${action.name}: invalid ${definition.name} (${definition.type})")

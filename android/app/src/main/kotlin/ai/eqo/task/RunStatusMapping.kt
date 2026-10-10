@@ -64,6 +64,12 @@ internal object RunStatusMapping {
                 )
             -> Text(R.string.run_accessibility_off)
             step.detail == FailureClass.BINDER_DEAD.repair -> Text(R.string.task_helper_lost)
+            RunDiagnostics.failureKind(
+                ai.eqo.core.agent.ExecuteResult
+                    .Failure(step.detail),
+            ) in
+                setOf("no_eqo_screenshot_yet", "no_matching_file", "needs_all_files_access", "protected_screen") ->
+                Text(R.string.run_user_action, fileFailureInstruction(step.detail))
             step.detail.contains("EQO did not save a screenshot") ->
                 Text(
                     R.string.run_user_action,
@@ -99,6 +105,20 @@ internal object RunStatusMapping {
             else -> null
         }
     }
+
+    private fun fileFailureInstruction(reason: String): String =
+        when (
+            RunDiagnostics.failureKind(
+                ai.eqo.core.agent.ExecuteResult
+                    .Failure(reason),
+            )
+        ) {
+            "no_eqo_screenshot_yet" ->
+                "No recent EQO screenshot or matching gallery screenshot. Take one and try again."
+            "no_matching_file" -> "No matching file. Check the name, type or date and try again."
+            "needs_all_files_access" -> "Turn on All files access for EQO, then start the task again."
+            else -> "This screen is protected. EQO cannot capture it."
+        }
 
     private fun handoff(step: StepProgress): Text =
         if (step.detail == "control_not_found") {

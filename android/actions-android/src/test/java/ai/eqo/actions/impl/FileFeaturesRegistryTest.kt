@@ -74,6 +74,21 @@ class FileFeaturesRegistryTest {
     private var secure = false
     private var writerCalls = 0
     private var writerResult = true
+    private val disclosed = mutableListOf<String>()
+    private val selection =
+        object : AttachmentSelection {
+            override suspend fun choose(
+                search: String,
+                files: List<AttachmentChoice>,
+            ): Int = 0
+
+            override suspend fun showResolved(files: List<AttachmentChoice>): Boolean {
+                assertTrue(stagedCopies().isEmpty())
+                assertNull(started())
+                disclosed += files.map { it.name }
+                return true
+            }
+        }
 
     private class FakeLastScreenshot : LastScreenshotStore {
         var file: File? = null
@@ -91,6 +106,7 @@ class FileFeaturesRegistryTest {
         base = Files.createTempDirectory("eqo-files").toFile().canonicalFile
         root = File(base, "storage").apply { mkdirs() }
         last.file = null
+        disclosed.clear()
         access = true
         secure = false
         writerCalls = 0
@@ -102,6 +118,7 @@ class FileFeaturesRegistryTest {
                 it.allFilesAccess = { access }
                 it.storageRoot = root
                 it.lastScreenshotStore = last
+                it.attachmentSelection = selection
                 it.shareUri = { file -> Uri.parse("content://ai.eqo.test/${file.parentFile!!.name}/${file.name}") }
                 it.screenshotWriter =
                     ScreenshotWriter { target ->
@@ -279,6 +296,44 @@ class FileFeaturesRegistryTest {
 
     // ── attachments ─────────────────────────────────────────
 
+    @Test fun runtimeSearchAndGalleryFallbackReachAllThreeShareIntentsOnlyAfterDisclosure() =
+        runTest {
+            file("Pictures/Screenshots/gallery.png")
+            file("Download/ebay-bill.pdf")
+            val references = listOf("find:latest,type=screenshot", "find:ebay bill", "last_screenshot")
+            for (action in listOf("SEND_WHATSAPP", "SEND_EMAIL", "SEND_SMS")) {
+                for (reference in references) {
+                    val pdf = reference.contains("ebay")
+                    val mime = if (pdf) "application/pdf" else "image/png"
+                    val packageName =
+                        when (action) {
+                            "SEND_EMAIL" -> "com.google.android.gm"
+                            "SEND_WHATSAPP" -> "com.whatsapp"
+                            else -> "com.google.android.apps.messaging"
+                        }
+                    org.robolectric.shadows.ShadowTelephony.ShadowSms.setDefaultSmsPackage(
+                        if (action == "SEND_SMS") packageName else null,
+                    )
+                    canResolve(Intent(Intent.ACTION_SEND).setType(mime).setPackage(packageName))
+                    canResolve(Intent(Intent.ACTION_SEND).setType(mime))
+                    val params =
+                        if (action == "SEND_EMAIL") {
+                            emailParams
+                        } else {
+                            mapOf("contact" to "+15551234567", "message" to "")
+                        }
+                    val result = registry.execute(action, params + ("attachment" to reference))
+                    assertTrue("$action: ${result.error}", result is ActionResult.UserActionRequired)
+                    val intent = started()
+                    val name = if (pdf) "ebay-bill.pdf" else "gallery.png"
+                    assertEquals(name, disclosed.last())
+                    assertEquals(name, intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)!!.lastPathSegment)
+                    assertTrue(intent.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
+                    EqoSharedFileProvider.stagingRoot(context).deleteRecursively()
+                }
+            }
+        }
+
     private val emailParams =
         mapOf("to" to "owner@example.test", "subject" to "Papers", "body" to "See file")
 
@@ -408,7 +463,7 @@ class FileFeaturesRegistryTest {
                 "Downloads/missing.txt" to "All files access",
                 "/data/data/ai.eqo.app/shared_prefs/x.xml" to "outside",
                 "../etc/hosts" to "..",
-                "last_screenshot" to "No EQO screenshot",
+                "last_screenshot" to "All files access",
             ).forEach { (attachment, expected) ->
                 val message =
                     registry.execute(

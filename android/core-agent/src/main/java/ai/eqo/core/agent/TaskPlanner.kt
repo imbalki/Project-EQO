@@ -354,7 +354,9 @@ object TaskPlanPreview {
             "FIND_FILES", "LIST_FILES" ->
                 "${step.action.name}: " + p.entries.joinToString(", ") { "${it.key}=${quote(it.value)}" } +
                     "; shared folders need All files access; turn it on when Android asks"
-            "TAKE_SCREENSHOT" -> "save a screenshot; EQO accessibility must be on; protected screens are refused"
+            "TAKE_SCREENSHOT" ->
+                "save a screenshot of the current app; open that app first, not EQO; " +
+                    "EQO accessibility must be on; protected screens are refused"
             "observe" -> "look at the screen"
             "scroll" -> "scroll ${quote(p["direction"].orEmpty())}"
             "open_app" -> "open ${quote(p["app"].orEmpty())}"
