@@ -31,6 +31,39 @@ import java.nio.file.Files
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
 class FileFeaturesRegistryTest {
+    @Test fun missingAccessOffersExactSettingsThenContinuesAfterGrant() =
+        runTest {
+            access = false
+            File(root, "Download").mkdirs()
+            File(root, "Download/sample.txt").writeText("test")
+            var prompts = 0
+            val granting =
+                AndroidActionRegistry.createWithStore(
+                    context,
+                    PermissionRequester {
+                        val permission = it as ActionPermission.SpecialAccess
+                        assertEquals(
+                            android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                            permission.settingsAction,
+                        )
+                        assertTrue(permission.packageScoped)
+                        assertTrue(permission.explanation.contains("Turn on All files access"))
+                        prompts++
+                        access = true
+                        true
+                    },
+                    { EqoAutomation({ null }, { EqoAutomation.ServiceState.AVAILABLE }, takeover) },
+                    UnknownActionSink {},
+                    RegistryOptions().also {
+                        it.allFilesAccess = { access }
+                        it.storageRoot = root
+                    },
+                )
+            val result = granting.execute("FIND_FILES", mapOf("query" to "sample", "folder" to "Downloads"))
+            assertTrue(result.success)
+            assertEquals(1, prompts)
+        }
+
     private lateinit var context: Application
     private lateinit var base: File
     private lateinit var root: File

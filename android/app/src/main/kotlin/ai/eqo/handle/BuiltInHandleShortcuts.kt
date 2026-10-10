@@ -62,6 +62,12 @@ internal fun createHandleRegistry(
 ): HandleShortcutRegistry<Context> {
     val registry = HandleShortcutRegistry<Context>(HandlePreferences(context))
     registry.register(
+        BuiltInHandleShortcut("explain_screen", R.string.explain_title, android.R.drawable.ic_menu_info_details) {
+            ai.eqo.explain.ExplainEntryActivity
+                .launch(it, "edge_handle")
+        },
+    )
+    registry.register(
         BuiltInHandleShortcut("ask_eqo", R.string.handle_ask, android.R.drawable.ic_menu_edit) {
             it.startActivity(
                 Intent(it, TaskActivity::class.java)

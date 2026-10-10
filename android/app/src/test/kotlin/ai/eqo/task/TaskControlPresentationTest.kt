@@ -61,9 +61,13 @@ class TaskControlPresentationTest {
                 .setNegativeButton("Reject", null)
                 .show()
         val prepare =
-            TaskActivity::class.java.getDeclaredMethod("prepareTaskDialog", android.app.AlertDialog::class.java)
+            TaskActivity::class.java.getDeclaredMethod(
+                "prepareTaskDialog",
+                android.app.AlertDialog::class.java,
+                Boolean::class.javaPrimitiveType,
+            )
         prepare.isAccessible = true
-        prepare.invoke(activity, dialog)
+        prepare.invoke(activity, dialog, false)
         shadowOf(android.os.Looper.getMainLooper()).idle()
         val bounds = Rect()
         val detector = TakeoverDetector.shared

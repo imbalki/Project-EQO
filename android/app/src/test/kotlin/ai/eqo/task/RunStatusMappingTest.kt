@@ -18,6 +18,30 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 
 class RunStatusMappingTest {
+    @Test fun permissionInstructionsAndFailureKindsContainNoPrivateDetail() {
+        assertEquals(
+            "Tap Allow for Contacts.",
+            RunStatusMapping.permissionInstruction("android.permission.READ_CONTACTS"),
+        )
+        assertEquals(
+            "Tap Allow for Location.",
+            RunStatusMapping.permissionInstruction("android.permission.ACCESS_FINE_LOCATION"),
+        )
+        assertEquals(
+            "Turn on All files access for EQO, then return here.",
+            RunStatusMapping.permissionInstruction(
+                android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+            ),
+        )
+        assertEquals("not_found", RunDiagnostics.failureKind(ExecuteResult.Failure("private-name not found")))
+        assertEquals(
+            "needs_all_files_access",
+            RunDiagnostics.failureKind(
+                ExecuteResult.Failure("All files access needed for private/path"),
+            ),
+        )
+    }
+
     private fun failed(
         reason: String,
         target: String = "",

@@ -21,6 +21,14 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
+/** Shared with permission preflight; drafts never need Calendar storage access. */
+internal fun isDirectCalendarInsert(params: Map<String, String>): Boolean =
+    params["date"].orEmpty().lowercase(Locale.ROOT) in setOf("today", "now") &&
+        params["time"].isNullOrBlank() &&
+        params["duration"].orEmpty() in setOf("", "1 hour") &&
+        params["attendees"].isNullOrBlank() &&
+        params["location"].isNullOrBlank()
+
 /** Calendar, alarm, timer and reminder executors; every system hand-off goes through [GatedIntentLauncher]. */
 internal class CalendarActions(
     private val launcher: GatedIntentLauncher,
@@ -39,20 +47,12 @@ internal class CalendarActions(
         params: Map<String, String>,
         context: Context,
     ): ActionResult =
-        if (isDirectInsert(params)) {
+        if (isDirectCalendarInsert(params)) {
             val refusal = writeRefusal(context)
             refusal ?: insertEvent(params, context)
         } else {
             calendarDraft(params, "Set the requested date, time and details in Calendar; the event is not saved yet.")
         }
-
-    /** Donor only supports an event starting now, lasting one hour. Never silently ignore a requested date/time. */
-    private fun isDirectInsert(params: Map<String, String>): Boolean =
-        params["date"].orEmpty().lowercase(Locale.ROOT) in setOf("today", "now") &&
-            params["time"].isNullOrBlank() &&
-            params["duration"].orEmpty() in setOf("", "1 hour") &&
-            params["attendees"].isNullOrBlank() &&
-            params["location"].isNullOrBlank()
 
     private suspend fun writeRefusal(context: Context): ActionResult? {
         val gate = takeoverGate()

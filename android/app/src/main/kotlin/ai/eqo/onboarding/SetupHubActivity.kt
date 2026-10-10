@@ -28,6 +28,16 @@ class SetupHubActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.setup_hub)
+        ai.eqo.task.VoiceSettings
+            .bind(this)
+        configureHandle()
+        findViewById<Button>(R.id.hub_background).setOnClickListener {
+            try {
+                startActivity(Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+            } catch (_: android.content.ActivityNotFoundException) {
+                Toast.makeText(this, R.string.background_no_settings, Toast.LENGTH_LONG).show()
+            }
+        }
         findViewById<Button>(R.id.explain_settings).setOnClickListener {
             startActivity(Intent(this, ai.eqo.explain.ExplainSettingsActivity::class.java))
         }
@@ -74,6 +84,11 @@ class SetupHubActivity : Activity() {
         super.onResume()
         runCatching { StudySetup.helper.attach() }
         render()
+        findViewById<android.widget.Switch>(R.id.hub_edge_handle).isChecked =
+            ai.eqo.accessibility.handle
+                .HandlePreferences(this)
+                .enabled
+        renderHandleHint()
     }
 
     override fun onPause() {
@@ -120,6 +135,34 @@ class SetupHubActivity : Activity() {
     }
 
     /** Separate from the readiness rows: optional, owner-granted in Settings, never part of "next step". */
+    private fun configureHandle() {
+        val handle =
+            ai.eqo.accessibility.handle
+                .HandlePreferences(this)
+        findViewById<android.widget.Switch>(R.id.hub_edge_handle).apply {
+            isChecked = handle.enabled
+            setOnCheckedChangeListener { _, enabled ->
+                handle.enabled = enabled
+                renderHandleHint()
+            }
+        }
+        findViewById<Button>(R.id.hub_handle_settings).setOnClickListener {
+            startActivity(Intent(this, ai.eqo.handle.EdgeHandleSettingsActivity::class.java))
+        }
+    }
+
+    private fun renderHandleHint() {
+        findViewById<TextView>(R.id.hub_handle_hint).setText(
+            if (ai.eqo.accessibility.EQOAccessibilityService
+                    .getInstance() == null
+            ) {
+                R.string.hub_handle_accessibility_off
+            } else {
+                R.string.hub_handle_hint
+            },
+        )
+    }
+
     private fun renderAllFilesRow() {
         val granted = AllFilesAccess.isGranted()
         findViewById<TextView>(R.id.row_all_files).text =

@@ -1,5 +1,114 @@
 # Current handoff (any agent can take over from this page)
 
+Last updated: 2026-10-10 (round-1 accepted permission preflight implemented; awaiting review). Update this file in the same PR as every merge to `main`.
+
+Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every merge to `main`.
+
+## Voice v2 (t_e9801e01, local-only branch `feat/voice-v2`)
+- Phone remains the default: 4/3/5-second speech-intent pause hints, live partials, Stop listening control,
+  preserved early-end text and append-on-next-tap. Providers may ignore pause hints; no automatic restarts.
+- Setup: Voice engine (Phone / AI model via OpenRouter), Voice language (device default / en-IN / hi-IN /
+  additional tags reported by the phone speech service). AI requires first-use consent before permission/capture.
+- AI records a cache WAV (16 kHz mono, 60-second cap), then uses the existing BYOK OpenRouter provider and shared
+  planning client. Public model metadata must advertise audio before upload. A text-only model is refused with
+  plain guidance and a Phone voice option. Success/error/cancel deletes audio; no words/audio logging or auto-submit.
+- Verified local code head `381b083`: app/core-llm ktlintFormat, ktlintCheck, detekt and debug unit tests;
+  final saved Gradle run reports BUILD SUCCESSFUL in 9m 48s. XML reports: 486 tests, zero failures/errors,
+  one existing core-llm skip; all 34 voice/provider tests pass. Both debug lint reports have zero issues.
+  Repo/branding/provenance checks pass (451 Kotlin files, 451 rows); changed Kotlin lines are <=120 chars.
+  Resumed-worker confirmation of both modules' static checks, tests and debug lint exited 0 in 28m 3s.
+  CI is still the full gate. Design: `docs/adr/0011-voice-input-engines.md`.
+- NOT TESTED ON PHONE: long English/Hindi pauses, installed language packs, AudioRecord, provider audio models,
+  permission dialogs, airplane mode, 60-second cap and cancellation. See the phone checklist in the test log.
+- Local commits only; lead owns push/PR. This card goes to same-card review, not self-completion.
+## Explain/handle UX polish (t_e84b3eaa, feat/explain-handle-polish): NOT TESTED ON PHONE
+
+- Compact Explain panel defaults to 25% of screen height; drag/tap the resize bar for a one-line
+  collapsed header, medium or large (35% maximum). The body scrolls, with 22sp answer text,
+  85%-opaque background, Read aloud, consent and follow-ups retained. Outside touches pass through.
+  See screen hides the keyboard and makes the entire panel 5%-opaque and non-touchable for five
+  seconds, then restores it. FLAG_SECURE is unchanged; no screen context is logged or persisted.
+- Explain screen is the first default edge shortcut on a fresh registry (saved user ordering is
+  preserved on upgrade). Accessibility connect/window-state callbacks repost the optional notification
+  directly, without trying to start a background foreground service; enabled handles refresh too.
+  This repairs a lost notification even if the OEM killed ExplainNotificationService. This is recovery
+  on the next observed window change, not a claim that EQO or its service can never be killed.
+- Accessibility button declared and routed through the transient Explain entry. API 31+ declares
+  isAccessibilityTool. Android 11 QS guidance has three plain steps and an editor hint; API 33+ has
+  the platform Add tile confirmation. There is no public direct Android 11 QS-editor intent.
+- Setup hub exposes the default-OFF Edge handle switch, accessibility-off wording, shortcut settings
+  and a background-running battery-settings row with Realme/ColorOS, Xiaomi and Samsung guidance.
+  First successful handle attachment shows “Drag me up or down. Tap to open.” once.
+- Owner follow-up: Ask already targets the real request planner with focus and optional voice button;
+  its shared layout incorrectly said “Practice run”. That heading now says “Your task”. No sample run
+  is started by Ask. Hidden apps settings now show the count and per-package Unhide / Unhide all;
+  EQO itself cannot be hidden, including legacy saved own-package choices.
+- Local verification: both final sequential scoped commands exit 0 (platform 1m 11s; app 6m 10s):
+  `:platform-a11y:ktlintFormat :platform-a11y:ktlintCheck :platform-a11y:detekt :platform-a11y:testDebugUnitTest :platform-a11y:lintDebug`;
+  then `:app:ktlintFormat :app:ktlintCheck :app:detekt :app:testDebugUnitTest :app:lintDebug`.
+  Both use `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process --console=plain`.
+  JUnit XML: platform 111 + app 251 = 362 tests, zero failures/errors/skips; 22 new API-30/33
+  polish cases. Repo/branding/provenance/secret checks, changed Kotlin <=120-character lines,
+  changed XML parsing and whitespace checks pass. No new permission or runtime dependency.
+  Native hub Switch has a narrowly documented XML lint exception to match platform Activity/StudyTheme.
+- Verification corrections: the peek deadline uses a close-cancelled main Handler (distinct name
+  avoids Button.handler receiver shadowing). Removed premature attachment-state reconciliation that
+  cancelled deferred handle panels; existing paced/in-flight Pause/Stop regressions now pass too.
+- NOT RUN: all-module/root Gradle gate, release/assemble APK, device/emulator instrumentation,
+  installation, real provider/speech/OEM behavior or GitHub CI. CI remains the full gate; commits local only.
+- Phone checklist (record actual results and build commit):
+  1. Realme Android 11: switch handle on in Setup, verify immediate drawing, first-use hint, drag and
+     Explain shortcut; switch off and confirm disappearance. With accessibility off, verify plain hint.
+  2. Explain a real other app twice: open, Close, open; exercise Read aloud and typed follow-up.
+     Check default height, all resize states, portrait/landscape, large font, keyboard and body scroll.
+  3. Tap See screen: verify background app receives taps inside and outside the faded panel and
+     full panel returns after five seconds. Check outside touches pass through normally too.
+  4. Enable notification, stop only ExplainNotificationService, change foreground window and verify
+     notification returns without starting that service; tap it twice. Deny notification permission
+     and switch preference off: it must not reappear. Check accessibility reconnect restores entries.
+  5. Add QS tile with the three manual steps; test Android accessibility button and configured
+     volume-key shortcut. On Android 13+, confirm Add tile request succeeds or cancels cleanly.
+  6. Open background-running row; inspect OEM battery/auto-start choices manually. No new permission.
+  7. Ask opens focused real request box with mic if available, never a practice/sample execution.
+     Hide another app, unhide it individually, then Unhide all; check count and immediate drawing.
+     Verify EQO settings always retain the handle even with a legacy own-package hidden preference.
+
+## Pairing discovery fix (t_9a512691, local-only fix/pairing-discovery)
+
+- Implemented: NSD still finds service instances. One bounded framework resolve attempt is preferred;
+  failure or no callback within 1.5 seconds invokes an independent Wi-Fi-interface-bound multicast
+  SRV query, then A/AAAA queries for its target. The socket uses mDNS multicast membership and a
+  WifiManager multicast lock; retries stop after four seconds. Network changes/close cancel sockets,
+  invalidate callbacks and release the lock. Parser limits packets, record counts, names and pointer
+  traversal; malformed/truncated/compression-loop replies yield no records. Only this phone's Wi-Fi
+  addresses are eligible, including IPv6 scope preservation. Logs contain only resolve method/status.
+- Notification Reply is available even with no discovered ports. Both reply and the in-app password
+  field accept CODE, CODE PAIRPORT, or CODE PAIRPORT CONNECTPORT, with spaces/commas, six ASCII code
+  digits and ports 1024–65535. Explicit ports override discovery; equal ports are refused. Three fields
+  require no discovery. Two fields use a known connection port, or wait in memory for up to one minute
+  for it; the owner can replace the pending reply with three fields. Waiting never starts PAIR, guesses
+  a connection port or reports enrollment. Codes are not saved in view state, logs or durable storage.
+- Security: no adb-pairing/authentication changes. Fresh CONNECT enrollment stays bound to its real
+  endpoint, PAIR and pinned CONNECT share the existing runner, and background replies never start or
+  authorize the helper. Return to EQO and tap Connect again; ADR-0006's own-process human Allow tap
+  remains required. Pending replies are discarded on timeout, Wi-Fi revision change, service close,
+  Forget and a new foreground pairing/reconnect run (synchronous main-thread cancellation).
+- Debug lab: `ai.eqo.debug.PAIR`, only in debug source/manifest, additionally checks BuildConfig.DEBUG
+  and requires sender permission android.permission.DUMP. Extras: string `code`, integer `pairing_port`
+  and integer `connection_port`. An explicit broadcast to ai.eqo.app/ai.eqo.onboarding.DebugPairReceiver
+  forwards validated extras to the same non-exported pairing service; it does not approve the helper.
+  Never paste real codes, addresses or ports into docs/logs. Tests cover release source-set exclusion.
+- Verified code commit `c8d6d2ad98ee912f57e3ed2bd3fc19e814a7b40b`: sequential app ktlintFormat,
+  ktlintCheck/detekt/testDebugUnitTest, then lintDebug/assembleDebug/processReleaseMainManifest all exit 0,
+  with `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`. Final JUnit XML: 255 app tests,
+  including 50 pairing regressions, zero failures/errors/skips. Repo/branding/provenance and whitespace/
+  changed-Kotlin line-length checks pass; all eight new Kotlin files are mapped (469 files/469 rows).
+  Actual merged debug manifest has the DUMP-protected receiver/action; actual merged release manifest
+  has neither. Debug APK exists, includes the receiver DEX and all four helper starter ABIs. Exact
+  commands, checksum and phone checklist are in PHASE-ONE-TEST-LOG.md. NOT TESTED ON PHONE; full root/
+  other-module unit suites, release APK/lint/unit tests and device instrumentation/CI were not run.
+  Lead owns install/device checklist, push/PR and the full CI merge gate. Worker requests same-card review.
+
 Last updated: 2026-10-09 (edge handle local handoff added). Update this file in the same PR as every merge to `main`.
 Last updated: 2026-10-09 (Explain screen section added). Update this file in the same PR as every merge to `main`.
 
@@ -10,6 +119,30 @@ Plain-language status, updated after each step. Details and design: `docs/adr/00
 - NOT TESTED WITHOUT THE PHONE: the real Android "All files access" page; reading a real Downloads folder; a real screenshot being saved and shown in Gallery; Gmail, WhatsApp and Messages actually receiving the file and EQO pressing Send (their button names are guesses from known ids); WhatsApp opening the right chat from the number; a protected screen (bank app) refusing a screenshot; the plan-preview wording on screen.
 - NOT RUN IN THIS CLOUD SESSION: the full Gradle build (cloud box cannot reach Google's Maven); CI runs it. Lessons from CI: a constructor's trailing-lambda parameter must stay last; Advanced-category actions must stay out of macros (do not mark file actions READ_ONLY); lint wants KTX `SharedPreferences.edit {}`.
 
+## Fixes for round 1 — t_7a91b291 (local branch `fix/round1-phone-tests`)
+- CURRENT: lead approved ADR-0008's pre-run runtime-permission model. Preview lists needed access; missing grants require Allow now before Android's prompt, then the existing plan approval. Android remembers grants. Run service checks only and never requests permission/Settings during execution; revoked access stops with explicit restart instructions. Removed the attempted permission-dialog takeover exception entirely. No permission-result latch clearing, Settings exemption or automatic resume.
+- Stop cancels pending preflight and invalidates preparation. Fake/Robolectric regression exercises the actual TaskActivity preview, Location-only request to a typed number, Stop/late Allow, and explicit retry reaching approval without execution. Other tests cover granted access, active-run revocation, stale request codes and 120-second waits. Contacts are only needed for names; inventory also covers flashlight Camera, current-weather Location, direct Calendar insertion and supported phone calls.
+- Fresh sequential two-worker checks: actions format/check/detekt + 72 focused tests; platform-a11y format/check/detekt + all 102 tests; app format/check/detekt + all 199 tests. Zero failures/errors/skips in these runs. Repo check passed (445 provenance rows), diff check passed, no added Kotlin lines exceed 120. No new Kotlin files. Core-agent/core-llm were not rerun in this permission rework; their earlier results are historical below.
+- REMAINING: independent review, full CI and lead-owned phone checklist. NOT TESTED ON PHONE; no instrumentation, APK/release build, full Gradle gate, push/PR/gh or remote CI. Broad actions' earlier five failures remain disclosed, not baseline-reproduced or claimed fixed. Per-contact channel memory remains follow-up as permitted by the card.
+
+### Historical work/evidence (superseded permission flow; not the current blocker)
+- BLOCKED, not complete: independent review found that Android 11 redacts the overlay's cross-UID `ACTION_OUTSIDE` coordinates. The permission-controller bounds exception below does NOT reliably exempt a real Allow tap. No wider takeover exception was introduced. Owner decision requested in proposed [ADR-0008](../adr/0008-runtime-permission-touch-attribution.md): obtain runtime prerequisites before approval/run (recommended, with explicit restart if revoked mid-run), or supply a reviewed trustworthy mid-run touch-attribution design. The current service stays fail-closed; Allow may still pause. This supersedes the earlier implication that round-1 permission takeover was fixed.
+- Review rework: `write/type/draft a note in Keep/Notes` can now reach approval with OPEN_APP + known local note-creation/navigation taps + TYPE_TEXT. Communication intent and explicit don't-send requests retain the strict no-tap/no-submit guard; notes plans cannot acquire communication actions, arbitrary IDs/taps or Send/Share/Publish taps. Unknown note controls fail closed. Fake-provider regressions exercise the actual planner and immutable approval snapshot. Fresh core-agent format/check/detekt/all unit tests passed: 110 tests, zero failures/errors/skips; `BUILD SUCCESSFUL in 2m 27s`. Repo/provenance and diff checks passed; no added Kotlin lines exceed 120 characters. Other modules were not rerun in this rework; prior evidence below is historical. NOT TESTED ON PHONE.
+- NOT TESTED ON PHONE. Local commits only; lead owns push/PR and CI is the full gate.
+- Runtime permissions wait up to 120 seconds without spending the normal apply budget. Stop settles the pending request before dispatch; stale callbacks cannot grant a replacement request. The attempted takeover exclusion requires a pending EQO-launched dialog in an allowlisted system package, verified controls and a touch inside visible bounds. Android 11 redacts the required touch coordinates across UIDs, so this is not an operational fix on that path. Other apps, Settings, unknown windows and coordinate-less touches remain conservative. EQO never presses Allow or clears a takeover latch.
+- All files access is shown in the preview and offered on EQO's exact package-scoped Android Settings page. The normal typed-plan path obtains this human-operated prerequisite before a run starts, then continues to the same plan's approval. This avoids exempting Settings from takeover. Execution rechecks access; denial is an honest Needs-you handoff. Mid-run revocation still retains takeover/resume protection.
+- Screenshot capability `android:canTakeScreenshot="true"` was already present. No missing flag was invented. Screenshots already save privately without All files access; taking a screenshot of EQO's own approval/task window is deliberately refused, now with actionable copy. Protected-window, takeover and accessibility guards remain intact. `EqoRun` adds only allowlisted failure kinds, never recipient names, numbers or file paths.
+- Named notes apps use app tap/type planning, not EQO internal ADD_NOTE. Title-only internal notes use the title as content. Arithmetic words, including percent of, evaluate locally; invalid arithmetic no longer launches web search. WhatsApp `draftOnly=true` opens a prefilled chat and never calls Send; preview says "you press Send". A pre-approval guard forces draft mode and rejects submit/tap/send routes for type/write/draft/don't-send requests. A bare message cannot silently pick SMS/WhatsApp; it asks for the channel once.
+- Email recipients split on commas, semicolons and " and "; literals bypass lookup/Contacts permission, names resolve individually, failed recipients are identified before any compose launch, and approved destinations remain frozen. Permission waiting now says "Tap Allow for Contacts/Location" or "Turn on All files access".
+- Per-contact channel memory is follow-up: the existing productivity preference boundary is unavailable by default, not a simple working per-contact store. No preference database or runtime dependency was added.
+- Verified with sequential, two-worker Gradle module checks (`ktlintFormat`, `ktlintCheck`, `detekt`, `testDebugUnitTest`): actions 71 focused tests passed; core-agent 107 passed; core-llm 272 discovered, one skipped, no failures; platform-a11y 102 passed; app 197 passed (`BUILD SUCCESSFUL in 8m 28s`). On recovery, app format/check/static analysis/test tasks passed again (tests up-to-date), and `scripts/check.sh` passed with all 445 Kotlin provenance rows covered. Added Kotlin lines are all at most 120 characters and `git diff --check` passed. The broad actions retry finished with 146 tests and the same five failures in untouched macro/shared-storage tests (macro timeout, Windows symlink privilege and path behavior); baseline was not separately reproduced. The retry's terminal transport timed out while Gradle continued; its completed JUnit XML, not the transport error, establishes those failures. No phone or instrumentation tests, APK/release build or full Gradle gate have run. CI remains required.
+
+## Files v2 (t_ecfe91de, local branch `feat/files-v2`)
+- Implemented: run-time `find:` attachment references with name/type/folder/local-date filters; bounded metadata-only shared-storage search; human chooser (up to eight names, dates and sizes); exact chosen-name run status and Continue/Cancel before staging and opening WhatsApp/email/SMS. One match resolves without a chooser; multiple matches never guess, including `latest`. No foreground UI refuses and lists matches. Existing plan approval, storage exclusions, last_screenshot and staged-copy cleanup retained.
+- Local tested code: `add2fab` (includes `8ae3fdd` and `e1cf5a2`), no push or PR. All four touched modules passed ktlintFormat/ktlintCheck/detekt. Core-agent: 108 tests (cached passing results), core-llm: 272 tests (one existing minSdk skip), app: 195 tests, no failures/errors; app debug APK built. Actions full suite: 155 tests, one unchanged macro delete/list 10-second coroutine timeout, three Windows real-symlink capability skips; all 60 file/resolver/OEM/registry tests have no failures/errors. Full actions gate is NOT green. See PHASE-ONE-TEST-LOG.md for exact commands/caveats. Every added Kotlin file has a provenance row; repo/branding gate passes (455 files/rows).
+- Operator addition implemented: MediaStore Images/Video/Audio/Downloads/Files metadata; one alias/MIME/extension asset table (modern/legacy messaging media included); first-search per-phone folder/bucket map in local preferences, zero-match refresh and `rescan=true` on demand; camera/gallery/download(s) types. Filesystem fallback also verifies uniqueness. Added synthetic Realme/Samsung/Xiaomi and unknown-OEM-bucket tests. Android/data/obb remain excluded, not bypassed.
+- Bare folder aliases search all coexisting locations (Download/Downloads, modern/legacy WhatsApp), retaining ambiguity rather than choosing a folder. Discovery has a global 500-entry/two-second cap. Business/ordinary media folders no longer cross-classify through a generic `Media` leaf. Fake-link exclusion tests run on Windows; actual link tests require host link privileges and must run on CI. Existing task-dialog takeover test updated for the new file-chooser flag; no guard relaxed.
+- NOT TESTED ON PHONE: "send my eBay bill to <test contact> on WhatsApp", "email the screenshot from 7 October to me", several matches -> chooser, Cancel/background/timeout, All files access off and excluded/link paths. Lead owns publication, CI and phone tests. The sibling round-1 fixes own missing-All-files-access wording and permission waiting; this card does not duplicate those changes.
 ## Edge handle (t_a3fa16d0, local-only branch feat/edge-handle)
 - Implemented: opt-in accessibility overlay, dynamic feature registry, persisted switches and Up/Down order,
   reset/defaults and per-app hiding/restoration. Built-ins Ask EQO, Pause, Stop and Open EQO; future adapters

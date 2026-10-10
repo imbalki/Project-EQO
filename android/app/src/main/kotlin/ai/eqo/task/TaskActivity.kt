@@ -66,13 +66,22 @@ class TaskActivity : Activity() {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var controller: StudyTaskController? = null
     private var voiceInput: TaskVoiceInput? = null
+    private val attachmentSelection by lazy {
+        TaskAttachmentSelection(this) { prepareTaskDialog(it, fileChoices = true) }
+    }
     private var waitingPermission: String? = null
     private var displayedStatus = PlanStatus.PENDING
+    private var preparationGeneration = 0
     private val actionPermissions by lazy {
-        TaskPermissionRequester(this) { permission ->
-            waitingPermission = permission
-            renderPlanStatus(displayedStatus)
-        }
+        TaskPermissionRequester(
+            this,
+            ::prepareTaskDialog,
+            onWaiting = { permission ->
+                waitingPermission = permission
+                renderPlanStatus(displayedStatus)
+            },
+            canRequest = { TaskRunSession.controller == null && TaskRunSession.pending == null && controller == null },
+        )
     }
 
     // TASK-069: foundation entry point for ported steps. Typed-request flow remains
@@ -96,6 +105,8 @@ class TaskActivity : Activity() {
         super.onResume()
         voiceInput?.refreshAvailability()
         actionPermissions.onResume()
+        attachmentSelection.foreground()
+        TaskRunSession.attachmentSelection = attachmentSelection
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,7 +132,11 @@ class TaskActivity : Activity() {
             planRequest()
         }
         findViewById<Button>(R.id.task_pause_button).setOnClickListener { control { it.pause() } }
-        findViewById<Button>(R.id.task_stop_button).setOnClickListener { control { it.stop() } }
+        findViewById<Button>(R.id.task_stop_button).setOnClickListener {
+            preparationGeneration++
+            actionPermissions.cancelWaiting()
+            control { it.stop() }
+        }
         findViewById<Button>(R.id.task_takeover_button).setOnClickListener { control { it.takeover() } }
         val resumeButton = findViewById<Button>(R.id.task_resume_button)
         protectConfirmationTouches(resumeButton)
@@ -163,6 +178,8 @@ class TaskActivity : Activity() {
     }
 
     override fun onPause() {
+        attachmentSelection.background()
+        if (TaskRunSession.attachmentSelection === attachmentSelection) TaskRunSession.attachmentSelection = null
         voiceInput?.pause()
         actionPermissions.onPause()
         TakeoverDetector.shared.setControlTouchExclusion(null)
@@ -212,7 +229,10 @@ class TaskActivity : Activity() {
     }
 
     /** Exclude only the dialog's explicit confirmation buttons, retaining its touch guard. */
-    private fun prepareTaskDialog(dialog: AlertDialog) {
+    private fun prepareTaskDialog(
+        dialog: AlertDialog,
+        fileChoices: Boolean = false,
+    ) {
         protectConfirmationDialog(dialog)
         val window = dialog.window ?: return
         val callback = window.callback
@@ -223,7 +243,8 @@ class TaskActivity : Activity() {
         ): Boolean =
             listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE).any {
                 containsTouch(dialog.getButton(it), x, y)
-            }
+            } ||
+                (fileChoices && dialog.listView?.let { containsTouch(it, x, y) } == true)
 
         fun registerControls(focused: Boolean) {
             TakeoverDetector.shared.setControlTouchExclusion(
@@ -305,13 +326,12 @@ class TaskActivity : Activity() {
                         approvedPlan = approved,
                     ),
                 executor = executor,
-                observe = {
-                    val result = liveAutomation()?.observe()
-                    (result as? ai.eqo.accessibility.A11yResult.Success)?.detail ?: ""
-                },
+                observe = ::observeTaskScreen,
                 onPlanStatus = { status -> mainHandler.post { renderPlanStatus(status) } },
                 onStepProgress = { progress -> mainHandler.post { renderStep(progress) } },
                 config = SamplePractice.config,
+                isPermissionWaiting = actionPermissions::isWaiting,
+                cancelPermissionWait = actionPermissions::cancelWaiting,
                 onControlFeedback = { feedback -> mainHandler.post { renderControlFeedback(feedback) } },
                 onInterStepWait = { next, total, remaining ->
                     mainHandler.post {
@@ -328,6 +348,11 @@ class TaskActivity : Activity() {
                 if (controller === newController) controller = null
             }
         }
+    }
+
+    private fun observeTaskScreen(): String {
+        val result = liveAutomation()?.observe()
+        return (result as? ai.eqo.accessibility.A11yResult.Success)?.detail ?: ""
     }
 
     private fun actionExecutor(approved: ApprovedTaskPlan): StudyActionExecutor {
@@ -446,7 +471,7 @@ class TaskActivity : Activity() {
         findViewById<TextView>(R.id.task_state).text = planLabel(status.name)
         waitingPermission?.let {
             findViewById<TextView>(R.id.task_state).text =
-                getString(R.string.run_permission_waiting, RunStatusMapping.permissionName(it))
+                RunStatusMapping.permissionInstruction(it)
         }
         val running = status == PlanStatus.RUNNING
         val paused = status == PlanStatus.PAUSED
@@ -633,6 +658,9 @@ class TaskActivity : Activity() {
     private fun registerDebugPlanReceiver() {
         val receiver =
             DebugPlanReceiver { json ->
+                if (planning || actionPermissions.isWaiting() || TaskRunSession.controller != null) {
+                    return@DebugPlanReceiver
+                }
                 scope.launch {
                     try {
                         val steps =
@@ -743,12 +771,25 @@ class TaskActivity : Activity() {
         }
     }
 
-    private suspend fun prepareAndShowPlan(
+    internal suspend fun prepareAndShowPlan(
         steps: List<ai.eqo.core.agent.LoopStep>,
         missing: List<String> = emptyList(),
     ) {
+        val generation = preparationGeneration
+        findViewById<TextView>(R.id.task_preview).text =
+            getString(R.string.task_preview_with_permissions, TaskPlanPreview.describe(steps), permissionPreview(steps))
+        if (!portedActions.prepareRuntimeAccess(steps)) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.task_permission_not_granted)
+            return
+        }
+        if (!portedActions.prepareFileAccess(steps)) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.task_files_access_needed)
+            return
+        }
         val prepared = portedActions.prepareRecipients(steps)
-        if (!isFinishing && !isDestroyed) showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing)
+        if (generation == preparationGeneration && !isFinishing && !isDestroyed) {
+            showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing)
+        }
     }
 
     private fun showPlan(
@@ -766,7 +807,7 @@ class TaskActivity : Activity() {
                     .escape(missing.joinToString(", ")) +
                     " is not installed on this phone, so this plan uses Chrome instead.\n\n"
             }
-        val preview = notice + TaskPlanPreview.describe(steps, recipientNames)
+        val preview = notice + TaskPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
         if (!PlanApprovalSettings.requiredFor(this, steps)) {
@@ -777,6 +818,15 @@ class TaskActivity : Activity() {
     }
 
     private fun planningError(failure: LLMException): Int = RunStatusMapping.planning(failure.error, failure.timedOut)
+
+    private fun permissionPreview(steps: List<ai.eqo.core.agent.LoopStep>): String {
+        val permissions = portedActions.plannedRuntimePermissions(steps)
+        return if (permissions.isEmpty()) {
+            ""
+        } else {
+            permissions.joinToString("\n", prefix = "\n\nAccess needed before this plan runs:\n") { it.explanation }
+        }
+    }
 
     override fun onDestroy() {
         voiceInput?.close()

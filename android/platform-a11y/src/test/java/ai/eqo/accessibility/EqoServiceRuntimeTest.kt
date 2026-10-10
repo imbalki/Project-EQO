@@ -8,6 +8,16 @@ import org.junit.Test
 import java.io.File
 
 class EqoServiceRuntimeTest {
+    @Test fun permissionWindowsNeverBypassTakeoverDuringAnAction() {
+        val detector = TakeoverDetector.shared
+        detector.startNewRun()
+        detector.onAgentActionStarted()
+        detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 500L)
+        assertTrue(detector.isPaused)
+        detector.onAgentActionFinished()
+        detector.startNewRun()
+    }
+
     @Test
     fun constructsWithoutAndroidApplicationOrHiltAndRefusesUnboundActions() {
         val runtime =
@@ -69,6 +79,13 @@ class EqoServiceRuntimeTest {
         ).forEach { assertFalse("Unsupported service seam: $it", source.contains(it)) }
         assertTrue(source.contains("private val nodeTraversal = AccessibilityNodeTraversal()"))
         assertTrue(source.contains("EqoServiceRuntime("))
+        assertFalse(source.contains("runtimePermissionPending"))
+        assertFalse(source.contains("isPermissionDialogTouch"))
+        val config = File(root, "platform-a11y/src/main/res/xml/accessibility_service_config.xml").readText()
+        assertTrue(
+            "Screenshots require the declared service capability",
+            config.contains("android:canTakeScreenshot=\"true\""),
+        )
         val appMain = File(root, "app/src/main")
         val application = appMain.walkTopDown().first { it.name == "EqoApplication.kt" }.readText()
         assertFalse(application.contains("@HiltAndroidApp"))

@@ -1,5 +1,29 @@
 # TASK-005 per-file provenance map
 
+## Voice v2 additions (t_e9801e01)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/PhoneVoiceInput.kt` | EQO-NEW | `ai.eqo.task` | Pause-tolerant phone recognizer session and stale callback guards |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/AiVoiceInput.kt` | EQO-NEW | `ai.eqo.task` | Opt-in AI recording/transcription session and cancellation |
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceSettings.kt` | EQO-NEW | `ai.eqo.task` | Non-secret engine/language/consent preferences and setup controls |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceAudioRecorder.kt` | EQO-NEW | `ai.eqo.task` | Bounded ephemeral PCM/WAV capture and file cleanup |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceInputV2Test.kt` | EQO-NEW | `ai.eqo.task` | Fake recorder/provider draft-only consent and cleanup regressions |
+| :core-llm | `android/core-llm/src/test/java/ai/eqo/core/llm/providers/OpenRouterAudioTest.kt` | EQO-NEW | `ai.eqo.core.llm.providers` | Synthetic input_audio and capability tests; no network |
+## Explain/handle UX polish (t_e84b3eaa)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainPanelState.kt` | EQO-NEW | `ai.eqo.explain` | Bounded panel sizes and clock-testable five-second touch-through state |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainPolishTest.kt` | EQO-NEW | `ai.eqo.explain` | Panel, reopen, notification refresh, entry routes, hub and hidden-app regressions |
+## Pairing discovery fix (t_9a512691)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/MdnsMessage.kt` | EQO-NEW | `ai.eqo.onboarding` | Bounded DNS SRV/A/AAAA parser, compression loop guard and own-address validation |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WifiMdnsResolver.kt` | EQO-NEW | `ai.eqo.onboarding` | Wi-Fi-bound multicast query with bounded retry and one-winner framework fallback |
+| :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WirelessPairingReply.kt` | EQO-NEW | `ai.eqo.onboarding` | Strict transient code and optional explicit ports; revision-bound wait when connect port is unknown |
+| :app | `android/app/src/debug/kotlin/ai/eqo/onboarding/DebugPairReceiver.kt` | EQO-NEW | `ai.eqo.onboarding` | Debug source-set lab receiver, DEBUG guard, DUMP-protected manifest and shared pairing service |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/MdnsMessageTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Synthetic DNS packets, compression, truncation, bounds and own-host safety |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/WirelessResolveAttemptTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Fake framework success/failure/timeout, fallback order and late callbacks |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/WirelessPairingReplyTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Reply validation and fake pair/connect runner without helper authorization |
+| :app | `android/app/src/testDebug/kotlin/ai/eqo/onboarding/DebugPairReceiverTest.kt` | EQO-NEW | `ai.eqo.onboarding` | Debug receiver forwarding, malformed extras and release-source-set exclusion guard |
+
 ## Edge-handle additions (t_a3fa16d0)
 
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleShortcutRegistry.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Internal shortcut API and fake-store-testable choice/order |
@@ -669,3 +693,13 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :app | `android/app/src/test/kotlin/ai/eqo/onboarding/AllFilesAccessTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, files-attachments: shared files, attachments, screenshots) |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AttachmentSpec.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, files-attachments: shared files, attachments, screenshots) |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/AttachmentSpecTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, files-attachments: shared files, attachments, screenshots) |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AttachmentSearch.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, Files v2 run-time attachment resolution, t_ecfe91de) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/AttachmentFileSearch.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, Files v2 run-time attachment resolution, t_ecfe91de) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/AttachmentSelection.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, Files v2 run-time attachment resolution, t_ecfe91de) |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/AttachmentFileSearchTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, Files v2 run-time attachment resolution, t_ecfe91de) |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskAttachmentSelection.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, Files v2 run-time attachment resolution, t_ecfe91de) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/TaskAttachmentSelectionTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, Files v2 run-time attachment resolution, t_ecfe91de) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/SharedFolderAliases.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, Files v2 OEM alias data, t_ecfe91de) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/SharedStorageCatalog.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, Files v2 per-phone discovery, t_ecfe91de) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/AndroidSharedMediaSource.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, Files v2 MediaStore metadata, t_ecfe91de) |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/SharedStorageCatalogTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, Files v2 Realme/Samsung/Xiaomi fake layouts, t_ecfe91de) |

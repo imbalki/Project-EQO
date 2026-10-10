@@ -1,5 +1,174 @@
 # Phase One phone test log
 
+## Fixes for round 1 — t_7a91b291 — NOT TESTED ON PHONE
+
+- 2026-10-10 accepted ADR-0008 implementation: preview lists runtime prerequisites; Allow now requests missing grants BEFORE approval/run. Existing Android grants are reused. The service is check-only; revoked permission does not launch a dialog and requires Stop plus explicit restart/reapproval. Removed the permission-controller touch bypass entirely; ordinary takeover, own-window and no-auto-resume protections remain.
+- Fresh host verification, sequential modules with `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`: actions ktlintFormat/check/detekt and 72 focused tests (5 suites), `BUILD SUCCESSFUL in 1m 28s`; platform-a11y format/check/detekt and all 102 tests (18 suites), `BUILD SUCCESSFUL in 50s`; app format/check/detekt and all 199 tests (34 suites), `BUILD SUCCESSFUL in 2m 38s`. Fresh XML has zero failures/errors/skips. `scripts/check.sh` passes (445 Kotlin/provenance rows); diff check passes; no added Kotlin line exceeds 120. Earlier failed iterations found formatting/static-analysis issues, an offline-weather test expectation changed by centralized prerequisite checking, and a JUnit test return type; final reruns above passed.
+- Actual TaskActivity Robolectric regression: preview before Location request, typed-number Contacts omission, no pending run/controller before approval, Stop cancels preparation, late grant cannot start it, explicit retry with grant remembered reaches approval without executing. Fake registry tests prove deduplicated inventory and no read/send on preflight; requester tests retain cancellation/stale callback/120-second coverage and verify active-run missing-grant refusal. Platform source regression rejects any permission-touch bypass. No device/input-attribution success is claimed.
+- Current phone checklist: grant/deny Location and named Contacts BEFORE run, wait over five seconds before answering, Stop/cancel then late callback, explicit retry after denial, remembered grant without another prompt, revoke between preview/approval or during run and verify no permission UI/automatic resume, delayed OEM input/lifecycle ordering, All files grant/return, screenshot guards, Keep note, arithmetic words, draft-only WhatsApp and multiple email recipients. NOT TESTED ON PHONE. No instrumentation, APK/release build, full Gradle gate or remote CI. Core-agent/core-llm and broad actions were not rerun in this rework; earlier evidence/failures remain below. Lead owns publication.
+
+### Historical iterations (permission blocker superseded by the accepted pre-run flow)
+
+- 2026-10-10 review rework: card remains BLOCKED on runtime-permission architecture, not ready for final approval. Re-fetched Android 11 InputDispatcher source and confirmed cross-UID outside-touch coordinate redaction (`FLAG_ZERO_COORDS`, lines 1846–1859 and 2523–2529). The existing Boolean permission helper test is not service-level attribution proof, and the bounds exception cannot identify a real Allow tap from the redacted event. Production permission/takeover code was not weakened or changed in this rework. See proposed ADR-0008 for the owner decision: recommended pre-run runtime prerequisites, with explicit restart after mid-run revocation; strict same-step mid-run continuation needs a different trustworthy input surface. No claim of a fixed real-phone Allow flow.
+- Fixed the other review finding: named Keep/Notes writing can use known local note-navigation taps and typing before immutable plan approval; communication drafts still reject arbitrary taps/IDs, submit and sending actions. Added three fake-provider tests covering accepted note writing/type/draft routes, rejected Send/Share/Publish/unknown note taps and communication actions, and strict explicit don't-send/communication requests.
+- Rework verification: sequential `:core-agent:ktlintFormat :core-agent:ktlintCheck :core-agent:detekt :core-agent:testDebugUnitTest --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`, exit 0, `BUILD SUCCESSFUL in 2m 27s`, 60 tasks (6 executed, 54 up-to-date). Fresh JUnit XML: 110 tests, 0 failures, 0 errors, 0 skipped in 19 suites. Earlier attempts caught and corrected a return-count violation, a long test line and a test fixture's wrong TYPE_TEXT parameter (`content`, not `text`); those failed runs are not passing evidence. `scripts/check.sh` passed (445 Kotlin files/445 provenance rows); `git diff --check` passed; no added Kotlin line exceeds 120 characters. No other module, phone, instrumentation, APK/release/full Gradle gate or remote CI was rerun in this rework. Prior test evidence follows, not a new device result.
+- Branch `fix/round1-phone-tests`, based on `92802e7`. The checked-in log did not contain a "Phone round 1" section; this card's supplied phone findings are the inputs, not new device test results.
+- Added fake/unit regressions for the permission apply-budget exclusion and 120-second wait, Stop/stale callbacks, narrowly scoped permission-dialog touch attribution, typed-number location permissions, All files Settings grant/recheck, title-only notes, calculator words/no-web-on-invalid-arithmetic, draft-only WhatsApp/no-send planning, explicit channel clarification, multiple email recipients and plain permission/failure copy.
+- Screenshot investigation: `canTakeScreenshot=true` is already declared. All files access is not needed for EQO's private screenshot fallback. Own-window refusal is intentional; the failure now tells the owner to open the app to capture, without weakening that guard.
+- All files Settings is normally completed before a run starts, after showing the preview warning. Returning with access granted continues the same plan; the owner still approves its actions. Settings is not a takeover exception. A real takeover or mid-run revocation never auto-resumes.
+- Initial `:actions-android:testDebugUnitTest --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`: 145 tests, five failures (untouched `AutomationExecutorsTest` macro timeout and four `SharedStorageTest` Windows link/path cases). This is not a passing full gate. Initial compile also found a hidden Android permission-controller API; implementation now uses allowlisted system packages plus verified dialog/control bounds.
+- Host checks passed sequentially with `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`: actions `ktlintFormat`, `ktlintCheck`, `detekt` and 71 focused tests (`ContactRecipientsTest`, `ProductivityInformationTest`, `FileFeaturesRegistryTest`, `ShareActionsTest`, `SystemActionsTest`); full core-agent checks and 107 tests; full core-llm checks and 272 discovered tests (one skipped); full platform-a11y checks and 102 tests; final app checks and 197 tests, zero failures/errors/skips (`BUILD SUCCESSFUL in 8m 28s`). Recovery reran app format/check/static analysis/test tasks successfully in 1m 46s (tests up-to-date). `scripts/check.sh` passed again (445 Kotlin files, 445 provenance rows), `git diff --check` passed, and no added Kotlin line exceeds 120 characters. Full repository Gradle gate, APK build and device instrumentation NOT RUN. No device was contacted or changed. CI and lead-owned phone tests remain required.
+- Recovery broad-actions retry: completed JUnit XML reports 146 tests, five failures, zero errors/skips. The same untouched cases fail: macro delete/list exceeds the coroutine test timeout; two shared-storage symlink fixtures lack Windows privilege; two shared-storage path assertions fail on Windows. The terminal transport timed out at 420 seconds while Gradle continued; the wrapper was subsequently observed exiting and XML results were parsed. These failures were not reproduced on an untouched baseline and are not claimed as a passing full actions gate. No out-of-scope macro/storage code was changed.
+- Phone checks remaining: hold Allow for more than five seconds, grant/deny Location and Contacts, Stop while permission is pending, touch outside a permission dialog and verify takeover, missing All files access then grant/return, protected/own-app screenshot refusal, real WhatsApp draft preserving text with no Send, multiple Gmail recipients, Keep title creation, and arithmetic answers.
+
+
+## Files v2 — t_ecfe91de — NOT TESTED ON PHONE
+
+- Local branch `feat/files-v2`; tested code `add2fab`, no push/PR or phone contact. Synthetic files and fake selection callbacks only. Host results below do not verify a real attachment or Send button.
+- Phone round-1 failure motivating this card (task-supplied evidence): All files access ON, FIND_FILES succeeded, then SEND_WHATSAPP/SEND_EMAIL with an attachment failed in the 12:28–12:31 test window. The pre-run planner could not know a file path; use `find:` directly on the send action rather than a made-up FIND_FILES output path.
+- [ ] "send my eBay bill to <test contact> on WhatsApp": approved search in preview, exact chosen name in run status before Continue, correct attachment/chat, Send pressed only after disclosure.
+- [ ] "email the screenshot from 7 October to me": planner emits `find:type=screenshot,date=YYYY-10-07` using the intended year; gallery screenshot from Pictures/Screenshots or DCIM/Screenshots, correct attachment, disclosure before Send.
+- [ ] Several matches -> chooser: at most eight names with date/size, newest first; tapping a non-first match attaches only that file. `latest` still requires choice.
+- [ ] Zero matches: plain searched-query message, no compose/send. No foreground UI: multiple-match name list and refusal.
+- [ ] Cancel, background, rotation, timeout, Stop/takeover: no unintended attachment or send; ordinary task controls/takeover still work.
+- [ ] Exact date/local midnight and inclusive range; words in different order/case; folder/type restrictions; All files access denied; hidden/other-app/staging/private/link paths excluded.
+- [ ] TAKE_SCREENSHOT + last_screenshot remains working; staged copies swept on age/failure; logs contain only counts/kinds/codes, not names/paths/searches.
+- [ ] Realme/Samsung/Xiaomi (where available): MediaStore screenshot/camera/gallery buckets, vendor-specific directories and Download/Downloads synonyms; modern and legacy WhatsApp/Business, Telegram, Instagram, Bluetooth and Documents.
+- [ ] Discovery is reused across runs/restart; `rescan=true` refreshes on demand, zero matches refresh automatically; no filename or search saved in the folder-map preferences. MediaStore denied/incompatible/stale -> safe filesystem fallback, without guessing among matches or visiting Android/data/obb.
+
+### Files v2 host verification (resumed run)
+
+- Serial module-scoped Gradle, from `android/`, with `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process --console=plain`. For each of `core-agent`, `core-llm`, `actions-android`, `app`: `:MODULE:ktlintFormat :MODULE:ktlintCheck :MODULE:detekt :MODULE:testDebugUnitTest`; app also `:app:assembleDebug`.
+- Core-agent: exit 0, `BUILD SUCCESSFUL in 1m 38s`, 60 tasks up-to-date. JUnit XML: 108 tests, zero failures/errors/skips; cached passing execution from the first attempt, not a new test run.
+- Core-llm: exit 0, `BUILD SUCCESSFUL in 5m 53s`, 68 tasks (16 executed, 52 up-to-date). JUnit XML: 272 tests, zero failures/errors, one existing pre-Android-Q/minSdk skip.
+- App: exit 0, `BUILD SUCCESSFUL in 10m 15s`, 240 tasks (56 executed, 184 up-to-date). JUnit XML: 195 tests, zero failures/errors/skips, including four chooser/disclosure/lifecycle tests and the task-control takeover checks. Debug APK built at `android/app/build/outputs/apk/debug/app-debug.apk`; not installed.
+- Actions: ktlintFormat/ktlintCheck/detekt pass, but full-suite exit 1, `BUILD FAILED in 7m 19s`, 120 tasks (10 executed, 110 up-to-date). JUnit XML: 155 tests, one failure, zero errors, three skips. Sole failure: unchanged `AutomationExecutorsTest` / `delete and list macros keep system macros and sort names`, `UncompletedCoroutinesError` after its explicit 10-second timeout, reproduced on retry. No unrelated macro production/test changes were made. This is NOT a passing full gate; lead/CI must investigate or confirm on an unloaded host.
+- File-specific suites within that full run: AttachmentFileSearchTest 13, SharedStorageCatalogTest 7, SharedStorageTest 21, FileFeaturesRegistryTest 19 (60 total), zero failures/errors. Three actual-link tests skip only when host link creation is unsupported (Windows privileges); deterministic injected-link/path-ancestor exclusion tests do run. CI must exercise actual symlinks. Staging sanitization uses a portable source filename and separately asserts invalid-name sanitization.
+- Verification fixes: split overlong resolver expression; search all coexisting folder aliases; avoid generic `Media` leaf learning across WhatsApp/Business; cap directory discovery globally; update stale reflective task-dialog test to pass the added chooser flag. No existing takeover guard, approval or send safety was relaxed.
+- Focused actions rerun: `:actions-android:testDebugUnitTest --tests 'ai.eqo.actions.impl.AttachmentFileSearchTest' --tests 'ai.eqo.actions.impl.SharedStorageCatalogTest' --tests 'ai.eqo.actions.impl.SharedStorageTest' --tests 'ai.eqo.actions.impl.FileFeaturesRegistryTest'` with the same worker/compiler flags. Exit 0, `BUILD SUCCESSFUL in 1m 21s`, 106 tasks (one executed, 105 up-to-date). Fresh XML confirms 60 tests, zero failures/errors, three capability skips. This focused execution replaces the local XML files from the failing full run; the full-run failure remains recorded above, not concealed by the focused pass.
+- `bash scripts/check.sh`: exit 0, `455` Kotlin files/provenance rows, `BRANDING GATE PASSED`, `OK`. `git diff --check`: exit 0. Added/modified Kotlin lines are at most 120 characters; pre-existing schema/registry long lines are unchanged.
+- NOT RUN: phone, instrumentation, publication/CI or a repository-wide Gradle gate. Required phone checklist above remains unchecked.
+## Voice v2 — 2026-10-09 — NOT TESTED ON PHONE
+
+Branch `feat/voice-v2`, card t_e9801e01. No phone was contacted or modified. No real provider audio was uploaded.
+Initial `:app:ktlintFormat :core-llm:ktlintFormat :app:compileDebugUnitTestKotlin --max-workers=2
+-Pkotlin.compiler.execution.strategy=in-process` succeeded in 8m 27s (Gradle daemon log verified after tool timeout).
+Final frozen-source checks for local code head `381b083` completed after the earlier worker timed out:
+`:app:ktlintFormat :core-llm:ktlintFormat :app:ktlintCheck :core-llm:ktlintCheck :app:detekt
+:core-llm:detekt :app:testDebugUnitTest :core-llm:testDebugUnitTest --max-workers=2`.
+Saved `voice-v2-final-gates.log` reports `BUILD SUCCESSFUL in 9m 48s` (220 actionable tasks).
+Verified XML: app 209 tests, core-llm 277 tests; zero failures/errors, one existing core-llm skip.
+All 34 voice/provider tests pass (6 Android adapter, 10 presenter, 13 v2 recording/UI, 5 provider).
+Both module debug lint XML reports contain zero fatal/error/warning issues. Repo/branding/provenance checks
+pass (451 Kotlin files and 451 provenance rows); no changed Kotlin line exceeds 120 characters.
+Resumed-worker confirmation on the unchanged Kotlin source: app/core-llm `ktlintCheck`, `detekt`,
+`testDebugUnitTest` and `lintDebug`, with `--max-workers=2 --console=plain
+-Pkotlin.compiler.execution.strategy=in-process`, exited 0: `BUILD SUCCESSFUL in 28m 3s`
+(370 actionable tasks: 42 executed, 328 up-to-date). Unit tests were up-to-date from the passing frozen-source run.
+CI remains the full merge gate; no APK install or real audio upload was performed.
+
+Phone checklist (owner must record build commit and actual outcome):
+- [ ] Phone engine: long English sentence with multiple 3–4 second pauses; partials appear live, stop control works.
+- [ ] Phone engine: hi-IN long Hindi sentence with pauses; en-IN, device default and provider-reported languages.
+- [ ] If the service still ends early, already-heard words remain; next mic tap adds rather than wipes.
+- [ ] Grant, deny, cancel and permanently deny microphone permission; no request at startup, typing still works.
+- [ ] Edit recognized words; nothing submits until the normal task button is tapped, preview/approval unchanged.
+- [ ] AI engine: first-use consent accept/decline; only accepted consent allows capture and provider upload.
+- [ ] Audio-capable configured model: English and Hindi verbatim transcripts; stop tap, 60-second cap, repeat append.
+- [ ] Text-only model: plain audio-unsupported explanation and Use Phone voice fallback; no audio upload.
+- [ ] Airplane mode on both engines: understandable failure, words kept, no automatic network retry.
+- [ ] Leave screen while recording/transcribing, or tap mic during transcription: no late draft overwrite,
+      microphone released and EQO voice cache file deleted. Test failures/cancellation as well as success.
+- [ ] Compare phone vs AI accuracy and latency; verify offline language packs separately in the phone provider.
+
+## Explain/handle UX polish (t_e84b3eaa): NOT TESTED ON PHONE
+
+This worker has not installed or exercised this change on a phone or emulator. Owner-reported
+earlier-phone behavior is the motivation, not verification of this revision. Full CI is the gate.
+Fake-clock tests cover all panel sizes/background alpha and the five-second peek deadline;
+Robolectric tests cover overlay close/reopen, touch flags, source intents, notification repost,
+accessibility refresh events, hub opt-in/background intent and hidden-app recovery. Existing Ask
+tests now assert a real focused request screen, voice control and no misleading Practice run title.
+Final local checks: sequential scoped platform/app ktlintFormat, ktlintCheck, detekt,
+testDebugUnitTest and lintDebug commands from CURRENT-HANDOFF.md exit 0 (1m 11s and 6m 10s).
+Both use max-workers=2 and the in-process Kotlin compiler. JUnit XML confirms platform 111,
+app 251, total 362 tests; no failures/errors/skips. The 22 new API-30/33 cases all pass.
+Initial failures exposed premature deferred-panel cancellation, timer scheduling and Button.handler
+receiver shadowing; corrected before the final full scoped runs. Removed an obsolete string and
+documented the single native Switch XML lint exception (platform Activity/StudyTheme, no new dependency).
+Repo/branding/provenance/secret, added/changed Kotlin line length, XML parse and whitespace checks pass.
+NOT RUN: full all-module/root Gradle gate, APK assembly/install, release tasks, device/emulator
+instrumentation, real provider/speech/OEM behavior or GitHub CI.
+
+Phone checklist: follow the seven steps in CURRENT-HANDOFF.md's UX polish section. Record
+build commit, OS/OEM, panel/large-font/rotation/keyboard behavior, peek touch-through and timing,
+open-close-open from each entry, notification recovery after service death and preference-off,
+QS editor/manual install (API 30) and platform add request (API 33+), accessibility/volume shortcut,
+hub handle immediate rendering/off hint, battery settings, real Ask focus/mic and per-app/all unhide.
+
+## Pairing discovery fix (t_9a512691, fix/pairing-discovery): NOT TESTED ON PHONE
+
+Local-only implementation; no device was contacted or changed. No model/provider request was made.
+Verified code commit: `c8d6d2ad98ee912f57e3ed2bd3fc19e814a7b40b` (later documentation-only commit does
+not change tested code). Each command below ran sequentially from `android/`, with
+`--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process`, and exited 0:
+
+| Gradle tasks | Actual final result |
+|---|---|
+| `:app:ktlintFormat` | BUILD SUCCESSFUL in 1m 2s |
+| `:app:ktlintCheck :app:detekt :app:testDebugUnitTest` | BUILD SUCCESSFUL in 6m; 255 app tests |
+| `:app:lintDebug :app:assembleDebug :app:processReleaseMainManifest` | BUILD SUCCESSFUL in 13m 3s |
+
+- Final JUnit XML: 255 tests, zero failures/errors/skips. Pairing regressions: 50 executions (DNS parser 8,
+  reply/pending state 6, fake resolve attempt 3, debug receiver 3, existing discovery state 10, notification/
+  Android discovery 20 on API 30 and 33). Includes real framework failure/timeout callbacks with an injected
+  mDNS lookup, late NSD rejection, code-envelope consumption, strict input, network-bound pending expiry,
+  and unchanged fake PAIR+CONNECT-only/no-helper path. Test data is synthetic; no pairing sockets were
+  opened against a device. Real multicast socket/lock behavior remains a phone checklist item.
+- Source-set regression verifies the lab receiver is only under `src/debug`, guarded by BuildConfig.DEBUG
+  and protected by DUMP. Read-back of actual merged debug/release manifests independently confirms the
+  exact debug receiver/action/permission and absence of the receiver/action in release. The built debug
+  APK's DEX contains the receiver. A release APK/DEX was not built or inspected.
+- Actual APK: `android/app/build/outputs/apk/debug/app-debug.apk`, 59,776,547 bytes; SHA-256
+  `c7d10024f9b3154fcdb049cc6163b844b55d3e193cf5d8a208443fcc5aded1f8`.
+  ZIP inspection confirms helper starters for arm64-v8a, armeabi-v7a, x86 and x86_64. No install attempted.
+- `bash scripts/check.sh` passes: BRANDING GATE PASSED, 469 tracked Kotlin files/469 provenance rows.
+  `git diff --check` and changed Kotlin lines <=120 checks pass. Raw host logs are kept under ignored
+  `android/app/build/reports/pairing-fix/`, not committed. No push, PR or gh action by this worker.
+- NOT RUN: full root/all-module Gradle checks, untouched modules' unit-test tasks, release lint/unit tests/
+  APK build, connected/device instrumentation or GitHub CI. App tasks' dependency compilation/lint
+  analysis is not those modules' unit-test execution. NOT TESTED ON PHONE; every phone item below remains.
+
+Initial lint/compile findings were fixed without a baseline: bounded parser wire-number annotation,
+named transport constants, split framework listener method, short imports/lines and explicit test generic.
+
+Phone checklist (lead/owner; record build commit and pass/fail, never real identifiers or credentials):
+- On the Android 11/ColorOS phone, open EQO setup, enable its notification, then open Wireless debugging.
+  Open Pair device with pairing code. Confirm EQO finds both ports despite the framework mapping failure;
+  app logs may contain only `resolve: nsd fail` / `resolve: mdns ok` (or generic fail), no values/names.
+- While the pairing dialog stays open, reply with its six-digit code from the notification. Verify PAIR
+  and CONNECT pass, no helper authorization occurs in the background, and returning/tapping Connect again
+  displays the protected EQO helper prompt. Deny/Back must fail; Allow must be a real human tap.
+- Force discovery to be unavailable in a lab build or environment: Reply remains visible. Supply code,
+  pairing port and connection port in one string, with spaces then commas, without split screen. Verify
+  the normal pinned path succeeds, and the code is cleared/consumed. Check the in-app box accepts both.
+- Supply code and pairing port only: use a discovered connection port if present; otherwise verify the
+  plain waiting message, no premature pairing or secure-enrollment report, successful late discovery,
+  replacement by a three-field reply and discard after one minute. No connection port is guessed.
+  Forget or a new foreground pair/reconnect must cancel the pending code before any new transport work.
+- Reject malformed codes, Unicode digits, signs, out-of-range/equal ports, extra fields and bad separators
+  before transport. Show a plain error; do not echo the entry or exception. Reopen expired pairing dialog.
+- Test notification denial/channel blocking and the in-app fallback; keyboard allows spaces/commas and
+  does not save/autofill the code. Check Android 13+ notification permission and background restrictions.
+- Toggle Wi-Fi, change network/address, enable VPN (API 30–32), stop discovery and close during lookup:
+  no stale endpoints/replies restore state; multicast socket/lock are released. Another LAN device's
+  advertised service is never selected. Repeat toggle/re-pair and rejected server-key/pinning scenarios.
+- In an installed DEBUG build only, use an explicit DUMP-authorized lab broadcast with the three extras
+  documented in CURRENT-HANDOFF.md. Verify shared PAIR+CONNECT, no helper auto-consent. A normal sender
+  without DUMP is denied; a release build has no receiver/action/class and cannot accept the broadcast.
+- Verify actual local multicast/unicast delivery, OEM multicast filtering and service-name handling;
+  host fixtures do not prove any of these real-network behaviors. CI remains the complete merge gate.
+
 ## Edge handle (t_a3fa16d0, feat/edge-handle): NOT TESTED ON PHONE
 
 Local code commit `205739d`: sequential platform-a11y and app ktlintFormat, ktlintCheck, detekt,

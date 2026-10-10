@@ -9,12 +9,54 @@ import ai.eqo.actions.base.ActionResult
 import ai.eqo.core.agent.ContactResolution
 import ai.eqo.core.agent.ContactResolver
 import ai.eqo.core.agent.failureMessage
+import ai.eqo.core.agent.isLiteralEmail
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
 import androidx.core.net.toUri
 import java.net.URLEncoder
+
+/** One parser for permission checks, pre-approval lookup and both email composers. */
+internal fun splitEmailRecipients(input: String): List<String> =
+    input.split(Regex("[,;]|\\s+and\\s+", RegexOption.IGNORE_CASE)).map { it.trim() }.filter { it.isNotEmpty() }
+
+internal data class ResolvedEmailRecipients(
+    val addresses: List<String>,
+    val labels: List<String>,
+)
+
+@Suppress("ThrowsCount") // Each refusal names its failed recipient; none may launch a partial recipient list.
+internal suspend fun resolveEmailRecipients(
+    input: String,
+    resolver: ContactResolver,
+): ResolvedEmailRecipients {
+    val recipients = splitEmailRecipients(input)
+    if (recipients.isEmpty()) {
+        throw RecipientPreparationException("At least one email recipient is required. Nothing was done.")
+    }
+    val labels = mutableListOf<String>()
+    val addresses =
+        recipients.map { recipient ->
+            if (isLiteralEmail(recipient)) {
+                labels += recipient
+                recipient
+            } else {
+                val resolved = resolver.resolveEmailWithDisambiguation(recipient)
+                if (resolved !is ContactResolution.Found) {
+                    throw RecipientPreparationException("Email recipient '$recipient': ${resolved.failureMessage()}")
+                }
+                if (!isLiteralEmail(resolved.contact.phoneNumber)) {
+                    throw RecipientPreparationException(
+                        "Email recipient '$recipient' has no valid email address. Nothing was done.",
+                    )
+                }
+                labels += resolved.contact.name
+                resolved.contact.phoneNumber.trim()
+            }
+        }
+    return ResolvedEmailRecipients(addresses, labels)
+}
 
 internal enum class EmailComposeOutcome {
     COMPOSED,
@@ -57,7 +99,7 @@ private class AndroidAttachmentEmailComposer(
     ): EmailComposeOutcome {
         val intent =
             FileShareIntents.build(files, GMAIL_PACKAGE).apply {
-                putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+                putExtra(Intent.EXTRA_EMAIL, splitEmailRecipients(to).toTypedArray())
                 putExtra(Intent.EXTRA_SUBJECT, subject)
                 putExtra(Intent.EXTRA_TEXT, body)
             }
@@ -99,7 +141,7 @@ private class AndroidEmailComposer(
         val intent =
             Intent(Intent.ACTION_SENDTO).apply {
                 data = "mailto:".toUri()
-                putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+                putExtra(Intent.EXTRA_EMAIL, splitEmailRecipients(to).toTypedArray())
                 putExtra(Intent.EXTRA_SUBJECT, subject)
                 putExtra(Intent.EXTRA_TEXT, body)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -203,7 +245,18 @@ internal class CommunicationActions constructor(
 
             return when (val resolved = contactResolver.resolveWithDisambiguation(contact)) {
                 is ContactResolution.Found ->
-                    executeWhatsApp(resolved.contact.phoneNumber, contact, message, params["attachment"])
+                    if (params["draftOnly"] == "true") {
+                        if (!params["attachment"].isNullOrBlank()) {
+                            ActionResult.Failure("Draft-only WhatsApp attachments are not supported. Nothing was sent.")
+                        } else {
+                            launcher.openWhatsAppChat(resolved.contact.phoneNumber, message)
+                            ActionResult.UserActionRequired(
+                                "WhatsApp draft opened. You press Send; EQO did not send it.",
+                            )
+                        }
+                    } else {
+                        executeWhatsApp(resolved.contact.phoneNumber, contact, message, params["attachment"])
+                    }
                 else -> ActionResult.Failure(resolved.failureMessage())
             }
         }
@@ -607,9 +660,12 @@ internal class CommunicationActions constructor(
         ): ActionResult {
             requireRegistryExecution()?.let { return it }
             val input = params["to"] ?: return ActionResult(false, null, "to email is missing")
-            val resolved = contactResolver.resolveEmailWithDisambiguation(input)
-            if (resolved !is ContactResolution.Found) return ActionResult.Failure(resolved.failureMessage())
-            val to = resolved.contact.phoneNumber
+            val to =
+                try {
+                    resolveEmailRecipients(input, contactResolver).addresses.joinToString(", ")
+                } catch (failure: RecipientPreparationException) {
+                    return ActionResult.Failure(failure.message.orEmpty())
+                }
             val subject = params["subject"] ?: ""
             val body = params["body"] ?: ""
             val attachment = params["attachment"]

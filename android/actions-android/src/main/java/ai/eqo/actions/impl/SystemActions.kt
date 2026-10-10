@@ -185,6 +185,11 @@ internal class SystemActions(
             val gate = automation()?.screenshotGate() ?: A11yResult.failure(A11yError.AccessibilityDisabled)
             return when {
                 capture == null -> ActionResult.Failure("Screenshots are not available in this build.")
+                gate is A11yResult.Failure && gate.error is A11yError.ActionRejected ->
+                    ActionResult.UserActionRequired(
+                        "Open the app you want to capture, then ask EQO again. " +
+                            "EQO cannot capture its own permission or approval screen.",
+                    )
                 !gate.isSuccess -> gate.toActionResult()
                 else ->
                     capture.capture()?.let { saved ->

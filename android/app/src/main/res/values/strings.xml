@@ -5,12 +5,40 @@
     <string name="voice_ready">Type your request or tap Mic to speak.</string>
     <string name="voice_permission_title">Allow microphone for voice input?</string>
     <string name="voice_permission_message">EQO needs microphone access only to turn your speech into an editable request. EQO does not save audio. Your phone’s speech service may send audio to its provider. You can keep typing instead.</string>
-    <string name="voice_listening">Listening…</string>
-    <string name="voice_review">Review or edit your words, then tap the normal task button. Nothing has been submitted.</string>
-    <string name="voice_not_caught">Did not catch that - try again</string>
+    <string name="voice_listening">Listening… tap Stop listening to finish. You can pause between words.</string>
+    <string name="voice_stop">Stop listening</string>
+    <string name="voice_processing">Transcribing… tap Mic to cancel.</string>
+    <string name="voice_engine_title">Voice engine</string>
+    <string-array name="voice_engines">
+        <item>Phone (default)</item>
+        <item>AI model via OpenRouter</item>
+    </string-array>
+    <string name="voice_language_title">Voice language</string>
+    <string name="voice_language_default">Device default</string>
+    <string name="voice_ai_disclosure">
+        Optional AI voice sends up to 60 seconds of audio to your configured model via OpenRouter, using your saved key.
+        Your provider may charge for it. The temporary audio file is deleted after transcription, error or cancellation.
+        Phone is the default. Cancelling cannot recall audio already sent; your provider controls its retention.
+    </string>
+    <string name="voice_ai_consent_title">Send voice audio to your AI provider?</string>
+    <string name="voice_ai_unsupported">
+        Your configured model does not accept audio. Use Phone voice or choose an audio-capable model in setup.
+    </string>
+    <string name="voice_use_phone">Use Phone voice</string>
+    <string name="voice_ai_error">
+        Audio transcription failed. Check your internet connection (including airplane mode), key and model,
+        or use Phone voice. Your words have not been submitted.
+    </string>
+    <string name="voice_review">
+        Review or edit your words. Tap Mic again to add more, or the normal task button when ready.
+        Nothing has been submitted.
+    </string>
+    <string name="voice_not_caught">Did not catch more. Words are kept; tap Mic to try again.</string>
     <string name="voice_not_allowed">Microphone not allowed. You can keep typing.</string>
     <string name="voice_unavailable">Voice input is not available on this phone. You can keep typing.</string>
-    <string name="voice_error">Voice input could not finish. Try again or keep typing.</string>
+    <string name="voice_error">
+        Voice input stopped. Your words are kept; tap Mic to add more. Check your connection or keep typing.
+    </string>
     <string name="setup_wireless_failed_check">%1$s failed. %2$s</string>
     <string name="helper_permission_title">Allow EQO to use its helper?</string>
     <string name="helper_permission_allow">Allow</string>
@@ -76,8 +104,8 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
 
     <!-- TASK-015: guided wireless ADB (UF-04/UF-05, S-08..S-11). Two ports, two names (REQ-ADB-05). -->
     <string name="wireless_adb_title">Wireless debugging</string>
-    <string name="wireless_adb_explanation">1. Connect this phone to Wi-Fi. Tap Find ports to enable the code notification.\n2. Open Developer options, turn on Wireless debugging, then tap Pair device with pairing code.\n3. Keep that dialog open. Reply to the EQO notification with the six-digit code.\n4. Return to EQO, tap Connect again, then tap Allow in EQO\'s helper prompt.\nIf notifications are blocked, enter the code here using split screen. EQO finds both ports for you.</string>
-    <string name="wireless_adb_pairing_code_hint">Pairing code (six digits)</string>
+    <string name="wireless_adb_explanation">1. Connect this phone to Wi-Fi. Tap Find ports to enable the code notification.\n2. Open Developer options, turn on Wireless debugging, then tap Pair device with pairing code.\n3. Keep that dialog open. Reply to the EQO notification with the six-digit code. If ports are not found, type code and pairing port, optionally followed by the connection port, separated by spaces or commas. With no connection port yet, EQO waits up to one minute before pairing.\n4. Return to EQO, tap Connect again, then tap Allow in EQO\'s helper prompt.\nThe code box here accepts the same format. Supplying both ports does not need discovery.</string>
+    <string name="wireless_adb_pairing_code_hint">Code, optionally pairing port and connection port</string>
     <string name="wireless_adb_pairing_port_hint">Pairing port</string>
     <string name="wireless_adb_connection_port_hint">Connection port</string>
     <string name="wireless_adb_run_checks">Pair and connect</string>
@@ -89,7 +117,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="wireless_link_lost">Paired, but not connected right now. Turn on Wireless debugging, then tap Connect again.</string>
     <string name="wireless_link_repair">Needs re-pair. This phone no longer matches the pairing EQO recorded. Open Wireless debugging, tap Pair device with pairing code, and pair again.</string>
     <string name="wireless_adb_working">Working… keep the pairing dialog open.</string>
-    <string name="wireless_adb_bad_input">Enter the six-digit code. Wait for EQO to find both ports, or fill in the fallback port boxes.</string>
+    <string name="wireless_adb_bad_input">Enter a six-digit code, optionally followed by the pairing port and connection port, separated by spaces or commas. Ports must be 1024–65535 and different.</string>
     <string name="wireless_wifi_needed">Wi-Fi needed. Connect this phone to Wi-Fi before pairing. On Android 11–12, turn off a VPN while finding ports.</string>
     <string name="wireless_developer_options">Open Developer options</string>
     <string name="wireless_discovery_start">Find ports / enable code notification</string>
@@ -103,9 +131,10 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="wireless_notification_channel">EQO wireless pairing</string>
     <string name="wireless_notification_title">EQO is finding wireless debugging</string>
     <string name="wireless_notification_ready">Enter the pairing code for EQO</string>
-    <string name="wireless_notification_waiting">Open Wireless debugging and its pairing-code dialog. Tap here to return to EQO.</string>
+    <string name="wireless_notification_waiting">Open the pairing-code dialog. Reply with the code, or code and pairing port (optionally connection port), separated by spaces.</string>
     <string name="wireless_notification_reply">Enter code</string>
-    <string name="wireless_reply_invalid">Enter exactly six digits. Keep the pairing dialog open while EQO finds both ports.</string>
+    <string name="wireless_reply_invalid">Use six-digit code, pairing port, then optional connection port, separated by spaces or commas. Ports must be 1024–65535 and different. Connect to Wi-Fi first.</string>
+    <string name="wireless_reply_connection_needed">Code accepted for up to one minute. Keep the pairing dialog open while EQO finds the connection port, or reply again with code, pairing port and connection port. Pairing has not started yet.</string>
     <string name="wireless_reply_paired">Paired securely. Return to EQO and tap Connect again to start the helper and approve its prompt.</string>
     <string name="wireless_reply_failed">Could not pair securely. Reopen the pairing dialog and try its new code. Return to EQO if ports need to be entered.</string>
     <string name="wireless_adb_bad_port">Enter the connection port (the IP address and port value on the Wireless debugging screen).</string>
@@ -246,7 +275,6 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="run_accessibility_off">Accessibility is off or disconnected. Turn on EQO in Android Accessibility settings, then try again.</string>
     <string name="run_permission_missing">EQO needs %1$s permission. Allow it in Android Settings > Apps > EQO > Permissions, then try again. This step did not run.</string>
     <string name="run_permission_explanation">%1$s Android access was not allowed. Allow it, then try again. This step did not run.</string>
-    <string name="run_permission_waiting">Needs you — EQO needs %1$s access. Answer the Android prompt or follow the access instructions. This step is waiting for your choice.</string>
     <string name="run_app_missing">%1$s is not installed. Install or enable it, then try again.</string>
     <string name="run_target_missing">EQO could not find “%1$s”. Open the right screen, or tell EQO the button or field label to look for.</string>
     <string name="run_action_rejected">The app did not accept the tap or text entry. Check the current screen, then try again.</string>
@@ -263,5 +291,9 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="handle_move_up_named">Move %1$s up</string>
     <string name="handle_move_down_named">Move %1$s down</string>
     <string name="handle_reset">Reset to default</string>
-    <string name="handle_restore_apps">Show handle in hidden apps again</string>
+
+    <string name="attach_ready_feedback">Ready to attach: %1$s</string>
+    <string name="task_preview_with_permissions">%1$s%2$s</string>
+    <string name="task_permission_not_granted">Permission was not granted. No run started. Tap Start to explicitly try this plan again.</string>
+    <string name="task_files_access_needed">Turn on All files access for EQO, then try this plan again.</string>
 </resources>

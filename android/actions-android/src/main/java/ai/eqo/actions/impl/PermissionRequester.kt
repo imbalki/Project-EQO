@@ -20,6 +20,10 @@ sealed interface ActionPermission {
 fun interface PermissionRequester {
     /** Suspends until Android responds or the owner returns from the exact settings screen. */
     suspend fun request(permission: ActionPermission): Boolean
+
+    fun isWaiting(): Boolean = false
+
+    fun cancelWaiting() = Unit
 }
 
 /** Unknown-action telemetry intentionally receives no parameter values or secrets. */

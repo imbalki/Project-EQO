@@ -12,9 +12,13 @@ import android.widget.TextView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
@@ -42,6 +46,153 @@ import java.util.concurrent.atomic.AtomicReference
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
 class TaskPermissionRequesterTest {
+    @Test fun locationPlanRequestsAccessBeforeApprovalAndStopRejectsLateAllow(): Unit =
+        runBlocking {
+            val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
+            val activity = lifecycle.get()
+            val step =
+                ai.eqo.core.agent.LoopStep(
+                    stepId = "location",
+                    action =
+                        ai.eqo.core.agent.ExecutedAction(
+                            "SHARE_LOCATION",
+                            mapOf("to" to "+15550199", "via" to "sms"),
+                        ),
+                )
+            val preparation = CoroutineScope(Dispatchers.Unconfined).async { activity.prepareAndShowPlan(listOf(step)) }
+            val preview = activity.findViewById<TextView>(R.id.task_preview).text.toString()
+            assertTrue(preview.contains("Allow location"))
+            assertNull(TaskRunSession.pending)
+            assertNull(TaskRunSession.controller)
+            val instructions = ShadowAlertDialog.getLatestAlertDialog()
+            assertEquals("Allow now", instructions.getButton(AlertDialog.BUTTON_POSITIVE).text.toString())
+            instructions.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            val request = shadowOf(activity).lastRequestedPermission
+            assertArrayEquals(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), request.requestedPermissions)
+            activity.findViewById<android.widget.Button>(R.id.task_stop_button).performClick()
+            preparation.await()
+            shadowOf(activity.application).grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
+            activity.onRequestPermissionsResult(request.requestCode, request.requestedPermissions, intArrayOf(0))
+            assertNull(TaskRunSession.pending)
+            assertNull(TaskRunSession.controller)
+            assertTrue(
+                activity
+                    .findViewById<TextView>(R.id.task_state)
+                    .text
+                    .toString()
+                    .contains("No run started"),
+            )
+            activity.prepareAndShowPlan(listOf(step))
+            val approval = ShadowAlertDialog.getLatestAlertDialog()
+            org.junit.Assert.assertNotSame(instructions, approval)
+            assertTrue(approval.isShowing)
+            assertTrue(
+                activity
+                    .findViewById<TextView>(R.id.task_preview)
+                    .text
+                    .toString()
+                    .contains("Allow location"),
+            )
+            assertEquals(request.requestCode, shadowOf(activity).lastRequestedPermission.requestCode)
+            assertNull(TaskRunSession.pending)
+            assertNull(TaskRunSession.controller)
+            lifecycle.pause().stop().destroy()
+        }
+
+    @Test fun preflightRequiresAllowNowAndActiveRunNeverLaunchesPermissionUi() =
+        runBlocking {
+            val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+            var running = false
+            val requester = TaskPermissionRequester(activity, canRequest = { !running })
+            val permission = ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Allow location.")
+            val result = CoroutineScope(Dispatchers.Unconfined).async { requester.request(permission) }
+            assertNull(shadowOf(activity).lastRequestedPermission)
+            val dialog = ShadowAlertDialog.getLatestAlertDialog()
+            assertEquals("Allow now", dialog.getButton(AlertDialog.BUTTON_POSITIVE).text.toString())
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            val code = shadowOf(activity).lastRequestedPermission.requestCode
+            shadowOf(activity.application).grantPermissions(permission.name)
+            requester.onRequestPermissionsResult(code)
+            assertTrue(result.await())
+            running = true
+            assertTrue(requester.request(permission))
+            shadowOf(activity.application).denyPermissions(permission.name)
+            org.junit.Assert.assertFalse(requester.request(permission))
+            assertEquals(code, shadowOf(activity).lastRequestedPermission.requestCode)
+            org.junit.Assert.assertFalse(requester.isWaiting())
+        }
+
+    @Test fun staleSettingsInstructionsCannotLaunchOrCancelTheNextRequest() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val requester = TaskPermissionRequester(activity)
+        val first =
+            startRequest(
+                requester,
+                ActionPermission.SpecialAccess(
+                    Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                    true,
+                    "Turn on All files access.",
+                    { false },
+                ),
+            )
+        val oldDialog = ShadowAlertDialog.getLatestAlertDialog()
+        requester.cancelWaiting()
+        awaitSettled(first, "cancelled Settings instructions")
+        val second =
+            startRequest(
+                requester,
+                ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Find a recipient."),
+            )
+        assertEquals("android.content.pm.action.REQUEST_PERMISSIONS", shadowOf(activity).nextStartedActivity.action)
+        oldDialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        oldDialog.getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
+        assertNull(shadowOf(activity).nextStartedActivity)
+        assertNull(second.outcome.get())
+        assertTrue(requester.isWaiting())
+        requester.cancelWaiting()
+        awaitSettled(second, "cancelled second request")
+    }
+
+    @Test fun stopSettlesPermissionWaitAndOldCallbackCannotSettleTheNextRequest() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val requester = TaskPermissionRequester(activity)
+        val permission = ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Find a recipient.")
+        val first = startRequest(requester, permission)
+        val oldCode = shadowOf(activity).lastRequestedPermission.requestCode
+        assertTrue(requester.isWaiting())
+        requester.cancelWaiting()
+        awaitSettled(first, "Stop cancelling permission")
+        assertEquals(false, first.outcome.get())
+        val second = startRequest(requester, permission)
+        val newCode = shadowOf(activity).lastRequestedPermission.requestCode
+        org.junit.Assert.assertFalse(requester.onRequestPermissionsResult(oldCode))
+        assertNull(second.outcome.get())
+        shadowOf(activity.application).grantPermissions(Manifest.permission.READ_CONTACTS)
+        assertTrue(requester.onRequestPermissionsResult(newCode))
+        awaitSettled(second, "new permission callback")
+        assertEquals(true, second.outcome.get())
+    }
+
+    @Test fun requestWaitsUpTo120SecondsInVirtualTime() =
+        kotlinx.coroutines.test.runTest {
+            Dispatchers.setMain(kotlinx.coroutines.test.StandardTestDispatcher(testScheduler))
+            val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+            val requester = TaskPermissionRequester(activity)
+            val result =
+                async {
+                    requester.request(
+                        ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Share location."),
+                    )
+                }
+            runCurrent()
+            advanceTimeBy(119_999)
+            assertTrue(requester.isWaiting())
+            org.junit.Assert.assertFalse(result.isCompleted)
+            advanceUntilIdle()
+            assertEquals(false, result.await())
+            org.junit.Assert.assertFalse(requester.isWaiting())
+        }
+
     @Before
     fun setUp() {
         Dispatchers.setMain(Dispatchers.Unconfined)
@@ -63,6 +214,9 @@ class TaskPermissionRequesterTest {
     ): InFlight {
         val outcome = AtomicReference<Boolean?>(null)
         val job = CoroutineScope(Dispatchers.Unconfined).launch { outcome.set(requester.request(permission)) }
+        if (permission is ActionPermission.Runtime && requester.isWaiting()) {
+            ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        }
         return InFlight(job, outcome)
     }
 
@@ -170,7 +324,7 @@ class TaskPermissionRequesterTest {
             startRequest(requester, ActionPermission.Runtime(Manifest.permission.CALL_PHONE, "Place this call."))
 
         val waitingText = activity.findViewById<TextView>(R.id.task_state).text.toString()
-        assertTrue(waitingText.contains("Needs you"))
+        assertTrue(waitingText.contains("Tap Allow"))
         assertTrue(waitingText.contains("Phone"))
 
         lifecycle.pause().stop().destroy()

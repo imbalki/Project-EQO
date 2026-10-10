@@ -63,10 +63,10 @@ class HandleFeaturesTest {
         val preferences = HandlePreferences(context)
         assertFalse(preferences.enabled)
         val registry = createHandleRegistry(context)
-        assertEquals(listOf("ask_eqo", "pause", "stop", "open_eqo"), registry.ordered().map { it.id })
+        assertEquals(listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo"), registry.ordered().map { it.id })
         assertTrue(registry.ordered().all { registry.enabled(it.id) })
         registry.setEnabled("ask_eqo", false)
-        registry.move("open_eqo", -3)
+        registry.move("open_eqo", -4)
         preferences.enabled = true
         preferences.rightEdge = false
         preferences.verticalFraction = 0.7f
@@ -100,7 +100,7 @@ class HandleFeaturesTest {
                     takeoverDetector = detector,
                 )
             val registry = createHandleRegistry(context)
-            assertEquals(listOf("ask_eqo", "open_eqo"), registry.visible(context).map { it.id })
+            assertEquals(listOf("explain_screen", "ask_eqo", "open_eqo"), registry.visible(context).map { it.id })
             TaskRunSession.controller = controller
             val run = async { controller.run() }
             runCurrent()
@@ -276,6 +276,12 @@ class HandleFeaturesTest {
         assertTrue(intent.getBooleanExtra(TaskActivity.FOCUS_REQUEST, false))
         val lifecycle = Robolectric.buildActivity(TaskActivity::class.java, intent).setup()
         assertTrue(lifecycle.get().findViewById<EditText>(R.id.task_request).hasFocus())
+        assertTrue(lifecycle.get().findViewById<android.widget.Button>(R.id.task_voice_button).isShown)
+        assertFalse(
+            descendants(lifecycle.get().window.decorView).filterIsInstance<android.widget.TextView>().any {
+                it.text == context.getString(R.string.task_practice_title)
+            },
+        )
         assertEquals(null, TaskRunSession.controller)
         lifecycle.pause().stop().destroy()
     }
@@ -305,13 +311,19 @@ class HandleFeaturesTest {
                         )
                 }
             move.performClick()
-            assertEquals(listOf("ask_eqo", "pause", "open_eqo", "stop"), registry.ordered().map { it.id })
+            assertEquals(
+                listOf("explain_screen", "ask_eqo", "pause", "open_eqo", "stop"),
+                registry.ordered().map { it.id },
+            )
             descendants(activity.window.decorView)
                 .filterIsInstance<android.widget.Button>()
                 .first {
                     it.text == context.getString(R.string.handle_reset)
                 }.performClick()
-            assertEquals(listOf("ask_eqo", "pause", "stop", "open_eqo"), registry.ordered().map { it.id })
+            assertEquals(
+                listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo"),
+                registry.ordered().map { it.id },
+            )
             assertTrue(registry.enabled("ask_eqo"))
             assertTrue(HandlePreferences(context).enabled)
         } finally {

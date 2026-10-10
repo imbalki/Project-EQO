@@ -16,6 +16,33 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ActionLoopTransitionsTest {
+    @Test fun permissionWaitDoesNotConsumeTheApplyBudget() =
+        runTest {
+            var waiting = true
+            var applies = 0
+            val loop =
+                ActionLoop(
+                    steps = listOf(testStep("permission")),
+                    approvalGate = { ApprovalDecision.Approved },
+                    execute = {
+                        kotlinx.coroutines.delay(119_000)
+                        waiting = false
+                        applies++
+                        ExecuteResult.Success("done")
+                    },
+                    observe = { "" },
+                    isPermissionWaiting = { waiting },
+                )
+            val run = async { loop.run() }
+            advanceTimeBy(118_000)
+            runCurrent()
+            assertTrue(loop.isActionInFlight())
+            assertFalse(run.isCompleted)
+            advanceUntilIdle()
+            assertEquals(1, applies)
+            assertEquals(PlanTerminal.COMPLETED, run.await().terminal)
+        }
+
     /**
      * Documented transition bounds (virtual time, ms):
      *  - pause/takeover: current apply + one command tick + phase handling
@@ -24,6 +51,38 @@ class ActionLoopTransitionsTest {
      *  - stop of an irreversible apply: its completion, or [ ][ActionLoop.Config.actionTimeoutMs] for a hang.
      */
     private val pauseBoundMs = 200L + 50L + 250L + 100L
+
+    @Test fun attachmentSendAllowsHumanChoiceButStillHasAHardDeadline() =
+        runTest {
+            val step =
+                LoopStep(
+                    "file",
+                    ExecutedAction("SEND_EMAIL", mapOf("attachment" to "find:bill"), irreversible = true),
+                )
+            val loop =
+                ActionLoop(
+                    steps = listOf(step),
+                    approvalGate = { ApprovalDecision.Approved },
+                    execute = {
+                        kotlinx.coroutines.delay(160_000)
+                        ExecuteResult.Success("unexpected")
+                    },
+                    observe = { "" },
+                )
+            val run = async { loop.run() }
+            runCurrent()
+            advanceTimeBy(6_000)
+            runCurrent()
+            assertFalse(run.isCompleted)
+            advanceUntilIdle()
+            assertTrue(
+                run
+                    .await()
+                    .steps
+                    .single()
+                    .outcome is StepOutcome.PartialApply,
+            )
+        }
 
     private fun loop(
         applyDelayMs: Long,
