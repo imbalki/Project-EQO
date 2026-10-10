@@ -107,7 +107,15 @@ internal class TaskPermissionRequester(
         try {
             val code = nextRequestCode++
             activeRequestCode = code
-            activity.requestPermissions(arrayOf(permission.name), code)
+            val names =
+                if (permission.name == android.Manifest.permission.ACCESS_FINE_LOCATION &&
+                    android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
+                ) {
+                    arrayOf(permission.name, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                } else {
+                    arrayOf(permission.name)
+                }
+            activity.requestPermissions(names, code)
         } catch (_: RuntimeException) {
             settle(false)
         }

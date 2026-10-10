@@ -140,7 +140,7 @@ class ShareActionsTest {
             assertFalse(registry.prepareRuntimeAccess(steps))
             assertEquals(listOf(Manifest.permission.READ_CONTACTS), requested)
             val refused = shareLocation("Sam", "sms") as ActionResult.UserActionRequired
-            assertTrue(refused.message.contains("explicitly restart"))
+            assertTrue(refused.message.contains("Retry remaining steps"))
             assertEquals(0, locationReads)
             assertTrue(sent.isEmpty())
         }

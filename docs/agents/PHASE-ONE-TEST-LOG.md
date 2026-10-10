@@ -1,5 +1,76 @@
 # Phase One phone test log
 
+## Location fix — `t_9fd2d126` — NOT TESTED ON PHONE
+
+CI review rework (2026-10-10; lead-reported ContactRecipientsTest failure):
+- Source inspection identifies stale `ACTIONS.size` (five) lookup assertions: per-plan
+  preparation deliberately reuses Alice's phone for four actions, with a separate email
+  resolution, totaling two. Both assertions now require exactly two. Removing that cache
+  would reintroduce potential text/location recipient drift during preparation.
+- Safety assertions are retained/strengthened: every approved literal and display label
+  is checked, the WhatsApp launch still must target the original approved phone, and no
+  execution lookup occurs after changing the fake contact and denying Contacts permission.
+  Production code and approval/takeover guards are unchanged. No new Kotlin file.
+- PASS: `bash scripts/check.sh` (489 Kotlin files/provenance rows), `git diff --check`,
+  added Kotlin lines <=120. No raw logs committed.
+- NOT RUN: `:actions-android:testDebugUnitTest --tests '*ContactRecipientsTest*'`, full
+  `:actions-android:testDebugUnitTest`, app/actions `ktlintFormat`, `ktlintCheck`, `detekt`
+  and `lintDebug`. First host probe found two sibling wrappers; after three minutes and
+  on the final probe, three were active. Skipped Gradle under the lead's busy-host policy;
+  no sibling processes touched. Failure was not locally reproduced; changed test not run.
+- NOT RUN: app tests, root/all-module gates, APK/release, instrumentation, phone or CI.
+  CI/free-host execution remains required before acceptance; same-card review requested.
+
+Lead approved check-only mid-run refusal, not a permission-dialog takeover exemption.
+Android verification remains unverified; lead permits review with the busy-host caveat.
+No phone was contacted; no real location or recipient
+was saved. Existing Google Maps message generation and redacted position handling are unchanged.
+
+Host attempt (2026-10-10): app/actions ktlintFormat began, but the tool transport timed
+out at 420 seconds. A corrected process probe found several sibling Gradle wrappers
+(`-jar gradle-wrapper.jar`, not `GradleWrapperMain`). Only this worktree's wrapper was
+cancelled to obey one Gradle at a time. Two subsequent five-minute bounded waits still
+found sibling wrappers; no second build was launched. No Android lint/static/unit gate
+has passed. No local commit existed at that attempt; no push, PR, APK or device test.
+`scripts/check.sh` passed with 489 tracked Kotlin files and 489 provenance rows.
+
+Resumed host verification (2026-10-10, lead's revised busy-host policy):
+- Existing local WIP checkpoint `ee5a66a` contains the saved code/tests/docs, uses
+  `imbalki <imbalki@users.noreply.github.com>` and includes no raw logs. Worktree was clean.
+- Four sibling Gradle wrappers were active on both probes separated by three minutes.
+  No new Gradle command was started; no sibling process was changed.
+- Fresh `bash scripts/check.sh` PASS (489 files/rows), checkpoint whitespace check PASS.
+- NOT RUN in this resumed attempt: app/actions ktlintFormat, ktlintCheck, detekt,
+  lintDebug and testDebugUnitTest (full app and focused/full actions suites).
+  The earlier cancelled formatter is NOT a successful formatting or build gate.
+- NOT RUN: root/all-module Gradle, APK/release tasks, instrumentation, phone tests or CI.
+- Code/tests remain unverified WIP. Same-card review is requested under the lead's policy;
+  lead owns full CI and local lint/ktlint/detekt follow-up. No push/PR/gh by this worker.
+
+Required next Android verification from `android/`: app/actions ktlintFormat, then both
+modules' lintDebug, ktlintCheck, detekt and testDebugUnitTest with `--max-workers=2
+-Pkotlin.compiler.execution.strategy=in-process --console=plain`. Focused actions
+ContactRecipientsTest and ShareActionsTest should run as well; do not claim them passed.
+
+Phone checklist (lead/owner; record build commit and pass/fail, no real identifiers):
+- [ ] Named WhatsApp text + location: Contacts and Location shown/requested BEFORE
+      approval/run; hold the answer longer than five seconds. Text and Maps link go to one chat.
+- [ ] Typed number: only Location requested, no Contacts. Previously frozen recipient:
+      revoke Contacts after preparation; execution must use the approved literal destination.
+- [ ] Deny Location or Contacts: nothing sends. Stop during preflight, then late Allow:
+      no run, no automatic approval/resume. Explicit retry obtains access before approval.
+- [ ] Revoke Location after text completes (controlled lab): no mid-run permission dialog;
+      location step says Needs you. Retry remaining steps obtains access, previews only
+      location and requires approval, then sends only the Maps link. Text is not repeated.
+- [ ] Retry denial twice; reject reapproval; rotate/reopen while stopped: completed text
+      stays excluded within the live process. Unchanged Start uses remaining-step retry.
+- [ ] Approval preference OFF still requires fresh approval of remaining steps.
+- [ ] Android 12+: precise/approximate requested together. Approximate-only answer cannot
+      authorize precise sharing. Email literal/name and SMS route use the frozen destination.
+- [ ] Real takeover, own-window/protected-window refusal, Pause/Stop and unknown effects
+      retain existing guards. Unknown effects/manual draft handoffs do not offer blind retry.
+- [ ] Process death does not start/repeat any step; no persistent delivery/dedup guarantee.
+      Check logs for counts/status only, never positions, Maps link, names or numbers.
 ## Keep and app-specific taps — t_2f7fbd22 — NOT TESTED ON PHONE
 
 - Local-only `fix-keep`, based on `9716dbd`. No phone, private notes, provider or credentials accessed.

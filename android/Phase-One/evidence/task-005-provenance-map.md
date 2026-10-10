@@ -1,5 +1,10 @@
 # TASK-005 per-file provenance map
 
+## Location retry additions (t_9fd2d126)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskPlanRetry.kt` | EQO-NEW | `ai.eqo.task` | Process-only completed-step memory; no replay of unknown effects |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/TaskPlanRetryTest.kt` | EQO-NEW | `ai.eqo.task` | Fake controller/executor retries without duplicate sends |
+
 ## Keep and app-control hints (t_2f7fbd22)
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AppControlHints.kt` | EQO-NEW | `ai.eqo.core.agent` | Static public app hints consumed by the approved task planner |

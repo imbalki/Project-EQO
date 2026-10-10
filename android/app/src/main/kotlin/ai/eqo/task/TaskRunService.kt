@@ -29,6 +29,8 @@ import kotlinx.coroutines.launch
 
 /** Process-only snapshot: activity detach never ends a run. Process death never silently repeats sends. */
 internal object TaskRunSession {
+    var retry = TaskPlanRetry()
+    var requestDraft: String = ""
     var pending: ApprovedTaskPlan? = null
     var controller: StudyTaskController? = null
     var status: PlanStatus = PlanStatus.PENDING
@@ -142,6 +144,7 @@ class TaskRunService : Service() {
                 plan,
                 registry::execute,
             )
+        TaskRunSession.retry.started(plan)
         TaskRunSession.receipt = null
         TaskRunSession.progress.clear()
         plan.steps().forEach {
@@ -173,6 +176,7 @@ class TaskRunService : Service() {
                     TaskRunSession.changed()
                 },
                 onStepProgress = {
+                    TaskRunSession.retry.record(it)
                     TaskRunSession.progress[it.stepId] = it
                     TaskRunSession.changed()
                 },
@@ -187,7 +191,12 @@ class TaskRunService : Service() {
     private fun launchRun(controller: StudyTaskController) {
         scope.launch {
             try {
-                TaskRunSession.receipt = controller.run()
+                val receipt = controller.run()
+                receipt.steps.forEach {
+                    TaskRunSession.retry.record(it)
+                    TaskRunSession.progress[it.stepId] = it
+                }
+                TaskRunSession.receipt = receipt
             } finally {
                 TaskRunSession.controller = null
                 TaskRunSession.changed()

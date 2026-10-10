@@ -31,6 +31,112 @@ import org.robolectric.shadows.ShadowLog
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
 class ContactRecipientsTest {
+    @Test
+    @Config(sdk = [33])
+    fun locationInventoryIncludesAndroidTwelveCompanionGrant() {
+        val step = LoopStep("location", ExecutedAction("SHARE_LOCATION", mapOf("to" to PHONE, "via" to "whatsapp")))
+        assertEquals(
+            listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+            registry().plannedRuntimePermissions(listOf(step)).map { it.name },
+        )
+    }
+
+    @Test fun emailSharingRejectsSeveralRecipientsBeforeCachedDestinationReuse() =
+        runTest {
+            val input = "first@example.test, second@example.test"
+            val steps =
+                listOf(
+                    emailStep(input),
+                    LoopStep("location", ExecutedAction("SHARE_LOCATION", mapOf("to" to input, "via" to "email"))),
+                )
+            try {
+                registry().prepareRecipients(steps)
+                throw AssertionError("Sharing must not approve an unusable multi-recipient destination")
+            } catch (refused: IllegalArgumentException) {
+                assertTrue(refused.message!!.contains("one email recipient"))
+            }
+            assertEquals(0, lookups)
+            assertTrue(requested.isEmpty())
+            assertNull(shadowOf(context).nextStartedActivity)
+        }
+
+    @Test fun textAndLocationFreezeOneRecipientWithOneLookup() =
+        runTest {
+            val steps =
+                listOf(
+                    LoopStep("text", ExecutedAction("SEND_WHATSAPP", params("SEND_WHATSAPP"))),
+                    LoopStep("location", ExecutedAction("SHARE_LOCATION", mapOf("to" to "Alice", "via" to "whatsapp"))),
+                )
+            val registry = registry()
+            assertEquals(
+                setOf(Manifest.permission.READ_CONTACTS, Manifest.permission.ACCESS_FINE_LOCATION),
+                registry.plannedRuntimePermissions(steps).map { it.name }.toSet(),
+            )
+            val prepared = registry.prepareRecipients(steps)
+            assertEquals(1, lookups)
+            assertEquals(listOf(Manifest.permission.READ_CONTACTS), requested)
+            assertEquals(
+                PHONE,
+                prepared.steps
+                    .first()
+                    .action.params["contact"],
+            )
+            assertEquals(
+                PHONE,
+                prepared.steps
+                    .last()
+                    .action.params["to"],
+            )
+            assertEquals(
+                listOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                registry.plannedRuntimePermissions(prepared.steps).map { it.name },
+            )
+            assertNull(shadowOf(context).nextStartedActivity)
+        }
+
+    @Test fun emailShareNameNeedsContactsAndIsFrozenBeforeApproval() =
+        runTest {
+            val registry = registry()
+            val step = LoopStep("location", ExecutedAction("SHARE_LOCATION", mapOf("to" to "Alice", "via" to "email")))
+            assertTrue(
+                registry.plannedRuntimePermissions(listOf(step)).any { it.name == Manifest.permission.READ_CONTACTS },
+            )
+            val prepared = registry.prepareRecipients(listOf(step))
+            assertEquals(
+                EMAIL,
+                prepared.steps
+                    .single()
+                    .action.params["to"],
+            )
+            assertEquals(1, lookups)
+            assertEquals(
+                listOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                registry.plannedRuntimePermissions(prepared.steps).map { it.name },
+            )
+        }
+
+    @Test fun typedShareRecipientDoesNotReadContactsAndDeniedAccessDoesNotExecute() =
+        runTest {
+            val registry = registry()
+            val step = LoopStep("location", ExecutedAction("SHARE_LOCATION", mapOf("to" to PHONE, "via" to "whatsapp")))
+            assertEquals(
+                PHONE,
+                registry
+                    .prepareRecipients(listOf(step))
+                    .steps
+                    .single()
+                    .action.params["to"],
+            )
+            assertTrue(requested.isEmpty())
+            assertEquals(0, lookups)
+            allowed = false
+            val result = registry.execute(step.action.name, step.action.params)
+            assertTrue(result is ai.eqo.actions.base.ActionResult.UserActionRequired)
+            val refusal = result as ai.eqo.actions.base.ActionResult.UserActionRequired
+            assertTrue(refusal.message.contains("This step did not run"))
+            assertNull(shadowOf(context).nextStartedActivity)
+        }
+
     @Test fun locationToTypedNumberOnlyRequestsLocationNotContacts() =
         runTest {
             registry().execute("SHARE_LOCATION", mapOf("to" to PHONE, "via" to "sms"))
@@ -202,9 +308,17 @@ class ContactRecipientsTest {
             assertTrue(preview.contains("Alice Example"))
             assertTrue(preview.contains(PHONE))
             assertTrue(preview.contains(EMAIL))
-            assertEquals(ACTIONS.size, lookups)
+            // Per-plan caching replaces five per-action lookups with one phone and one email lookup.
+            // The approved literal destinations, not repeated Contacts reads, are the safety guarantee.
+            assertEquals(2, lookups)
+            approved.steps().forEach { step ->
+                val email = step.action.name == "SEND_EMAIL"
+                assertEquals(if (email) EMAIL else PHONE, step.action.params[if (email) "to" else "contact"])
+                assertEquals("Alice Example", prepared.names[step.stepId])
+            }
             assertNull(shadowOf(context).nextStartedActivity)
             resolution = ContactResolution.Found(Contact("Alice Raj", "+15557654321"))
+            allowed = false
             registry.execute(
                 "SEND_WHATSAPP",
                 approved
@@ -213,7 +327,7 @@ class ContactRecipientsTest {
                     .action.params,
             )
             assertTrue(shadowOf(context).nextStartedActivity.dataString!!.contains("phone=$PHONE&"))
-            assertEquals(ACTIONS.size, lookups)
+            assertEquals(2, lookups)
             assertTrue(approved.matches(prepared.steps))
             assertNoContactLogs()
         }

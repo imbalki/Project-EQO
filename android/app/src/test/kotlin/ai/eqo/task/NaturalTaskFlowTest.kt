@@ -100,9 +100,10 @@ class NaturalTaskFlowTest {
                 ApprovedTaskPlan::class.java,
                 Map::class.java,
                 List::class.java,
+                Boolean::class.javaPrimitiveType,
             )
         show.isAccessible = true
-        show.invoke(activity, plan, emptyMap<String, String>(), emptyList<String>())
+        show.invoke(activity, plan, emptyMap<String, String>(), emptyList<String>(), false)
         val preview = activity.findViewById<android.widget.TextView>(R.id.task_preview).text.toString()
         val dialog =
             org.robolectric.shadows.ShadowAlertDialog
@@ -144,9 +145,10 @@ class NaturalTaskFlowTest {
                 ApprovedTaskPlan::class.java,
                 Map::class.java,
                 List::class.java,
+                Boolean::class.javaPrimitiveType,
             )
         show.isAccessible = true
-        show.invoke(activity, plan, mapOf("sms" to "Contact Name"), emptyList<String>())
+        show.invoke(activity, plan, mapOf("sms" to "Contact Name"), emptyList<String>(), false)
         val preview = activity.findViewById<android.widget.TextView>(R.id.task_preview).text.toString()
         val dialog =
             org.robolectric.shadows.ShadowAlertDialog

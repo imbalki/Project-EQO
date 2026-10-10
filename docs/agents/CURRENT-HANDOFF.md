@@ -1,5 +1,38 @@
 # Current handoff (any agent can take over from this page)
 
+## Location permission/retry fix (`t_9fd2d126`, local `fix-location`)
+
+- CI review rework: the immutable-recipient test still expected five per-action lookups.
+  The intentional per-plan cache does two (one phone, one email), freezing one destination
+  across phone-channel steps and location. Both count assertions now expect exactly two;
+  literal destination/label checks cover all five approved steps. WhatsApp execution still
+  checks the original destination and no extra lookup, now with Contacts denied and the
+  fake resolver changed to a different destination. No production cache/approval guard was weakened.
+- This rework passes repo/provenance, diff whitespace and added-Kotlin line-length checks.
+  Android verification is still NOT RUN: two sibling wrappers on the first probe, three
+  after a three-minute wait and on the final probe. Gradle skipped under lead policy;
+  focused ContactRecipientsTest, full actions tests and app/actions static/lint gates
+  must still run on CI/free host. NOT TESTED ON PHONE; local-only review handoff.
+
+- Lead decision supersedes mid-run waiting: ADR-0008 stands. Preflight obtains all
+  planned runtime access; the active service checks only, never opens permission UI.
+- Share recipients now join pre-approval recipient preparation. Repeated names reuse
+  one frozen destination for text and location; typed numbers/email avoid Contacts.
+  Named email sharing needs Contacts. Android 12+ fine/coarse location are requested together.
+- Missing access stops with Needs you and an explicit Retry remaining steps button.
+  Process-only completed IDs are excluded; unchanged Start uses this path instead of
+  replanning/re-sending text. Remaining steps need fresh approval even with approval OFF.
+  Unknown effects/manual drafts do not offer permission retry; no persistent exactly-once claim.
+- Existing Google Maps link and redacted LocationFix remain unchanged; coordinates stay unlogged.
+- Lead authorized a local WIP checkpoint and review without Android gates on a busy host.
+  Code checkpoint: `ee5a66a` (correct commit identity; no raw logs). Resumed verification
+  found four sibling Gradle wrappers both before and after a three-minute wait, so no
+  new Gradle command was launched. App/actions ktlintFormat, ktlintCheck, detekt, lintDebug
+  and unit tests remain unverified; CI/lead must run them before accepting the fix.
+  Repo/provenance gate passes (489 Kotlin files/rows); commit whitespace check passes.
+  NOT TESTED ON PHONE; checklist is in PHASE-ONE-TEST-LOG.md. Same-card review requested
+  under the lead's revised policy, not a claim of passing Android checks.
+  No push, PR or gh action. Lead owns publication and full CI.
 ## Screenshot/gallery repair — t_f123214e (local-only `fix-shots`)
 
 - Existing gallery requests use `find:latest,type=screenshot`, dated screenshots use

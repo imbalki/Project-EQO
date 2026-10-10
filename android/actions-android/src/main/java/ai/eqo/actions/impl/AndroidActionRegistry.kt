@@ -67,7 +67,8 @@ class AndroidActionRegistry internal constructor(
             if (needsSharedAccess(actionName, ready) && !requestAllFilesAccess()) {
                 android.util.Log.w("EqoRun", "action=$actionName reason=needs_all_files_access")
                 return ActionResult.UserActionRequired(
-                    "Turn on All files access for EQO. This step did not run. Stop and explicitly restart this plan.",
+                    "Turn on All files access for EQO. This step did not run. " +
+                        "Use Retry remaining steps and approve again.",
                 )
             }
             for (permission in requiredPermissions(actionName, ready)) {
@@ -76,7 +77,7 @@ class AndroidActionRegistry internal constructor(
                     android.util.Log.w("EqoRun", "action=$actionName permission=${permission.name} denied")
                     return ActionResult.UserActionRequired(
                         "${permission.explanation} This step did not run. " +
-                            "Stop and explicitly restart the plan to grant access.",
+                            "Use Retry remaining steps to grant access and approve again.",
                     )
                 }
             }
@@ -104,26 +105,45 @@ class AndroidActionRegistry internal constructor(
     }
 
     /** Lookup is local and happens before approval. The approved snapshot contains the literal destination. */
+    @Suppress("CyclomaticComplexMethod")
     suspend fun prepareRecipients(steps: List<LoopStep>): RecipientPlan {
         val names = mutableMapOf<String, String>()
+        // Process-only, per-plan cache: a later share uses the very same approved destination.
+        val destinations = mutableMapOf<Pair<Boolean, String>, Pair<String, String>>()
         val prepared =
             steps.map { step ->
                 val name = step.action.name
-                if (name !in CONTACT_ACTIONS) return@map step
-                val key = if (name == "SEND_EMAIL") "to" else "contact"
+                if (name !in CONTACT_ACTIONS && name !in SHARE_ACTIONS) return@map step
+                val email =
+                    name == "SEND_EMAIL" ||
+                        name in SHARE_ACTIONS &&
+                        step.action.params["via"]
+                            ?.trim()
+                            ?.lowercase() == "email"
+                val key = if (name == "SEND_EMAIL" || name in SHARE_ACTIONS) "to" else "contact"
                 val input =
                     step.action.params[key]
                         .orEmpty()
                         .trim()
                 if (name == "SEND_TELEGRAM" && input.startsWith("@")) return@map step
+                require(name !in SHARE_ACTIONS || !email || splitEmailRecipients(input).size == 1) {
+                    "Sharing needs one email recipient. Nothing was done."
+                }
+                val cacheKey = email to input.lowercase(java.util.Locale.ROOT)
+                destinations[cacheKey]?.let { (destination, label) ->
+                    names[step.stepId] = label
+                    return@map step.copy(action = step.action.copy(params = step.action.params + (key to destination)))
+                }
                 val needed = requiredPermissions(name, step.action.params)
                 val permission = needed.firstOrNull { it.name == Manifest.permission.READ_CONTACTS }
                 if (permission != null && !permissions.request(permission)) {
                     throw RecipientPreparationException(ContactResolution.PermissionDenied.failureMessage())
                 }
-                if (name == "SEND_EMAIL") {
+                if (email) {
                     val recipients = withContext(Dispatchers.IO) { resolveEmailRecipients(input, contactResolver) }
+
                     names[step.stepId] = recipients.labels.joinToString(", ")
+                    destinations[cacheKey] = recipients.addresses.joinToString(", ") to names.getValue(step.stepId)
                     return@map step.copy(
                         action =
                             step.action.copy(
@@ -137,6 +157,7 @@ class AndroidActionRegistry internal constructor(
                     }
                 if (resolved !is ContactResolution.Found) throw RecipientPreparationException(resolved.failureMessage())
                 names[step.stepId] = resolved.contact.name
+                destinations[cacheKey] = resolved.contact.phoneNumber to resolved.contact.name
                 step.copy(
                     action = step.action.copy(params = step.action.params + (key to resolved.contact.phoneNumber)),
                 )
@@ -235,19 +256,27 @@ class AndroidActionRegistry internal constructor(
         params: Map<String, String>,
     ): List<ActionPermission.Runtime> {
         if (name !in SHARE_ACTIONS) return emptyList()
-        val to = params["to"].orEmpty().replace(Regex("[+\\-\\s()]"), "")
-        val toIsNumber = to.isNotEmpty() && to.all { it.isDigit() }
+        val to = params["to"].orEmpty().trim()
         val byEmail = params["via"]?.trim()?.lowercase() == "email"
+        val direct = if (byEmail) isLiteralEmail(to) else isLiteralPhone(to)
         val contactsPermission =
             ActionPermission.Runtime(Manifest.permission.READ_CONTACTS, "Allow contacts access to find this person.")
         val locationPermission =
             ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Allow location to share where you are.")
         return buildList {
-            if (name == "SHARE_CONTACT" || !(byEmail || toIsNumber)) {
+            if (name == "SHARE_CONTACT" || !direct) {
                 add(contactsPermission)
             }
             if (name == "SHARE_LOCATION") {
                 add(locationPermission)
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    add(
+                        ActionPermission.Runtime(
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            "Allow approximate location alongside precise location for sharing.",
+                        ),
+                    )
+                }
             }
         }
     }

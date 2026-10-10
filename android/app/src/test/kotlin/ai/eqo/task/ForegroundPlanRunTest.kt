@@ -9,8 +9,10 @@ import ai.eqo.data.models.PlanStatus
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,6 +28,8 @@ import org.robolectric.annotation.Config
 @Config(sdk = [30])
 class ForegroundPlanRunTest {
     @After fun reset() {
+        TaskRunSession.retry = TaskPlanRetry()
+        TaskRunSession.requestDraft = ""
         TaskRunSession.controller = null
         TaskRunSession.pending = null
         TaskRunSession.receipt = null
@@ -94,6 +98,76 @@ class ForegroundPlanRunTest {
             }
             assertEquals(registry.enabledActionNames, reached)
         }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @Test
+    @Suppress("LongMethod")
+    fun permissionRetryReapprovesOnlyLocationEvenWithApprovalPreferenceOff() {
+        val context = ApplicationProvider.getApplicationContext<android.app.Application>()
+        PlanApprovalSettings.setRequired(context, false)
+        org.robolectric.Shadows
+            .shadowOf(context)
+            .grantPermissions(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        val steps =
+            listOf(
+                LoopStep(
+                    "text",
+                    ExecutedAction("SEND_WHATSAPP", mapOf("contact" to "+15555550199", "message" to "test")),
+                ),
+                LoopStep(
+                    "location",
+                    ExecutedAction("SHARE_LOCATION", mapOf("to" to "+15555550199", "via" to "whatsapp")),
+                ),
+            )
+        TaskRunSession.retry.started(ApprovedTaskPlan(steps))
+        TaskRunSession.retry.record(
+            ai.eqo.study.StepProgress("text", "SEND_WHATSAPP", ai.eqo.study.StepProgressState.DONE),
+        )
+        TaskRunSession.retry.record(
+            ai.eqo.study.StepProgress(
+                "location",
+                "SHARE_LOCATION",
+                ai.eqo.study.StepProgressState.NEEDS_YOU,
+                detail = "Allow location. This step did not run.",
+            ),
+        )
+        val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
+        val activity = lifecycle.get()
+        kotlinx.coroutines.Dispatchers.setMain(kotlinx.coroutines.Dispatchers.Unconfined)
+        try {
+            kotlinx.coroutines.runBlocking {
+                activity.prepareAndShowPlan(TaskRunSession.retry.remaining()!!.steps(), retry = true)
+            }
+        } finally {
+            kotlinx.coroutines.Dispatchers.resetMain()
+        }
+        val dialog =
+            org.robolectric.shadows.ShadowAlertDialog
+                .getLatestAlertDialog()
+        assertTrue(dialog.isShowing)
+        val preview = activity.findViewById<android.widget.TextView>(ai.eqo.R.id.task_preview).text.toString()
+        assertTrue(preview.contains("Completed steps will not run again"))
+        assertTrue(preview.contains("current location"))
+        assertFalse(preview.contains("test"))
+        assertEquals(null, TaskRunSession.pending)
+        assertEquals(null, TaskRunSession.controller)
+        dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).performClick()
+        assertEquals(
+            listOf("location"),
+            TaskRunSession.retry
+                .remaining()!!
+                .steps()
+                .map { it.stepId },
+        )
+        activity.findViewById<android.widget.Button>(ai.eqo.R.id.task_stop_button).performClick()
+        dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick()
+        org.robolectric.Shadows
+            .shadowOf(android.os.Looper.getMainLooper())
+            .idle()
+        assertEquals(null, TaskRunSession.pending)
+        assertEquals(null, TaskRunSession.controller)
+        lifecycle.pause().stop().destroy()
+    }
 
     @Test fun defaultOnAndTogglePersistsAcrossInstances() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
