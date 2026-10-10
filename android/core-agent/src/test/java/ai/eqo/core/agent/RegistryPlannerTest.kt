@@ -13,20 +13,18 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RegistryPlannerTest {
-    @Test fun bareMessageAsksForChannelExactlyOnce() =
+    @Test fun bareMessageMeansSmsAndNeverWhatsAppUnlessNamed() =
         runTest {
             val send = """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"hi"}}]}"""
             val fake = Fake(listOf(send))
-            val plan = TaskPlanner(fake, setOf("ASK_USER", "SEND_WHATSAPP", "SEND_SMS")).plan("message Example hi")
+            val plan = TaskPlanner(fake, setOf("SEND_WHATSAPP", "SEND_SMS")).plan("message Example hi")
             assertEquals(1, fake.requests.size)
-            assertEquals("ASK_USER", plan.single().action.name)
-            assertTrue(
-                plan
-                    .single()
-                    .action.params
-                    .getValue("question")
-                    .contains("SMS or WhatsApp"),
-            )
+            assertEquals("SEND_SMS", plan.single().action.name)
+            assertEquals("Example", plan.single().action.params["contact"])
+            assertEquals("hi", plan.single().action.params["message"])
+            val both = setOf("SEND_WHATSAPP", "SEND_SMS")
+            val named = TaskPlanner(Fake(listOf(send)), both).plan("message Example hi on WhatsApp")
+            assertEquals("SEND_WHATSAPP", named.single().action.name)
         }
 
     @Test fun draftRequestsCannotGainSendingSteps() =
@@ -46,7 +44,6 @@ class RegistryPlannerTest {
             val prompt = RegistryPlanVocabulary.prompt(enabled)
             assertTrue(prompt.contains("Google Keep"))
             assertTrue(prompt.contains("ADD_NOTE is only EQO internal memory"))
-            assertTrue(prompt.contains("ASK_USER once for the channel"))
             assertTrue(prompt.contains("Do not ASK_USER for an unambiguous contact"))
         }
 
@@ -131,21 +128,21 @@ class RegistryPlannerTest {
             assertTrue(prompt.contains("Never type into toolbar"))
             assertTrue(prompt.contains("PRESS_BACK to autosave"))
             assertTrue(prompt.contains("omit body typing"))
-            val unsafeTargets =
-                listOf(
-                    "Create a note,Send",
-                    "Create a note,",
-                    "id:new_note_button,Share",
-                    "id:new_list_button",
-                )
-            for (unsafe in unsafeTargets) {
+            val outwardTargets = listOf("Create a note,Send", "id:new_note_button,Share")
+            for (unsafe in outwardTargets) {
                 try {
                     TaskPlanner(Fake(listOf(output.replace("Create a note", unsafe))), actions)
                         .plan("write a note in Keep")
-                    error("Unsafe alternative must be rejected")
+                    error("Outward alternative must be rejected")
                 } catch (_: IllegalArgumentException) {
                 }
             }
+            // A harmless extra tap (not outward) is dropped, not fatal: the AI keeps its plan.
+            val dropped =
+                TaskPlanner(Fake(listOf(output.replace("Create a note", "id:new_list_button"))), actions)
+                    .plan("write a note in Keep")
+            assertEquals(steps.size - 1, dropped.size)
+            assertEquals(dropped.indices.map { "task-${it + 1}" }, dropped.map { it.stepId })
         }
 
     @Test fun titleOnlyKeepRequestsUseTheSameFlowWithoutInventingBody() =
@@ -273,6 +270,25 @@ class RegistryPlannerTest {
 
     private val enabled = setOf("OPEN_APP", "TYPE_TEXT", "CLICK_TEXT")
     private val valid = """{"steps":[{"action":"OPEN_APP","params":{"appName":"gmail"}}]}"""
+
+    @Test fun guardRejectionIsReturnedToTheModelOnceAndTheFixedPlanIsUsed() =
+        runTest {
+            val bad =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
+                    """{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"hi"}}]}"""
+            val good =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
+                    """{"action":"WAIT","params":{"durationMs":"3000"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Create a note"}},""" +
+                    """{"action":"PRESS_BACK","params":{}}]}"""
+            val fake = Fake(listOf(bad, good))
+            val steps =
+                TaskPlanner(fake, enabled + setOf("WAIT", "PRESS_BACK", "SEND_WHATSAPP"))
+                    .plan("save a note in Keep called test")
+            assertEquals(4, steps.size)
+            assertEquals(2, fake.requests.size)
+            assertTrue(fake.requests[1].systemPrompt.contains("Note editing cannot include"))
+        }
 
     @Test fun wrappersAndMinorSyntaxKeepSchema() {
         listOf(
@@ -402,7 +418,7 @@ class RegistryPlannerTest {
 
         override suspend fun complete(request: LLMRequest): LLMResponse {
             requests += request
-            return LLMResponse(outputs[requests.lastIndex], 0, "fake", name, 0)
+            return LLMResponse(outputs[minOf(requests.lastIndex, outputs.lastIndex)], 0, "fake", name, 0)
         }
 
         override fun streamComplete(request: LLMRequest) = emptyFlow<String>()

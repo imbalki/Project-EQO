@@ -39,7 +39,13 @@ class TaskPlanner(
             } catch (_: IllegalStateException) {
                 repair(input, prompt, "Plan JSON has an invalid structure")
             }
-        return respectDraftRequest(request, respectMessageChannel(request, planned))
+        // A guard that refuses the plan sends its reason back to the model once, so the AI can fix its own plan.
+        return try {
+            respectDraftRequest(request, respectMessageChannel(request, planned))
+        } catch (failure: IllegalArgumentException) {
+            val fixed = repair(input, prompt, failure.message.orEmpty())
+            respectDraftRequest(request, respectMessageChannel(request, fixed))
+        }
     }
 
     private fun respectMessageChannel(
@@ -52,22 +58,16 @@ class TaskPlanner(
                 "\\b(whatsapp|sms|email|telegram)\\b|text message",
                 RegexOption.IGNORE_CASE,
             ).containsMatchIn(request)
-        if (!genericMessage || channelNamed || steps.none { it.action.name in setOf("SEND_WHATSAPP", "SEND_SMS") }) {
-            return steps
+        if (!genericMessage || channelNamed) return steps
+        // A plain "message" means a text message (SMS). WhatsApp is used only when the user says WhatsApp.
+        return steps.map { step ->
+            if (step.action.name == "SEND_WHATSAPP") {
+                val kept = step.action.params.filterKeys { it in setOf("contact", "to", "message", "attachment") }
+                step.copy(action = step.action.copy(name = "SEND_SMS", params = kept))
+            } else {
+                step
+            }
         }
-        require("ASK_USER" in enabledActions.orEmpty()) { "Name SMS or WhatsApp before sending a message" }
-        return listOf(
-            LoopStep(
-                "task-1",
-                ExecutedAction(
-                    "ASK_USER",
-                    mapOf(
-                        "question" to "Which channel should this message use: SMS or WhatsApp?",
-                    ),
-                    irreversible = true,
-                ),
-            ),
-        )
     }
 
     /** Fail closed before approval if a model adds outward effects to a draft request. */
@@ -78,8 +78,13 @@ class TaskPlanner(
         val draft = Regex("\\b(type|write|draft)\\b|don['’]?t send|do not send", RegexOption.IGNORE_CASE)
         if (!draft.containsMatchIn(request) && !isNamedNoteEditingRequest(request)) return steps
         return if (isNamedNoteEditingRequest(request)) {
-            require(steps.all(::isNoteEditingStep)) { "Note editing cannot include communication or submit steps" }
-            steps
+            // Keep saves by itself, so harmless extra taps (Save, Done, OK) are dropped, not fatal.
+            // Anything that could communicate or submit is still refused.
+            val kept = steps.filterNot(::isHarmlessExtraNoteTap)
+            require(kept.isNotEmpty() && kept.all(::isNoteEditingStep)) {
+                "Note editing cannot include communication or submit steps"
+            }
+            kept.mapIndexed { index, step -> step.copy(stepId = "task-${index + 1}") }
         } else {
             respectCommunicationDraft(steps)
         }
@@ -134,6 +139,14 @@ class TaskPlanner(
         }
     }
 
+    /** A tap that is not note navigation but also names nothing outward (no send, share, post, call...). */
+    private fun isHarmlessExtraNoteTap(step: LoopStep): Boolean {
+        val text = step.action.params["text"].orEmpty()
+        return step.action.name in setOf("CLICK_TEXT", "tap_text") &&
+            !safeNoteTap(text) &&
+            !OUTWARD_WORDS.containsMatchIn(text)
+    }
+
     private fun safeNoteTap(text: String): Boolean {
         val alternatives = text.split(',').map { it.trim().lowercase() }
         val allowed =
@@ -172,6 +185,11 @@ class TaskPlanner(
     }
 
     companion object {
+        private val OUTWARD_WORDS =
+            Regex(
+                "send|share|post|publish|submit|reply|forward|message|whatsapp|sms|email|mail|telegram|call|pay|buy",
+                RegexOption.IGNORE_CASE,
+            )
         private const val MAX_TEXT = 8000
         private const val MAX_RESPONSE = 32000
         private val json =
