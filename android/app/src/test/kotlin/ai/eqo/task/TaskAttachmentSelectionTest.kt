@@ -107,6 +107,7 @@ class TaskAttachmentSelectionTest {
             assertEquals("Cancel", dialog.getButton(AlertDialog.BUTTON_NEGATIVE).text)
             assertEquals("Choose a different file", dialog.getButton(AlertDialog.BUTTON_NEUTRAL).text)
             dialog.getButton(AlertDialog.BUTTON_NEUTRAL).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
             runCurrent()
             assertEquals(AttachmentDecision.DIFFERENT, result.await())
         }

@@ -23,7 +23,51 @@
   testDebugUnitTest tasks requested with --continue; progress is real, not a pass.
   It found new line-length/complexity/import violations; corrections are in progress.
   This first invocation is not a frozen-source verification (regressions were added
-  while dependency compilation ran). Final gates/results recorded below when complete.
+  while dependency compilation ran).
+- Second invocation: BUILD FAILED in 29m 30s, 410 tasks (93 executed). Core-agent
+  119 tests pass; actions 190 tests (one macro timeout, three Windows symlink skips);
+  app 336 tests (one new neutral-button test lacked Android looper dispatch, corrected).
+  :app:lintDebug and all three ktlintCheck passed. Additional detekt findings corrected.
+- Third invocation: BUILD FAILED in 20m 31s, 410 tasks (76 executed). Core-agent
+  119 and app 336 tests pass; actions 190 tests have only the historical untouched
+  AutomationExecutorsTest macro delete/list UncompletedCoroutinesError and three
+  Windows symlink capability skips. All attachment/resolver/picker/recipient/status
+  tests and StudyLoopWiringTest pass. Core/app detekt and app lint pass. Actions
+  ktlintCheck ran before its formatter had completed the new email handoff; the file
+  was corrected by ktlintFormat. Two remaining actions detekt findings (cleanup throws
+  count and a formatter-collapsed media fake line) corrected.
+- Read-only review caught outgoing-cancellation cleanup, neutral control touch and
+  oversized-picker reason issues, now covered by passing fakes. Owner-requested
+  persistable one-document read grant remains: immediate release after copy plus
+  next-process stale read-only/non-tree grant recovery, preserving workspace trees.
+- Final separated invocation (frozen Kotlin source): formatting BUILD SUCCESSFUL in
+  1m 39s (27 tasks, four executed); checks BUILD FAILED in 14m 35s (386 tasks,
+  29 executed). PASS all :core-agent/:actions-android/:app ktlintCheck and detekt;
+  PASS :app:lintDebug (zero XML issues); PASS :core-agent:testDebugUnitTest (119)
+  and :app:testDebugUnitTest (336). :actions-android:testDebugUnitTest runs 190 tests,
+  with one failure in untouched AutomationExecutorsTest `delete and list macros keep
+  system macros and sort names` (10-second UncompletedCoroutinesError), three Windows
+  symlink capability skips, zero errors. Across the three modules: 645 tests, one
+  failure, zero errors, three skips. FULL GATE IS NOT GREEN. This historical macro
+  failure is recorded in earlier handoffs, but was not baseline-reproduced this run;
+  no unrelated macro implementation/test was changed to hide it.
+- Final focused results from the full suites: AttachmentFileSearchTest 26/26,
+  SharedStorageCatalogTest 9/9, ContactRecipientsTest 21/21, RegistryPlannerTest 18/18,
+  AttachmentSpecTest 14/14, TaskAttachmentSelectionTest 9/9, RunStatusMappingTest 12/12,
+  TaskControlPresentationTest 3/3, StudyLoopWiringTest 11/11; zero failures/errors/skips.
+- Exact final tasks: first :core-agent:ktlintFormat :actions-android:ktlintFormat
+  :app:ktlintFormat; then :core-agent:ktlintCheck :actions-android:ktlintCheck
+  :app:ktlintCheck :core-agent:detekt :actions-android:detekt :app:detekt :app:lintDebug
+  :core-agent:testDebugUnitTest :actions-android:testDebugUnitTest :app:testDebugUnitTest
+  --continue. Both invocations use --no-daemon --max-workers=2
+  -Pkotlin.compiler.execution.strategy=in-process --console=plain and
+  -Dorg.gradle.jvmargs='-Xmx1536m -XX:MaxMetaspaceSize=1024m -XX:ActiveProcessorCount=2
+  -Dfile.encoding=UTF-8'. Formatter/check invocations are serialized, not concurrent.
+- Logs retained only under ignored android/app/build/reports/findshots/; no raw logs
+  committed. Repository secret/branding/provenance gate PASS (496 Kotlin files/rows),
+  added Kotlin lines <=120 and git whitespace checks PASS. Same-card review required.
+- NOT RUN: root/all-module suites, release/APK build/install, instrumentation, live
+  model/provider, phone or GitHub CI. Lead owns independent review, CI and phone checklist.
 
 
 ## Location fix — `t_9fd2d126` — NOT TESTED ON PHONE

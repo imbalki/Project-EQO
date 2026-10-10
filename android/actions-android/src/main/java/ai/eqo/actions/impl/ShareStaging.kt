@@ -22,7 +22,8 @@ internal class ShareStaging(
             Files.newInputStream(source.toPath(), LinkOption.NOFOLLOW_LINKS)
         })
 
-    @Suppress("TooGenericExceptionCaught") // Provider callbacks and cancellation must both delete partial copies.
+    // Creation failure and both IO/provider-cancellation cleanup paths must propagate without leaking partial copies.
+    @Suppress("TooGenericExceptionCaught", "ThrowsCount")
     fun stage(
         name: String,
         open: () -> java.io.InputStream,

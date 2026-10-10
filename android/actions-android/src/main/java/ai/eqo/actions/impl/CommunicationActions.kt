@@ -705,8 +705,11 @@ internal class CommunicationActions constructor(
                             ActionResult.Success(mapOf("message" to "Gmail Send pressed; delivery is not verified."))
                         } else {
                             ActionResult.UserActionRequired(
-                                if (shared != null) AttachmentFailure.reason("send_requires_user")
-                                else "Email draft opened, but EQO could not press Send. Nothing was verified as sent.",
+                                if (shared != null) {
+                                    AttachmentFailure.reason("send_requires_user")
+                                } else {
+                                    "Email draft opened, but EQO could not press Send. Nothing was verified as sent."
+                                },
                             )
                         }
                     }
