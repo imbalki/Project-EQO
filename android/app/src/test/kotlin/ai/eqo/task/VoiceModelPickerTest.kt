@@ -67,6 +67,48 @@ class VoiceModelPickerTest {
     }
 
     @Test
+    fun recommendedDefaultTracksNewerAdvertisedFlashButNeverTextOnly() {
+        val models = OpenRouterModelCatalog.parse(catalog)
+        val newer = models.first().copy(id = "google/gemini-3.1-flash", inputModalities = setOf("audio"))
+        assertEquals(newer.id, VoiceModelPicker.defaultAudioModel(models + newer))
+        assertEquals(
+            "google/gemini-2.5-flash",
+            VoiceModelPicker.defaultAudioModel(models + newer.copy(inputModalities = setOf("text"))),
+        )
+    }
+
+    @Test
+    fun pickerReusesPublicCatalogUntilExactly24Hours() {
+        val controller = Robolectric.buildActivity(Activity::class.java).setup()
+        val activity = controller.get()
+        activity.setContentView(R.layout.setup_hub)
+        var fetches = 0
+        var time = 1000L
+        val repository =
+            OpenRouterModelRepository(AndroidModelCatalogCache(activity), {
+                fetches++
+                catalog
+            }, { time })
+        val picker = VoiceModelPicker(activity, VoiceSettings(activity), repository, { it() })
+        picker.bind()
+        val button = activity.findViewById<Button>(R.id.voice_model_setting)
+        button.performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        ShadowAlertDialog.getLatestAlertDialog().dismiss()
+        time += OpenRouterModelRepository.DAY_MILLIS - 1
+        button.performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(1, fetches)
+        ShadowAlertDialog.getLatestAlertDialog().dismiss()
+        time++
+        button.performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(2, fetches)
+        picker.pause()
+        controller.pause().stop().destroy()
+    }
+
+    @Test
     fun pickerUsesFakeRepositoryAndRemembersOnlyAnAudioModel() {
         val controller = Robolectric.buildActivity(Activity::class.java).setup()
         val activity = controller.get()
@@ -78,7 +120,21 @@ class VoiceModelPickerTest {
         activity.findViewById<Button>(R.id.voice_model_setting).performClick()
         shadowOf(Looper.getMainLooper()).idle()
         val dialog = ShadowAlertDialog.getLatestAlertDialog()
-        assertEquals(2, dialog.listView.count)
+        assertEquals(5, dialog.listView.count)
+        val rows =
+            (0 until dialog.listView.count).map {
+                dialog.listView.adapter
+                    .getItem(it)
+                    .toString()
+            }
+        assertTrue(rows[0].contains("Audio") && rows[0].contains("Recommended default"))
+        assertTrue(rows[1].contains("Audio"))
+        assertTrue(rows.drop(2).all { it.contains("Text only") })
+        dialog.listView.performItemClick(dialog.listView.getChildAt(3), 3, 3)
+        assertEquals("google/gemini-2.5-flash", settings.audioModel)
+        val warning = ShadowAlertDialog.getLatestAlertDialog()
+        assertEquals(activity.getString(R.string.voice_ai_unsupported), shadowOf(warning).message)
+        warning.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
         dialog.listView.performItemClick(dialog.listView.getChildAt(1), 1, 1)
         assertEquals("test/audio", settings.audioModel)
         assertFalse(dialog.isShowing)
@@ -119,7 +175,7 @@ class VoiceModelPickerTest {
     }
 
     @Test
-    fun emptyCatalogShowsPlainExplanationAndExplicitRetryRefreshes() {
+    fun emptyCatalogShowsPlainExplanationAndDoesNotRefetchWithinDay() {
         val controller = Robolectric.buildActivity(Activity::class.java).setup()
         val activity = controller.get()
         activity.setContentView(R.layout.setup_hub)
@@ -139,7 +195,7 @@ class VoiceModelPickerTest {
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
         button.performClick()
         shadowOf(Looper.getMainLooper()).idle()
-        assertEquals(2, fetches)
+        assertEquals(1, fetches)
         picker.pause()
         controller.pause().stop().destroy()
     }

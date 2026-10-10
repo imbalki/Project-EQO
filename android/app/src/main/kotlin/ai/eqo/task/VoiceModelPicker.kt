@@ -23,6 +23,7 @@ internal class VoiceModelPicker(
     private var active = true
     private var generation = 0
     private var dialog: AlertDialog? = null
+    private var warning: AlertDialog? = null
 
     fun activate() {
         active = true
@@ -33,6 +34,8 @@ internal class VoiceModelPicker(
         generation++
         dialog?.dismiss()
         dialog = null
+        warning?.dismiss()
+        warning = null
         activity.findViewById<Button>(R.id.voice_model_setting).apply {
             isEnabled = true
             label(this)
@@ -48,12 +51,12 @@ internal class VoiceModelPicker(
             button.isEnabled = false
             button.setText(R.string.model_catalog_loading)
             loadInBackground {
-                val result = repository.load(force = true)
+                val result = repository.load()
                 activity.runOnUiThread {
                     if (activity.isDestroyed || activity.isFinishing) return@runOnUiThread
                     if (active && generation == current) {
                         button.isEnabled = true
-                        show(audioModels(result.models), button)
+                        show(orderedModels(result.models), button)
                     }
                 }
             }
@@ -77,36 +80,56 @@ internal class VoiceModelPicker(
     ) {
         if (settings.audioModel == null) settings.audioModel = defaultAudioModel(models)
         label(button)
+        val recommended = defaultAudioModel(models)
         val builder = AlertDialog.Builder(activity).setTitle(R.string.voice_model_title)
         if (models.isEmpty()) {
             builder.setMessage(R.string.voice_models_unavailable)
         } else {
             builder.setSingleChoiceItems(
-                models.map { activity.getString(R.string.voice_model_row, it.name, it.id) }.toTypedArray(),
+                models.map { modelLabel(it, recommended) }.toTypedArray(),
                 models.indexOfFirst { it.id == settings.audioModel },
             ) { dialog, which ->
-                settings.audioModel = models[which].id
-                label(button)
-                dialog.dismiss()
+                val selected = models[which]
+                if ("audio" in selected.inputModalities) {
+                    settings.audioModel = selected.id
+                    label(button)
+                    dialog.dismiss()
+                } else {
+                    (dialog as AlertDialog).listView.setItemChecked(which, false)
+                    dialog.listView.setItemChecked(models.indexOfFirst { it.id == settings.audioModel }, true)
+                    warning?.dismiss()
+                    warning =
+                        AlertDialog
+                            .Builder(activity)
+                            .setMessage(R.string.voice_ai_unsupported)
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show()
+                }
             }
         }
         dialog = builder.setNegativeButton(android.R.string.cancel, null).show()
     }
 
     companion object {
+        fun orderedModels(models: List<OpenRouterModel>): List<OpenRouterModel> =
+            models.sortedWith(compareBy<OpenRouterModel> { "audio" !in it.inputModalities }.thenBy { it.id })
+
         fun audioModels(models: List<OpenRouterModel>): List<OpenRouterModel> =
             models.filter { "audio" in it.inputModalities }.sortedBy { it.id }
 
         fun defaultAudioModel(models: List<OpenRouterModel>): String? {
             val audio = audioModels(models)
-            return audio.firstOrNull { it.id == "google/gemini-2.5-flash" }?.id ?: audio.firstOrNull()?.id
+            return audio
+                .lastOrNull {
+                    it.id.startsWith("google/gemini-") && it.id.endsWith("-flash")
+                }?.id ?: audio.firstOrNull()?.id
         }
 
         fun selectedModel(
             context: Context,
             settings: VoiceSettings,
+            models: List<OpenRouterModel> = cachedModels(context),
         ): String {
-            val models = cachedModels(context)
             val selected = settings.audioModel ?: defaultAudioModel(models) ?: StudyModelChoice.read(context)
             if (selected == null) throw AudioUnsupportedException()
             if (models.isNotEmpty() && audioModels(models).none { it.id == selected }) throw AudioUnsupportedException()
@@ -120,5 +143,17 @@ internal class VoiceModelPicker(
                 ?.let {
                     runCatching { OpenRouterModelCatalog.parse(it.json) }.getOrDefault(emptyList())
                 }.orEmpty()
+
+        fun loadModels(context: Context): List<OpenRouterModel> =
+            OpenRouterModelRepository(AndroidModelCatalogCache(context), OpenRouterModelHttp()::fetch).load().models
+    }
+
+    private fun modelLabel(
+        model: OpenRouterModel,
+        recommended: String?,
+    ): String {
+        val capability = if ("audio" in model.inputModalities) R.string.voice_model_audio else R.string.voice_model_text
+        val label = activity.getString(R.string.voice_model_row, model.name, model.id, activity.getString(capability))
+        return if (model.id == recommended) activity.getString(R.string.voice_model_recommended, label) else label
     }
 }

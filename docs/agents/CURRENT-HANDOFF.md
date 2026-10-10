@@ -1,5 +1,44 @@
 # Current handoff (any agent can take over from this page)
 
+## Voice v3.1 (`t_1598bf81`, local-only `fix/voice-key`) — NOT TESTED ON PHONE
+
+- Verified case-sensitive credential mismatch: voice checked `apiKeys["OpenRouter"]`, but Setup,
+  Explain and task planning use `ProviderCredentialId.ApiKey("openrouter")`. Transcription now reads
+  that exact direct-store ID and supplies the key as ephemeral/redacted request configuration.
+  Only a successful empty/blank read is a missing-key error; inaccessible storage is not absence.
+  Missing-key copy gives `Setup > Model key`; voice settings say `Uses your existing OpenRouter key`.
+  HTTP 401/403 say the saved key was rejected, not that a separate voice key is needed.
+- The full public catalog is labeled Audio/Text only, Audio first. Text-only selection warns and
+  cannot change the voice model; output-only/unknown audio metadata does not count as audio input.
+  The newest stable Gemini Flash ID advertised as audio input is marked Recommended default;
+  otherwise the first audio-input ID is preferred. Planner model selection remains separate.
+  Picker and transcription reuse the shared 24-hour public catalog cache; no credential is cached.
+- Finished audio stays only in the active screen's cache session after transcription failure.
+  Try again is primary; Use Phone voice remains an explicit secondary choice. Retry reuses the
+  same file, rereads settings/key, never records again or submits a task, and never extends the
+  ten-minute deadline. Success, Cancel, phone fallback, edit, pause/close or expiry delete it.
+  Process death has no persistent retry restoration; stale owned WAVs are swept on next entry.
+- Host verification PASS: final serial app/core-llm ktlintFormat, ktlintCheck, detekt,
+  testDebugUnitTest and lintDebug, exit 0, BUILD SUCCESSFUL in 11m 58s (394 tasks,
+  13 executed/381 up-to-date). XML: app 336, core 281, zero failures/errors, one existing
+  core skip; all 59 voice/provider tests pass. Both debug lint XMLs have zero issues.
+  Repo/provenance/branding gate 494/494, whitespace and added Kotlin lines <=120 pass.
+  Fake tests cover saved lowercase key with no uppercase map entry and outgoing authorization,
+  missing/unavailable store, cached metadata, label/order/text rejection/default and day boundary,
+  same-file retry, failure copy, expiry, cancellation and close. No new Kotlin files.
+- Exact command from `android/`: `./gradlew :app:ktlintFormat :core-llm:ktlintFormat
+  :app:ktlintCheck :core-llm:ktlintCheck :app:detekt :core-llm:detekt
+  :app:testDebugUnitTest :core-llm:testDebugUnitTest :app:lintDebug :core-llm:lintDebug
+  --continue --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process
+  '-Dorg.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=1024m -XX:ActiveProcessorCount=2
+  -Dfile.encoding=UTF-8' --console=plain`. Scoped verification, not root/all-module CI.
+- Failed iterations are not passing evidence: static method/throw counts, generic exception
+  boundary and long lines were corrected; fake AlertDialog callbacks required looper drain.
+  The expiry test also found a real CoroutineScope.cancel receiver-shadowing bug: fixed with
+  explicit audio-owner cancellation. Focused expiry PASS (3m18s) before final full gates.
+- No push, PR, gh, APK install, phone/device test, real key access or real audio-provider request.
+  Lead owns publication/CI and the unchecked phone checklist in PHASE-ONE-TEST-LOG.md.
+
 ## Location permission/retry fix (`t_9fd2d126`, local `fix-location`)
 
 - CI review rework: the immutable-recipient test still expected five per-action lookups.

@@ -81,8 +81,10 @@ internal class VoiceInputPresenter(
         if (state in VoiceInputState.ACTIVE) update(failure)
     }
 
-    fun processing() {
-        if (state == VoiceInputState.LISTENING) update(VoiceInputState.PROCESSING)
+    fun processing(retry: Boolean = false) {
+        if (state == VoiceInputState.LISTENING || (retry && state == VoiceInputState.ERROR)) {
+            update(VoiceInputState.PROCESSING)
+        }
     }
 
     fun cancel(preservePermission: Boolean = false) {
