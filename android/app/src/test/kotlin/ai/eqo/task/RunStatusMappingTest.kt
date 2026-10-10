@@ -42,6 +42,16 @@ class RunStatusMappingTest {
         )
     }
 
+    @Test fun missingControlStopsAsNeedsYouWithPlainCopyAndFixedDiagnostics() {
+        val progress = RunStatusMapping.progress(null, failed("control_not_found").copy(name = "CLICK_TEXT"), null)
+        assertEquals(StepProgressState.NEEDS_YOU, progress.state)
+        assertEquals(R.string.run_control_not_found, RunStatusMapping.detail(progress)?.resource)
+        assertEquals("NEEDS_YOU", RunStatusMapping.terminal(RunReceipt(listOf(progress), "FAILED")))
+        assertEquals("control_not_found", RunDiagnostics.code(ExecuteResult.Failure("control_not_found")))
+        assertEquals("control_not_found", RunDiagnostics.failureKind(ExecuteResult.Failure("control_not_found")))
+        assertTrue(RunReceipt(listOf(progress), "FAILED").executedStepIds.isEmpty())
+    }
+
     @Test fun screenshotAndFileReasonsAreSpecificAndNeverLeakNamesIntoLogs() {
         val reasons =
             mapOf(

@@ -94,15 +94,25 @@ private class EqoNavigationPort(
         return text
     }
 
-    override fun tap(text: String): Boolean = record(automation()?.tap(text))
+    override fun tap(text: String): Boolean = recordTap(automation()?.tap(text))
 
-    override fun tapById(viewId: String): Boolean = record(automation()?.tapById(viewId))
+    override fun tapById(viewId: String): Boolean = recordTap(automation()?.tapById(viewId))
 
     override fun typeText(text: String): Boolean = record(automation()?.type(searchText = text, content = text))
 
     override fun scroll(direction: String): Boolean {
         val forward = !direction.equals("up", ignoreCase = true)
         return record(automation()?.scroll(forward = forward))
+    }
+
+    private fun recordTap(result: A11yResult?): Boolean {
+        val success = record(result)
+        if ((result as? A11yResult.Failure)?.error is ai.eqo.accessibility.A11yError.NodeNotFound) {
+            failure =
+                ai.eqo.core.agent.ExecuteResult
+                    .Failure("control_not_found", transient = false)
+        }
+        return success
     }
 
     /** Fixed codes only: target strings and screen contents never enter diagnostics. */

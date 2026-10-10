@@ -31,7 +31,15 @@ class GatedServiceActions(
             }
         }
 
-    fun pressBack(): A11yResult = globalAction("back") { ops.performGlobalBack() }
+    /** App-edit Back must not dismiss EQO's approval/consent windows; legacy navigation is unchanged. */
+    fun pressBack(restrictToApp: Boolean = false): A11yResult =
+        if (restrictToApp) {
+            automation.runAction {
+                automation.ownWindowBlocked("back") ?: globalAction("back") { ops.performGlobalBack() }
+            }
+        } else {
+            globalAction("back") { ops.performGlobalBack() }
+        }
 
     fun pressHome(): A11yResult = globalAction("home") { ops.performGlobalHome() }
 
