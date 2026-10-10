@@ -52,9 +52,12 @@ class TaskPermissionRequesterTest {
         runBlocking {
             val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
             val requester = TaskPermissionRequester(activity)
-            val answer = CoroutineScope(Dispatchers.Unconfined).async {
-                requester.request(ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Allow location"))
-            }
+            val answer =
+                CoroutineScope(Dispatchers.Unconfined).async {
+                    requester.request(
+                        ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Allow location"),
+                    )
+                }
             ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
             assertArrayEquals(
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),

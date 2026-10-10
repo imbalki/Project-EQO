@@ -9,9 +9,9 @@ import ai.eqo.data.models.PlanStatus
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -100,21 +100,34 @@ class ForegroundPlanRunTest {
         }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    @Test fun permissionRetryReapprovesOnlyLocationEvenWithApprovalPreferenceOff() {
+    @Test
+    @Suppress("LongMethod")
+    fun permissionRetryReapprovesOnlyLocationEvenWithApprovalPreferenceOff() {
         val context = ApplicationProvider.getApplicationContext<android.app.Application>()
         PlanApprovalSettings.setRequired(context, false)
-        org.robolectric.Shadows.shadowOf(context).grantPermissions(android.Manifest.permission.ACCESS_FINE_LOCATION)
-        val steps = listOf(
-            LoopStep("text", ExecutedAction("SEND_WHATSAPP", mapOf("contact" to "+15555550199", "message" to "test"))),
-            LoopStep("location", ExecutedAction("SHARE_LOCATION", mapOf("to" to "+15555550199", "via" to "whatsapp"))),
-        )
+        org.robolectric.Shadows
+            .shadowOf(context)
+            .grantPermissions(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        val steps =
+            listOf(
+                LoopStep(
+                    "text",
+                    ExecutedAction("SEND_WHATSAPP", mapOf("contact" to "+15555550199", "message" to "test")),
+                ),
+                LoopStep(
+                    "location",
+                    ExecutedAction("SHARE_LOCATION", mapOf("to" to "+15555550199", "via" to "whatsapp")),
+                ),
+            )
         TaskRunSession.retry.started(ApprovedTaskPlan(steps))
         TaskRunSession.retry.record(
             ai.eqo.study.StepProgress("text", "SEND_WHATSAPP", ai.eqo.study.StepProgressState.DONE),
         )
         TaskRunSession.retry.record(
             ai.eqo.study.StepProgress(
-                "location", "SHARE_LOCATION", ai.eqo.study.StepProgressState.NEEDS_YOU,
+                "location",
+                "SHARE_LOCATION",
+                ai.eqo.study.StepProgressState.NEEDS_YOU,
                 detail = "Allow location. This step did not run.",
             ),
         )
@@ -128,7 +141,9 @@ class ForegroundPlanRunTest {
         } finally {
             kotlinx.coroutines.Dispatchers.resetMain()
         }
-        val dialog = org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog()
+        val dialog =
+            org.robolectric.shadows.ShadowAlertDialog
+                .getLatestAlertDialog()
         assertTrue(dialog.isShowing)
         val preview = activity.findViewById<android.widget.TextView>(ai.eqo.R.id.task_preview).text.toString()
         assertTrue(preview.contains("Completed steps will not run again"))
@@ -137,10 +152,18 @@ class ForegroundPlanRunTest {
         assertEquals(null, TaskRunSession.pending)
         assertEquals(null, TaskRunSession.controller)
         dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).performClick()
-        assertEquals(listOf("location"), TaskRunSession.retry.remaining()!!.steps().map { it.stepId })
+        assertEquals(
+            listOf("location"),
+            TaskRunSession.retry
+                .remaining()!!
+                .steps()
+                .map { it.stepId },
+        )
         activity.findViewById<android.widget.Button>(ai.eqo.R.id.task_stop_button).performClick()
         dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick()
-        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+        org.robolectric.Shadows
+            .shadowOf(android.os.Looper.getMainLooper())
+            .idle()
         assertEquals(null, TaskRunSession.pending)
         assertEquals(null, TaskRunSession.controller)
         lifecycle.pause().stop().destroy()

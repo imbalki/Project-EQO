@@ -148,9 +148,10 @@ class MissingAppFallbackTest {
                 ApprovedTaskPlan::class.java,
                 Map::class.java,
                 List::class.java,
+                Boolean::class.javaPrimitiveType,
             )
         method.isAccessible = true
-        method.invoke(activity, ApprovedTaskPlan(web()), emptyMap<String, String>(), listOf("Flipkart"))
+        method.invoke(activity, ApprovedTaskPlan(web()), emptyMap<String, String>(), listOf("Flipkart"), false)
     }
 
     @Test fun approvalDialogShowsNoticeAndInstallChoiceDoesNotStartTask() {

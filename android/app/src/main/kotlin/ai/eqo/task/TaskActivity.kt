@@ -109,6 +109,7 @@ class TaskActivity : Activity() {
         TaskRunSession.attachmentSelection = attachmentSelection
     }
 
+    @Suppress("LongMethod")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.task_screen)
@@ -863,7 +864,8 @@ class TaskActivity : Activity() {
         val generation = preparationGeneration
         PlanFallbackDialog(this, { approved ->
             if (generation == preparationGeneration &&
-                TaskRunSession.controller == null && TaskRunSession.pending == null
+                TaskRunSession.controller == null &&
+                TaskRunSession.pending == null
             ) {
                 startRun(approved)
             }
