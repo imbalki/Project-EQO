@@ -240,7 +240,7 @@ class EqoAutomation(
                 NodeTreeSearch.findFirst(root) { node ->
                     val matches =
                         when {
-                            byViewId -> NodeTreeSearch.matches(node, label, true)
+                            byViewId || label.startsWith("id:") -> NodeTreeSearch.matches(node, label, true)
                             exact ->
                                 NodeTreeSearch.matchesExactly(node, label) || NodeTreeSearch.matches(node, label, true)
                             else -> NodeTreeSearch.matches(node, label, false)
@@ -312,7 +312,11 @@ class EqoAutomation(
                 NodeTreeSearch.isTextInput(node) &&
                     if (focusedOnly) node.isFocused else NodeTreeSearch.matches(node, target, byViewId)
             }
-        return matched ?: if (byViewId || focusedOnly) null else NodeTreeSearch.soleTextInput(root)
+        return matched ?: if (byViewId || focusedOnly || target.startsWith("id:")) {
+            null
+        } else {
+            NodeTreeSearch.soleTextInput(root)
+        }
     }
 
     @Suppress("ReturnCount") // live takeover/service checks must stop between mutations

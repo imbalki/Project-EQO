@@ -104,35 +104,71 @@ class RegistryPlannerTest {
             }
         }
 
-    @Test fun keepPlanUsesEntryAlternativesTitleBodyAndBackWithoutWeakeningDraftGuard() =
+    @Test fun keepPlanUsesRealSpeedDialTitleBodyAndBackWithoutWeakeningDraftGuard() =
         runTest {
             val output =
                 """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
                     """{"action":"WAIT","params":{"durationMs":"3000"}},""" +
-                    """{"action":"CLICK_TEXT","params":{"text":"Take a note,New text note"}},""" +
-                    """{"action":"TYPE_TEXT","params":{"searchText":"Title","content":"Test"}},""" +
-                    """{"action":"TYPE_TEXT","params":{"searchText":"Note","content":"Example body"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Create a note"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"id:new_note_button"}},""" +
+                    """{"action":"TYPE_TEXT","params":{"searchText":"id:editable_title","content":"Test"}},""" +
+                    """{"action":"TYPE_TEXT","params":{"searchText":"id:edit_note_text","content":"Example body"}},""" +
                     """{"action":"PRESS_BACK","params":{}}]}"""
             val actions = enabled + setOf("WAIT", "PRESS_BACK")
             val fake = Fake(listOf(output))
             val steps = TaskPlanner(fake, actions).plan("write a note called Test in Keep with body Example body")
-            assertEquals(6, steps.size)
+            assertEquals(7, steps.size)
             assertEquals("PRESS_BACK", steps.last().action.name)
-            assertEquals("Test", steps[3].action.params["content"])
-            assertEquals("Example body", steps[4].action.params["content"])
+            assertEquals("Test", steps[4].action.params["content"])
+            assertEquals("Example body", steps[5].action.params["content"])
             assertTrue(ApprovedTaskPlan(steps).matches(steps))
             val prompt = fake.requests.single().systemPrompt
             AppControlHints.byPackage.keys.forEach { assertTrue(prompt.contains(it)) }
-            assertTrue(prompt.contains("Take a note,New text note"))
+            assertTrue(prompt.contains("Create a note"))
+            assertTrue(prompt.contains("id:new_note_button"))
+            assertTrue(prompt.contains("id:editable_title"))
+            assertTrue(prompt.contains("id:edit_note_text"))
+            assertTrue(prompt.contains("Never type into toolbar"))
             assertTrue(prompt.contains("PRESS_BACK to autosave"))
             assertTrue(prompt.contains("omit body typing"))
-            for (unsafe in listOf("Take a note,Send", "Take a note,", "New text note,Share")) {
+            val unsafeTargets =
+                listOf(
+                    "Create a note,Send",
+                    "Create a note,",
+                    "id:new_note_button,Share",
+                    "id:new_list_button",
+                )
+            for (unsafe in unsafeTargets) {
                 try {
-                    TaskPlanner(Fake(listOf(output.replace("Take a note,New text note", unsafe))), actions)
+                    TaskPlanner(Fake(listOf(output.replace("Create a note", unsafe))), actions)
                         .plan("write a note in Keep")
                     error("Unsafe alternative must be rejected")
                 } catch (_: IllegalArgumentException) {
                 }
+            }
+        }
+
+    @Test fun titleOnlyKeepRequestsUseTheSameFlowWithoutInventingBody() =
+        runTest {
+            val output =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
+                    """{"action":"WAIT","params":{"durationMs":"3000"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Create a note"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"id:new_note_button"}},""" +
+                    """{"action":"TYPE_TEXT","params":{"searchText":"id:editable_title","content":"Test"}},""" +
+                    """{"action":"PRESS_BACK","params":{}}]}"""
+            for (verb in listOf("add", "write", "create")) {
+                val steps =
+                    TaskPlanner(Fake(listOf(output)), enabled + setOf("WAIT", "PRESS_BACK"))
+                        .plan("$verb a note called Test in Keep")
+                assertEquals(6, steps.size)
+                assertEquals(
+                    listOf("id:editable_title"),
+                    steps
+                        .filter { it.action.name == "TYPE_TEXT" }
+                        .map { it.action.params["searchText"] },
+                )
+                assertTrue(ApprovedTaskPlan(steps).matches(steps))
             }
         }
 

@@ -9,6 +9,20 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class NavigationRetryTest {
     @Test
+    fun missingKeepHomeEntryFailsOnFirstProbeWithoutWaiting() =
+        runTest {
+            var attempts = 0
+            val result =
+                GenericAppAutomator.clickTextAttempt("Create a note") {
+                    attempts++
+                    A11yResult.failure(A11yError.NodeNotFound("Create a note"))
+                }
+            assertEquals(A11yError.NodeNotFound("Create a note"), (result as A11yResult.Failure).error)
+            assertEquals(1, attempts)
+            assertEquals(0L, testScheduler.currentTime)
+        }
+
+    @Test
     fun waitsForDelayedNodeAndStopsOnSuccess() =
         runTest {
             var attempts = 0

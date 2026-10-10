@@ -140,6 +140,8 @@ class TaskPlanner(
             setOf(
                 "new note",
                 "create note",
+                "create a note",
+                "id:new_note_button",
                 "take a note",
                 "take a note…",
                 "new text note",

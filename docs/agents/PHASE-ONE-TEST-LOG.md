@@ -68,6 +68,44 @@
   added Kotlin lines <=120 and git whitespace checks PASS. Same-card review required.
 - NOT RUN: root/all-module suites, release/APK build/install, instrumentation, live
   model/provider, phone or GitHub CI. Lead owns independent review, CI and phone checklist.
+## Keep real speed-dial flow — `t_821c6c33` — NOT TESTED ON PHONE
+
+- Local-only `fix/keep2`, based on `edf1612`; no push/PR/gh, device, private note
+  text, account or provider request. The card's owner-supplied widget IDs are
+  technical evidence for the flow, not verification of this build.
+- Keep hints consumed by the registry planner now specify OPEN_APP + WAIT 3000,
+  Create a note content-description, id:new_note_button, id:editable_title,
+  optional supplied body into id:edit_note_text, PRESS_BACK autosave. Toolbar is
+  Search Keep, never the note field. No invented body or Take a note bar.
+- Explicit id: targets match exact resource IDs/slash-delimited suffixes only;
+  no label, sole-input or focused-field fallback. Active-root/own-window,
+  password, takeover and approval gates remain. Safe note navigation allowlist
+  includes only the text-note speed-dial ID, not list/photo/drawing or arbitrary IDs.
+- Missing Create a note fails on its first probe (no wait/retry), feeds the
+  existing control_not_found -> plain Needs you presentation and stops the loop.
+- Synthetic fake-tree tests mirror home, four unlabelled speed-dial controls and
+  title/body/search fields, missing-ID and EQO-window refusal. Fake planner tests
+  cover prompt consumption, supplied body and add/write/create title-only proposals;
+  they do not establish live-model output quality or on-device autosave.
+- No new Kotlin files; provenance still covers 494 tracked files/rows.
+- Phone checklist and exact action parameters: [KEEP-NOTE-FLOW.md](KEEP-NOTE-FLOW.md).
+- PASS: final Gradle exit 0, BUILD SUCCESSFUL in 8m 40s (370 tasks: 13 executed,
+  357 up-to-date). From android/, exact tasks: `:core-agent:ktlintFormat
+  :platform-a11y:ktlintFormat :core-agent:ktlintCheck :core-agent:detekt
+  :platform-a11y:ktlintCheck :platform-a11y:detekt :app:lintDebug
+  :core-agent:testDebugUnitTest :platform-a11y:testDebugUnitTest`, with
+  `--continue --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process
+  --console=plain`. No test filters. XML: core-agent 119 + platform-a11y 123 =
+  242 tests, zero failures/errors/skips; app debug lint XML has zero issues.
+- Initial gate BUILD FAILED in 48m 10s solely on one core-agent detekt long test
+  line; corrected before final rerun. Initial unit suites and app lint passed;
+  final core tests reran, platform tests remained up-to-date on unchanged source.
+  Raw local logs are ignored under `android/app/build/reports/keep2/`, not committed.
+- PASS: `bash scripts/check.sh` (494 Kotlin/provenance rows), `git diff --check`,
+  and added Kotlin lines <=120. No method signature changed; pinned study wiring untouched.
+- NOT RUN: app/other-module unit suites, other-module static checks, root/all-module
+  gate, APK/release, instrumentation, phone, live model/provider or GitHub CI.
+  Local commit only; independent same-card review and owner phone checklist required.
 
 
 ## Location fix — `t_9fd2d126` — NOT TESTED ON PHONE
