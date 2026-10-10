@@ -14,9 +14,15 @@
 - Natural `find:latest` searches still require choice among multiple matches; only the explicitly
   previewed compatibility fallback selects a uniquely newest screenshot. All files access is required
   for gallery lookup, not for a fresh private EQO capture. No new permission or runtime dependency.
+- File-only sends can have empty message/body/subject without inventing a caption. Planner and
+  registry share the narrow exception; a valid attachment and nonblank recipient remain required.
 - Diagnostics no longer equate every screenshot error with missing screenshot permission. Specific
   reasons: no_eqo_screenshot_yet, no_matching_file, needs_all_files_access, eqo_in_foreground,
   protected_screen; unknown capture/copy failures stay unknown. Logs contain only allowlisted kinds.
+- Final scoped host gate exits 0: three-module ktlintFormat/check, detekt, debug lint and unit tests
+  (actions attachment/storage filters; full core-agent/app suites), max two workers/in-process compiler.
+  BUILD SUCCESSFUL in 36m 5s; XML 491 tests, no failures/errors, three Windows real-link skips;
+  all three lint XML reports have zero issues. Repo gate passes (487 files/provenance rows).
 - NOT TESTED ON PHONE. Fake-provider tests verify supplied model proposals and the prompt contract,
   not real model interpretation. Fake registry tests exercise attachment resolution/disclosure/staging
   and outgoing intents, not actual delivery or real Send buttons. See the test-log checklist.

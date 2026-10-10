@@ -108,7 +108,13 @@ class RegistryPlannerTest {
         val send =
             """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"", """ +
                 """"attachment":"find:ebay bill"}}]}"""
-        assertEquals("", RegistryPlanVocabulary.parse(send, setOf("SEND_WHATSAPP")).single().action.params["message"])
+        assertEquals(
+            "",
+            RegistryPlanVocabulary
+                .parse(send, setOf("SEND_WHATSAPP"))
+                .single()
+                .action.params["message"],
+        )
         for (invalid in listOf(
             send.replace("Example", ""),
             send.replace("find:ebay bill", ""),

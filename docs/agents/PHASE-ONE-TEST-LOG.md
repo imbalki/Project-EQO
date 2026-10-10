@@ -25,6 +25,28 @@ Phone checklist (lead/owner; synthetic files and contacts, record actual result 
 - [ ] Verify EqoRun logs never include search terms, file/contact names or paths; capture/copy
   failures without a proven protected-window diagnosis do not claim missing permission/protection.
 
+Final frozen-source Gradle exits 0: BUILD SUCCESSFUL in 36m 5s, 416 tasks (224 executed,
+192 up-to-date). One serial invocation from `android/`: all three modules' ktlintFormat,
+ktlintCheck, detekt, testDebugUnitTest and lintDebug, with `--max-workers=2 --no-daemon
+-Dorg.gradle.jvmargs='-Xmx1536m -XX:MaxMetaspaceSize=1024m'
+-Pkotlin.compiler.execution.strategy=in-process --console=plain`. All three debug lint XML
+reports have zero issues. Total 491 tests, zero failures/errors, three disclosed capability skips.
+Repo/branding/provenance gate passes (487 Kotlin files/rows); no new Kotlin files; diff check and
+changed Kotlin lines <=120 pass. Logs: ignored `android/app/build/reports/screenshot-fix/`.
+NOT RUN: full actions suite (untouched macro cases), other-module unit suites, root/all-module
+Gradle gate, APK/release build, install, device instrumentation, live model/provider or GitHub CI.
+Lead owns publication and phone verification; worker requests same-card review, not completion.
+
+Host coverage (synthetic fixtures): final XML reports actions 66 tests (zero failures/errors,
+three Windows real-link capability skips), core-agent 117 and app 308 tests (zero failures/errors/skips).
+Actions filter: `--tests 'ai.eqo.actions.impl.*File*Test' --tests 'ai.eqo.actions.impl.SharedStorage*Test'`;
+core-agent/app suites unfiltered. Fake registry covers all nine combinations of three send routes and
+search/gallery fallback references, empty-caption sends, URI/read grants and disclosure before staging.
+Fake planner supplies proposals for latest/last/date screenshot, photo/picture/PDF/file, eBay bill,
+WhatsApp it, email it to me and explicit capture. This is not live-model or actual delivery proof.
+The shared AttachmentSpec blank-text exception permits only message/body/subject with a valid
+attachment; recipients are never waived. The real registry uses the same exception as the planner.
+
 Host validation caveats: initial static findings were corrected; the two-worker host exhausted
 Windows commit/paging-file memory, then a reduced-heap compile exhausted Metaspace. Retried with
 one Gradle at a time and bounded memory; these failed attempts are not passing verification.
