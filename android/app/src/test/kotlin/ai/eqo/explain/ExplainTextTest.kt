@@ -57,6 +57,32 @@ class ExplainTextTest {
         assertEquals(3, clips.size)
     }
 
+    @Test fun `closing the real panel stops its fake speech engine and ignores a stale completion`() {
+        val host = org.robolectric.Robolectric.buildService(
+            ai.eqo.accessibility.EQOAccessibilityService::class.java,
+        ).create()
+        val overlay = ExplainOverlay::class.java.getDeclaredConstructor(
+            ai.eqo.accessibility.EQOAccessibilityService::class.java,
+        ).apply { isAccessible = true }.newInstance(host.get())
+        var plays = 0
+        var stops = 0
+        var utterance = ""
+        val reader = ExplainSpeech({ _, id -> plays++; utterance = id }, { stops++ }, {}, 5)
+        ExplainOverlay::class.java.getDeclaredField("reader").apply { isAccessible = true }.set(overlay, reader)
+        try {
+            reader.read("**synthetic** answer")
+            assertEquals(1, plays)
+            ExplainOverlay::class.java.getDeclaredMethod("close").apply { isAccessible = true }.invoke(overlay)
+            reader.completed(utterance)
+            reader.continueReading()
+            assertEquals(ExplainSpeech.State.STOPPED, reader.state)
+            assertEquals(1, plays)
+            assertTrue(stops >= 2)
+        } finally {
+            host.destroy()
+        }
+    }
+
     @Test fun `explanation prompt uses device language short simple explanations and never copies the page`() {
         val prompt = explainPrompt(java.util.Locale.forLanguageTag("hi-IN"))
         listOf("hi-IN", "120 words", "unless the user asks", "formulas and code", "main controls", "next step",

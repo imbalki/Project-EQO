@@ -86,20 +86,21 @@ class ExplainOverlay private constructor(
         }
     private var speech: TextToSpeech? = null
     private val speechState = TextView(service).apply { setTextColor(Color.WHITE) }
-    private val reader = ExplainSpeech(
-        play = { text, id -> speech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, id) },
-        halt = { speech?.stop() },
-        changed = { state ->
-            speechState.setText(
-                when (state) {
-                    ExplainSpeech.State.SPEAKING -> R.string.explain_speaking
-                    ExplainSpeech.State.PAUSED -> R.string.explain_speech_paused
-                    ExplainSpeech.State.STOPPED -> R.string.explain_speech_stopped
-                },
-            )
-        },
-        chunkSize = TextToSpeech.getMaxSpeechInputLength(),
-    )
+    private val reader =
+        ExplainSpeech(
+            play = { text, id -> speech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, id) },
+            halt = { speech?.stop() },
+            changed = { state ->
+                speechState.setText(
+                    when (state) {
+                        ExplainSpeech.State.SPEAKING -> R.string.explain_speaking
+                        ExplainSpeech.State.PAUSED -> R.string.explain_speech_paused
+                        ExplainSpeech.State.STOPPED -> R.string.explain_speech_stopped
+                    },
+                )
+            },
+            chunkSize = TextToSpeech.getMaxSpeechInputLength(),
+        )
     private val params =
         WindowManager
             .LayoutParams(
@@ -393,15 +394,17 @@ class ExplainOverlay private constructor(
         button(R.string.explain_pause_speech) { reader.pause() }
         button(R.string.explain_continue_speech) { reader.continueReading() }
         button(R.string.explain_stop_speech) { reader.stop() }
-        speech = TextToSpeech(service) { status ->
-            speechReady = status == TextToSpeech.SUCCESS
-            if (speechReady) {
-                val language = speech?.setLanguage(Locale.getDefault())
-                speechReady = language != TextToSpeech.LANG_MISSING_DATA && language != TextToSpeech.LANG_NOT_SUPPORTED
-                listenForSpeech()
-                if (ExplainSettings.autoRead(service) && answer.isNotBlank()) speak()
+        speech =
+            TextToSpeech(service) { status ->
+                speechReady = status == TextToSpeech.SUCCESS
+                if (speechReady) {
+                    val language = speech?.setLanguage(Locale.getDefault())
+                    speechReady = language != TextToSpeech.LANG_MISSING_DATA &&
+                        language != TextToSpeech.LANG_NOT_SUPPORTED
+                    listenForSpeech()
+                    if (ExplainSettings.autoRead(service) && answer.isNotBlank()) speak()
+                }
             }
-        }
     }
 
     companion object {

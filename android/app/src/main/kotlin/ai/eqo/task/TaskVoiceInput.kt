@@ -6,13 +6,13 @@ import ai.eqo.core.llm.InputAudio
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.Intent
 import android.content.Context
-import android.view.View
-import android.view.WindowManager
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.speech.SpeechRecognizer
 import android.util.Base64
+import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -148,7 +148,8 @@ internal class TaskVoiceInput(
                     }
                 }.setNegativeButton(android.R.string.cancel) { _, _ -> presenter.permissionResult(false) }
                 .setOnCancelListener { presenter.permissionResult(false) }
-                .create().also { showVoiceDialog(activity, it) }
+                .create()
+                .also { showVoiceDialog(activity, it) }
     }
 
     private fun engineAvailable(): Boolean {
@@ -188,7 +189,10 @@ internal class TaskVoiceInput(
 }
 
 /** Accessibility-hosted dialogs keep the EQO UID; no SYSTEM_ALERT_WINDOW grant is needed. */
-internal fun showVoiceDialog(context: Context, dialog: AlertDialog) {
+internal fun showVoiceDialog(
+    context: Context,
+    dialog: AlertDialog,
+) {
     if (context !is Activity) dialog.window?.setType(WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY)
     dialog.show()
 }

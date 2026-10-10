@@ -40,10 +40,18 @@ internal object ExplainText {
 
     /** Strip markdown punctuation for synthesis. No URL or HTML evaluation. */
     fun spoken(markdown: String): String =
-        markdown.lines().filterNot { it.trim().startsWith("```") }.joinToString("\n") { line ->
-            line.replace(heading, "").replace(bullet, "").replace(number, "")
-                .replace(link, "$1").replace(bold, "$1").replace(Regex("[*#_`]"), "")
-        }.trim()
+        markdown
+            .lines()
+            .filterNot { it.trim().startsWith("```") }
+            .joinToString("\n") { line ->
+                line
+                    .replace(heading, "")
+                    .replace(bullet, "")
+                    .replace(number, "")
+                    .replace(link, "$1")
+                    .replace(bold, "$1")
+                    .replace(Regex("[*#_`]"), "")
+            }.trim()
 
     private const val HEADING_SCALE = 1.15f
 }

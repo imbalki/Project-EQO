@@ -4,14 +4,22 @@
 
 - Owner findings in the task are input, not execution evidence. The original log has no Round 3
   section. No device was contacted, no model call made, no microphone recording or real audio upload.
-- Host checks PENDING: sibling Gradle wrappers remain active; this worker has not started a concurrent
-  Gradle invocation. Fake formatting/speech, compact preview/approval/cancellation/drag/navigation,
-  handle redraw and compact guard tests are written but NOT RUN. No green build is claimed.
+- Host gates PENDING: local WIP checkpoint `a260c7d` made at the lead's explicit request. Initial
+  Gradle format attempt failed on two inline-block style rules (formatter expanded the statements).
+  The initial idle check missed `-jar gradle-wrapper.jar` processes; the corrected retry queue checks
+  both wrapper forms. No sibling process was stopped. No green build is claimed.
+  New integrated fake regressions cover obscured approval DOWN/MOVE/UP, pending/delayed-start Pause/Stop,
+  live final result, already-removed Android window cleanup, reused Phone speech, voice availability
+  preservation and Explain close stopping a fake engine. These tests are NOT RUN.
+  Three corrected 20-minute idle waits expired; a fourth was stopped once current sibling builds
+  finished, leaving only an Oct-7 hung Android lint execution. JVM thread inspection identifies
+  BidirectionalTextDetector / KotlinUFile / IntelliJ PSI traversal. No sibling process was stopped;
+  operator cleanup/authorization is needed before the serial build queue can progress.
 - Actual host-only verification: `bash scripts/check.sh` exits 0 (494 Kotlin files and provenance rows,
   BRANDING GATE PASSED). Staged `git diff --check`, added Kotlin lines <=120 and changed XML parse pass.
   Five-minute wrapper-idle wait exits 1, GRADLE_BUSY; further wait times out at the terminal transport's
   420-second cap before any w-mini Gradle starts. Process read-back still shows sibling wrappers only.
-  No Kotlin compile/lint/detekt/unit-test result exists for this revision. Changes staged, not committed.
+  No passing Kotlin compile/lint/detekt/unit-test result exists yet for this revision.
 - Required sequential gates from `android/`, max-workers=2 and in-process Kotlin compiler:
   `:platform-a11y:ktlintFormat :platform-a11y:ktlintCheck :platform-a11y:detekt
   :platform-a11y:testDebugUnitTest :platform-a11y:lintDebug`, then equivalent app tasks.

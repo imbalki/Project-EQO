@@ -112,7 +112,8 @@ class TaskActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.task_screen)
-        ai.eqo.handle.HandleReturn.install(this)
+        ai.eqo.handle.HandleReturn
+            .install(this)
         if (intent.getBooleanExtra(FOCUS_REQUEST, false)) {
             findViewById<EditText>(R.id.task_request).apply {
                 requestFocus()

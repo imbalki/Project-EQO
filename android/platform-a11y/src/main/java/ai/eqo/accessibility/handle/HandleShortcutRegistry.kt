@@ -12,11 +12,16 @@ interface HandleShortcut<C> {
 
     fun run(context: C)
 
-    fun runFromHandle(context: C, entry: HandleEntry) = run(context)
+    fun runFromHandle(
+        context: C,
+        entry: HandleEntry,
+    ) = run(context)
 }
 
 /** Captured before an EQO overlay becomes the active window; no app-name hard-coding. */
-data class HandleEntry(val foregroundPackage: String)
+data class HandleEntry(
+    val foregroundPackage: String,
+)
 
 data class HandleChoice(
     val order: List<String> = emptyList(),

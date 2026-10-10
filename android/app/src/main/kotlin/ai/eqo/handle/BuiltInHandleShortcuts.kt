@@ -3,13 +3,12 @@ package ai.eqo.handle
 
 import ai.eqo.MainActivity
 import ai.eqo.R
-import ai.eqo.accessibility.handle.HandlePreferences
-import ai.eqo.accessibility.handle.HandleEntry
 import ai.eqo.accessibility.EQOAccessibilityService
+import ai.eqo.accessibility.handle.HandleEntry
+import ai.eqo.accessibility.handle.HandlePreferences
 import ai.eqo.accessibility.handle.HandleShortcut
 import ai.eqo.accessibility.handle.HandleShortcutRegistry
 import ai.eqo.core.agent.LoopState
-
 import ai.eqo.task.TaskRunSession
 import android.content.Context
 import android.content.Intent
@@ -58,7 +57,10 @@ internal class BuiltInHandleShortcut(
         if (unavailableReason(context) == null) action(context)
     }
 
-    override fun runFromHandle(context: Context, entry: HandleEntry) {
+    override fun runFromHandle(
+        context: Context,
+        entry: HandleEntry,
+    ) {
         if (unavailableReason(context) == null) {
             entryAction?.invoke(context, entry) ?: action(context)
         }
@@ -78,12 +80,20 @@ internal fun createHandleRegistry(
     )
     registry.register(
         BuiltInHandleShortcut(
-            "ask_eqo", R.string.handle_ask, android.R.drawable.ic_menu_edit,
+            "ask_eqo",
+            R.string.handle_ask,
+            android.R.drawable.ic_menu_edit,
             entryAction = { _, entry ->
-                EQOAccessibilityService.getInstance()?.let { ai.eqo.task.MiniTaskOverlay.show(it, entry) }
+                EQOAccessibilityService.getInstance()?.let {
+                    ai.eqo.task.MiniTaskOverlay
+                        .show(it, entry)
+                }
             },
         ) {
-            EQOAccessibilityService.getInstance()?.let { service -> ai.eqo.task.MiniTaskOverlay.show(service, null) }
+            EQOAccessibilityService.getInstance()?.let { service ->
+                ai.eqo.task.MiniTaskOverlay
+                    .show(service, null)
+            }
         },
     )
     val activeReason: (Context) -> Int? = { if (controls.active()) null else R.string.handle_no_run }
@@ -99,7 +109,9 @@ internal fun createHandleRegistry(
     )
     registry.register(
         BuiltInHandleShortcut(
-            "open_eqo", R.string.handle_open, android.R.drawable.ic_menu_view,
+            "open_eqo",
+            R.string.handle_open,
+            android.R.drawable.ic_menu_view,
             entryAction = { context, entry ->
                 context.startActivity(HandleReturn.intent(context, MainActivity::class.java, entry))
             },

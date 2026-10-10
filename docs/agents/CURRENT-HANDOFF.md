@@ -15,14 +15,21 @@
   touch wrapper; no new agent resume/token path. Handle removal cannot erase compact hitboxes.
   Missing action access is check-only and routes the owner to Full EQO's existing pre-run grant flow.
   Microphone grant is a non-exported transient activity; tap Mic again after granting, no auto-capture.
-- BLOCKED on host gates: sibling worktree Gradle wrappers stayed active through a five-minute wait
-  (exit 1, GRADLE_BUSY) and a further bounded wait (terminal transport timed out at 420 seconds).
-  Process read-back confirms only sibling wrappers, none for w-mini; no Gradle gate was started here.
-  `scripts/check.sh` passes (494 Kotlin files/494 provenance rows); staged diff whitespace, added
-  Kotlin <=120-character lines and changed XML parsing pass. Compilation/static checks/unit tests
-  have NOT run. Changes are staged, not committed; lint-before-commit rule retained. No push/PR/phone.
-  Next: serialize machine Gradle use, run app/platform format + required gates, fix actual findings,
-  finish integrated regressions, commit locally as specified and request same-card review.
+- Host gates UNVERIFIED after lead-directed local WIP checkpoint `a260c7d`; no push/PR/phone.
+  Initial format attempt failed on two inline-block rules, expanded by the formatter. Initial idle
+  probe checked only GradleWrapperMain and missed current `-jar gradle-wrapper.jar` wrappers; corrected
+  queue checks both forms before starting a new Gradle invocation. Sibling processes are not stopped.
+  Three corrected 20-minute queue attempts expired; a fourth was stopped after current sibling builds
+  exited and only an Oct-7 hung lint wrapper remained. Read-only JVM inspection confirms its daemon
+  spins in BidirectionalTextDetector / KotlinUFile / IntelliJ PSI traversal. Lead cleanup or explicit
+  authorization to cancel that unrelated execution is needed. No sibling process was stopped.
+  Required app/platform compile/static/lint/unit gates are still pending; no green build is claimed.
+  `scripts/check.sh` passes again (494 Kotlin files/494 provenance rows). Integrated regressions now
+  cover obscured approval DOWN/MOVE/UP, pending/delayed-start Pause/Stop cancellation, live final result,
+  Android-already-removed window cleanup, existing Phone speech in the compact panel, voice-state
+  preservation and Explain close with a fake speech engine. These new regressions are NOT RUN.
+  Next: complete sequential app/platform gates, fix actual findings, commit verification changes
+  locally as specified and request same-card review.
   ADR: `docs/adr/0012-compact-panel-threat-model.md`. This is a draft, not a verified implementation.
 
 Last updated: 2026-10-10 (round-1 accepted permission preflight implemented; awaiting review). Update this file in the same PR as every merge to `main`.

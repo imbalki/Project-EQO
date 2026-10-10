@@ -28,7 +28,8 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
-        ai.eqo.handle.HandleReturn.install(this)
+        ai.eqo.handle.HandleReturn
+            .install(this)
         findViewById<Button>(R.id.edge_handle_settings_button).setOnClickListener {
             startActivity(Intent(this, ai.eqo.handle.EdgeHandleSettingsActivity::class.java))
         }

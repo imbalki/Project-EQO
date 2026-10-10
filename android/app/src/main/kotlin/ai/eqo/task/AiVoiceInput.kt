@@ -62,7 +62,8 @@ internal class AiVoiceInput(
                         }
                     }.setNegativeButton(android.R.string.cancel) { _, _ -> consentPending = false }
                     .setOnCancelListener { consentPending = false }
-                    .create().also { showVoiceDialog(activity, it) }
+                    .create()
+                    .also { showVoiceDialog(activity, it) }
         }
     }
 
@@ -132,7 +133,8 @@ internal class AiVoiceInput(
                     settings.engine = VoiceEngine.PHONE
                     presenter.availability(SpeechRecognizer.isRecognitionAvailable(activity))
                 }.setNegativeButton(android.R.string.cancel, null)
-                .create().also { showVoiceDialog(activity, it) }
+                .create()
+                .also { showVoiceDialog(activity, it) }
     }
 
     fun cancel() {

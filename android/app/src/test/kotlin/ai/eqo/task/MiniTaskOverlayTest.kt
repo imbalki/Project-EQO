@@ -95,6 +95,39 @@ class MiniTaskOverlayTest {
         assertNull(HandleWindowGuard.shared.compactBounds)
     }
 
+    @Test fun `obscured approval down move or up never starts a run`() = runTest {
+        for (obscuredAction in listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP)) {
+            val panel = open()
+            draft(panel).setText("synthetic request")
+            button(panel, R.string.mini_plan).performClick()
+            runCurrent()
+            val approve = button(panel, R.string.task_approval_approve)
+            val wrapper = approve.parent as ViewGroup
+            wrapper.measure(
+                View.MeasureSpec.makeMeasureSpec(400, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(100, View.MeasureSpec.EXACTLY),
+            )
+            wrapper.layout(0, 0, 400, 100)
+            for (action in listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP)) {
+                val event = MotionEvent.obtain(
+                    0L, 10L, action, 1,
+                    arrayOf(MotionEvent.PointerProperties().apply { id = 0 }),
+                    arrayOf(MotionEvent.PointerCoords().apply { x = 20f; y = 20f }),
+                    0, 0, 1f, 1f, 0, 0, android.view.InputDevice.SOURCE_TOUCHSCREEN,
+                    if (action == obscuredAction) MotionEvent.FLAG_WINDOW_IS_OBSCURED else 0,
+                )
+                wrapper.dispatchTouchEvent(event)
+                event.recycle()
+            }
+            shadowOf(Looper.getMainLooper()).idle()
+            advanceTimeBy(400)
+            runCurrent()
+            assertEquals(0, started)
+            assertTrue(approve.isEnabled)
+            panel.close()
+        }
+    }
+
     @Test fun `edit cancel and close invalidate late plans and approvals`() = runTest {
         val waiting = CompletableDeferred<ApprovedTaskPlan>()
         val panel = open { waiting.await() }
@@ -121,6 +154,37 @@ class MiniTaskOverlayTest {
         advanceTimeBy(400)
         runCurrent()
         assertEquals(0, started)
+    }
+
+    @Test fun `Pause before delayed start cancels without adding a resume path`() = runTest {
+        val panel = open()
+        draft(panel).setText("request")
+        button(panel, R.string.mini_plan).performClick()
+        runCurrent()
+        button(panel, R.string.task_approval_approve).performClick()
+        runCurrent()
+        button(panel, R.string.task_pause).performClick()
+        advanceTimeBy(400)
+        runCurrent()
+        assertEquals(0, started)
+        assertNull(TaskRunSession.pending)
+        assertFalse(button(panel, R.string.task_approval_approve).isEnabled)
+    }
+
+    @Test fun `Stop clears an approved plan queued for the foreground service`() = runTest {
+        TaskRunSession.pending = plan
+        val panel = open()
+        button(panel, R.string.task_stop).performClick()
+        runCurrent()
+        assertNull(TaskRunSession.pending)
+        assertEquals(0, started)
+    }
+
+    @Test fun `close tolerates a window already removed by Android`() = runTest {
+        val panel = open()
+        service.getSystemService(WindowManager::class.java).removeViewImmediate(field(panel, "root") as View)
+        panel.close()
+        assertNull(HandleWindowGuard.shared.compactBounds)
     }
 
     @Test fun `collapsed panel retains live status and drag changes window position`() = runTest {
@@ -210,6 +274,65 @@ class MiniTaskOverlayTest {
         assertEquals("STOPPED", run.await().terminal)
         assertFalse(detector.isPaused)
         assertTrue((field(panel, "root") as View).isAttachedToWindow)
+    }
+
+    @Test fun `compact microphone reuses phone speech and fills only the draft`() = runTest {
+        val info = android.content.pm.ServiceInfo().apply {
+            packageName = "test.speech"
+            name = "test.speech.RecognitionService"
+        }
+        shadowOf(service.packageManager).addResolveInfoForIntent(
+            android.content.Intent(android.speech.RecognitionService.SERVICE_INTERFACE),
+            android.content.pm.ResolveInfo().apply { serviceInfo = info },
+        )
+        shadowOf(service.application).grantPermissions(android.Manifest.permission.RECORD_AUDIO)
+        val panel = open()
+        (field(panel, "root") as View).findViewById<Button>(R.id.task_voice_button).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        val recognizer = shadowOf(org.robolectric.shadows.ShadowSpeechRecognizer.getLatestSpeechRecognizer())
+        recognizer.triggerOnResults(android.os.Bundle().apply {
+            putStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION, arrayListOf("Synthetic request"))
+        })
+        runCurrent()
+        assertEquals("Synthetic request", draft(panel).text.toString())
+        assertFalse(button(panel, R.string.task_approval_approve).isEnabled)
+        assertEquals(0, started)
+        panel.close()
+        assertTrue(recognizer.isDestroyed)
+    }
+
+    @Test fun `idle refresh never overrides an unavailable or processing voice button`() = runTest {
+        val panel = open()
+        runCurrent()
+        val mic = (field(panel, "root") as View).findViewById<Button>(R.id.task_voice_button)
+        mic.isEnabled = false
+        advanceTimeBy(300)
+        runCurrent()
+        assertFalse(mic.isEnabled)
+    }
+
+    @Test fun `live step and final result update without opening an activity`() = runTest {
+        TaskRunSession.pending = plan
+        TaskRunSession.status = PlanStatus.RUNNING
+        TaskRunSession.progress["step"] = ai.eqo.study.StepProgress(
+            "step", "OPEN_APP", ai.eqo.study.StepProgressState.RUNNING,
+        )
+        val panel = open()
+        runCurrent()
+        val status = field(panel, "status") as android.widget.TextView
+        assertTrue(status.text.toString().contains("open app"))
+        TaskRunSession.pending = null
+        TaskRunSession.progress.clear()
+        TaskRunSession.receipt = ai.eqo.study.RunReceipt(
+            listOf(ai.eqo.study.StepProgress("step", "WAIT", ai.eqo.study.StepProgressState.DONE,
+                detail = "Synthetic result")),
+            "COMPLETED",
+        )
+        advanceTimeBy(300)
+        runCurrent()
+        assertTrue(status.text.toString().contains(service.getString(R.string.task_completed)))
+        assertTrue(status.text.toString().contains("Synthetic result"))
+        assertNull(shadowOf(service).nextStartedActivity)
     }
 
     @Test fun `transient microphone activity requests only access and finishes without starting work`() {
