@@ -105,6 +105,7 @@ class AndroidActionRegistry internal constructor(
     }
 
     /** Lookup is local and happens before approval. The approved snapshot contains the literal destination. */
+    @Suppress("CyclomaticComplexMethod")
     suspend fun prepareRecipients(steps: List<LoopStep>): RecipientPlan {
         val names = mutableMapOf<String, String>()
         // Process-only, per-plan cache: a later share uses the very same approved destination.
@@ -113,8 +114,12 @@ class AndroidActionRegistry internal constructor(
             steps.map { step ->
                 val name = step.action.name
                 if (name !in CONTACT_ACTIONS && name !in SHARE_ACTIONS) return@map step
-                val email = name == "SEND_EMAIL" ||
-                    name in SHARE_ACTIONS && step.action.params["via"]?.trim()?.lowercase() == "email"
+                val email =
+                    name == "SEND_EMAIL" ||
+                        name in SHARE_ACTIONS &&
+                        step.action.params["via"]
+                            ?.trim()
+                            ?.lowercase() == "email"
                 val key = if (name == "SEND_EMAIL" || name in SHARE_ACTIONS) "to" else "contact"
                 val input =
                     step.action.params[key]
@@ -265,10 +270,12 @@ class AndroidActionRegistry internal constructor(
             if (name == "SHARE_LOCATION") {
                 add(locationPermission)
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                    add(ActionPermission.Runtime(
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        "Allow approximate location alongside precise location for sharing.",
-                    ))
+                    add(
+                        ActionPermission.Runtime(
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            "Allow approximate location alongside precise location for sharing.",
+                        ),
+                    )
                 }
             }
         }

@@ -44,10 +44,11 @@ class ContactRecipientsTest {
     @Test fun emailSharingRejectsSeveralRecipientsBeforeCachedDestinationReuse() =
         runTest {
             val input = "first@example.test, second@example.test"
-            val steps = listOf(
-                emailStep(input),
-                LoopStep("location", ExecutedAction("SHARE_LOCATION", mapOf("to" to input, "via" to "email"))),
-            )
+            val steps =
+                listOf(
+                    emailStep(input),
+                    LoopStep("location", ExecutedAction("SHARE_LOCATION", mapOf("to" to input, "via" to "email"))),
+                )
             try {
                 registry().prepareRecipients(steps)
                 throw AssertionError("Sharing must not approve an unusable multi-recipient destination")
