@@ -307,9 +307,17 @@ class ContactRecipientsTest {
             assertTrue(preview.contains("Alice Example"))
             assertTrue(preview.contains(PHONE))
             assertTrue(preview.contains(EMAIL))
-            assertEquals(ACTIONS.size, lookups)
+            // Per-plan caching replaces five per-action lookups with one phone and one email lookup.
+            // The approved literal destinations, not repeated Contacts reads, are the safety guarantee.
+            assertEquals(2, lookups)
+            approved.steps().forEach { step ->
+                val email = step.action.name == "SEND_EMAIL"
+                assertEquals(if (email) EMAIL else PHONE, step.action.params[if (email) "to" else "contact"])
+                assertEquals("Alice Example", prepared.names[step.stepId])
+            }
             assertNull(shadowOf(context).nextStartedActivity)
             resolution = ContactResolution.Found(Contact("Alice Raj", "+15557654321"))
+            allowed = false
             registry.execute(
                 "SEND_WHATSAPP",
                 approved
@@ -318,7 +326,7 @@ class ContactRecipientsTest {
                     .action.params,
             )
             assertTrue(shadowOf(context).nextStartedActivity.dataString!!.contains("phone=$PHONE&"))
-            assertEquals(ACTIONS.size, lookups)
+            assertEquals(2, lookups)
             assertTrue(approved.matches(prepared.steps))
             assertNoContactLogs()
         }

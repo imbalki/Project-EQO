@@ -2,6 +2,25 @@
 
 ## Location fix — `t_9fd2d126` — NOT TESTED ON PHONE
 
+CI review rework (2026-10-10; lead-reported ContactRecipientsTest failure):
+- Source inspection identifies stale `ACTIONS.size` (five) lookup assertions: per-plan
+  preparation deliberately reuses Alice's phone for four actions, with a separate email
+  resolution, totaling two. Both assertions now require exactly two. Removing that cache
+  would reintroduce potential text/location recipient drift during preparation.
+- Safety assertions are retained/strengthened: every approved literal and display label
+  is checked, the WhatsApp launch still must target the original approved phone, and no
+  execution lookup occurs after changing the fake contact and denying Contacts permission.
+  Production code and approval/takeover guards are unchanged. No new Kotlin file.
+- PASS: `bash scripts/check.sh` (489 Kotlin files/provenance rows), `git diff --check`,
+  added Kotlin lines <=120. No raw logs committed.
+- NOT RUN: `:actions-android:testDebugUnitTest --tests '*ContactRecipientsTest*'`, full
+  `:actions-android:testDebugUnitTest`, app/actions `ktlintFormat`, `ktlintCheck`, `detekt`
+  and `lintDebug`. First host probe found two sibling wrappers; after three minutes and
+  on the final probe, three were active. Skipped Gradle under the lead's busy-host policy;
+  no sibling processes touched. Failure was not locally reproduced; changed test not run.
+- NOT RUN: app tests, root/all-module gates, APK/release, instrumentation, phone or CI.
+  CI/free-host execution remains required before acceptance; same-card review requested.
+
 Lead approved check-only mid-run refusal, not a permission-dialog takeover exemption.
 Android verification remains unverified; lead permits review with the busy-host caveat.
 No phone was contacted; no real location or recipient

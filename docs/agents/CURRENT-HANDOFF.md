@@ -2,6 +2,18 @@
 
 ## Location permission/retry fix (`t_9fd2d126`, local `fix-location`)
 
+- CI review rework: the immutable-recipient test still expected five per-action lookups.
+  The intentional per-plan cache does two (one phone, one email), freezing one destination
+  across phone-channel steps and location. Both count assertions now expect exactly two;
+  literal destination/label checks cover all five approved steps. WhatsApp execution still
+  checks the original destination and no extra lookup, now with Contacts denied and the
+  fake resolver changed to a different destination. No production cache/approval guard was weakened.
+- This rework passes repo/provenance, diff whitespace and added-Kotlin line-length checks.
+  Android verification is still NOT RUN: two sibling wrappers on the first probe, three
+  after a three-minute wait and on the final probe. Gradle skipped under lead policy;
+  focused ContactRecipientsTest, full actions tests and app/actions static/lint gates
+  must still run on CI/free host. NOT TESTED ON PHONE; local-only review handoff.
+
 - Lead decision supersedes mid-run waiting: ADR-0008 stands. Preflight obtains all
   planned runtime access; the active service checks only, never opens permission UI.
 - Share recipients now join pre-approval recipient preparation. Repeated names reuse
