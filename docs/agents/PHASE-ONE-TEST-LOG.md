@@ -362,3 +362,16 @@ Capture note: the live log capture was not running between 12:36 and 19:07; repo
 | Panel: Ask EQO | FAIL: opens the practice-run (sample task) screen. | Wrong target screen. | Card t_e84b3eaa (comment added): open the real task screen with the request box focused. |
 | Panel: Hide for this app | PARTIAL: hid the handle for EQO itself, no way to bring it back; handle then not seen on EQO screens although enabled. | No "hidden apps" list. | Card t_e84b3eaa (comment added): Hidden apps list with Unhide; never hide inside EQO's own settings. |
 | Panel: Pause / Stop | Not yet tested. | n/a | n/a |
+
+### Round 3 on main 9716dbd (2026-10-10, 08:55-09:05, first test round of the combined build)
+
+Capture running (`EqoRun`, `EqoActions`, `EqoExplain`). Results are the owner's account plus the log lines noted.
+
+| Test | Result | Evidence / cause | Fix |
+|---|---|---|---|
+| Setup hub, Edge handle switch | PASS: switch present; the handle was already enabled from earlier; off and on both worked. | n/a | n/a |
+| Handle > Ask EQO (from Gmail) | PASS: opens the real task screen with the request box ready. | n/a | Redesign wanted: a compact in-place panel. |
+| Handle > Explain screen | PARTIAL. Works and reopens (log: `entry source=edge_handle`, `opened`, `explain: text, ok`, `closed`, twice). But the answer shows raw markdown symbols (`##`, `**`), reads like the page text, and Read aloud speaks the symbols and cannot be paused or stopped. | Model answer is not rendered or stripped for speech; no stop control on the speech. | Card: render markdown, strip for TTS, Pause/Stop, plainer short explanation. |
+| Handle disappears briefly | BUG: after closing the panel the handle was not drawn until the owner switched to another app and came back. | Handle is not redrawn after the panel closes. | Same card. |
+| Handle: Ask EQO vs Open EQO | UX: two near-identical entries. | Ask EQO goes to the full task screen, Open EQO to the main screen. | Same card: Ask EQO becomes a compact in-place panel; Open EQO stays as "Full EQO" plus a "Back to previous app" option. |
+| Task from Gmail: "reply to this mail" | UNCLEAR to the owner ("nothing happened"). Log 09:01: `OPEN_APP`, `GET_SCREEN_TEXT`, tap `reply_button`, `TYPE_TEXT` (two NodeNotFound retries, then success), tap `send`, `COMPLETED`. | The run did type and press Send; the owner saw no result (the run screen is behind the app, with no visible progress). | Same card: live progress inside the compact panel. Owner to check Gmail's Sent folder. |
