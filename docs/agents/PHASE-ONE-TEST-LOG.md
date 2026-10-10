@@ -555,3 +555,78 @@ NOT TESTED ON PHONE. Local-only branch `feat/one-step-pairing`; lead/owner owns 
 - Repo checks: `bash scripts/check.sh`, exit **0**, real output `kt files: 425; provenance rows: 425`, `BRANDING GATE PASSED`, `OK`. `git diff --check` exits 0. The source guard now permits only the activity and its isolated notification service to construct the pinned runner; it also rejects helper hooks or activation completion in the notification service.
 - Verification caveats: the initial build retried a failing Kotlin daemon; using in-process compilation avoided it without changing project configuration. The first full gate hit a timeout in the untouched `AutomationExecutorsTest` macro delete/list case in `actions-android`; one full-gate retry passed all 95 tests in that module without edits. Phone tests and Android device instrumentation were **not run**. Notification permission/channel denial, real mDNS visibility and OEM Settings behavior still need lead/owner confirmation.
 - Required phone checks: Android 11 and 13+ local mDNS announcements, reply with leading-zero code while the pairing dialog remains open, success followed by human helper authorization, wrong/expired code, revocation/key mismatch, notification permission denied/channel blocked, wireless debugging off, ten-second discovery timeout with manual ports, service lost/new dialog, Wi-Fi disconnected/switched, screen rotation and five-minute discovery expiry. No real codes, ports or device identifiers belong in this log.
+
+## Phone round 1 on main 92802e7 (2026-10-09, Realme RM10, Android 11, local debug build, accessibility on)
+
+Capture: `adb logcat -s EqoRun EqoActions` into `eqorun-live.log` (started 09:15, before the tests). Times are IST. Owner ran the tests by typing requests; contact names and numbers are masked here.
+
+| Time | Test | Result (owner report + log) | Cause found | Fix |
+|---|---|---|---|---|
+| 09:30-09:48 | 1. "add a note called Test in Keep" | FAIL: nothing typed in Keep. Log: `ASK_USER NeedsInput` (09:30), `ADD_NOTE Failure` (09:32, 09:48), planner repair "ADD_NOTE: missing content". | The planner picked `ADD_NOTE`, which is EQO's own internal memory note (`ProductivityMemoryActions.addNote`), not Google Keep, and it fails when only a title is given. | Planner hint: when the user names an app (Keep), plan open_app + type steps; `ADD_NOTE` only for "remember this" notes. |
+| 09:50-09:51 | 2. Zepto search | PASS for search (OPEN_APP, WAIT, TYPE_TEXT after tap, PRESS_ENTER, COMPLETED). "Add item" FAIL: plan stopped after the search. | The plan was made before the results screen was visible; nothing plans the Add tap. | Needs re-plan on the new screen (planned) and/or vision locate. |
+| 09:52-09:57 | 3. "what is 238 times 8" | PARTIAL: right answer, but via a Google search and not the Calculator app; owner saw a notice. Log: `CALCULATE UserActionRequired` then OPEN_URL + GET_SCREEN_TEXT. | `CALCULATE` could not parse the words "times" and fell back to a web search. | Normalise words (times, plus, minus, divided by) before evaluating; prefer the built-in result. |
+| (earlier) | 4. "open Flipkart" | PASS: not-installed notice, Chrome opened. | n/a | n/a |
+| 10:00, 10:05, 10:23 | 5/6. WhatsApp message to a saved contact | PASS for sending (`SEND_WHATSAPP Success`). FAIL on intent: when the request said only to type the message, EQO still pressed Send; a plain "message" defaulted to WhatsApp. | `SEND_WHATSAPP` always presses Send; no type-only route; no default channel rule. | Add a draft-only WhatsApp route and planner rule: "type"/"draft"/"don't send" never presses Send; ask once which channel for a bare "message". |
+| 10:03, 10:24 | SMS to a saved contact | PASS as designed: text window opened with the right message (`SEND_SMS UserActionRequired` = draft, user sends). | n/a | n/a |
+| 10:08 | 7. Phone call to the test number | PASS: `MAKE_CALL Success`, permissions granted. | n/a | n/a |
+| 10:08-10:09 | 8. WhatsApp voice call (3 attempts) | Log shows `WHATSAPP_CALL Success` x3. Owner has not yet confirmed what rang. | n/a | Owner to confirm. |
+| 10:19 | 9. Email draft, one recipient | PASS (`SEND_EMAIL Success`). | n/a | n/a |
+| (10:2x) | Email with a second recipient | FAIL: "no matching contact usable number or email was found". | Multiple recipients in one `to` are looked up as a single name. | Split recipients on comma / "and" / ";", accept typed addresses without a contact lookup. |
+| 10:28-10:33 | 10/11. Share contact by WhatsApp | FIRST TRY showed "Needs you" (`SHARE_CONTACT UserActionRequired`, then two `ASK_USER NeedsInput`); SECOND TRY (rephrased) PASS (`SHARE_CONTACT Success`, text typed into the right chat). | First try needed the Contacts permission tap; the screen only said "Needs you". | Say what is needed ("Tap Allow for Contacts"), and don't ask the model to ask the user when a contact is clear. |
+
+Not yet tested in round 1: 12 share location, 13-16 files and screenshots, 17 voice, 18-19 pairing, 20 controls.
+
+### Round 1, second batch (2026-10-09, 10:38 onwards, same build 92802e7)
+
+| Time | Test | Result (owner report + log) | Cause found | Fix |
+|---|---|---|---|---|
+| 10:38 (x2) | 12. Share location by WhatsApp | FAIL. Permission dialog appeared, then the run closed; the second try said it could not finish. Log attempt 1: `SHARE_LOCATION` requested READ_CONTACTS and ACCESS_FINE_LOCATION, then `takeover=USER_TAKEOVER`, status PAUSED, FAILED. Attempt 2: `Interrupted apply_interrupted_effect_unknown` exactly 5 s after start. | The owner's tap on the system permission dialog was counted as a takeover; the permission wait times out after about 5 s; READ_CONTACTS was requested although a typed number needs no lookup. Location permission was granted "only this time" (appops/dumpsys: ONE_TIME). | Card t_7a91b291 item 1. |
+| 11:38-11:41 (x3) | 16. Screenshot | FAIL: `TAKE_SCREENSHOT Failure`, instantly, no reason shown. | `MANAGE_EXTERNAL_STORAGE` (All files access) not granted on the phone (`appops get`: no operations, default mode); possibly also a missing accessibility screenshot flag (to be checked). The failure carries no plain reason. | Card item 2. |
+| 11:39 | 14. Find a file in Downloads | FAIL: `FIND_FILES Failure`, instantly. | Same: All files access not granted. | Card item 2. |
+| 11:44-11:46 | file and WhatsApp-the-file requests | Planner returned an invalid structure once (repair attempted), then a network error with automatic retry. | Planner output shape for the new attachment parameters; transient network. | Watch; no fix yet. |
+| ~11:30 | 18. Wireless pairing screen | FAIL: no EQO Allow prompt; the screen kept saying EQO is searching for the port, with no end. | Not yet known. The manual-port fallback is meant to appear after 10 s and did not (or was not noticed). The device log buffer holds no pairing lines. Needs a controlled run with the pairing dialog open. | To be diagnosed with the owner at the phone. |
+| ~11:45 | 17. Voice input | PARTIAL: works some of the time. Owner asks for a separate (non-device) speech model, e.g. through OpenRouter. | Details of "partial" not yet captured (which phrases or languages). Android's built-in recogniser quality varies by language and phone. | To be investigated; OpenRouter audio input is an option. |
+
+### Round 1, third batch (2026-10-09, 12:16 onwards; All files access switched on at ~12:28)
+
+| Time | Test | Result (owner report + log) | Cause found | Fix |
+|---|---|---|---|---|
+| 12:16-12:22 | Find file / screenshot, All files access OFF | FAIL (`FIND_FILES Failure`, `TAKE_SCREENSHOT Failure`, instantly). | Permission not granted (the special-access page is not in the normal Permissions list). | Card t_7a91b291 item 2 (plain message + opens the page). |
+| 12:23 | Open the Files app, then the eBay bill | First attempt `CLICK_TEXT NodeNotFound` x17, FAILED. A later attempt (12:32) PASSED: OPEN_APP, WAIT, FIND_FILES Success, CLICK_TEXT accepted, COMPLETED. Owner: "executed it correctly". | First attempt tapped a label that was not on screen. | Watch. |
+| 12:28-12:31 | Attach a file to email / WhatsApp, All files access ON | FAIL: `FIND_FILES Success` then `SEND_EMAIL Failure` (12:28), `SEND_WHATSAPP Failure` (12:30, 12:31). Owner: asked for the 7 October screenshot to a friend by WhatsApp, "couldn't do that". | Design flaw: the planner must write a literal file path before the run, and cannot know the path FIND_FILES will find; `AttachmentSpec` accepts only a path or `last_screenshot`. So "send the <file>" can never work as built. | Card t_ecfe91de: `find:` references resolved at run time (name, type, date), chooser for several matches. |
+| 12:31 | List/find files | PASS (`FIND_FILES Success`, `LIST_FILES Success`, COMPLETED). | n/a | n/a |
+
+### Round 2 on main 732751e (2026-10-09 evening; Explain screen, edge handle, pairing, voice)
+
+Capture note: the live log capture was not running between 12:36 and 19:07; reports in that window rely on the owner's account only. Capture restarted 19:07, tag `EqoExplain` added at ~20:00.
+
+| Time | Test | Result (owner report + device evidence) | Cause found | Fix |
+|---|---|---|---|---|
+| ~19:40 | Wireless pairing, Find ports, pair box open | FAIL: screen stayed on "searching/not paired"; no notification; split screen not working on this phone. | Device log: `NsdManager.discoverServices` works and reports both services (pairing service appears when the pair box opens), but every `resolveService` fails with `NsdService: id N for SERVICE_RESOLVED has no client mapping` (Realme/ColorOS Android 11), so EQO never receives a port. | Card t_9a512691: self-contained mDNS resolver, one-string fallback `CODE PAIRPORT CONNECTPORT`, debug-only PAIR receiver. My earlier owner steps wrongly omitted "tap Find ports first". |
+| ~20:00 | Explain screen, first use (Calculator) | PASS with issues: opened from the notification action; consent shown; read-aloud PASS; follow-up question PASS. The result sheet covers most of the screen. First read-out was meaningless ("calculator display"). | Sheet is full-width, 40% text area plus controls, opaque; the first answer used thin screen text. | Card t_e84b3eaa: compact translucent panel, see-through button. |
+| ~20:00 | Explain screen, second use | FAIL: could not reopen; notification no longer in the shade; Quick Settings tile never added. | `dumpsys activity services`: only EQOAccessibilityService alive, `ExplainNotificationService` not running although pref `notification=true`; ColorOS stops background foreground services. Tile needs manual add on Android 11 with no in-app guidance. | Card t_e84b3eaa: handle shortcut, accessibility-service re-posts notification, accessibility button, tile guidance, battery row. |
+| ~20:10 | Edge handle | FAIL: no handle visible. | No handle preference exists on the device: the switch (behind a small button on the main screen) was never turned on. `dumpsys window` shows no handle window. | Card t_e84b3eaa: switch in Setup hub, draws immediately, first-time hint. |
+| ~20:10 | Voice v1 | FAIL: listens for under 2 seconds. | Android recogniser default silence timeout. | Card t_e9801e01 (voice v2). |
+
+### Round 2, edge handle after switching it on (2026-10-09, ~21:30, build 732751e)
+
+| Test | Result | Cause / note | Fix |
+|---|---|---|---|
+| Edge handle visible and draggable | PASS: owner saw it and moved it. Preference `handle_enabled=true` confirmed on the device. | The earlier "no handle" was the switch never being turned on: the screen holding it (button "Edge handle shortcuts") is on `MainActivity`, a second launcher entry; the normal EQO icon opens the Setup hub, which has no handle switch. | Card t_e84b3eaa: switch in Setup hub. |
+| Panel: Open EQO | PASS (goes to the main screen). | n/a | n/a |
+| Panel: Ask EQO | FAIL: opens the practice-run (sample task) screen. | Wrong target screen. | Card t_e84b3eaa (comment added): open the real task screen with the request box focused. |
+| Panel: Hide for this app | PARTIAL: hid the handle for EQO itself, no way to bring it back; handle then not seen on EQO screens although enabled. | No "hidden apps" list. | Card t_e84b3eaa (comment added): Hidden apps list with Unhide; never hide inside EQO's own settings. |
+| Panel: Pause / Stop | Not yet tested. | n/a | n/a |
+
+### Round 3 on main 9716dbd (2026-10-10, 08:55-09:05, first test round of the combined build)
+
+Capture running (`EqoRun`, `EqoActions`, `EqoExplain`). Results are the owner's account plus the log lines noted.
+
+| Test | Result | Evidence / cause | Fix |
+|---|---|---|---|
+| Setup hub, Edge handle switch | PASS: switch present; the handle was already enabled from earlier; off and on both worked. | n/a | n/a |
+| Handle > Ask EQO (from Gmail) | PASS: opens the real task screen with the request box ready. | n/a | Redesign wanted: a compact in-place panel. |
+| Handle > Explain screen | PARTIAL. Works and reopens (log: `entry source=edge_handle`, `opened`, `explain: text, ok`, `closed`, twice). But the answer shows raw markdown symbols (`##`, `**`), reads like the page text, and Read aloud speaks the symbols and cannot be paused or stopped. | Model answer is not rendered or stripped for speech; no stop control on the speech. | Card: render markdown, strip for TTS, Pause/Stop, plainer short explanation. |
+| Handle disappears briefly | BUG: after closing the panel the handle was not drawn until the owner switched to another app and came back. | Handle is not redrawn after the panel closes. | Same card. |
+| Handle: Ask EQO vs Open EQO | UX: two near-identical entries. | Ask EQO goes to the full task screen, Open EQO to the main screen. | Same card: Ask EQO becomes a compact in-place panel; Open EQO stays as "Full EQO" plus a "Back to previous app" option. |
+| Task from Gmail: "reply to this mail" | UNCLEAR to the owner ("nothing happened"). Log 09:01: `OPEN_APP`, `GET_SCREEN_TEXT`, tap `reply_button`, `TYPE_TEXT` (two NodeNotFound retries, then success), tap `send`, `COMPLETED`. | The run did type and press Send; the owner saw no result (the run screen is behind the app, with no visible progress). | Same card: live progress inside the compact panel. Owner to check Gmail's Sent folder. |
