@@ -75,7 +75,7 @@ class RegistryPlannerTest {
 
     @Test fun notesEditingExceptionCannotHideAnOutwardActionOrUnknownTap() =
         runTest {
-            val note = "write a note called Test in Keep"
+            val note = "add a note called Test in Keep"
             for (target in listOf("Send", "Share", "Publish", "Submit", "Example recipient", "New note and Send")) {
                 val output = """{"steps":[{"action":"CLICK_TEXT","params":{"text":"$target"}}]}"""
                 try {
@@ -99,6 +99,38 @@ class RegistryPlannerTest {
                 try {
                     TaskPlanner(Fake(listOf(output)), enabled).plan(request)
                     error("Explicit communication draft must not allow taps")
+                } catch (_: IllegalArgumentException) {
+                }
+            }
+        }
+
+    @Test fun keepPlanUsesEntryAlternativesTitleBodyAndBackWithoutWeakeningDraftGuard() =
+        runTest {
+            val output =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
+                    """{"action":"WAIT","params":{"durationMs":"3000"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Take a note,New text note"}},""" +
+                    """{"action":"TYPE_TEXT","params":{"searchText":"Title","content":"Test"}},""" +
+                    """{"action":"TYPE_TEXT","params":{"searchText":"Note","content":"Example body"}},""" +
+                    """{"action":"PRESS_BACK","params":{}}]}"""
+            val actions = enabled + setOf("WAIT", "PRESS_BACK")
+            val fake = Fake(listOf(output))
+            val steps = TaskPlanner(fake, actions).plan("write a note called Test in Keep with body Example body")
+            assertEquals(6, steps.size)
+            assertEquals("PRESS_BACK", steps.last().action.name)
+            assertEquals("Test", steps[3].action.params["content"])
+            assertEquals("Example body", steps[4].action.params["content"])
+            assertTrue(ApprovedTaskPlan(steps).matches(steps))
+            val prompt = fake.requests.single().systemPrompt
+            AppControlHints.byPackage.keys.forEach { assertTrue(prompt.contains(it)) }
+            assertTrue(prompt.contains("Take a note,New text note"))
+            assertTrue(prompt.contains("PRESS_BACK to autosave"))
+            assertTrue(prompt.contains("omit body typing"))
+            for (unsafe in listOf("Take a note,Send", "Take a note,", "New text note,Share")) {
+                try {
+                    TaskPlanner(Fake(listOf(output.replace("Take a note,New text note", unsafe))), actions)
+                        .plan("write a note in Keep")
+                    error("Unsafe alternative must be rejected")
                 } catch (_: IllegalArgumentException) {
                 }
             }

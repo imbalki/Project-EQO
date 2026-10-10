@@ -14,6 +14,7 @@ internal object RunDiagnostics {
             "a11y_no_active_root",
             "a11y_no_scrollable_node",
             "a11y_node_not_found",
+            "control_not_found",
             "a11y_action_rejected",
             "a11y_empty_observation",
             "study_action_not_applied",
@@ -41,6 +42,7 @@ internal object RunDiagnostics {
                 reason.contains("accessibility in Settings", ignoreCase = true) -> "accessibility_off"
             reason.contains("screenshot", ignoreCase = true) -> "no_screenshot_permission"
             reason.contains("empty", ignoreCase = true) -> "empty"
+            reason == "control_not_found" -> "control_not_found"
             reason.contains("not found", ignoreCase = true) -> "not_found"
             result is ExecuteResult.Failure -> "execution_failed"
             else -> "none"

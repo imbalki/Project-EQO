@@ -38,6 +38,7 @@ object RegistryPlanVocabulary {
             appendLine("ASK_USER once for the channel, not for an unambiguous contact.")
             appendLine("Do not ASK_USER for an unambiguous contact: EQO resolves saved names locally.")
             appendLine("For Keep, Google Keep, Notes or another named notes app, use OPEN_APP and tap/type there.")
+            append(AppControlHints.prompt())
             appendLine("ADD_NOTE is only EQO internal memory for 'remember this', never a note in another app.")
             appendLine("For type/write/draft/don't send/only type on WhatsApp use SEND_WHATSAPP draftOnly=true.")
             appendLine("Never add Send taps, Enter or any send action to a draft-only request; the user presses Send.")

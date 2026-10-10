@@ -276,6 +276,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="run_permission_missing">EQO needs %1$s permission. Allow it in Android Settings > Apps > EQO > Permissions, then try again. This step did not run.</string>
     <string name="run_permission_explanation">%1$s Android access was not allowed. Allow it, then try again. This step did not run.</string>
     <string name="run_app_missing">%1$s is not installed. Install or enable it, then try again.</string>
+    <string name="run_control_not_found">EQO could not find the planned control. Open the right screen or finish this step yourself. Stop and approve a new plan to try again.</string>
     <string name="run_target_missing">EQO could not find “%1$s”. Open the right screen, or tell EQO the button or field label to look for.</string>
     <string name="run_action_rejected">The app did not accept the tap or text entry. Check the current screen, then try again.</string>
     <string name="run_failed_unknown">This step could not finish. EQO did not receive a specific reason. Check the current screen before trying again.</string>

@@ -1454,8 +1454,9 @@ object ActionSchema {
             ),
             ActionDefinition(
                 name = "CLICK_TEXT",
-                description = "Clicks on screen element by visible text",
-                params = listOf(ParamDefinition("text", ParamType.STRING, true, "Text to click on")),
+                description = "Clicks by ordered comma-separated text, content-description or view-id alternatives",
+                params =
+                    listOf(ParamDefinition("text", ParamType.STRING, true, "Ordered labels, comma-separated")),
                 examples = listOf("click on Settings"),
                 category = ActionCategory.ADVANCED,
             ),
@@ -1511,6 +1512,13 @@ object ActionSchema {
                         ParamDefinition("y", ParamType.STRING, true, "Y coordinate"),
                     ),
                 examples = listOf("click at position"),
+                category = ActionCategory.ADVANCED,
+            ),
+            ActionDefinition(
+                name = "PRESS_BACK",
+                description = "Presses Android Back in the active app; Keep notes autosave on Back",
+                params = emptyList(),
+                examples = listOf("go back", "finish a Keep note"),
                 category = ActionCategory.ADVANCED,
             ),
             ActionDefinition(

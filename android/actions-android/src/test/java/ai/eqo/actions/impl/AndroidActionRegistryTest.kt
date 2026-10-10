@@ -60,6 +60,27 @@ class AndroidActionRegistryTest {
             )
     }
 
+    @Test fun missingTapHasFixedReasonButOtherSafetyFailuresArePreserved() {
+        val missing =
+            ai.eqo.accessibility.A11yResult
+                .failure(
+                    ai.eqo.accessibility.A11yError
+                        .NodeNotFound("synthetic"),
+                )
+        assertEquals("control_not_found", missing.toControlResult().error)
+        listOf(
+            ai.eqo.accessibility.A11yError.AccessibilityDisabled,
+            ai.eqo.accessibility.A11yError.TakeoverDetected,
+            ai.eqo.accessibility.A11yError
+                .ActionRejected("synthetic"),
+        ).forEach { error ->
+            val failure =
+                ai.eqo.accessibility.A11yResult
+                    .failure(error)
+            assertEquals(failure.toActionResult().error, failure.toControlResult().error)
+        }
+    }
+
     private fun resolve(intent: Intent) {
         val info =
             ResolveInfo().apply {
@@ -78,7 +99,7 @@ class AndroidActionRegistryTest {
 
     @Test
     fun `enabled action names exist in the single schema and executor classes are internal`() {
-        assertEquals(98, registry.enabledActionNames.size)
+        assertEquals(99, registry.enabledActionNames.size)
         registry.enabledActionNames.forEach { assertNotNull(ActionSchema.getAction(it)) }
         // Public surface never exposes Action objects, constructors or family lists.
         assertFalse(AndroidActionRegistry::class.java.methods.any { it.returnType == Action::class.java })
@@ -228,6 +249,7 @@ class AndroidActionRegistryTest {
                 "TYPE_ID" to mapOf("viewId" to "test:id/input", "content" to "hello"),
                 "TYPE_TEXT" to mapOf("searchText" to "Search", "content" to "hello"),
                 "PRESS_ENTER" to emptyMap(),
+                "PRESS_BACK" to emptyMap(),
                 "SCROLL" to mapOf("direction" to "forward"),
                 "GET_SCREEN_TEXT" to emptyMap(),
             )) {

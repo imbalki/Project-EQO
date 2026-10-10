@@ -24,7 +24,8 @@ internal object RunStatusMapping {
         val draft =
             progress.state == StepProgressState.DONE &&
                 progress.name.lowercase() in setOf("compose_sms", "compose_email")
-        val needsYou = draft || (handoff != null && progress.state == StepProgressState.FAILED)
+        val missingControl = progress.state == StepProgressState.FAILED && progress.detail == "control_not_found"
+        val needsYou = draft || missingControl || (handoff != null && progress.state == StepProgressState.FAILED)
         val params = step?.action?.params.orEmpty()
         return progress.copy(
             state = if (needsYou) StepProgressState.NEEDS_YOU else progress.state,
@@ -97,7 +98,9 @@ internal object RunStatusMapping {
     }
 
     private fun handoff(step: StepProgress): Text =
-        if (!step.detail.contains("draft opened", ignoreCase = true)) {
+        if (step.detail == "control_not_found") {
+            Text(R.string.run_control_not_found)
+        } else if (!step.detail.contains("draft opened", ignoreCase = true)) {
             Text(R.string.run_user_action, TaskDisplayText.escape(step.detail))
         } else {
             when (step.name.lowercase()) {

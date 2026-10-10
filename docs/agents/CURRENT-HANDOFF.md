@@ -4,6 +4,39 @@ Last updated: 2026-10-10 (round-1 accepted permission preflight implemented; awa
 
 Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every merge to `main`.
 
+## Keep and app-specific taps — t_2f7fbd22 — NOT TESTED ON PHONE
+
+- Local-only `fix-keep`, based on `9716dbd`. No phone, private notes, provider or credentials accessed.
+- Static package-keyed `AppControlHints` feeds the registry planner: Keep's Take a note / New text note entry,
+  Title and Note fields, Back autosave; Gmail, Messages, WhatsApp search, Chrome, Calendar, Contacts,
+  Calculator and Clock controls. These are public guidance, not proof of every app version/language.
+- CLICK_TEXT accepts ordered comma-separated alternatives. Exact text/content-description/ID suffix matches
+  precede partial labels; existing non-input preference and clickable-ancestor handling remain. Accepted or
+  rejected mutations are never followed by a second alternative. Password, own-window and takeover guards remain.
+- CLICK_TEXT/CLICK_ID use four missing-node probes with 700 ms intervals (2.1 seconds waiting, not 17 retries).
+  Exhaustion reports `control_not_found`; run presentation says Needs you with manual/reapproval guidance.
+  Legacy tap_text reports the same fixed reason immediately rather than retrying an irreversible tap.
+- Added the missing registry PRESS_BACK schema/executor through the existing gated Android Back facade;
+  advanced-control risk, registry execution/approval scope and no automatic fallback are retained (99 actions).
+- Named-note plans use open + wait + entry alternatives + title/body typing + Back. Title-only requests must
+  omit body rather than invent it. Note-edit draft validation checks EVERY alternative and allows Back autosave;
+  Send/Share/Publish, arbitrary IDs and communication draft submit routes remain rejected before approval.
+- This base has no enabled vision-locate fallback/settings; no fictitious vision button or automatic upload was
+  added. Explain screen is separate from locate/tap. A vision offer needs integration with a real enabled fallback.
+- Host verification: pending sequential touched-module lint, ktlint, detekt and unit execution; results below
+  will be updated from actual output. Full CI remains lead-owned. No push/PR/gh or phone installation.
+
+Phone checklist (lead/owner, synthetic content only; record build and result):
+- [ ] Keep: “add a note called Test in Keep”; preview has correct entry alternatives, Title and Back, no
+      invented body. With an explicit synthetic body, verify both fields and autosave after Back.
+- [ ] Keep-like variants: text-bar and content-description FAB; missing labels stop promptly with Needs you,
+      no repeated mutation and no next typing step. Explicit new plan/reapproval only after manual correction.
+- [ ] Gmail: Compose and To/Subject/Compose email fields; verify draft vs approved Send behavior.
+- [ ] Calendar: Create/Event entry and title; verify Save only when the approved plan requests it.
+- [ ] Different language/version, delayed launch, Stop/Pause/takeover and own EQO approval window refusal.
+- [ ] When an actual vision-locate fallback lands/enables: offer only after failure, require existing consent,
+      capability and fresh approval; disabled state must never capture/upload or automatically tap.
+
 ## Voice v2 (t_e9801e01, local-only branch `feat/voice-v2`)
 - Phone remains the default: 4/3/5-second speech-intent pause hints, live partials, Stop listening control,
   preserved early-end text and append-on-next-tap. Providers may ignore pause hints; no automatic restarts.

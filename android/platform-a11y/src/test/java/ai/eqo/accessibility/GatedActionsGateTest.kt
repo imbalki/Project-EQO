@@ -65,6 +65,25 @@ class FakeServiceActionOps : ServiceActionOps {
 
 class GatedActionsGateTest {
     @Test
+    fun appEditBackRefusesOwnWindowButNavigatesExternalAppInsideGate() {
+        val ops = FakeServiceActionOps()
+        val detector = TakeoverDetector()
+        var root = FakeNode(packageName = "ai.eqo.app")
+        val automation = EqoAutomation(
+            { root },
+            { EqoAutomation.ServiceState.AVAILABLE },
+            detector,
+            ownPackage = "ai.eqo.app",
+        )
+        val actions = GatedServiceActions(automation, ops)
+        assertFalse(actions.pressBackInApp().isSuccess)
+        assertTrue(ops.calls.isEmpty())
+        root = FakeNode(packageName = "com.google.android.keep")
+        assertTrue(actions.pressBackInApp().isSuccess)
+        assertEquals(listOf("performGlobalBack"), ops.calls)
+    }
+
+    @Test
     fun typedScrollFailureSurvivesTheGatedServiceRoute() {
         val expected = A11yResult.failure(A11yError.ActionRejected("scroll"))
         val ops =

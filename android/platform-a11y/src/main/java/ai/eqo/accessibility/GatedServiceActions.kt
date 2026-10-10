@@ -33,6 +33,16 @@ class GatedServiceActions(
 
     fun pressBack(): A11yResult = globalAction("back") { ops.performGlobalBack() }
 
+    /** App-edit Back must not dismiss EQO's approval/consent windows. */
+    fun pressBackInApp(): A11yResult =
+        automation.runAction {
+            automation.ownWindowBlocked("back") ?: if (ops.performGlobalBack()) {
+                A11yResult.success("back")
+            } else {
+                A11yResult.failure(A11yError.ActionRejected("back"))
+            }
+        }
+
     fun pressHome(): A11yResult = globalAction("home") { ops.performGlobalHome() }
 
     fun scroll(forward: Boolean): A11yResult =

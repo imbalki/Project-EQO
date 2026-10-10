@@ -55,6 +55,66 @@ class EqoAutomationFakeTreeTest {
         val list: FakeNode,
     )
 
+    @Test
+    fun keepEntryAlternativesMatchTextBarAndContentDescriptionFab() {
+        listOf(
+            FakeNode(text = "Take a note", isClickable = true),
+            FakeNode(contentDescription = "New text note", isClickable = true),
+        ).forEach { entry ->
+            assertTrue(automation(FakeNode().child(entry)).tap("Take a note, New text note").isSuccess)
+            assertEquals(1, entry.clickCount)
+        }
+    }
+
+    @Test
+    fun keepTitleAndNoteFieldsAcceptOnlyTheirRequestedContent() {
+        val title = FakeNode(hintText = "Title", isEditable = true)
+        val body = FakeNode(hintText = "Note", isEditable = true)
+        val app = automation(FakeNode().child(title).child(body))
+        assertTrue(app.type("Title", "Test").isSuccess)
+        assertTrue(app.type("Note", "Example body").isSuccess)
+        assertEquals("Test", title.typedValue)
+        assertEquals("Example body", body.typedValue)
+    }
+
+    @Test
+    fun exactAlternativeBeatsEarlierPartialAndUsesDeclaredOrder() {
+        val partial = FakeNode(text = "Take a note later", isClickable = true)
+        val fab = FakeNode(contentDescription = "New text note", isClickable = true)
+        val bar = FakeNode(text = "Take a note", isClickable = true)
+        val root = FakeNode().child(partial).child(fab)
+        assertTrue(automation(root).tap("Take a note,New text note").isSuccess)
+        assertEquals(0, partial.clickCount)
+        assertEquals(1, fab.clickCount)
+        root.child(bar)
+        assertTrue(automation(root).tap("Take a note,New text note").isSuccess)
+        assertEquals(1, bar.clickCount)
+        assertEquals(1, fab.clickCount)
+    }
+
+    @Test
+    fun alternativesMatchIdSuffixAndIgnoreEmptyLabelsAndPasswords() {
+        val secret = FakeNode(text = "Take a note", isPassword = true, isClickable = true)
+        val entry = FakeNode(viewIdResourceName = "com.google.android.keep:id/new_note", isClickable = true)
+        val root = FakeNode().child(secret).child(entry)
+        assertTrue(automation(root).tap(" ,Take a note,new_note, ").isSuccess)
+        assertEquals(0, secret.clickCount)
+        assertEquals(1, entry.clickCount)
+        assertFalse(automation(root).tap(" , , ").isSuccess)
+    }
+
+    @Test
+    fun alternativesFallBackToPartialButNeverTryAnotherControlAfterRejection() {
+        val partial = FakeNode(contentDescription = "Create new text note", isClickable = true)
+        assertTrue(automation(FakeNode().child(partial)).tap("Take a note,New text note").isSuccess)
+        val first = FakeNode(text = "Take a note", isClickable = true).apply { rejectActions = true }
+        val second = FakeNode(contentDescription = "New text note", isClickable = true)
+        val result = automation(FakeNode().child(first).child(second)).tap("Take a note,New text note")
+        assertTrue((result as A11yResult.Failure).error is A11yError.ActionRejected)
+        assertEquals(listOf("click"), first.actions)
+        assertEquals(0, second.clickCount)
+    }
+
     // ── observe ───────────────────────────────────────────────────────────
 
     @Test

@@ -76,7 +76,7 @@ class TaskPlanner(
         steps: List<LoopStep>,
     ): List<LoopStep> {
         val draft = Regex("\\b(type|write|draft)\\b|don['’]?t send|do not send", RegexOption.IGNORE_CASE)
-        if (!draft.containsMatchIn(request)) return steps
+        if (!draft.containsMatchIn(request) && !isNamedNoteEditingRequest(request)) return steps
         return if (isNamedNoteEditingRequest(request)) {
             require(steps.all(::isNoteEditingStep)) { "Note editing cannot include communication or submit steps" }
             steps
@@ -126,13 +126,28 @@ class TaskPlanner(
         return when (step.action.name) {
             "OPEN_APP", "open_app" ->
                 (params["appName"] ?: params["app"]).orEmpty().trim().lowercase() in
-                    setOf("keep", "google keep", "keep notes", "notes", "google keep notes")
+                    setOf("keep", "google keep", "keep notes", "notes", "google keep notes", "com.google.android.keep")
             "CLICK_TEXT", "tap_text" ->
-                params["text"].orEmpty().trim().lowercase() in
-                    setOf("new note", "create note", "take a note", "take a note…", "title", "note", "body")
-            "WAIT", "TYPE_TEXT", "type_text", "paste", "observe" -> true
+                safeNoteTap(params["text"].orEmpty())
+            "WAIT", "TYPE_TEXT", "type_text", "paste", "observe", "PRESS_BACK", "press_back" -> true
             else -> false
         }
+    }
+
+    private fun safeNoteTap(text: String): Boolean {
+        val alternatives = text.split(',').map { it.trim().lowercase() }
+        val allowed =
+            setOf(
+                "new note",
+                "create note",
+                "take a note",
+                "take a note…",
+                "new text note",
+                "title",
+                "note",
+                "body",
+            )
+        return alternatives.isNotEmpty() && alternatives.all { it in allowed }
     }
 
     private suspend fun repair(
