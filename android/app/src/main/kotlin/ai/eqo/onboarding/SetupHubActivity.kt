@@ -25,11 +25,14 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 
 class SetupHubActivity : Activity() {
+    private var voiceModels: ai.eqo.task.VoiceModelPicker? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.setup_hub)
-        ai.eqo.task.VoiceSettings
-            .bind(this)
+        voiceModels =
+            ai.eqo.task.VoiceSettings
+                .bind(this)
         configureHandle()
         findViewById<Button>(R.id.hub_background).setOnClickListener {
             try {
@@ -82,6 +85,7 @@ class SetupHubActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        voiceModels?.activate()
         runCatching { StudySetup.helper.attach() }
         render()
         findViewById<android.widget.Switch>(R.id.hub_edge_handle).isChecked =
@@ -92,6 +96,7 @@ class SetupHubActivity : Activity() {
     }
 
     override fun onPause() {
+        voiceModels?.pause()
         runCatching { StudySetup.helper.detach() }
         super.onPause()
     }
