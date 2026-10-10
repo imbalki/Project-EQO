@@ -19,6 +19,8 @@ internal interface VoiceRecording {
 
     fun start(onLimit: () -> Unit)
 
+    fun setProgressListener(listener: (Long, Int) -> Unit) = Unit
+
     fun stopCapture()
 
     suspend fun finish(): File
@@ -36,6 +38,11 @@ internal class VoiceAudioRecorder(
     private var recorder: AudioRecord? = null
     private var writer: Job? = null
     private var failure = false
+    private var progress: (Long, Int) -> Unit = { _, _ -> }
+
+    override fun setProgressListener(listener: (Long, Int) -> Unit) {
+        progress = listener
+    }
 
     // TaskVoiceInput checks the user-granted permission before invoking start; revocation is caught there.
     @SuppressLint("MissingPermission")
@@ -53,33 +60,48 @@ internal class VoiceAudioRecorder(
         recorder = audio
         check(audio.state == AudioRecord.STATE_INITIALIZED)
         audio.startRecording()
-        writer =
-            scope.launch(Dispatchers.IO) {
-                try {
-                    RandomAccessFile(file, "rw").use { output ->
-                        output.write(ByteArray(WAV_HEADER_BYTES))
-                        val buffer = ByteArray(BUFFER_BYTES)
-                        var written = 0
-                        while (!stopping && written < MAX_BYTES) {
-                            val count = audio.read(buffer, 0, minOf(buffer.size, MAX_BYTES - written))
-                            if (count < 0) {
-                                check(stopping)
-                                break
-                            }
-                            if (count > 0) {
-                                output.write(buffer, 0, count)
-                                written += count
-                            }
-                        }
-                        output.seek(0)
-                        output.write(wavHeader(written))
-                        if (!stopping) onLimit()
-                    }
-                } catch (_: Exception) {
-                    failure = true
-                    if (!stopping) onLimit()
-                }
+        writer = scope.launch(Dispatchers.IO) { writeAudio(audio, onLimit) }
+    }
+
+    private fun writeAudio(
+        audio: AudioRecord,
+        onLimit: () -> Unit,
+    ) {
+        try {
+            RandomAccessFile(file, "rw").use { output ->
+                output.write(ByteArray(WAV_HEADER_BYTES))
+                val written = capturePcm(audio, output)
+                output.seek(0)
+                output.write(wavHeader(written))
             }
+            if (!stopping) onLimit()
+        } catch (_: Exception) {
+            failure = true
+            if (!stopping) onLimit()
+        }
+    }
+
+    private fun capturePcm(
+        audio: AudioRecord,
+        output: RandomAccessFile,
+    ): Int {
+        val buffer = ByteArray(BUFFER_BYTES)
+        val policy = VoiceCapturePolicy()
+        var written = 0
+        while (!stopping && !policy.shouldStop) {
+            val count = audio.read(buffer, 0, minOf(buffer.size, MAX_BYTES - written))
+            if (count < 0) {
+                check(stopping)
+                break
+            }
+            if (count > 0) {
+                output.write(buffer, 0, count)
+                written += count
+                policy.accept(buffer, count)
+                progress(policy.elapsedMillis, policy.level)
+            }
+        }
+        return written
     }
 
     override suspend fun finish(): File {
@@ -113,8 +135,8 @@ internal class VoiceAudioRecorder(
 
     companion object {
         const val RATE = 16000
-        const val MAX_BYTES = RATE * 2 * 60
-        const val MAX_DURATION_MILLIS = 60000L
+        const val MAX_BYTES = RATE * 2 * 90
+        const val MAX_DURATION_MILLIS = VoiceCapturePolicy.MAX_DURATION_MILLIS
         private const val STALE_AGE_MILLIS = 300000L
         private const val WAV_HEADER_BYTES = 44
         private const val BUFFER_BYTES = 4096

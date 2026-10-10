@@ -1,6 +1,7 @@
 # ADR 0011: Pause-tolerant draft-only voice with opt-in OpenRouter audio
 
 Status: Implemented locally; phone validation pending.
+Default/limit/model selection superseded by ADR 0012 (Voice v3); this document records the v2 decision.
 
 ## Decision
 

@@ -1,5 +1,24 @@
 # Current handoff (any agent can take over from this page)
 
+## Voice v3 (t_112c2517, local-only `feat/voice-v3`): NOT TESTED ON PHONE
+
+- AI is the default for unset preferences; explicitly saved Phone selection is preserved.
+  Owned AudioRecord WAV capture (16 kHz mono), tap-to-stop, recording timer/level meter,
+  six-second quiet-audio stop and 90-second sample/wall-clock caps. No primary SpeechRecognizer.
+- Setup offers AI / Phone and a separate audio-model picker using the shared catalog/cache.
+  Only advertised audio-input models are listed. Prefer advertised Gemini 2.5 Flash, otherwise
+  the first audio model by ID. The configured planning model/key is not changed.
+- First-use provider-audio consent is remembered; microphone permission stays first-tap only.
+  Transcribing shows Cancel; success fills the editable draft only. Error/cancel/leave/edit
+  delete temporary audio and reject late results; network/key/model messages offer Phone.
+- Design: ADR 0012 supersedes ADR 0011 defaults/limits/model selection. Fixed silence threshold
+  is hardware/noise-sensitive and must be phone-tested. No real provider, microphone or phone used.
+- Host verification: pending final scoped gates. This is not yet passing verification evidence.
+  Lead owns publication, CI and phone tests; worker uses same-card review, never self-completion.
+- Phone checklist and exact 20-word English/Hindi fixtures: Voice v3 in PHASE-ONE-TEST-LOG.md.
+
+The Voice v2 section below is historical, not the current default/limit.
+
 Last updated: 2026-10-10 (round-1 accepted permission preflight implemented; awaiting review). Update this file in the same PR as every merge to `main`.
 
 Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every merge to `main`.
