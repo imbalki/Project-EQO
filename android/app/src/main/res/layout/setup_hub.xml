@@ -162,6 +162,13 @@
             android:layout_height="wrap_content"
             android:minHeight="52dp"
             android:text="@string/voice_language_title" />
+        <Button
+            style="@style/StudySecondaryButton"
+            android:id="@+id/voice_model_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:text="@string/voice_model_title" />
         <CheckBox
             android:id="@+id/require_plan_approval"
             android:textSize="@dimen/study_text_body"

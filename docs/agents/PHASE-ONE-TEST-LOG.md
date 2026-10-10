@@ -1,5 +1,47 @@
 # Phase One phone test log
 
+## Voice v3 — t_112c2517 — NOT TESTED ON PHONE
+
+Local-only `feat/voice-v3`. The checked-in log has no Round 3 heading; this card's supplied
+Realme Android 11 early-stop result motivated the change, but is not verification of this build.
+No real microphone, provider upload, APK install or device interaction was performed.
+Verified code checkpoint `51c1125` (external in-progress checkpoint). Final serial command from
+`android/`: `./gradlew :app:ktlintFormat :core-llm:ktlintFormat :app:ktlintCheck :app:detekt
+:core-llm:ktlintCheck :core-llm:detekt :app:testDebugUnitTest :core-llm:testDebugUnitTest
+:app:lintDebug :core-llm:lintDebug --continue --max-workers=2
+-Pkotlin.compiler.execution.strategy=in-process --console=plain`.
+Saved ignored `app/build/reports/voice-v3/final-gates-2.log`: `BUILD SUCCESSFUL in 25m 45s`,
+394 tasks (26 executed, 368 up-to-date). Fresh XML: app 322 and core-llm 279 tests, zero
+failures/errors, one existing core skip. All 51 voice/provider tests pass; both module lint
+XML reports have zero issues. Repo/provenance 491/491, diff and changed Kotlin line lengths pass.
+Earlier failed runs found static findings, fake scheduling after key-check suspension, a
+safe-error assertion and timer idle-endpoint mismatch; corrected, not baselined or concealed.
+NOT RUN: all-module/root checks, other module unit suites, APK/release build, instrumentation,
+real provider/mic, remote CI and all phone items below. Host tests do not establish phone quality.
+
+Phone checklist (lead/owner must record build commit and outcomes; synthetic requests only):
+- [ ] New/unset engine preference defaults to AI; a previously explicit Phone choice stays Phone.
+      First-use consent declines without capture/upload; accept is remembered. Grant/deny/cancel
+      microphone permission at first tap, never startup; typing remains possible after denial.
+- [ ] English 20-word fixture: "Please open my notes tomorrow morning and remind me to buy milk
+      bread fruit vegetables and rice after finishing work". Pause 3–4 seconds after "notes" and
+      "milk": Recording continues, timer and level update; second tap stops and starts Transcribing.
+- [ ] Hindi 20-word fixture: "कृपया कल सुबह नोट्स खोलकर मुझे दूध रोटी फल सब्जियां और चावल खरीदने की याद
+      दिलाना जब काम खत्म हो". Pause 3–4 seconds after "नोट्स" and "चावल"; repeat with Hinglish,
+      proper nouns and spoken numbers. Confirm original language, no translation or task execution.
+- [ ] Review/edit the returned text; no auto-submit. Second session appends to the current draft.
+- [ ] Six seconds of initial/post-speech silence stops capture; shorter pauses continue. Repeat
+      quiet/noisy rooms and soft/loud voices; report threshold errors, not assumed reliability.
+- [ ] Continuous speech reaches 90-second cap, never longer; the timer stops, no stuck microphone.
+- [ ] Choose an audio model in setup: only catalog audio INPUT models, remembered separate from
+      planner model; advertised Gemini default when available. Unsupported/text-only model gives
+      a plain message without uploading; missing/rejected key gives its plain setup message.
+- [ ] Airplane mode: plain cannot-reach-provider message, request draft unchanged, no auto-retry;
+      choose Use Phone voice, then verify its recognizer/language pack or plain offline failure.
+- [ ] Cancel during Transcribing, edit draft, leave/rotate while recording/uploading, retry and
+      fail capture/provider: microphone released, voice cache file deleted, no late draft overwrite.
+      Cancellation does not claim to recall provider audio already sent. No transcript/audio logs.
+
 ## Fixes for round 1 — t_7a91b291 — NOT TESTED ON PHONE
 
 - 2026-10-10 accepted ADR-0008 implementation: preview lists runtime prerequisites; Allow now requests missing grants BEFORE approval/run. Existing Android grants are reused. The service is check-only; revoked permission does not launch a dialog and requires Stop plus explicit restart/reapproval. Removed the permission-controller touch bypass entirely; ordinary takeover, own-window and no-auto-resume protections remain.
