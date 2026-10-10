@@ -5,6 +5,7 @@ import ai.eqo.R
 import ai.eqo.core.llm.providers.AudioUnsupportedException
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.speech.SpeechRecognizer
@@ -20,13 +21,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+@Suppress("LongParameterList") // Existing voice adapter plus its Activity/overlay-owned status view.
 internal class AiVoiceInput(
-    private val activity: Activity,
+    private val activity: Context,
     private val presenter: VoiceInputPresenter,
     private val settings: VoiceSettings,
     private val recordingFactory: (File, CoroutineScope) -> VoiceRecording,
     private val ioDispatcher: CoroutineDispatcher,
     private val transcribe: suspend (File, String) -> String,
+    private val status: TextView = (activity as Activity).findViewById(R.id.task_voice_state),
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val handler = Handler(Looper.getMainLooper())
@@ -59,7 +62,7 @@ internal class AiVoiceInput(
                         }
                     }.setNegativeButton(android.R.string.cancel) { _, _ -> consentPending = false }
                     .setOnCancelListener { consentPending = false }
-                    .show()
+                    .create().also { showVoiceDialog(activity, it) }
         }
     }
 
@@ -79,7 +82,7 @@ internal class AiVoiceInput(
         } catch (_: Exception) {
             cancel()
             presenter.error(VoiceInputState.ERROR)
-            activity.findViewById<TextView>(R.id.task_voice_state).setText(R.string.voice_ai_error)
+            status.setText(R.string.voice_ai_error)
         }
     }
 
@@ -120,7 +123,7 @@ internal class AiVoiceInput(
     ) {
         if (recording !== session || !active) return
         presenter.error(VoiceInputState.ERROR)
-        activity.findViewById<TextView>(R.id.task_voice_state).setText(message)
+        status.setText(message)
         dialog =
             AlertDialog
                 .Builder(activity)
@@ -129,7 +132,7 @@ internal class AiVoiceInput(
                     settings.engine = VoiceEngine.PHONE
                     presenter.availability(SpeechRecognizer.isRecognitionAvailable(activity))
                 }.setNegativeButton(android.R.string.cancel, null)
-                .show()
+                .create().also { showVoiceDialog(activity, it) }
     }
 
     fun cancel() {

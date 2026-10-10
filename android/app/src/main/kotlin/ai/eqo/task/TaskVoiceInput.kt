@@ -7,6 +7,9 @@ import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.Context
+import android.view.View
+import android.view.WindowManager
 import android.content.pm.PackageManager
 import android.speech.SpeechRecognizer
 import android.util.Base64
@@ -21,7 +24,7 @@ import java.io.File
 import java.util.Locale
 
 internal class TaskVoiceInput(
-    private val activity: Activity,
+    private val activity: Context,
     recordingFactory: (File, CoroutineScope) -> VoiceRecording = ::VoiceAudioRecorder,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     transcribe: suspend (File, String) -> String = { file, language ->
@@ -32,10 +35,12 @@ internal class TaskVoiceInput(
             language,
         )
     },
+    root: View = (activity as Activity).window.decorView,
+    private val overlayPermission: (() -> Unit)? = null,
 ) {
-    private val mic = activity.findViewById<Button>(R.id.task_voice_button)
-    private val status = activity.findViewById<TextView>(R.id.task_voice_state)
-    private val draft = activity.findViewById<EditText>(R.id.task_request)
+    private val mic = root.findViewById<Button>(R.id.task_voice_button)
+    private val status = root.findViewById<TextView>(R.id.task_voice_state)
+    private val draft = root.findViewById<EditText>(R.id.task_request)
     private val settings = VoiceSettings(activity)
     private var rationale: AlertDialog? = null
     private var resumed = true
@@ -64,7 +69,7 @@ internal class TaskVoiceInput(
         )
     private val phone: PhoneVoiceInput by lazy { PhoneVoiceInput(activity, presenter) { settings.language } }
     private val audio: AiVoiceInput by lazy {
-        AiVoiceInput(activity, presenter, settings, recordingFactory, ioDispatcher, transcribe)
+        AiVoiceInput(activity, presenter, settings, recordingFactory, ioDispatcher, transcribe, status)
     }
 
     init {
@@ -135,10 +140,15 @@ internal class TaskVoiceInput(
                         R.string.voice_ai_disclosure
                     },
                 ).setPositiveButton(android.R.string.ok) { _, _ ->
-                    activity.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_CODE)
+                    if (activity is Activity) {
+                        activity.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_CODE)
+                    } else {
+                        presenter.permissionResult(false)
+                        overlayPermission?.invoke()
+                    }
                 }.setNegativeButton(android.R.string.cancel) { _, _ -> presenter.permissionResult(false) }
                 .setOnCancelListener { presenter.permissionResult(false) }
-                .show()
+                .create().also { showVoiceDialog(activity, it) }
     }
 
     private fun engineAvailable(): Boolean {
@@ -175,4 +185,10 @@ internal class TaskVoiceInput(
 
         fun errorState(error: Int): VoiceInputState = PhoneVoiceInput.errorState(error)
     }
+}
+
+/** Accessibility-hosted dialogs keep the EQO UID; no SYSTEM_ALERT_WINDOW grant is needed. */
+internal fun showVoiceDialog(context: Context, dialog: AlertDialog) {
+    if (context !is Activity) dialog.window?.setType(WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY)
+    dialog.show()
 }

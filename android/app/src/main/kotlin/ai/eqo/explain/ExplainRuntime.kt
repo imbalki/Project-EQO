@@ -176,13 +176,7 @@ class AndroidExplainModel(
                 LLMRequest(
                     model = model,
                     providerConfig = ProviderRequestConfig(key, "https://openrouter.ai/api/v1/chat/completions"),
-                    systemPrompt =
-                        UntrustedScreenText.IMAGE_DIRECTIVE + " " + UntrustedScreenText.DIRECTIVE +
-                            " Explain the Android screen in plain language in " +
-                            "${Locale.getDefault().toLanguageTag()}. " +
-                            "Name the app/screen, describe main controls and suggest the next step. " +
-                            "Explain formulas and code in simple steps. Only explain; never execute actions. " +
-                            "Say when the available screen text is insufficient. Do not invent unseen controls.",
+                    systemPrompt = explainPrompt(Locale.getDefault()),
                     messages =
                         listOf(
                             ChatMessage(
@@ -222,3 +216,12 @@ class AndroidExplainModel(
             }.getOrDefault(false)
     }
 }
+
+internal fun explainPrompt(language: Locale): String =
+    UntrustedScreenText.IMAGE_DIRECTIVE + " " + UntrustedScreenText.DIRECTIVE +
+        " Explain the Android screen in plain language in ${language.toLanguageTag()}. " +
+        "Name the app/screen, describe main controls and suggest the next step. " +
+        "Explain formulas and code in simple steps. Only explain; never execute actions. " +
+        "Use at most about 120 words unless the user asks for more. " +
+        "Do not copy the page text or use markdown headings. " +
+        "Say when the available screen text is insufficient. Do not invent unseen controls."

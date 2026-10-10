@@ -284,7 +284,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="handle_settings_explanation">Optional EQO shortcuts on other screens; requires EQO Accessibility. Tap or swipe inward to open. Opening the panel pauses an active run after its current action finishes. Closing it does not resume: use the task screen to confirm Resume. Drag vertically to move, or across the screen to switch edge. Long press for Hide for this app. The keyboard or full-screen videos and games may hide the handle. It never reads or sends the screen. Unavailable shortcuts are omitted from the panel; your choices are kept.</string>
     <string name="handle_enable">Enable edge handle</string>
     <string name="handle_ask">Ask EQO</string>
-    <string name="handle_open">Open EQO</string>
+    <string name="handle_open">Full EQO</string>
     <string name="handle_no_run">Unavailable: no active run.</string>
     <string name="handle_move_up">Move up</string>
     <string name="handle_move_down">Move down</string>
@@ -296,4 +296,18 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_preview_with_permissions">%1$s%2$s</string>
     <string name="task_permission_not_granted">Permission was not granted. No run started. Tap Start to explicitly try this plan again.</string>
     <string name="task_files_access_needed">Turn on All files access for EQO, then try this plan again.</string>
+    <string name="explain_speaking">Speaking</string>
+    <string name="explain_speech_paused">Speech paused</string>
+    <string name="explain_speech_stopped">Speech stopped</string>
+    <string name="explain_pause_speech">Pause reading</string>
+    <string name="explain_continue_speech">Continue reading</string>
+    <string name="explain_stop_speech">Stop reading</string>
+    <string name="handle_back_app">Back to %1$s</string>
+    <string name="handle_previous_app">previous app</string>
+    <string name="mini_drag">Drag / collapse</string>
+    <string name="mini_plan">Plan</string>
+    <string name="mini_ready">Review the plan, then Approve or Cancel. Nothing has run.</string>
+    <string name="mini_access_needed">Access is missing. Open Full EQO and prepare this task there before approval.</string>
+    <string name="mini_takeover_info">Touch the app to take over. Closing this panel never resumes work. To continue a paused run, open Full EQO, then the task screen and confirm Resume.</string>
+    <string name="mini_status">%1$s %2$s\n%3$s</string>
 </resources>

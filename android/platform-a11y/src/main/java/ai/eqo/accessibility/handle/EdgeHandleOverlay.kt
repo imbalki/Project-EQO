@@ -64,6 +64,14 @@ class EdgeHandleOverlay(
         handler.post(refreshTask)
     }
 
+    fun redraw() {
+        if (guard.panelOpen) return
+        if (removeWindow()) {
+            render()
+            if (view != null) android.util.Log.i("EqoExplain", "handle: redrawn")
+        }
+    }
+
     private fun render() {
         if (!preferences.enabled || !probeAvailable || preferences.isHidden(foregroundPackage)) {
             removeWindow()
@@ -211,6 +219,7 @@ class EdgeHandleOverlay(
         if (!preferences.enabled || !probeAvailable || preferences.isHidden(foregroundPackage)) return
         if (!panelReady(requestPause)) return
         guard.panelOpen = true
+        val entry = HandleEntry(foregroundPackage)
         val root = PanelView()
         root.setBackgroundColor(BACKDROP_COLOR)
         root.isFocusableInTouchMode = true
@@ -224,7 +233,7 @@ class EdgeHandleOverlay(
             addButton(column, shortcut.labelRes, shortcut.iconRes) {
                 closePanel()
                 // Availability is checked again; a run may have ended while the panel was open.
-                if (shortcut.unavailableReason(context) == null) shortcut.run(context)
+                if (shortcut.unavailableReason(context) == null) shortcut.runFromHandle(context, entry)
             }
         }
         if (foregroundPackage != context.packageName) {

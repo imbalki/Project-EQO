@@ -70,6 +70,9 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" android:noHistory="true"
             android:excludeFromRecents="true" android:taskAffinity="" />
         <activity android:name=".explain.ExplainSettingsActivity" android:exported="false" />
+        <activity android:name=".task.MiniVoicePermissionActivity" android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true" android:taskAffinity="" />
         <service android:name=".explain.ExplainTileService" android:exported="true"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
             android:label="@string/explain_title" android:icon="@drawable/ic_launcher">

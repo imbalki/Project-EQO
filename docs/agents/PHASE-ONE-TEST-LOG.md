@@ -1,5 +1,41 @@
 # Phase One phone test log
 
+## Compact Ask / Explain round 3 — t_edb1be59 — NOT TESTED ON PHONE
+
+- Owner findings in the task are input, not execution evidence. The original log has no Round 3
+  section. No device was contacted, no model call made, no microphone recording or real audio upload.
+- Host checks PENDING: sibling Gradle wrappers remain active; this worker has not started a concurrent
+  Gradle invocation. Fake formatting/speech, compact preview/approval/cancellation/drag/navigation,
+  handle redraw and compact guard tests are written but NOT RUN. No green build is claimed.
+- Actual host-only verification: `bash scripts/check.sh` exits 0 (494 Kotlin files and provenance rows,
+  BRANDING GATE PASSED). Staged `git diff --check`, added Kotlin lines <=120 and changed XML parse pass.
+  Five-minute wrapper-idle wait exits 1, GRADLE_BUSY; further wait times out at the terminal transport's
+  420-second cap before any w-mini Gradle starts. Process read-back still shows sibling wrappers only.
+  No Kotlin compile/lint/detekt/unit-test result exists for this revision. Changes staged, not committed.
+- Required sequential gates from `android/`, max-workers=2 and in-process Kotlin compiler:
+  `:platform-a11y:ktlintFormat :platform-a11y:ktlintCheck :platform-a11y:detekt
+  :platform-a11y:testDebugUnitTest :platform-a11y:lintDebug`, then equivalent app tasks.
+- [ ] Explain Settings, browser, formulas and code: readable headings/bold/lists, no HTML execution,
+      explanation not copied page text, device language, about 120 words unless asked for more.
+- [ ] Read/Pause/Continue/Stop: visible state, no markdown symbols, repeated interrupted chunk is
+      acceptable; Close/replacement/service disconnect stops speech, late callbacks never restart it.
+- [ ] Explain open/close/open and compact close: handle visible without app switch, content-free redraw log.
+- [ ] Ask stays above the current app, about 30% height; large fonts, keyboard, portrait/landscape,
+      scroll preview/controls, drag, collapse to chip, live progress and terminal detail line.
+- [ ] Mic Phone and AI: consent and runtime grant, denial/cancel, long pauses, edits, no auto-plan;
+      tap Mic again after system grant, provider capability refusal and temporary audio cleanup.
+- [ ] Plan/Approve/Cancel, edit during model call, Stop before delayed start, Close during preparation:
+      no late plan starts; exactly the visible immutable plan runs after protected human approval.
+- [ ] Agent node and coordinate taps cannot activate EQO controls; unrelated app taps trigger takeover,
+      panel touches do not; Pause/Stop during real in-flight work, no silent resume after close/collapse.
+- [ ] Obscured approval DOWN/MOVE/UP rejected; Resume only in Full EQO's existing human dialog.
+- [ ] Full EQO / Back to previous app from several installed apps; missing-launch fallback, task screen
+      entry, background restrictions; no app-specific hard-coding or history persisted.
+- [ ] Missing access: no run/permission request mid-run; grant through Full EQO and explicitly retry.
+      File attachment ambiguity/disclosure remains fail-closed without foreground selection UI.
+- [ ] Revoke Accessibility, reconnect, rotate, process death and OEM redraw: no context persistence,
+      no stale hitbox after actual window removal, no approved run replay, no request/screen logs.
+
 ## Fixes for round 1 — t_7a91b291 — NOT TESTED ON PHONE
 
 - 2026-10-10 accepted ADR-0008 implementation: preview lists runtime prerequisites; Allow now requests missing grants BEFORE approval/run. Existing Android grants are reused. The service is check-only; revoked permission does not launch a dialog and requires Stop plus explicit restart/reapproval. Removed the permission-controller touch bypass entirely; ordinary takeover, own-window and no-auto-resume protections remain.

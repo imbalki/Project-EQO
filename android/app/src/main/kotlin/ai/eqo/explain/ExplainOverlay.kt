@@ -85,6 +85,21 @@ class ExplainOverlay private constructor(
             filters = arrayOf(android.text.InputFilter.LengthFilter(ExplainSession.MAX_QUESTION))
         }
     private var speech: TextToSpeech? = null
+    private val speechState = TextView(service).apply { setTextColor(Color.WHITE) }
+    private val reader = ExplainSpeech(
+        play = { text, id -> speech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, id) },
+        halt = { speech?.stop() },
+        changed = { state ->
+            speechState.setText(
+                when (state) {
+                    ExplainSpeech.State.SPEAKING -> R.string.explain_speaking
+                    ExplainSpeech.State.PAUSED -> R.string.explain_speech_paused
+                    ExplainSpeech.State.STOPPED -> R.string.explain_speech_stopped
+                },
+            )
+        },
+        chunkSize = TextToSpeech.getMaxSpeechInputLength(),
+    )
     private val params =
         WindowManager
             .LayoutParams(
@@ -124,17 +139,7 @@ class ExplainOverlay private constructor(
                 }
             }
             button(R.string.explain_ask) { ask(question.text.toString()) }
-            button(R.string.explain_read) { speak() }
-            speech =
-                TextToSpeech(service) { status ->
-                    speechReady = status == TextToSpeech.SUCCESS
-                    if (speechReady) {
-                        val language = speech?.setLanguage(Locale.getDefault())
-                        speechReady = language != TextToSpeech.LANG_MISSING_DATA &&
-                            language != TextToSpeech.LANG_NOT_SUPPORTED
-                        if (ExplainSettings.autoRead(service) && answer.isNotBlank()) speak()
-                    }
-                }
+            configureSpeech()
             ask(service.getString(R.string.explain_initial_question))
         }
         // Accessibility disabled while sheet is open: discard the entire in-memory session.
@@ -283,7 +288,7 @@ class ExplainOverlay private constructor(
     private fun ask(prompt: String) {
         if (busy || closed || prompt.isBlank()) return
         busy = true
-        speech?.stop()
+        reader.stop()
         question.text.clear()
         detach()
         scope.launch {
@@ -307,7 +312,7 @@ class ExplainOverlay private constructor(
                         "capture" -> service.getString(R.string.explain_text_only_capture)
                         else -> ""
                     }
-                output.text = service.getString(R.string.explain_result, notice, answer)
+                output.text = ExplainText.styled(service.getString(R.string.explain_result, notice, answer))
                 android.util.Log.i("EqoExplain", "explain: ${active.sourceType}, ok")
                 attach()
                 if (ExplainSettings.autoRead(service)) speak()
@@ -341,10 +346,7 @@ class ExplainOverlay private constructor(
                 .makeText(service, R.string.explain_tts_unavailable, android.widget.Toast.LENGTH_LONG)
                 .show()
         } else if (answer.isNotBlank()) {
-            answer.chunked(TextToSpeech.getMaxSpeechInputLength()).forEachIndexed { index, chunk ->
-                val queue = if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-                speech?.speak(chunk, queue, null, "explain-$index")
-            }
+            reader.read(answer)
         }
     }
 
@@ -356,7 +358,7 @@ class ExplainOverlay private constructor(
         scope.cancel()
         session?.close()
         session = null
-        speech?.stop()
+        reader.stop()
         speech?.shutdown()
         speech = null
         answer = ""
@@ -364,6 +366,42 @@ class ExplainOverlay private constructor(
         output.text = ""
         detach()
         if (current?.get() === this) current = null
+        service.redrawHandle()
+    }
+
+    private fun listenForSpeech() {
+        speech?.setOnUtteranceProgressListener(
+            object : android.speech.tts.UtteranceProgressListener() {
+                override fun onStart(id: String) = Unit
+
+                override fun onDone(id: String) {
+                    peekHandler.post { if (!closed) reader.completed(id) }
+                }
+
+                @Deprecated("Required by the Android speech listener")
+                override fun onError(id: String) {
+                    peekHandler.post { if (!closed) reader.failed(id) }
+                }
+            },
+        )
+    }
+
+    private fun configureSpeech() {
+        button(R.string.explain_read) { speak() }
+        content.addView(speechState)
+        reader.stop()
+        button(R.string.explain_pause_speech) { reader.pause() }
+        button(R.string.explain_continue_speech) { reader.continueReading() }
+        button(R.string.explain_stop_speech) { reader.stop() }
+        speech = TextToSpeech(service) { status ->
+            speechReady = status == TextToSpeech.SUCCESS
+            if (speechReady) {
+                val language = speech?.setLanguage(Locale.getDefault())
+                speechReady = language != TextToSpeech.LANG_MISSING_DATA && language != TextToSpeech.LANG_NOT_SUPPORTED
+                listenForSpeech()
+                if (ExplainSettings.autoRead(service) && answer.isNotBlank()) speak()
+            }
+        }
     }
 
     companion object {

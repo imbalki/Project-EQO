@@ -1,5 +1,30 @@
 # Current handoff (any agent can take over from this page)
 
+## Compact Ask / Explain round-3 revision (t_edb1be59, feat/mini-panel): IN PROGRESS
+
+- NOT TESTED ON PHONE. Worktree contains the compact accessibility overlay, existing Phone/AI voice
+  adapters, immutable preview/Approve, live status/Pause/Stop, drag/collapse and Full EQO navigation.
+  Resume remains on the full task screen; opening/closing the compact panel never resumes a run.
+- Explain uses native spans rather than HTML, strips markdown for speech and exposes speaking,
+  paused and stopped states with Pause/Continue/Stop reading. Closing cancels speech and screen context.
+  Prompt asks for about 120 words in device language, explanation rather than copied screen text.
+- Handle has explicit redraw/re-attachment after Explain/compact close and real app window changes,
+  with the content-free `EqoExplain` log `handle: redrawn`. Registry carries generic foreground-entry
+  context; Full EQO shows Back to the captured app label and launch/task fallback.
+- Security: existing own-package guard; independent compact coordinate rectangle; protected approval
+  touch wrapper; no new agent resume/token path. Handle removal cannot erase compact hitboxes.
+  Missing action access is check-only and routes the owner to Full EQO's existing pre-run grant flow.
+  Microphone grant is a non-exported transient activity; tap Mic again after granting, no auto-capture.
+- BLOCKED on host gates: sibling worktree Gradle wrappers stayed active through a five-minute wait
+  (exit 1, GRADLE_BUSY) and a further bounded wait (terminal transport timed out at 420 seconds).
+  Process read-back confirms only sibling wrappers, none for w-mini; no Gradle gate was started here.
+  `scripts/check.sh` passes (494 Kotlin files/494 provenance rows); staged diff whitespace, added
+  Kotlin <=120-character lines and changed XML parsing pass. Compilation/static checks/unit tests
+  have NOT run. Changes are staged, not committed; lint-before-commit rule retained. No push/PR/phone.
+  Next: serialize machine Gradle use, run app/platform format + required gates, fix actual findings,
+  finish integrated regressions, commit locally as specified and request same-card review.
+  ADR: `docs/adr/0012-compact-panel-threat-model.md`. This is a draft, not a verified implementation.
+
 Last updated: 2026-10-10 (round-1 accepted permission preflight implemented; awaiting review). Update this file in the same PR as every merge to `main`.
 
 Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every merge to `main`.

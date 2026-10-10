@@ -21,10 +21,13 @@ class HandleWindowGuard {
     @Volatile
     var panelOpen: Boolean = false
 
+    @Volatile
+    var compactBounds: Bounds? = null
+
     fun contains(
         x: Int,
         y: Int,
-    ): Boolean = bounds?.contains(x, y) == true
+    ): Boolean = bounds?.contains(x, y) == true || compactBounds?.contains(x, y) == true
 
     fun blocksGesture(
         x: Float,

@@ -73,6 +73,10 @@ class EQOAccessibilityService :
 
     val automation: EqoAutomation get() = runtime.automation
 
+    fun redrawHandle() {
+        edgeHandle?.redraw()
+    }
+
     /**
      * TASK-012 (SF-1): the takeover-gated facade over this service's raw
      * [ServiceActionOps]. Every automator action goes through here, which runs
@@ -122,6 +126,7 @@ class EQOAccessibilityService :
             val appWindow = targetPackage != packageName || windowClass.endsWith("Activity")
             if (targetPackage != null && appWindow && !windowClass.contains("InputMethod")) {
                 edgeHandle?.updateForeground(targetPackage)
+                redrawHandle()
             }
         }
         // TASK-009: TYPE_TOUCH_INTERACTION_START fires when a finger (or an

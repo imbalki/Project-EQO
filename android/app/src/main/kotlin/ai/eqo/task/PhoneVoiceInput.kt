@@ -1,7 +1,7 @@
 // Origin: EQO-authored pause-tolerant phone speech session, with no audio storage.
 package ai.eqo.task
 
-import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -12,7 +12,7 @@ import android.speech.SpeechRecognizer
 import android.util.Log
 
 internal class PhoneVoiceInput(
-    private val activity: Activity,
+    private val activity: Context,
     private val presenter: VoiceInputPresenter,
     private val language: () -> String,
 ) {

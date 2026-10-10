@@ -1,5 +1,16 @@
 # TASK-005 per-file provenance map
 
+## Compact panel additions (t_edb1be59)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/MiniVoicePermissionActivity.kt` | EQO-NEW | `ai.eqo.task` | Transient system microphone grant, no capture or submission |
+
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainText.kt` | EQO-NEW | `ai.eqo.explain` | Safe styled text and cancellable speech state |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/HandleReturn.kt` | EQO-NEW | `ai.eqo.handle` | Entry-scoped return to the previous app |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/MiniTaskOverlay.kt` | EQO-NEW | `ai.eqo.task` | Accessibility-hosted task preview and protected approval |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/MiniTaskPreparation.kt` | EQO-NEW | `ai.eqo.task` | Check-only prerequisite preparation using existing planner |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainTextTest.kt` | EQO-NEW | `ai.eqo.explain` | Synthetic formatting and fake speech regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/MiniTaskOverlayTest.kt` | EQO-NEW | `ai.eqo.task` | Fake planner/run and real overlay lifecycle tests |
+
 ## Voice v2 additions (t_e9801e01)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/PhoneVoiceInput.kt` | EQO-NEW | `ai.eqo.task` | Pause-tolerant phone recognizer session and stale callback guards |

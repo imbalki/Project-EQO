@@ -268,22 +268,12 @@ class HandleFeaturesTest {
         }
 
     @Test
-    fun `Ask opens the request screen with focus and never plans or runs a request`() {
+    fun `Ask without accessibility never leaves the current app or runs a request`() {
         val registry = createHandleRegistry(context)
         registry.ordered().first { it.id == "ask_eqo" }.run(context)
         val intent = shadowOf(context as android.app.Application).nextStartedActivity
-        assertEquals(TaskActivity::class.java.name, intent.component!!.className)
-        assertTrue(intent.getBooleanExtra(TaskActivity.FOCUS_REQUEST, false))
-        val lifecycle = Robolectric.buildActivity(TaskActivity::class.java, intent).setup()
-        assertTrue(lifecycle.get().findViewById<EditText>(R.id.task_request).hasFocus())
-        assertTrue(lifecycle.get().findViewById<android.widget.Button>(R.id.task_voice_button).isShown)
-        assertFalse(
-            descendants(lifecycle.get().window.decorView).filterIsInstance<android.widget.TextView>().any {
-                it.text == context.getString(R.string.task_practice_title)
-            },
-        )
+        assertEquals(null, intent)
         assertEquals(null, TaskRunSession.controller)
-        lifecycle.pause().stop().destroy()
     }
 
     @Test

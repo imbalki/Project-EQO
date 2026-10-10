@@ -13,6 +13,28 @@ class HandleWindowSafetyTest {
     @After
     fun cleanUp() {
         guard.clear()
+        guard.compactBounds = null
+    }
+
+    @Test
+    fun `compact panel excludes only its bounds and blocks agent coordinates without blocking underlying work`() {
+        guard.compactBounds = HandleWindowGuard.Bounds(0, 700, 400, 1000)
+        val detector = TakeoverDetector()
+        detector.onAgentActionStarted()
+        reportProbeTouch(detector, 200, 800)
+        assertFalse(detector.isPaused)
+        val ops = FakeServiceActionOps()
+        val actions = GatedServiceActions(automation(), ops)
+        assertFalse(actions.clickCoordinates(200f, 800f).isSuccess)
+        assertTrue(ops.calls.isEmpty())
+        assertTrue(actions.clickCoordinates(200f, 200f).isSuccess)
+        reportProbeTouch(detector, 200, 200)
+        assertTrue(detector.isPaused)
+        guard.clear()
+        assertTrue(detector.isControlTouch(200, 800))
+        assertTrue(detector.isPaused)
+        guard.compactBounds = null
+        assertFalse(detector.isControlTouch(200, 800))
     }
 
     @Test
