@@ -62,8 +62,14 @@ object GenericAppAutomator {
         return block(actions)
     }
 
+    /** Keep's home-screen entry is already preceded by WAIT; a missing entry requires the owner. */
+    internal suspend fun clickTextAttempt(
+        text: String,
+        attempt: () -> A11yResult,
+    ): A11yResult = if (text == "Create a note") attempt() else retryTap(attempt)
+
     suspend fun clickText(text: String): A11yResult =
-        retryTap {
+        clickTextAttempt(text) {
             automationOrNull()?.tap(text) ?: A11yResult.failure(A11yError.AccessibilityDisabled)
         }
 
@@ -83,7 +89,9 @@ object GenericAppAutomator {
         searchText: String,
         content: String,
     ): A11yResult {
-        if (searchText.lowercase() in setOf("focused", "current")) return typeOnce(searchText, content)
+        if (searchText.startsWith("id:") || searchText.lowercase() in setOf("focused", "current")) {
+            return if (searchText.startsWith("id:")) typeId(searchText, content) else typeOnce(searchText, content)
+        }
         // One quick look first: the step has a short time budget, and a launcher-style search button
         // (no input exists yet) must reach the tap fallback before the cold-start retries use it up.
         val quick = automationOrNull()?.type(searchText, content) ?: A11yResult.failure(A11yError.AccessibilityDisabled)
