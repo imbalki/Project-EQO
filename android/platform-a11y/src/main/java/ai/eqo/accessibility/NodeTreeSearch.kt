@@ -108,8 +108,10 @@ internal object NodeTreeSearch {
         target: String,
         byViewId: Boolean,
     ): Boolean =
-        if (byViewId) {
-            node.viewIdResourceName?.endsWith("/$target") == true || node.viewIdResourceName == target
+        if (byViewId || target.startsWith("id:")) {
+            val viewId = target.removePrefix("id:")
+            viewId.isNotEmpty() &&
+                (node.viewIdResourceName?.endsWith("/$viewId") == true || node.viewIdResourceName == viewId)
         } else {
             listOf(node.text, node.contentDescription, node.hintText).any { label ->
                 label?.contains(target, ignoreCase = true) == true

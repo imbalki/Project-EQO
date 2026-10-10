@@ -27,6 +27,66 @@ class EqoAutomationFakeTreeTest {
             takeover = takeover,
         )
 
+    @Test
+    fun keepSpeedDialAndEditorUseIdsWithoutLabelsOrSearchFallback() {
+        val fab =
+            FakeNode(
+                contentDescription = "Create a note",
+                viewIdResourceName = "com.google.android.keep:id/speed_dial_create_close_button",
+                isClickable = true,
+            )
+        val items =
+            listOf("new_list_button", "new_drawing_button", "new_photo_note", "new_note_button")
+                .map { FakeNode(viewIdResourceName = "com.google.android.keep:id/$it", isClickable = true) }
+        val title = FakeNode(viewIdResourceName = "com.google.android.keep:id/editable_title", isEditable = true)
+        val body = FakeNode(viewIdResourceName = "com.google.android.keep:id/edit_note_text", isEditable = true)
+        val toolbar =
+            FakeNode(
+                contentDescription = "Search Keep",
+                viewIdResourceName = "com.google.android.keep:id/toolbar",
+                isEditable = true,
+            )
+        var root = FakeNode().child(toolbar).child(fab)
+        val runner =
+            EqoAutomation(
+                rootProvider = { root },
+                serviceState = { serviceState },
+                takeover = takeover,
+                ownPackage = "ai.eqo.app",
+            )
+        assertTrue(runner.tap("Create a note").isSuccess)
+        root = FakeNode().child(toolbar)
+        items.forEach(root::child)
+        assertTrue(runner.tap("id:new_note_button").isSuccess)
+        assertEquals(listOf(0, 0, 0, 1), items.map { it.clickCount })
+        root = FakeNode().child(toolbar).child(title).child(body)
+        assertTrue(runner.type("id:editable_title", "Test").isSuccess)
+        assertTrue(runner.type("id:edit_note_text", "Example body").isSuccess)
+        assertEquals("Test", title.typedValue)
+        assertEquals("Example body", body.typedValue)
+        assertNull(toolbar.typedValue)
+        root = FakeNode().child(toolbar)
+        assertFalse(runner.type("id:editable_title", "Never search").isSuccess)
+        assertNull(toolbar.typedValue)
+        assertFalse(runner.tap("Create a note").isSuccess)
+        root = FakeNode(packageName = "ai.eqo.app").child(title).child(items.last())
+        assertFalse(runner.type("id:editable_title", "Never approve").isSuccess)
+        assertFalse(runner.tap("id:new_note_button").isSuccess)
+        assertEquals("Test", title.typedValue)
+        assertEquals(1, items.last().clickCount)
+    }
+
+    @Test
+    fun explicitIdNeverMatchesLabelDecoysPartialIdsOrPasswords() {
+        val label = FakeNode(text = "id:new_note_button", isClickable = true)
+        val partial = FakeNode(viewIdResourceName = "keep:id/other_new_note_button", isClickable = true)
+        val password = FakeNode(viewIdResourceName = "keep:id/new_note_button", isPassword = true, isClickable = true)
+        val runner = automation(FakeNode().child(label).child(partial).child(password))
+        assertFalse(runner.tap("id:new_note_button").isSuccess)
+        assertFalse(runner.tap("id:").isSuccess)
+        assertEquals(listOf(0, 0, 0), listOf(label, partial, password).map { it.clickCount })
+    }
+
     /** A small "test app" screen: headline, decoy, target row, text field, list. */
     private fun probeScreen(): Pair<FakeNode, Screen> {
         val root = FakeNode()
