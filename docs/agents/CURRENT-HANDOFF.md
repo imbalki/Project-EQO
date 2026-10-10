@@ -1,5 +1,26 @@
 # Current handoff (any agent can take over from this page)
 
+## Screenshot/gallery repair — t_f123214e (local-only `fix-shots`)
+
+- Existing gallery requests use `find:latest,type=screenshot`, dated screenshots use
+  `find:type=screenshot,date=YYYY-MM-DD`, and latest photo/picture/PDF/file use the corresponding
+  run-time search. eBay bill uses `find:ebay bill`; no invented path or FIND_FILES output binding.
+- An explicit capture uses TAKE_SCREENSHOT then `last_screenshot`. The preview says to open the
+  intended app first, not EQO. Own-window, protected-screen, takeover and approval gates are unchanged.
+- `last_screenshot` prefers an EQO capture no older than one hour (file modification time); missing,
+  deleted, stale or future-dated captures fall back to the newest shared-gallery screenshot. Equal
+  newest timestamps require choice. Fallback requires the existing foreground exact-name disclosure
+  and Continue before staging/compose. Cancel, missing UI and post-wait deletion refuse to send.
+- Natural `find:latest` searches still require choice among multiple matches; only the explicitly
+  previewed compatibility fallback selects a uniquely newest screenshot. All files access is required
+  for gallery lookup, not for a fresh private EQO capture. No new permission or runtime dependency.
+- Diagnostics no longer equate every screenshot error with missing screenshot permission. Specific
+  reasons: no_eqo_screenshot_yet, no_matching_file, needs_all_files_access, eqo_in_foreground,
+  protected_screen; unknown capture/copy failures stay unknown. Logs contain only allowlisted kinds.
+- NOT TESTED ON PHONE. Fake-provider tests verify supplied model proposals and the prompt contract,
+  not real model interpretation. Fake registry tests exercise attachment resolution/disclosure/staging
+  and outgoing intents, not actual delivery or real Send buttons. See the test-log checklist.
+
 Last updated: 2026-10-10 (round-1 accepted permission preflight implemented; awaiting review). Update this file in the same PR as every merge to `main`.
 
 Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every merge to `main`.

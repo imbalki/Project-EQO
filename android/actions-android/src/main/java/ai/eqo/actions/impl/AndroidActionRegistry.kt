@@ -59,7 +59,13 @@ class AndroidActionRegistry internal constructor(
             return ActionResult.Failure("Missing or invalid parameters: ${validation.params.joinToString(", ")}.")
         }
         val ready = enriched.mapValues { it.value.toString() }
-        val blankRequired = ActionSchema.getAction(actionName)!!.params.filter { it.required && ready[it.name].isNullOrBlank() }
+        val blankRequired =
+            ActionSchema.getAction(actionName)!!.params.filter {
+                it.required &&
+                    ready[it.name].isNullOrBlank() &&
+                    !ai.eqo.core.agent.AttachmentSpec
+                        .allowsEmptyText(actionName, it.name, ready)
+            }
         if (blankRequired.isNotEmpty()) {
             return ActionResult.Failure("Required parameters must not be empty: ${blankRequired.joinToString { it.name }}.")
         }

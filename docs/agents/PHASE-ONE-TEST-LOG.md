@@ -1,5 +1,34 @@
 # Phase One phone test log
 
+## Screenshot/gallery repair — t_f123214e — NOT TESTED ON PHONE
+
+Local branch `fix-shots`; no phone contacted, no model request, no push/PR/gh action.
+Task-supplied Round-3 evidence: All files access ON, latest-screenshot WhatsApp requests failed
+with misleading `no_screenshot_permission` or ASK_USER; capture correctly refused EQO foreground.
+The supplied evidence is motivation, not a new phone result. This checkout has no separately
+labelled Round-2/Round-3 phone tables; the existing history and card evidence were read.
+
+Phone checklist (lead/owner; synthetic files and contacts, record actual result and build commit):
+- [ ] Send my latest/last screenshot to a test contact on WhatsApp: gallery search, correct chosen
+  file named before Continue, correct chat/file; no new capture of EQO.
+- [ ] Dated screenshot, latest photo/picture/PDF/file, and the eBay bill: correct `find:` filters;
+  several matches show a chooser (including latest), zero matches show no_matching_file.
+- [ ] Refer to the bill and say WhatsApp it to a test contact / email it to me; unresolved it or
+  unknown own email asks rather than inventing a file/address. Repeat SMS attachment route.
+- [ ] Explicit take a screenshot and send it: preview instructs opening the app first; EQO
+  foreground hands off with eqo_in_foreground, protected window remains refused, no automatic resume.
+- [ ] No recent EQO capture: last_screenshot uses newest gallery screenshot, displays exact name
+  before Continue; tied newest timestamps require choice. Cancel/background/Stop sends nothing.
+- [ ] Fresh private EQO capture works without All files access; stale/deleted capture falls back;
+  gallery lookup without access says needs_all_files_access. No match says no_eqo_screenshot_yet.
+- [ ] Delete/revoke access after disclosure; no stale file or private/excluded/link path is shared.
+- [ ] Verify EqoRun logs never include search terms, file/contact names or paths; capture/copy
+  failures without a proven protected-window diagnosis do not claim missing permission/protection.
+
+Host validation caveats: initial static findings were corrected; the two-worker host exhausted
+Windows commit/paging-file memory, then a reduced-heap compile exhausted Metaspace. Retried with
+one Gradle at a time and bounded memory; these failed attempts are not passing verification.
+
 ## Fixes for round 1 — t_7a91b291 — NOT TESTED ON PHONE
 
 - 2026-10-10 accepted ADR-0008 implementation: preview lists runtime prerequisites; Allow now requests missing grants BEFORE approval/run. Existing Android grants are reused. The service is check-only; revoked permission does not launch a dialog and requires Stop plus explicit restart/reapproval. Removed the permission-controller touch bypass entirely; ordinary takeover, own-window and no-auto-resume protections remain.
