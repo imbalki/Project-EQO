@@ -1,5 +1,22 @@
 # Current handoff (any agent can take over from this page)
 
+## Location permission/retry fix (`t_9fd2d126`, local `fix-location`)
+
+- Lead decision supersedes mid-run waiting: ADR-0008 stands. Preflight obtains all
+  planned runtime access; the active service checks only, never opens permission UI.
+- Share recipients now join pre-approval recipient preparation. Repeated names reuse
+  one frozen destination for text and location; typed numbers/email avoid Contacts.
+  Named email sharing needs Contacts. Android 12+ fine/coarse location are requested together.
+- Missing access stops with Needs you and an explicit Retry remaining steps button.
+  Process-only completed IDs are excluded; unchanged Start uses this path instead of
+  replanning/re-sending text. Remaining steps need fresh approval even with approval OFF.
+  Unknown effects/manual drafts do not offer permission retry; no persistent exactly-once claim.
+- Existing Google Maps link and redacted LocationFix remain unchanged; coordinates stay unlogged.
+- Verification blocked by concurrent sibling Gradle wrappers; required Android gates
+  have NOT passed and this change is not review-ready or committed. Repo/provenance gate
+  passes (489 Kotlin files/rows). NOT TESTED ON PHONE; checklist is in PHASE-ONE-TEST-LOG.md.
+  No push, PR or gh action. Lead owns publication and full CI.
+
 Last updated: 2026-10-10 (round-1 accepted permission preflight implemented; awaiting review). Update this file in the same PR as every merge to `main`.
 
 Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every merge to `main`.

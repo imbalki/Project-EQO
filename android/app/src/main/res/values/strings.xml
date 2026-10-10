@@ -294,6 +294,8 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
 
     <string name="attach_ready_feedback">Ready to attach: %1$s</string>
     <string name="task_preview_with_permissions">%1$s%2$s</string>
+    <string name="task_retry_remaining">Retry remaining steps</string>
+    <string name="task_retry_notice">Completed steps will not run again. Review and approve only what is left.</string>
     <string name="task_permission_not_granted">Permission was not granted. No run started. Tap Start to explicitly try this plan again.</string>
     <string name="task_files_access_needed">Turn on All files access for EQO, then try this plan again.</string>
 </resources>

@@ -121,11 +121,18 @@ class TaskActivity : Activity() {
                 }
             }
         }
+        configureRetry()
         voiceInput = TaskVoiceInput(this)
         registerDebugPlanReceiver()
         val startButton = findViewById<Button>(R.id.task_start_button)
 
         startButton.setOnClickListener {
+            if (TaskRunSession.retry.remaining() != null &&
+                findViewById<EditText>(R.id.task_request).text.toString() == TaskRunSession.requestDraft
+            ) {
+                findViewById<Button>(R.id.task_retry_button).performClick()
+                return@setOnClickListener
+            }
             // A NEW run is an explicit hand-back, not an agent/recovery reset.
             val confirmation = UserResumeConfirmation.forExplicitUserConfirmation(SystemClock.elapsedRealtime())
             TakeoverDetector.shared.resume(confirmation)
@@ -147,9 +154,11 @@ class TaskActivity : Activity() {
                 renderPlanStatus(TaskRunSession.status)
                 renderSteps(TaskRunSession.progress.values.toList())
                 TaskRunSession.receipt?.let(::renderReceipt)
+                updateRetry()
             }
         }
         renderSteps(TaskRunSession.progress.values.toList())
+        updateRetry()
         protectConfirmationTouches(findViewById<Button>(R.id.task_start_button))
         renderPlanStatus(PlanStatus.PENDING)
         if (TaskRunSession.controller == null && TaskRunSession.pending == null && TaskRunSession.receipt == null) {
@@ -292,9 +301,43 @@ class TaskActivity : Activity() {
             .also { prepareTaskDialog(it) }
     }
 
+    private fun configureRetry() {
+        val button = findViewById<Button>(R.id.task_retry_button)
+        protectConfirmationTouches(button)
+        button.setOnClickListener {
+            if (planning || TaskRunSession.controller != null || TaskRunSession.pending != null) {
+                return@setOnClickListener
+            }
+            val remaining = TaskRunSession.retry.remaining() ?: return@setOnClickListener
+            planning = true
+            updateRetry()
+            scope.launch {
+                try {
+                    prepareAndShowPlan(remaining.steps(), retry = true)
+                } catch (failure: ai.eqo.actions.impl.RecipientPreparationException) {
+                    findViewById<TextView>(R.id.task_state).text = failure.message
+                } catch (failure: IllegalArgumentException) {
+                    findViewById<TextView>(R.id.task_state).text =
+                        getString(R.string.task_plan_rejected_detail, failure.message.orEmpty())
+                } finally {
+                    planning = false
+                    updateRetry()
+                }
+            }
+        }
+    }
+
+    private fun updateRetry() {
+        findViewById<Button>(R.id.task_retry_button).apply {
+            visibility = if (TaskRunSession.retry.remaining() != null) View.VISIBLE else View.GONE
+            isEnabled = !planning && TaskRunSession.controller == null && TaskRunSession.pending == null
+        }
+    }
+
     private fun startRun(approved: ApprovedTaskPlan) {
         TakeoverDetector.shared.startNewRun()
         if (approved.steps().all { it.action.name == it.action.name.uppercase() }) {
+            TaskRunSession.requestDraft = findViewById<EditText>(R.id.task_request).text.toString()
             TaskRunSession.pending = approved
             TaskRunSession.status = PlanStatus.RUNNING
             startForegroundService(Intent(this, TaskRunService::class.java))
@@ -774,6 +817,7 @@ class TaskActivity : Activity() {
     internal suspend fun prepareAndShowPlan(
         steps: List<ai.eqo.core.agent.LoopStep>,
         missing: List<String> = emptyList(),
+        retry: Boolean = false,
     ) {
         val generation = preparationGeneration
         findViewById<TextView>(R.id.task_preview).text =
@@ -788,7 +832,7 @@ class TaskActivity : Activity() {
         }
         val prepared = portedActions.prepareRecipients(steps)
         if (generation == preparationGeneration && !isFinishing && !isDestroyed) {
-            showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing)
+            showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing, retry)
         }
     }
 
@@ -796,6 +840,7 @@ class TaskActivity : Activity() {
         plan: ApprovedTaskPlan,
         recipientNames: Map<String, String> = emptyMap(),
         missing: List<String> = emptyList(),
+        retry: Boolean = false,
     ) {
         val steps = plan.steps()
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
@@ -807,14 +852,22 @@ class TaskActivity : Activity() {
                     .escape(missing.joinToString(", ")) +
                     " is not installed on this phone, so this plan uses Chrome instead.\n\n"
             }
-        val preview = notice + TaskPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
+        val retryNotice = if (retry) getString(R.string.task_retry_notice) + "\n\n" else ""
+        val preview = retryNotice + notice + TaskPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
-        if (!PlanApprovalSettings.requiredFor(this, steps)) {
+        if (!retry && !PlanApprovalSettings.requiredFor(this, steps)) {
             startRun(plan)
             return
         }
-        PlanFallbackDialog(this, ::startRun).show(plan, preview, missing).also { prepareTaskDialog(it) }
+        val generation = preparationGeneration
+        PlanFallbackDialog(this, { approved ->
+            if (generation == preparationGeneration &&
+                TaskRunSession.controller == null && TaskRunSession.pending == null
+            ) {
+                startRun(approved)
+            }
+        }).show(plan, preview, missing).also { prepareTaskDialog(it) }
     }
 
     private fun planningError(failure: LLMException): Int = RunStatusMapping.planning(failure.error, failure.timedOut)

@@ -58,8 +58,26 @@ unnecessary lookup/location/calendar requests. All files Settings preflight rema
 Stop cancels the pending request and invalidates preparation; stale callbacks cannot
 approve/start that preparation. The activity requester refuses new missing grants
 during a run. The foreground service uses a check-only requester: revocation stops
-the step with Needs-you copy requiring Stop and explicit restart/reapproval.
+the step with Needs-you copy requiring explicit retry/reapproval of remaining steps.
 No system permission dialog or Settings is launched from an active run.
+
+### Location follow-up (`t_9fd2d126`, lead-approved amendment)
+
+SHARE_LOCATION destinations are prepared alongside communication destinations before
+approval. A process-only per-plan cache freezes a repeated name to the same literal
+phone/email destination, so text and location use the same chat without a second
+contact lookup. Literal destinations do not require Contacts. Named email share
+destinations do require Contacts. Android 12+ precise Location requests include its
+required approximate-location companion in the same system request.
+
+A missing grant at execution remains check-only and returns "This step did not run."
+The task screen offers Retry remaining steps. Completed step IDs are kept in memory
+for that plan and excluded from the new immutable preview. Retrying requires fresh
+approval even when the normal plan-approval preference is off. Unchanged Start uses
+that retry path instead of calling the planner again. A changed request is a new task.
+Unknown effects and manual draft handoffs do not offer this permission-retry path.
+No ledger, request, recipient or position is written to disk; process death cannot
+automatically retry. This is not persistent exactly-once delivery after process death.
 
 The attempted permission-controller touch exemption is removed entirely. All
 unknown/redacted/system-window touches retain the ordinary takeover path. EQO never

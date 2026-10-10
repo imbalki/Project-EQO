@@ -1,5 +1,46 @@
 # Phase One phone test log
 
+## Location fix — `t_9fd2d126` — NOT TESTED ON PHONE
+
+Lead approved check-only mid-run refusal, not a permission-dialog takeover exemption.
+Host verification is blocked. No phone was contacted; no real location or recipient
+was saved. Existing Google Maps message generation and redacted position handling are unchanged.
+
+Host attempt (2026-10-10): app/actions ktlintFormat began, but the tool transport timed
+out at 420 seconds. A corrected process probe found several sibling Gradle wrappers
+(`-jar gradle-wrapper.jar`, not `GradleWrapperMain`). Only this worktree's wrapper was
+cancelled to obey one Gradle at a time. Two subsequent five-minute bounded waits still
+found sibling wrappers; no second build was launched. No Android lint/static/unit gate
+has passed. No local commit, push, PR, APK or device test. `scripts/check.sh` passes:
+489 tracked Kotlin files and 489 provenance rows. New files are staged for that check.
+
+Next worker: obtain an exclusive host slot, then from `android/` run app/actions
+ktlintFormat, followed by both modules' lintDebug, ktlintCheck, detekt and unit tests
+with `--max-workers=2 -Pkotlin.compiler.execution.strategy=in-process --console=plain`.
+The initial command included app's full debug suite plus actions ContactRecipientsTest
+and ShareActionsTest. Finish all failures and update this evidence BEFORE committing.
+Code/tests are unverified WIP, not a completed fix. Commit locally only, then same-card review.
+
+Phone checklist (lead/owner; record build commit and pass/fail, no real identifiers):
+- [ ] Named WhatsApp text + location: Contacts and Location shown/requested BEFORE
+      approval/run; hold the answer longer than five seconds. Text and Maps link go to one chat.
+- [ ] Typed number: only Location requested, no Contacts. Previously frozen recipient:
+      revoke Contacts after preparation; execution must use the approved literal destination.
+- [ ] Deny Location or Contacts: nothing sends. Stop during preflight, then late Allow:
+      no run, no automatic approval/resume. Explicit retry obtains access before approval.
+- [ ] Revoke Location after text completes (controlled lab): no mid-run permission dialog;
+      location step says Needs you. Retry remaining steps obtains access, previews only
+      location and requires approval, then sends only the Maps link. Text is not repeated.
+- [ ] Retry denial twice; reject reapproval; rotate/reopen while stopped: completed text
+      stays excluded within the live process. Unchanged Start uses remaining-step retry.
+- [ ] Approval preference OFF still requires fresh approval of remaining steps.
+- [ ] Android 12+: precise/approximate requested together. Approximate-only answer cannot
+      authorize precise sharing. Email literal/name and SMS route use the frozen destination.
+- [ ] Real takeover, own-window/protected-window refusal, Pause/Stop and unknown effects
+      retain existing guards. Unknown effects/manual draft handoffs do not offer blind retry.
+- [ ] Process death does not start/repeat any step; no persistent delivery/dedup guarantee.
+      Check logs for counts/status only, never positions, Maps link, names or numbers.
+
 ## Fixes for round 1 — t_7a91b291 — NOT TESTED ON PHONE
 
 - 2026-10-10 accepted ADR-0008 implementation: preview lists runtime prerequisites; Allow now requests missing grants BEFORE approval/run. Existing Android grants are reused. The service is check-only; revoked permission does not launch a dialog and requires Stop plus explicit restart/reapproval. Removed the permission-controller touch bypass entirely; ordinary takeover, own-window and no-auto-resume protections remain.

@@ -1,5 +1,11 @@
 # TASK-005 per-file provenance map
 
+## Location retry additions (t_9fd2d126)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskPlanRetry.kt` | EQO-NEW | `ai.eqo.task` | Process-only completed-step memory; no replay of unknown effects |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/TaskPlanRetryTest.kt` | EQO-NEW | `ai.eqo.task` | Fake controller/executor retries without duplicate sends |
+
+
 ## Voice v2 additions (t_e9801e01)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/PhoneVoiceInput.kt` | EQO-NEW | `ai.eqo.task` | Pause-tolerant phone recognizer session and stale callback guards |

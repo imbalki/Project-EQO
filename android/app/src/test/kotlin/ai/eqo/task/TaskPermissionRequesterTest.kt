@@ -46,6 +46,24 @@ import java.util.concurrent.atomic.AtomicReference
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
 class TaskPermissionRequesterTest {
+    @Test
+    @Config(sdk = [33])
+    fun preciseLocationRequestsCoarseAndFineTogetherBeforeRun(): Unit =
+        runBlocking {
+            val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+            val requester = TaskPermissionRequester(activity)
+            val answer = CoroutineScope(Dispatchers.Unconfined).async {
+                requester.request(ActionPermission.Runtime(Manifest.permission.ACCESS_FINE_LOCATION, "Allow location"))
+            }
+            ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            assertArrayEquals(
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+                shadowOf(activity).lastRequestedPermission.requestedPermissions,
+            )
+            requester.cancelWaiting()
+            assertEquals(false, answer.await())
+        }
+
     @Test fun locationPlanRequestsAccessBeforeApprovalAndStopRejectsLateAllow(): Unit =
         runBlocking {
             val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
