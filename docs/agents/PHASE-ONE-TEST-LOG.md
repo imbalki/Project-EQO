@@ -1,5 +1,36 @@
 # Phase One phone test log
 
+## Voice v3.1 — `t_1598bf81` — NOT TESTED ON PHONE
+
+Owner-supplied evidence: build `edf1612` recorded twenty seconds, then falsely reported a missing
+key while Explain worked. This is motivation, not phone verification of this revision.
+The historical round evidence and prior Voice v3 checklist were read; no missing round results invented.
+
+- Direct single-credential lookup now uses the same lowercase `openrouter` ID as Setup/Explain/planner;
+  transcription sends it through redacted ephemeral request configuration rather than a display-name map.
+- Setup route and shared-key wording corrected; provider rejection no longer claims no key is stored.
+- Full catalog labels Audio/Text only, audio-input first, blocks text-only choice and marks the
+  advertised stable Gemini Flash recommendation. Picker/transcription use the shared 24-hour cache.
+- Failed finished WAV stays for explicit same-file retry, with an original ten-minute deadline.
+  Success, Cancel/Back, fallback, draft edit, background/close and expiry delete it; nothing auto-submits.
+- Final host gates: PENDING. No real microphone, provider audio, credential, device or APK install.
+
+Phone checklist (lead/owner; synthetic speech only, record build and results, never keys/audio):
+- [ ] Existing saved key: Explain still works; record twenty seconds including 3–4 second pauses,
+      stop, and get an editable transcript without entering a separate voice key.
+- [ ] Truly missing key: exact Setup > Model key guidance and shared-key explanation. Invalid/rejected
+      key: rejection message, not a claim that no key is stored. Draft/task remains unchanged.
+- [ ] Setup list: every row says Audio or Text only; Audio rows first; advertised current stable
+      Gemini Flash marked Recommended default. Text-only tap warns and leaves selection unchanged.
+- [ ] Reopen picker/transcribe within 24 hours: reuse catalog; after a day refresh public metadata.
+      Offline stale metadata keeps last-known labels; unknown/output-only capability cannot upload.
+- [ ] Airplane mode/provider failure after twenty seconds: file retained; Try again offered before
+      Phone voice. Restore network and retry without speaking again; original words reach draft only.
+- [ ] Repeated failure/retry does not extend ten minutes. Success and expiry remove cached audio;
+      no audio/path/transcript/key in logs. Cancel/Back, edit, phone fallback and leave/rotate also delete.
+- [ ] Cancel/close while retry uploads: microphone already released, no late draft overwrite or
+      task submission. App/process restart does not recover/upload old audio automatically.
+
 ## Location fix — `t_9fd2d126` — NOT TESTED ON PHONE
 
 CI review rework (2026-10-10; lead-reported ContactRecipientsTest failure):

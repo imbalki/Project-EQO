@@ -113,6 +113,13 @@ class VoiceInputV2Test {
     }
 
     @Test
+    fun voiceSharesExistingKeyAndGivesExactSetupRoute() {
+        assertTrue(activity.getString(R.string.voice_ai_disclosure).contains("Uses your existing OpenRouter key"))
+        assertTrue(activity.getString(R.string.voice_ai_key_missing).contains("Setup > Model key"))
+        assertTrue(activity.getString(R.string.voice_ai_key_missing).contains("same key"))
+    }
+
+    @Test
     fun successDeletesAudioAndAppendsOnlyToDraft() =
         runTest(dispatcher) {
             ai()
@@ -132,7 +139,7 @@ class VoiceInputV2Test {
         }
 
     @Test
-    fun failureDeletesAudioAndPreservesDraft() =
+    fun failureKeepsAudioAndPreservesDraft() =
         runTest(dispatcher) {
             ai()
             activity.findViewById<EditText>(R.id.task_request).setText("keep me")
@@ -140,7 +147,7 @@ class VoiceInputV2Test {
             tap()
             tap()
             advanceUntilIdle()
-            assertFalse(clip.file.exists())
+            assertTrue(clip.file.exists())
             assertEquals("keep me", activity.findViewById<EditText>(R.id.task_request).text.toString())
             assertEquals(
                 activity.getString(R.string.voice_ai_error),
@@ -150,21 +157,27 @@ class VoiceInputV2Test {
         }
 
     @Test
-    fun unsupportedModelOffersPhoneEngineAndDeletesAudio() =
+    fun unsupportedModelOffersRetryBeforePhoneEngine() =
         runTest(dispatcher) {
             ai()
             create { _, _ -> throw AudioUnsupportedException() }
             tap()
             tap()
             advanceUntilIdle()
-            assertFalse(clip.file.exists())
+            assertTrue(clip.file.exists())
             assertEquals(
                 activity.getString(R.string.voice_ai_unsupported),
                 activity.findViewById<TextView>(R.id.task_voice_state).text,
             )
-            ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            val dialog = ShadowAlertDialog.getLatestAlertDialog()
+            assertEquals(
+                activity.getString(R.string.voice_try_again),
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).text,
+            )
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).performClick()
             shadowOf(Looper.getMainLooper()).idle()
             assertEquals(VoiceEngine.PHONE, settings.engine)
+            assertFalse(clip.file.exists())
         }
 
     @Test
@@ -286,7 +299,7 @@ class VoiceInputV2Test {
         val recent = File.createTempFile("eqo-voice-", ".wav", activity.cacheDir)
         val other = File.createTempFile("other-", ".wav", activity.cacheDir)
         val now = System.currentTimeMillis()
-        stale.setLastModified(now - 300001)
+        stale.setLastModified(now - 600001)
         VoiceAudioRecorder.removeStaleFiles(activity.cacheDir, now)
         assertFalse(stale.exists())
         assertTrue(recent.exists())
@@ -373,7 +386,7 @@ class VoiceInputV2Test {
     }
 
     @Test
-    fun networkAndKeyErrorsArePlainAndDeleteAudio() =
+    fun networkAndKeyErrorsArePlainAndKeepAudioUntilCancelled() =
         runTest(dispatcher) {
             ai()
             val cases =
@@ -381,7 +394,7 @@ class VoiceInputV2Test {
                     java.io.IOException("synthetic") to R.string.voice_ai_network,
                     AudioKeyMissingException() to R.string.voice_ai_key_missing,
                     AudioIncompleteException() to R.string.voice_ai_incomplete,
-                    AudioProviderException(401) to R.string.voice_ai_key_missing,
+                    AudioProviderException(401) to R.string.voice_ai_key_rejected,
                     AudioProviderException(400) to R.string.voice_ai_unsupported,
                     AudioProviderException(429) to R.string.voice_ai_error,
                 )
@@ -390,11 +403,75 @@ class VoiceInputV2Test {
                 tap()
                 tap()
                 advanceUntilIdle()
-                assertFalse(clip.file.exists())
+                assertTrue(clip.file.exists())
                 assertEquals(activity.getString(message), activity.findViewById<TextView>(R.id.task_voice_state).text)
                 ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
+                shadowOf(Looper.getMainLooper()).idle()
+                assertFalse(clip.file.exists())
                 voice.close()
             }
+        }
+
+    @Test
+    fun retryUsesSameRecordingAndDeletesOnlyAfterSuccess() =
+        runTest(dispatcher) {
+            ai()
+            var calls = 0
+            var first: File? = null
+            create { file, _ ->
+                calls++
+                if (calls == 1) {
+                    first = file
+                    throw AudioKeyMissingException()
+                }
+                assertEquals(first, file)
+                assertTrue(file.exists())
+                "recovered words"
+            }
+            tap()
+            tap()
+            advanceUntilIdle()
+            assertTrue(clip.file.exists())
+            ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            advanceUntilIdle()
+            assertEquals(2, calls)
+            assertFalse(clip.file.exists())
+            assertEquals("recovered words", activity.findViewById<EditText>(R.id.task_request).text.toString())
+            assertFalse(submitted)
+        }
+
+    @Test
+    fun failedRecordingExpiresAfterTenMinutesAndRetryDoesNotExtendIt() =
+        runTest(dispatcher) {
+            ai()
+            create { _, _ -> throw java.io.IOException("synthetic") }
+            tap()
+            tap()
+            advanceUntilIdle()
+            shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMinutes(9))
+            assertTrue(clip.file.exists())
+            ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            advanceUntilIdle()
+            // Robolectric rounds the delayed-message endpoint; cross it rather than stopping on it.
+            shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(61))
+            assertFalse(clip.file.exists())
+            assertFalse(ShadowAlertDialog.getLatestAlertDialog().isShowing)
+        }
+
+    @Test
+    fun leavingAfterFailureDeletesRetainedAudio() =
+        runTest(dispatcher) {
+            ai()
+            create { _, _ -> throw AudioKeyMissingException() }
+            tap()
+            tap()
+            advanceUntilIdle()
+            assertTrue(clip.file.exists())
+            voice.close()
+            assertFalse(clip.file.exists())
+            assertFalse(ShadowAlertDialog.getLatestAlertDialog().isShowing)
         }
 
     private class FakeRecording(

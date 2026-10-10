@@ -13,13 +13,18 @@
     <string name="voice_level_description">Microphone level</string>
     <string name="voice_model_title">Voice audio model</string>
     <string name="voice_model_selected">Voice audio model: %1$s</string>
-    <string name="voice_model_row">%1$s (%2$s)</string>
+    <string name="voice_model_row">%1$s (%2$s) — %3$s</string>
+    <string name="voice_model_audio">Audio</string>
+    <string name="voice_model_text">Text only</string>
+    <string name="voice_model_recommended">%1$s — Recommended default</string>
+    <string name="voice_try_again">Try again</string>
+    <string name="voice_ai_key_rejected">OpenRouter did not accept your saved key. Check it in Setup &gt; Model key.</string>
     <string name="voice_models_unavailable">
         No audio-input models are available in the catalog. Check your internet connection and try again,
         or use Phone voice.
     </string>
     <string name="voice_ai_key_missing">
-        OpenRouter key is missing or not accepted. Add your key in setup, or use Phone voice.
+        Save your OpenRouter key in Setup &gt; Model key. Voice uses the same key as your other AI features.
     </string>
     <string name="voice_ai_network">
         Cannot reach your AI provider. Check your internet connection and airplane mode, or use Phone voice.
@@ -36,8 +41,9 @@
     <string name="voice_language_title">Voice language</string>
     <string name="voice_language_default">Device default</string>
     <string name="voice_ai_disclosure">
-        AI voice sends up to 90 seconds of audio to your chosen audio model via OpenRouter, using your saved key.
-        Your provider may charge for it. The temporary audio file is deleted after transcription, error or cancellation.
+        Uses your existing OpenRouter key. AI voice sends up to 90 seconds of audio to your chosen audio model.
+        Your provider may charge for it. Failed recordings stay on this screen for retry for up to 10 minutes.
+        Audio is deleted on success, cancellation or leaving this screen; it is never logged.
         AI is the default; Phone voice is an optional fallback. Cancelling cannot recall audio already sent;
         your provider controls its retention.
     </string>
