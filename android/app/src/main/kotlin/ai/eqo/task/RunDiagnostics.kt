@@ -1,5 +1,6 @@
 package ai.eqo.task
 
+import ai.eqo.core.agent.AttachmentFailure
 import ai.eqo.core.agent.ExecuteResult
 import android.util.Log
 
@@ -23,7 +24,9 @@ internal object RunDiagnostics {
     fun code(result: ExecuteResult): String =
         when (result) {
             is ExecuteResult.Success -> "executor_success_not_independent_receipt"
-            is ExecuteResult.Failure -> result.reason.takeIf { it in failureCodes } ?: "execution_failed"
+            is ExecuteResult.Failure ->
+                AttachmentFailure.kind(result.reason)
+                    ?: result.reason.takeIf { it in failureCodes } ?: "execution_failed"
             is ExecuteResult.Interrupted -> "apply_interrupted_effect_unknown"
         }
 
@@ -37,6 +40,7 @@ internal object RunDiagnostics {
     fun failureKind(result: ExecuteResult): String {
         val reason = (result as? ExecuteResult.Failure)?.reason.orEmpty()
         return when {
+            AttachmentFailure.kind(reason) != null -> requireNotNull(AttachmentFailure.kind(reason))
             reason.contains("All files access", ignoreCase = true) -> "needs_all_files_access"
             reason in setOf("a11y_not_bound", "a11y_disabled") ||
                 reason.contains("accessibility in Settings", ignoreCase = true) -> "accessibility_off"

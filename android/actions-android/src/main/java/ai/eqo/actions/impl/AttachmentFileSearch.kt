@@ -1,6 +1,7 @@
 // Origin: EQO Files v2, bounded read-only attachment resolution in shared storage.
 package ai.eqo.actions.impl
 
+import ai.eqo.core.agent.AttachmentFailure
 import ai.eqo.core.agent.AttachmentSearch
 import java.io.File
 import java.time.Instant
@@ -24,7 +25,13 @@ internal class AttachmentFileSearch(
     private val clockNanos: () -> Long = System::nanoTime,
 ) {
     fun search(query: AttachmentSearch): FileSearchResult {
-        if (accessGranted()) catalog?.refresh(query.rescan)
+        if (accessGranted()) {
+            try {
+                catalog?.refresh(query.rescan)
+            } catch (_: RuntimeException) {
+                // A broken media index must not prevent the bounded filesystem fallback.
+            }
+        }
         val result = scan(query)
         val empty = (result as? FileSearchResult.Matches)?.files?.isEmpty() == true
         return if (empty && catalog != null && !query.rescan) {
@@ -39,12 +46,12 @@ internal class AttachmentFileSearch(
     private fun scan(query: AttachmentSearch): FileSearchResult {
         val starts =
             try {
-                layout.searchFolders(query.folder)
+                layout.searchFolders(query.folder ?: typeFolder(query.type))
             } catch (_: SecurityException) {
-                return FileSearchResult.Refused(SharedFileBrowser.OUTSIDE)
+                return FileSearchResult.Refused(AttachmentFailure.reason("attachment_not_allowed"))
             }
         if (!accessGranted() && starts.any { !layout.isOwnArea(it) }) {
-            return FileSearchResult.Refused(SharedFileBrowser.NEEDS_ACCESS)
+            return FileSearchResult.Refused(AttachmentFailure.reason("needs_all_files_access"))
         }
         val deadline = clockNanos() + MAX_NANOS
         val queue = ArrayDeque<Pair<File, Int>>()
@@ -55,13 +62,21 @@ internal class AttachmentFileSearch(
         catalog
             ?.indexedFiles()
             ?.filter { it.isFile && layout.isAllowed(it) && !layout.hasLinkedAncestor(it) }
-            ?.filter { file -> starts.any { file.toPath().startsWith(it.toPath()) } && matches(file, query) }
-            ?.forEach { found += it }
+            ?.filter { file ->
+                val withinRoots = starts.any { file.toPath().startsWith(it.toPath()) }
+                val indexedScreenshot = query.folder == null && query.type == "screenshot"
+                (withinRoots || indexedScreenshot) && matches(file, query)
+            }?.forEach { found += it }
         if (found.size > MAX_MATCHES) return FileSearchResult.Refused(TOO_MANY)
         var visited = 0
         while (queue.isNotEmpty()) {
             val (dir, depth) = queue.removeFirst()
-            val children = dir.listFiles() ?: return FileSearchResult.Refused(INCOMPLETE)
+            val children =
+                try {
+                    dir.listFiles()
+                } catch (_: SecurityException) {
+                    null
+                } ?: return FileSearchResult.Refused(AttachmentFailure.reason("folder_not_readable"))
             for (file in children) {
                 if (++visited > MAX_VISITED || clockNanos() >= deadline) {
                     return FileSearchResult.Refused(INCOMPLETE)
@@ -76,7 +91,8 @@ internal class AttachmentFileSearch(
                 }
             }
         }
-        return FileSearchResult.Matches(found.sortedWith(compareByDescending<File> { modified(it) }.thenBy { it.name }))
+        val sorted = found.sortedWith(compareByDescending<File> { modifiedMillis(it) }.thenBy { it.name })
+        return FileSearchResult.Matches(sorted)
     }
 
     private fun searchable(file: File): Boolean {
@@ -90,7 +106,7 @@ internal class AttachmentFileSearch(
     ): Boolean {
         val name = file.name.lowercase()
         if (query.words.any { !name.contains(it.lowercase()) } || !matchesType(file, query.type)) return false
-        val day = Instant.ofEpochMilli(modified(file)).atZone(zone).toLocalDate()
+        val day = Instant.ofEpochMilli(modifiedMillis(file)).atZone(zone).toLocalDate()
         return query.firstDay == null || (!day.isBefore(query.firstDay) && !day.isAfter(query.lastDay))
     }
 
@@ -101,14 +117,36 @@ internal class AttachmentFileSearch(
         val mime = catalog?.metadata(file)?.mime
         return when (type) {
             null -> true
-            "screenshot", "camera" -> layout.aliases.matchesType("image", file, mime) && belongs(file, type)
+            "screenshot" ->
+                layout.aliases.matchesType("image", file, mime) &&
+                    (belongs(file, type) || file.name.startsWith("Screenshot_", ignoreCase = true))
+            "camera", "photo" -> layout.aliases.matchesType("image", file, mime) && belongs(file, "camera")
             "gallery" -> layout.aliases.matchesType("image", file, mime)
             "download", "downloads" -> belongs(file, "downloads")
             else -> layout.aliases.matchesType(type, file, mime)
         }
     }
 
-    private fun modified(file: File): Long = catalog?.modifiedMillis(file) ?: file.lastModified()
+    private fun typeFolder(type: String?): String? =
+        when (type) {
+            "screenshot" -> "screenshot"
+            "photo", "camera" -> "camera"
+            "download", "downloads" -> "downloads"
+            else -> null
+        }
+
+    fun modifiedMillis(file: File): Long = screenshotTime(file) ?: catalog?.modifiedMillis(file) ?: file.lastModified()
+
+    private fun screenshotTime(file: File): Long? =
+        SCREENSHOT_TIME.find(file.name)?.let { match ->
+            try {
+                val date = java.time.LocalDateTime.parse(match.groupValues[1], SCREENSHOT_FORMAT)
+                val fraction = match.groupValues[2].toLongOrNull()?.times(MILLIS_PER_CENTISECOND) ?: 0L
+                date.atZone(zone).toInstant().toEpochMilli() + fraction
+            } catch (_: java.time.DateTimeException) {
+                null
+            }
+        }
 
     private fun belongs(
         file: File,
@@ -121,9 +159,19 @@ internal class AttachmentFileSearch(
     companion object {
         private const val MAX_VISITED = 50_000
         private const val MAX_DEPTH = 8
+        private const val MILLIS_PER_CENTISECOND = 10L
         private const val MAX_MATCHES = 200
         private const val MAX_NANOS = 2_000_000_000L
-        private const val INCOMPLETE = "File search could not finish safely. Specify a narrower folder or name."
-        private const val TOO_MANY = "Too many files match. Specify a narrower folder, date, type or name."
+        private val INCOMPLETE = AttachmentFailure.reason("search_incomplete")
+        private val TOO_MANY = AttachmentFailure.reason("too_many_matches")
+        private val SCREENSHOT_FORMAT =
+            java.time.format.DateTimeFormatter
+                .ofPattern("uuuu-MM-dd-HH-mm-ss")
+                .withResolverStyle(java.time.format.ResolverStyle.STRICT)
+        private val SCREENSHOT_TIME =
+            Regex(
+                "^Screenshot_(\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}-\\d{2})(?:-(\\d{2}))?(?:_|\\.)",
+                RegexOption.IGNORE_CASE,
+            )
     }
 }

@@ -6,6 +6,8 @@ import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.util.UUID
 
+internal class AttachmentTooLargeException : java.io.IOException("Attachment too large")
+
 /**
  * Attachments are copied into one folder that EQO's non-exported file provider serves, so the receiving
  * app never gets a handle on the owner's real folders. Each share lives in its own sub-folder and is
@@ -15,20 +17,48 @@ internal class ShareStaging(
     val root: File,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
-    fun stage(source: File): File {
+    fun stage(source: File): File =
+        stage(source.name, {
+            Files.newInputStream(source.toPath(), LinkOption.NOFOLLOW_LINKS)
+        })
+
+    @Suppress("TooGenericExceptionCaught") // Provider callbacks and cancellation must both delete partial copies.
+    fun stage(
+        name: String,
+        open: () -> java.io.InputStream,
+        checkActive: () -> Unit = {},
+    ): File {
         val dir = File(root, UUID.randomUUID().toString())
-        check(dir.mkdirs()) { "Could not create the share folder" }
-        val target = File(dir, safeName(source.name))
+        if (!dir.mkdirs()) throw java.io.IOException("Could not create the share folder")
+        val target = File(dir, safeName(name))
         try {
-            Files.newInputStream(source.toPath(), LinkOption.NOFOLLOW_LINKS).use { input ->
-                target.outputStream().use { output -> input.copyTo(output) }
-            }
+            open().use { input -> target.outputStream().use { output -> copyBounded(input, output, checkActive) } }
         } catch (failure: java.io.IOException) {
+            dir.deleteRecursively()
+            throw failure
+        } catch (failure: RuntimeException) {
             dir.deleteRecursively()
             throw failure
         }
         dir.setLastModified(clock())
         return target
+    }
+
+    private fun copyBounded(
+        input: java.io.InputStream,
+        output: java.io.OutputStream,
+        checkActive: () -> Unit,
+    ) {
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        var total = 0L
+        var count = input.read(buffer)
+        while (count != -1) {
+            checkActive()
+            total += count
+            if (total > AttachmentShare.MAX_TOTAL_BYTES) throw AttachmentTooLargeException()
+            output.write(buffer, 0, count)
+            count = input.read(buffer)
+        }
     }
 
     /** Deletes the share folders of these staged files. */

@@ -459,11 +459,11 @@ class FileFeaturesRegistryTest {
             file("Download/ok.txt")
             access = false
             listOf(
-                "Downloads/ok.txt" to "All files access",
-                "Downloads/missing.txt" to "All files access",
-                "/data/data/ai.eqo.app/shared_prefs/x.xml" to "outside",
-                "../etc/hosts" to "..",
-                "last_screenshot" to "All files access",
+                "Downloads/ok.txt" to "attachment_cancelled",
+                "Downloads/missing.txt" to "attachment_cancelled",
+                "/data/data/ai.eqo.app/shared_prefs/x.xml" to "attachment_not_allowed",
+                "../etc/hosts" to "attachment_invalid",
+                "last_screenshot" to "attachment_cancelled",
             ).forEach { (attachment, expected) ->
                 val message =
                     registry.execute(

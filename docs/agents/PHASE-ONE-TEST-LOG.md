@@ -1,5 +1,31 @@
 # Phase One phone test log
 
+## Runtime screenshot resolver and picker — t_62291cf6 — NOT TESTED ON PHONE
+
+- Local-only branch `fix/find-screenshots`, worktree `w-findshots`; no push/PR/gh,
+  install, phone, real contact/file content, live provider/model or credentials accessed.
+- Owner-supplied DCIM/Screenshots evidence is not a new phone test. Regression fakes
+  reproduce 26 OEM-style JPEG names, absent Pictures/Screenshots and an unrelated
+  depth-limited folder; scoped screenshot roots, capture-date matching and newest
+  selection are exercised separately from whole-storage search failure.
+- One-document ACTION_OPEN_DOCUMENT fallback for zero matches/search failure and
+  Choose a different file; stage selected content, release original read grant before
+  confirmation, show name/date/size and Send / Cancel. Existing 60-second confirmation,
+  recipient approval, capture, takeover and resume guards remain unchanged.
+- Fixed allowlisted attachment reasons map to readable run detail and EqoRun kinds;
+  tests prohibit generic diagnoses and private names/paths/exception payloads.
+- Executable planner few-shots distinguish existing screenshot, yesterday, explicit
+  capture, bill email (known own address only), and latest camera photo.
+- Checklist and limitations: `docs/agents/FIND-SCREENSHOTS.md`.
+- First shared-host gate attempt: three sibling Gradle wrappers remained active after
+  one 3-minute wait. Own invocation uses 2 workers, in-process Kotlin and 1536 MB heap.
+  All touched modules' ktlintFormat/ktlintCheck/detekt, :app:lintDebug and all three
+  testDebugUnitTest tasks requested with --continue; progress is real, not a pass.
+  It found new line-length/complexity/import violations; corrections are in progress.
+  This first invocation is not a frozen-source verification (regressions were added
+  while dependency compilation ran). Final gates/results recorded below when complete.
+
+
 ## Location fix — `t_9fd2d126` — NOT TESTED ON PHONE
 
 CI review rework (2026-10-10; lead-reported ContactRecipientsTest failure):

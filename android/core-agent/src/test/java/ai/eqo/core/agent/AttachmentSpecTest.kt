@@ -114,7 +114,7 @@ class AttachmentSpecTest {
         assertTrue(prompt.contains("find:ebay bill"))
         assertTrue(prompt.contains("date=2026-10-01..2026-10-07"))
         assertTrue(prompt.contains("Never invent a path"))
-        assertTrue(prompt.contains("never authorizes guessing"))
+        assertTrue(prompt.contains("tied newest files require human choice"))
     }
 
     @Test fun searchFormsParseAndValidate() {

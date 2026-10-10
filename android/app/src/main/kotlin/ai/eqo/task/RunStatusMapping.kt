@@ -1,6 +1,7 @@
 package ai.eqo.task
 
 import ai.eqo.R
+import ai.eqo.core.agent.AttachmentFailure
 import ai.eqo.core.agent.LoopStep
 import ai.eqo.core.agent.TaskDisplayText
 import ai.eqo.core.llm.error.LLMError
@@ -25,7 +26,14 @@ internal object RunStatusMapping {
             progress.state == StepProgressState.DONE &&
                 progress.name.lowercase() in setOf("compose_sms", "compose_email")
         val missingControl = progress.state == StepProgressState.FAILED && progress.detail == "control_not_found"
-        val needsYou = draft || missingControl || (handoff != null && progress.state == StepProgressState.FAILED)
+        val fileNeedsYou =
+            AttachmentFailure.kind(progress.detail) in
+                setOf("attachment_cancelled", "attachment_selection_required")
+        val needsYou =
+            draft ||
+                missingControl ||
+                fileNeedsYou ||
+                (handoff != null && progress.state == StepProgressState.FAILED)
         return progress.copy(
             state = if (needsYou) StepProgressState.NEEDS_YOU else progress.state,
             detail = if (needsYou) handoff ?: progress.detail else progress.detail,
@@ -54,6 +62,8 @@ internal object RunStatusMapping {
         if (original.state == StepProgressState.UNKNOWN) return null
         val step = original.copy(detail = original.detail.removePrefix("permission denied: "))
         return when {
+            AttachmentFailure.message(step.detail) != null ->
+                Text(R.string.run_user_action, requireNotNull(AttachmentFailure.message(step.detail)))
             step.state == StepProgressState.NEEDS_YOU -> handoff(step)
             step.detail == FailureClass.A11Y_LOST.repair ||
                 step.detail in

@@ -1,5 +1,11 @@
 # TASK-005 per-file provenance map
 
+## Screenshot runtime resolver and document picker (t_62291cf6)
+
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AttachmentFailure.kt` | EQO-NEW | `ai.eqo.core.agent` | Allowlisted attachment diagnoses with no filenames, URIs or exception payloads |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskDocumentPicker.kt` | EQO-NEW | `ai.eqo.task` | One-document system picker and ephemeral read-grant lifecycle |
+
+
 ## Location retry additions (t_9fd2d126)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/TaskPlanRetry.kt` | EQO-NEW | `ai.eqo.task` | Process-only completed-step memory; no replay of unknown effects |

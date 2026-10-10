@@ -1,6 +1,7 @@
 package ai.eqo.task
 
 import ai.eqo.R
+import ai.eqo.core.agent.AttachmentFailure
 import ai.eqo.core.agent.ExecuteResult
 import ai.eqo.core.agent.ExecutedAction
 import ai.eqo.core.agent.LoopStep
@@ -68,6 +69,40 @@ class RunStatusMappingTest {
         val shown = RunStatusMapping.detail(failed("No files found for private-file."))!!.argument
         assertTrue(shown.contains("No matching"))
         assertFalse(shown.contains("private-file"))
+    }
+
+    @Test fun everyAttachmentDiagnosisHasSpecificLogKindAndReadableRunDetail() {
+        val kinds =
+            listOf(
+                "attachment_invalid",
+                "no_matching_file",
+                "folder_not_readable",
+                "search_incomplete",
+                "too_many_matches",
+                "attachment_selection_required",
+                "attachment_cancelled",
+                "attachment_unavailable",
+                "attachment_not_allowed",
+                "needs_all_files_access",
+                "attachment_too_large",
+                "staging_failed",
+                "provider_failed",
+                "send_route_failed",
+                "send_requires_user",
+            )
+        for (kind in kinds) {
+            val reason = AttachmentFailure.reason(kind)
+            val failure = ExecuteResult.Failure(reason)
+            assertEquals(kind, RunDiagnostics.code(failure))
+            assertEquals(kind, RunDiagnostics.failureKind(failure))
+            val progress = RunStatusMapping.progress(null, failed(reason).copy(name = "SEND_EMAIL"), null)
+            val detail = requireNotNull(RunStatusMapping.detail(progress))
+            assertEquals(R.string.run_user_action, detail.resource)
+            assertEquals(AttachmentFailure.message(reason), detail.argument)
+            assertFalse(detail.argument.contains("/sdcard"))
+            if (kind == "attachment_cancelled") assertEquals(StepProgressState.NEEDS_YOU, progress.state)
+        }
+        assertEquals("execution_failed", RunDiagnostics.code(ExecuteResult.Failure("staging_failed: private-name")))
     }
 
     private fun failed(
@@ -214,7 +249,7 @@ class RunStatusMappingTest {
     }
 
     @Test fun diagnosticCodesNeverIncludeArbitraryExecutorTextEvenIfIdentifierLike() {
-        for (reason in listOf("secret", "App 'private app' not installed", "draft opened", "sk-or-private")) {
+        for (reason in listOf("secret", "App 'private app' not installed", "draft opened", "«redacted:sk-…»")) {
             assertEquals("execution_failed", RunDiagnostics.code(ExecuteResult.Failure(reason)))
         }
         assertEquals("a11y_node_not_found", RunDiagnostics.code(ExecuteResult.Failure("a11y_node_not_found")))
