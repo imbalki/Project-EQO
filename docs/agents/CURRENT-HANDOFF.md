@@ -23,8 +23,24 @@ Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every me
   Send/Share/Publish, arbitrary IDs and communication draft submit routes remain rejected before approval.
 - This base has no enabled vision-locate fallback/settings; no fictitious vision button or automatic upload was
   added. Explain screen is separate from locate/tap. A vision offer needs integration with a real enabled fallback.
-- Host verification: pending sequential touched-module lint, ktlint, detekt and unit execution; results below
-  will be updated from actual output. Full CI remains lead-owned. No push/PR/gh or phone installation.
+- Broad five-module host gate ran with `--continue --no-daemon --max-workers=2`, in-process Kotlin,
+  `-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m -XX:ActiveProcessorCount=2 -Dfile.encoding=UTF-8`.
+  Tasks per core-llm/platform-a11y/core-agent/actions-android/app: ktlintFormat, lintDebug, ktlintCheck,
+  detekt, testDebugUnitTest. Actual output: BUILD FAILED in 1h 32m 33s (477 tasks, 362 executed).
+  XML: core-llm 277 (one existing skip), platform 120, core-agent 115, actions 169 (one macro failure,
+  three Windows symlink capability skips), app 309; 990 tests, one failure, zero errors, four skips.
+  All new tests passed; the sole test failure is historical macro delete/list UncompletedCoroutinesError,
+  not baseline-reproduced here. All five lintDebug tasks completed; static checks passed except app progress
+  complexity 16 (limit 15), now fixed by extracting existing target selection without a suppression.
+- Final corrected-source confirmation: platform-a11y/app ktlintFormat, lintDebug, ktlintCheck, detekt,
+  testDebugUnitTest with the same memory/worker/compiler flags exited 0: BUILD SUCCESSFUL in 22m 28s
+  (389 tasks: 52 executed, 337 up-to-date). Fresh XML: platform 120 + app 309, zero failures/errors/skips.
+  All five module lint XMLs contain zero issues. Earlier attempt crashed from native memory allocation;
+  retries caught/fixed a long line, app complexity and facade method count, without global suppressions.
+- Repo secret/branding/provenance gate passes (488 Kotlin files/rows); added Kotlin lines <=120 and
+  git diff --check pass. The broad actions macro failure remains; full gate is NOT green. Release/APK,
+  instrumentation, other-module suites and live provider/device/CI were not run. No push/PR/gh/install.
+  Lead owns CI and phone checks; same-card independent review must approve before publication.
 
 Phone checklist (lead/owner, synthetic content only; record build and result):
 - [ ] Keep: “add a note called Test in Keep”; preview has correct entry alternatives, Title and Back, no

@@ -26,14 +26,17 @@ internal object RunStatusMapping {
                 progress.name.lowercase() in setOf("compose_sms", "compose_email")
         val missingControl = progress.state == StepProgressState.FAILED && progress.detail == "control_not_found"
         val needsYou = draft || missingControl || (handoff != null && progress.state == StepProgressState.FAILED)
-        val params = step?.action?.params.orEmpty()
         return progress.copy(
             state = if (needsYou) StepProgressState.NEEDS_YOU else progress.state,
             detail = if (needsYou) handoff ?: progress.detail else progress.detail,
-            targetLabel =
-                params["target"] ?: params["searchText"] ?: params["viewId"] ?: params["view_id"]
-                    ?: params["appName"] ?: params["app_name"] ?: params["app"] ?: params["text"].orEmpty(),
+            targetLabel = targetLabel(step),
         )
+    }
+
+    private fun targetLabel(step: LoopStep?): String {
+        val params = step?.action?.params.orEmpty()
+        return params["target"] ?: params["searchText"] ?: params["viewId"] ?: params["view_id"]
+            ?: params["appName"] ?: params["app_name"] ?: params["app"] ?: params["text"].orEmpty()
     }
 
     fun terminal(receipt: RunReceipt): String =

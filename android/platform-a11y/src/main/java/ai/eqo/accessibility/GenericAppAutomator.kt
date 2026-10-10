@@ -154,7 +154,7 @@ object GenericAppAutomator {
 
     fun pressBack(): A11yResult = gated { it.pressBack() }
 
-    fun pressBackInApp(): A11yResult = gated { it.pressBackInApp() }
+    fun pressBackInApp(): A11yResult = gated { it.pressBack(restrictToApp = true) }
 
     fun pressHome(): A11yResult = gated { it.pressHome() }
 

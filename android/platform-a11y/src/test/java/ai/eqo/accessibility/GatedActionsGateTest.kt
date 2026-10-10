@@ -69,17 +69,18 @@ class GatedActionsGateTest {
         val ops = FakeServiceActionOps()
         val detector = TakeoverDetector()
         var root = FakeNode(packageName = "ai.eqo.app")
-        val automation = EqoAutomation(
-            { root },
-            { EqoAutomation.ServiceState.AVAILABLE },
-            detector,
-            ownPackage = "ai.eqo.app",
-        )
+        val automation =
+            EqoAutomation(
+                { root },
+                { EqoAutomation.ServiceState.AVAILABLE },
+                detector,
+                ownPackage = "ai.eqo.app",
+            )
         val actions = GatedServiceActions(automation, ops)
-        assertFalse(actions.pressBackInApp().isSuccess)
+        assertFalse(actions.pressBack(restrictToApp = true).isSuccess)
         assertTrue(ops.calls.isEmpty())
         root = FakeNode(packageName = "com.google.android.keep")
-        assertTrue(actions.pressBackInApp().isSuccess)
+        assertTrue(actions.pressBack(restrictToApp = true).isSuccess)
         assertEquals(listOf("performGlobalBack"), ops.calls)
     }
 
