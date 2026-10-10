@@ -13,7 +13,22 @@ The historical round evidence and prior Voice v3 checklist were read; no missing
   advertised stable Gemini Flash recommendation. Picker/transcription use the shared 24-hour cache.
 - Failed finished WAV stays for explicit same-file retry, with an original ten-minute deadline.
   Success, Cancel/Back, fallback, draft edit, background/close and expiry delete it; nothing auto-submits.
-- Final host gates: PENDING. No real microphone, provider audio, credential, device or APK install.
+- Final frozen-source scoped gate exits 0: BUILD SUCCESSFUL in 11m 58s, 394 tasks
+  (13 executed, 381 up-to-date). From `android/`: `./gradlew :app:ktlintFormat
+  :core-llm:ktlintFormat :app:ktlintCheck :core-llm:ktlintCheck :app:detekt :core-llm:detekt
+  :app:testDebugUnitTest :core-llm:testDebugUnitTest :app:lintDebug :core-llm:lintDebug
+  --continue --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process
+  '-Dorg.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=1024m -XX:ActiveProcessorCount=2
+  -Dfile.encoding=UTF-8' --console=plain`. App 336 + core 281 tests: zero failures/errors,
+  one existing core skip. All 59 voice/provider tests pass; both debug lint XMLs have zero issues.
+  Repo/branding/provenance gate passes (494/494), diff whitespace and added Kotlin <=120 pass.
+- Initial full gates failed (1h05m13s, 22m03s, 24m59s): static findings were fixed without
+  baselines, dialog callbacks drained, and the expiry regression found a real receiver-shadowing
+  error. Unqualified cancel inside launch cancelled the coroutine scope, not the audio owner;
+  explicit owner cancellation fixes deletion. Focused expiry passed in 3m18s before the final
+  complete gate. Prior failed runs are not concealed; no raw host logs were committed.
+- NOT RUN: root/all-module Android gates, other modules' unit suites, release/APK build,
+  instrumentation, device/microphone, live provider or remote CI. No credential or device accessed.
 
 Phone checklist (lead/owner; synthetic speech only, record build and results, never keys/audio):
 - [ ] Existing saved key: Explain still works; record twenty seconds including 3–4 second pauses,

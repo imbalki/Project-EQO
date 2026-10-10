@@ -127,7 +127,8 @@ internal class AiVoiceInput(
                         retryReady = true
                         handler.postDelayed({
                             if (recording === session) {
-                                cancel()
+                                // launch supplies a CoroutineScope receiver; release the audio owner, not that scope.
+                                this@AiVoiceInput.cancel()
                                 presenter.cancel()
                                 dialog?.dismiss()
                             }

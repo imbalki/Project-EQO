@@ -454,7 +454,7 @@ class VoiceInputV2Test {
             ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
             shadowOf(Looper.getMainLooper()).idle()
             advanceUntilIdle()
-            // Robolectric rounds the delayed-message endpoint; cross it rather than stopping on it.
+            // Cross the deadline with bounded looper dispatch slack, without resetting it on retry.
             shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(61))
             assertFalse(clip.file.exists())
             assertFalse(ShadowAlertDialog.getLatestAlertDialog().isShowing)
