@@ -13,8 +13,19 @@
   delete temporary audio and reject late results; network/key/model messages offer Phone.
 - Design: ADR 0012 supersedes ADR 0011 defaults/limits/model selection. Fixed silence threshold
   is hardware/noise-sensitive and must be phone-tested. No real provider, microphone or phone used.
-- Host verification: pending final scoped gates. This is not yet passing verification evidence.
-  Lead owns publication, CI and phone tests; worker uses same-card review, never self-completion.
+- Verified code checkpoint: `51c1125` (external in-progress checkpoint, no worker history rewrite).
+  Final serial app/core-llm ktlintFormat, ktlintCheck, detekt, testDebugUnitTest and lintDebug:
+  `BUILD SUCCESSFUL in 25m 45s`, 394 tasks (26 executed, 368 up-to-date); saved ignored log
+  `android/app/build/reports/voice-v3/final-gates-2.log`. Flags: `--continue --max-workers=2
+  -Pkotlin.compiler.execution.strategy=in-process --console=plain`. Fresh XML: app 322, core-llm
+  279 tests; zero failures/errors, one existing core skip; all 51 voice/provider cases pass.
+  Both lint XML reports contain zero issues. Repo/provenance (491/491), diff and changed Kotlin
+  line-length checks pass. Earlier failed iterations caught static issues, blocking fake-test
+  scheduling after the key check, safe-error expectation and a fake-clock endpoint assertion;
+  fixed without baselines. Intermediate failed runs are not final passing evidence.
+- NOT RUN: full all-module/root Gradle gate, other modules' unit tests, APK/release build,
+  instrumentation, live provider/microphone, phone testing or remote CI. Lead owns publication,
+  CI and phone tests; worker uses same-card review, never self-completion.
 - Phone checklist and exact 20-word English/Hindi fixtures: Voice v3 in PHASE-ONE-TEST-LOG.md.
 
 The Voice v2 section below is historical, not the current default/limit.

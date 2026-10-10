@@ -5,7 +5,19 @@
 Local-only `feat/voice-v3`. The checked-in log has no Round 3 heading; this card's supplied
 Realme Android 11 early-stop result motivated the change, but is not verification of this build.
 No real microphone, provider upload, APK install or device interaction was performed.
-Host verification: pending final scoped gates; passing results will replace this line.
+Verified code checkpoint `51c1125` (external in-progress checkpoint). Final serial command from
+`android/`: `./gradlew :app:ktlintFormat :core-llm:ktlintFormat :app:ktlintCheck :app:detekt
+:core-llm:ktlintCheck :core-llm:detekt :app:testDebugUnitTest :core-llm:testDebugUnitTest
+:app:lintDebug :core-llm:lintDebug --continue --max-workers=2
+-Pkotlin.compiler.execution.strategy=in-process --console=plain`.
+Saved ignored `app/build/reports/voice-v3/final-gates-2.log`: `BUILD SUCCESSFUL in 25m 45s`,
+394 tasks (26 executed, 368 up-to-date). Fresh XML: app 322 and core-llm 279 tests, zero
+failures/errors, one existing core skip. All 51 voice/provider tests pass; both module lint
+XML reports have zero issues. Repo/provenance 491/491, diff and changed Kotlin line lengths pass.
+Earlier failed runs found static findings, fake scheduling after key-check suspension, a
+safe-error assertion and timer idle-endpoint mismatch; corrected, not baselined or concealed.
+NOT RUN: all-module/root checks, other module unit suites, APK/release build, instrumentation,
+real provider/mic, remote CI and all phone items below. Host tests do not establish phone quality.
 
 Phone checklist (lead/owner must record build commit and outcomes; synthetic requests only):
 - [ ] New/unset engine preference defaults to AI; a previously explicit Phone choice stays Phone.
