@@ -67,11 +67,14 @@ class AttachmentFileSearchTest {
                 as FileSearchResult.Matches
         ).files
 
-    private fun share(selection: AttachmentSelection? = null): AttachmentShare =
+    private fun share(
+        selection: AttachmentSelection? = null,
+        recorded: File? = null,
+    ): AttachmentShare =
         AttachmentShare(
             layout,
             object : LastScreenshotStore {
-                override fun get(): File? = null
+                override fun get(): File? = recorded?.takeIf { it.isFile }
 
                 override fun record(file: File) = Unit
             },
@@ -79,6 +82,54 @@ class AttachmentFileSearchTest {
             { true },
             selection,
         ) { Uri.parse("content://synthetic/${it.name}") }
+
+    @Test fun staleRecordedScreenshotFallsBackButFreshEqoCaptureKeepsItsIdentity() =
+        runBlocking {
+            val eqo = file("Pictures/EQO/eqo.png", "2026-10-01")
+            file("Pictures/Screenshots/new.png")
+            val ui = FakeSelection()
+            val fallback = share(ui, eqo).prepareOnIo("last_screenshot") as PreparedShare.Ready
+            assertEquals("new.png", fallback.files.single().displayName)
+            fallback.files.forEach { it.staged.delete() }
+            eqo.setLastModified(System.currentTimeMillis())
+            val captured = share(ui, eqo).prepareOnIo("last_screenshot") as PreparedShare.Ready
+            assertEquals("eqo.png", captured.files.single().displayName)
+        }
+
+    @Test fun missingEqoScreenshotUsesNewestGalleryWithDisclosureBeforeStaging() =
+        runBlocking {
+            file("Pictures/Screenshots/old.png", "2026-10-01")
+            file("DCIM/Screenshots/new.png")
+            val ui = FakeSelection()
+            ui.beforeConfirm = { assertTrue(staging.listFiles().orEmpty().isEmpty()) }
+            val ready = share(ui).prepareOnIo("last_screenshot") as PreparedShare.Ready
+            assertEquals("new.png", ready.files.single().displayName)
+            assertEquals("new.png", ui.shown.single().name)
+            assertTrue(ui.offered.isEmpty())
+        }
+
+    @Test fun galleryFallbackNeedsForegroundConfirmationAndRespectsCancelAndDeletion() =
+        runBlocking {
+            val screenshot = file("Pictures/Screenshots/new.png")
+            assertTrue(share().prepareOnIo("last_screenshot") is PreparedShare.Refused)
+            val ui = FakeSelection()
+            ui.confirm = false
+            assertTrue(share(ui).prepareOnIo("last_screenshot") is PreparedShare.Refused)
+            ui.confirm = true
+            ui.beforeConfirm = { screenshot.delete() }
+            assertTrue(share(ui).prepareOnIo("last_screenshot") is PreparedShare.Refused)
+            assertTrue(staging.listFiles().orEmpty().isEmpty())
+        }
+
+    @Test fun tiedNewestGalleryScreenshotsRequireHumanChoice() =
+        runBlocking {
+            file("Pictures/Screenshots/a.png")
+            file("DCIM/Screenshots/b.png")
+            val ui = FakeSelection()
+            val ready = share(ui).prepareOnIo("last_screenshot") as PreparedShare.Ready
+            assertEquals(2, ui.offered.size)
+            assertEquals("b.png", ready.files.single().displayName)
+        }
 
     @Test fun allWordsTypeAndFolderMustMatchAndNewestComesFirst() {
         file("Download/EBAY-BILL-old.PDF", "2026-10-01")

@@ -259,10 +259,10 @@ class SharedStorageTest {
     }
 
     @Test fun `last_screenshot uses the recorded file and fails clearly when none exists`() {
-        val shot = file("Pictures/EQO/eqo-screenshot-1.png", "P")
         val last = FakeLast()
         val none = share(last).prepare("last_screenshot") as PreparedShare.Refused
         assertTrue(none.message.contains("No EQO screenshot"))
+        val shot = file("Pictures/EQO/eqo-screenshot-1.png", "P")
         last.record(shot)
         val ready = share(last).prepare("last_screenshot") as PreparedShare.Ready
         assertEquals("eqo-screenshot-1.png", ready.files.single().displayName)

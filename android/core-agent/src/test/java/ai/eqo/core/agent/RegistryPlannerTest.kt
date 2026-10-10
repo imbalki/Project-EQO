@@ -104,6 +104,86 @@ class RegistryPlannerTest {
             }
         }
 
+    @Test fun fileOnlySendCanOmitTextButNeverItsRecipientOrAValidAttachment() {
+        val send =
+            """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"", """ +
+                """"attachment":"find:ebay bill"}}]}"""
+        assertEquals(
+            "",
+            RegistryPlanVocabulary
+                .parse(send, setOf("SEND_WHATSAPP"))
+                .single()
+                .action.params["message"],
+        )
+        for (invalid in listOf(
+            send.replace("Example", ""),
+            send.replace("find:ebay bill", ""),
+            send.replace("find:ebay bill", "../private"),
+        )) {
+            assertThrows(IllegalArgumentException::class.java) {
+                RegistryPlanVocabulary.parse(invalid, setOf("SEND_WHATSAPP"))
+            }
+        }
+    }
+
+    @Test fun naturalFileRequestsKeepRuntimeReferencesThroughFakePlannerAndApproval() =
+        runTest {
+            val cases =
+                mapOf(
+                    "send my latest screenshot to Example on WhatsApp" to "find:latest,type=screenshot",
+                    "send my last screenshot to Example on WhatsApp" to "find:latest,type=screenshot",
+                    "send the screenshot from 7 October to Example on WhatsApp" to
+                        "find:type=screenshot,date=2026-10-07",
+                    "send my latest photo to Example on WhatsApp" to "find:latest,type=image",
+                    "send my latest picture to Example on WhatsApp" to "find:latest,type=image",
+                    "send my latest PDF to Example on WhatsApp" to "find:latest,type=pdf",
+                    "send my latest file to Example on WhatsApp" to "find:latest",
+                    "send the eBay bill to Example on WhatsApp" to "find:ebay bill",
+                    "the eBay bill: WhatsApp it to Example" to "find:ebay bill",
+                )
+            for ((request, reference) in cases) {
+                val output =
+                    """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"", """ +
+                        """"attachment":"$reference"}}]}"""
+                val fake = Fake(listOf(output))
+                val steps = TaskPlanner(fake, setOf("SEND_WHATSAPP")).plan(request)
+                assertEquals(reference, steps.single().action.params["attachment"])
+                assertTrue(ApprovedTaskPlan(steps).matches(steps))
+                assertTrue(
+                    fake.requests
+                        .single()
+                        .systemPrompt
+                        .contains("NOT TAKE_SCREENSHOT"),
+                )
+                assertTrue(TaskPlanPreview.describe(steps).contains("attach"))
+            }
+        }
+
+    @Test fun emailItAndExplicitCaptureKeepTheirDistinctContracts() =
+        runTest {
+            val email =
+                """{"steps":[{"action":"SEND_EMAIL","params":{"to":"owner@example.test","subject":"", """ +
+                    """"body":"","attachment":"find:ebay bill"}}]}"""
+            val fake = Fake(listOf(email))
+            val steps = TaskPlanner(fake, setOf("SEND_EMAIL")).plan("the eBay bill: email it to me")
+            assertEquals("find:ebay bill", steps.single().action.params["attachment"])
+            assertTrue(
+                fake.requests
+                    .single()
+                    .systemPrompt
+                    .contains("own email is unknown"),
+            )
+            val capture =
+                """{"steps":[{"action":"TAKE_SCREENSHOT","params":{}},""" +
+                    """{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"", """ +
+                    """"attachment":"last_screenshot"}}]}"""
+            val plan =
+                TaskPlanner(Fake(listOf(capture)), setOf("TAKE_SCREENSHOT", "SEND_WHATSAPP"))
+                    .plan("take a screenshot and send it to Example on WhatsApp")
+            assertEquals(listOf("TAKE_SCREENSHOT", "SEND_WHATSAPP"), plan.map { it.action.name })
+            assertTrue(TaskPlanPreview.describe(plan).contains("open that app first, not EQO"))
+        }
+
     private val enabled = setOf("OPEN_APP", "TYPE_TEXT", "CLICK_TEXT")
     private val valid = """{"steps":[{"action":"OPEN_APP","params":{"appName":"gmail"}}]}"""
 

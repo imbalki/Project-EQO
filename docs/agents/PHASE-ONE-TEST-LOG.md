@@ -1,5 +1,55 @@
 # Phase One phone test log
 
+## Screenshot/gallery repair — t_f123214e — NOT TESTED ON PHONE
+
+Local branch `fix-shots`; no phone contacted, no model request, no push/PR/gh action.
+Task-supplied Round-3 evidence: All files access ON, latest-screenshot WhatsApp requests failed
+with misleading `no_screenshot_permission` or ASK_USER; capture correctly refused EQO foreground.
+The supplied evidence is motivation, not a new phone result. This checkout has no separately
+labelled Round-2/Round-3 phone tables; the existing history and card evidence were read.
+
+Phone checklist (lead/owner; synthetic files and contacts, record actual result and build commit):
+- [ ] Send my latest/last screenshot to a test contact on WhatsApp: gallery search, correct chosen
+  file named before Continue, correct chat/file; no new capture of EQO.
+- [ ] Dated screenshot, latest photo/picture/PDF/file, and the eBay bill: correct `find:` filters;
+  several matches show a chooser (including latest), zero matches show no_matching_file.
+- [ ] Refer to the bill and say WhatsApp it to a test contact / email it to me; unresolved it or
+  unknown own email asks rather than inventing a file/address. Repeat SMS attachment route.
+- [ ] Explicit take a screenshot and send it: preview instructs opening the app first; EQO
+  foreground hands off with eqo_in_foreground, protected window remains refused, no automatic resume.
+- [ ] No recent EQO capture: last_screenshot uses newest gallery screenshot, displays exact name
+  before Continue; tied newest timestamps require choice. Cancel/background/Stop sends nothing.
+- [ ] Fresh private EQO capture works without All files access; stale/deleted capture falls back;
+  gallery lookup without access says needs_all_files_access. No match says no_eqo_screenshot_yet.
+- [ ] Delete/revoke access after disclosure; no stale file or private/excluded/link path is shared.
+- [ ] Verify EqoRun logs never include search terms, file/contact names or paths; capture/copy
+  failures without a proven protected-window diagnosis do not claim missing permission/protection.
+
+Final frozen-source Gradle exits 0: BUILD SUCCESSFUL in 36m 5s, 416 tasks (224 executed,
+192 up-to-date). One serial invocation from `android/`: all three modules' ktlintFormat,
+ktlintCheck, detekt, testDebugUnitTest and lintDebug, with `--max-workers=2 --no-daemon
+-Dorg.gradle.jvmargs='-Xmx1536m -XX:MaxMetaspaceSize=1024m'
+-Pkotlin.compiler.execution.strategy=in-process --console=plain`. All three debug lint XML
+reports have zero issues. Total 491 tests, zero failures/errors, three disclosed capability skips.
+Repo/branding/provenance gate passes (487 Kotlin files/rows); no new Kotlin files; diff check and
+changed Kotlin lines <=120 pass. Logs: ignored `android/app/build/reports/screenshot-fix/`.
+NOT RUN: full actions suite (untouched macro cases), other-module unit suites, root/all-module
+Gradle gate, APK/release build, install, device instrumentation, live model/provider or GitHub CI.
+Lead owns publication and phone verification; worker requests same-card review, not completion.
+
+Host coverage (synthetic fixtures): final XML reports actions 66 tests (zero failures/errors,
+three Windows real-link capability skips), core-agent 117 and app 308 tests (zero failures/errors/skips).
+Actions filter: `--tests 'ai.eqo.actions.impl.*File*Test' --tests 'ai.eqo.actions.impl.SharedStorage*Test'`;
+core-agent/app suites unfiltered. Fake registry covers all nine combinations of three send routes and
+search/gallery fallback references, empty-caption sends, URI/read grants and disclosure before staging.
+Fake planner supplies proposals for latest/last/date screenshot, photo/picture/PDF/file, eBay bill,
+WhatsApp it, email it to me and explicit capture. This is not live-model or actual delivery proof.
+The shared AttachmentSpec blank-text exception permits only message/body/subject with a valid
+attachment; recipients are never waived. The real registry uses the same exception as the planner.
+
+Host validation caveats: initial static findings were corrected; the two-worker host exhausted
+Windows commit/paging-file memory, then a reduced-heap compile exhausted Metaspace. Retried with
+one Gradle at a time and bounded memory; these failed attempts are not passing verification.
 ## Voice v3 — t_112c2517 — NOT TESTED ON PHONE
 
 Local-only `feat/voice-v3`. The checked-in log has no Round 3 heading; this card's supplied
