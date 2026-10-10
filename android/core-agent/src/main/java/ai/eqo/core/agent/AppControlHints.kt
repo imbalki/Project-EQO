@@ -6,9 +6,12 @@ internal object AppControlHints {
     val byPackage: Map<String, String> =
         linkedMapOf(
             "com.google.android.keep" to
-                "Google Keep: new note CLICK_TEXT text=Take a note,New text note; " +
-                "TYPE_TEXT searchText=Title for the title, searchText=Note for the body; " +
-                "PRESS_BACK to autosave. Do not invent a Save or New note button.",
+                "Google Keep: OPEN_APP appName=Google Keep, WAIT durationMs=3000; " +
+                "CLICK_TEXT text=Create a note (content-description, speed_dial_create_close_button); " +
+                "CLICK_TEXT text=id:new_note_button (unlabelled speed-dial text-note item); " +
+                "TYPE_TEXT searchText=id:editable_title for the title, " +
+                "searchText=id:edit_note_text for the supplied body; PRESS_BACK to autosave. " +
+                "There is no Take a note bar. Never type into toolbar (Search Keep).",
             "com.google.android.gm" to
                 "Gmail: Compose; fields To, Subject, Compose email; Send sends real mail. " +
                 "Prefer SEND_EMAIL for a self-contained email request.",
@@ -40,8 +43,9 @@ internal object AppControlHints {
             byPackage.forEach { (packageName, hint) -> appendLine("$packageName: $hint") }
             appendLine("CLICK_TEXT text accepts ordered comma-separated alternatives.")
             appendLine("All exact text/content-description/view-id suffix matches precede partial label matches.")
-            appendLine("For a note in a named app: OPEN_APP, WAIT 3000, CLICK_TEXT entry alternatives,")
-            appendLine("TYPE_TEXT Title, TYPE_TEXT Note, PRESS_BACK.")
+            appendLine("CLICK_TEXT text and TYPE_TEXT searchText accept id:<view-id suffix> references.")
+            appendLine("For add/write/create a note in Keep, follow the exact Keep flow above.")
+            appendLine("If Create a note is missing, stop with Needs you; Keep is not on its home screen.")
             appendLine("Use the requested title/body, never invent content.")
             appendLine("For title-only Keep requests, omit body typing rather than inventing a body.")
             appendLine("Missing controls stop with Needs you; do not plan repeated taps or bypass approvals.")
