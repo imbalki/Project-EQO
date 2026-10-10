@@ -25,11 +25,13 @@ internal class TaskVoiceInput(
     recordingFactory: (File, CoroutineScope) -> VoiceRecording = ::VoiceAudioRecorder,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     transcribe: suspend (File, String) -> String = { file, language ->
-        val model = VoiceModelPicker.selectedModel(activity, VoiceSettings(activity))
+        val catalog = VoiceModelPicker.loadModels(activity)
+        val model = VoiceModelPicker.selectedModel(activity, VoiceSettings(activity), catalog)
         TaskPlanningRuntime.voiceProvider(activity).transcribe(
             model,
             InputAudio(Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)),
             language,
+            catalog,
         )
     },
 ) {

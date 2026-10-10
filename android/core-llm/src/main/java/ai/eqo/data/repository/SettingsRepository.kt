@@ -64,6 +64,10 @@ class SettingsRepository internal constructor(
     /** A UI-safe recovery signal; it never contains credential or ciphertext data. */
     val providerCredentialRecoveryState = providerCredentialStore.recoveryState
 
+    /** Reads the same case-sensitive credential ID used by Setup, Explain and task planning. */
+    internal fun readOpenRouterCredential(): CredentialStoreResult<String?> =
+        providerCredentialStore.read(ProviderCredentialId.ApiKey("openrouter"))
+
     private val mutableProviderCredentialPersistenceState =
         MutableStateFlow<ProviderCredentialPersistenceState>(ProviderCredentialPersistenceState.Ready)
 

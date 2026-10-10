@@ -17,6 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaType
@@ -68,6 +69,7 @@ class OpenRouterAudioTest {
                         val modality = if (acceptsAudio) "audio" else "text"
                         """{"data":[{"id":"test/model","architecture":{"input_modalities":["$modality"]}}]}"""
                     } else {
+                        assertEquals("Bearer synthetic-test-key", request.header("Authorization"))
                         uploads++
                         val buffer = Buffer()
                         request.body!!.writeTo(buffer)
@@ -104,6 +106,13 @@ class OpenRouterAudioTest {
     @Test
     fun audioUsesConfiguredModelAndVerbatimPrompt() =
         runBlocking {
+            // No display-name key exists in the legacy configuration map.
+            assertTrue(
+                repository.llmConfig
+                    .first()
+                    .apiKeys["OpenRouter"]
+                    .isNullOrBlank(),
+            )
             assertEquals("verbatim words", provider.transcribe("test/model", InputAudio("synthetic-audio"), "hi-IN"))
             val json = JsonParser.parseString(payload).asJsonObject
             assertEquals("test/model", json.get("model").asString)
@@ -132,6 +141,18 @@ class OpenRouterAudioTest {
         }
         assertEquals(0, uploads)
     }
+
+    @Test
+    fun cachedAudioCatalogAvoidsAnotherMetadataRequest() =
+        runBlocking {
+            val catalog =
+                OpenRouterModelCatalog.parse(
+                    """{"data":[{"id":"test/model","architecture":{"input_modalities":["audio"]}}]}""",
+                )
+            assertEquals("verbatim words", provider.transcribe("test/model", InputAudio("audio"), "en-IN", catalog))
+            assertEquals(1, requests)
+            assertEquals(1, uploads)
+        }
 
     @Test
     fun payloadCannotAppearInRequestRenderingOrHttpErrors() {
@@ -265,16 +286,38 @@ class OpenRouterAudioTest {
         assertEquals(0, requests)
     }
 
+    @Test
+    fun inaccessibleStoreIsNotReportedAsAnAbsentKey() {
+        credentials.unavailable = true
+        val failure =
+            assertThrows(java.io.IOException::class.java) {
+                runBlocking { provider.transcribe("test/model", InputAudio("audio"), "en-IN") }
+            }
+        assertEquals(java.io.IOException::class.java, failure.javaClass)
+        assertEquals(0, requests)
+    }
+
     private class FakeCredentials : ProviderCredentialStore {
         var hasKey = true
+        var unavailable = false
         override val recoveryState =
             MutableStateFlow<ProviderCredentialRecoveryState>(ProviderCredentialRecoveryState.Ready)
 
         override fun read(credential: ProviderCredentialId): CredentialStoreResult<String?> =
-            CredentialStoreResult.Success("synthetic-test-key")
+            if (unavailable) {
+                CredentialStoreResult.StorageUnavailable
+            } else {
+                CredentialStoreResult.Success(
+                    if (hasKey && credential == ProviderCredentialId.ApiKey("openrouter")) {
+                        "synthetic-test-key"
+                    } else {
+                        null
+                    },
+                )
+            }
 
         override fun readProviderApiKeys(): CredentialStoreResult<Map<String, String>> =
-            CredentialStoreResult.Success(if (hasKey) mapOf("OpenRouter" to "synthetic-test-key") else emptyMap())
+            CredentialStoreResult.Success(if (hasKey) mapOf("openrouter" to "synthetic-test-key") else emptyMap())
 
         override fun write(
             credential: ProviderCredentialId,

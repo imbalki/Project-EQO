@@ -137,7 +137,7 @@ internal class VoiceAudioRecorder(
         const val RATE = 16000
         const val MAX_BYTES = RATE * 2 * 90
         const val MAX_DURATION_MILLIS = VoiceCapturePolicy.MAX_DURATION_MILLIS
-        private const val STALE_AGE_MILLIS = 300000L
+        private const val STALE_AGE_MILLIS = 600000L
         private const val WAV_HEADER_BYTES = 44
         private const val BUFFER_BYTES = 4096
 

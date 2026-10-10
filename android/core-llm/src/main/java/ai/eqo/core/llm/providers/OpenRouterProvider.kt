@@ -6,11 +6,13 @@ import ai.eqo.core.llm.InputAudio
 import ai.eqo.core.llm.LLMProvider
 import ai.eqo.core.llm.LLMRequest
 import ai.eqo.core.llm.LLMResponse
+import ai.eqo.core.llm.ProviderRequestConfig
 import ai.eqo.core.llm.ResponseFormat
 import ai.eqo.core.llm.error.ProviderErrorDetail
 import ai.eqo.core.llm.error.toSafeProviderException
 import ai.eqo.core.llm.security.LogRedactor
 import ai.eqo.core.llm.toOpenAIMessages
+import ai.eqo.core.security.CredentialStoreResult
 import ai.eqo.data.repository.SettingsRepository
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -57,12 +59,15 @@ class OpenRouterProvider
             model: String,
             audio: InputAudio,
             language: String,
+            catalog: List<OpenRouterModel>? = null,
         ): String {
-            if (!isAvailable()) throw AudioKeyMissingException()
-            val catalogRequest = Request.Builder().url("https://openrouter.ai/api/v1/models").build()
+            val key = audioKey
             val supportsAudio =
-                await(catalogRequest).use { response ->
-                    audioModelSupported(response, model)
+                if (catalog != null) {
+                    catalog.any { it.id == model && "audio" in it.inputModalities }
+                } else {
+                    val catalogRequest = Request.Builder().url(OpenRouterModelHttp.ENDPOINT).build()
+                    await(catalogRequest).use { response -> audioModelSupported(response, model) }
                 }
             if (!supportsAudio) throw AudioUnsupportedException()
             return complete(
@@ -78,9 +83,17 @@ class OpenRouterProvider
                     maxTokens = AUDIO_TRANSCRIPT_TOKENS,
                     responseFormat = ResponseFormat.TEXT,
                     inputAudio = audio,
+                    providerConfig = ProviderRequestConfig(key, "https://openrouter.ai/api/v1"),
                 ),
             ).content
         }
+
+        private val audioKey: String
+            get() {
+                val stored = settingsRepository.readOpenRouterCredential()
+                if (stored !is CredentialStoreResult.Success) throw IOException("Credential store unavailable")
+                return stored.value?.takeIf { it.isNotBlank() } ?: throw AudioKeyMissingException()
+            }
 
         private fun audioModelSupported(
             response: Response,

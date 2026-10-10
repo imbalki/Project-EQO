@@ -45,6 +45,7 @@ internal class AiVoiceInput(
     private var stopping = false
     private var startedAt = 0L
     private var level = 0
+    private var retryReady = false
 
     fun activate() {
         active = true
@@ -76,6 +77,7 @@ internal class AiVoiceInput(
     fun start() {
         try {
             check(settings.consent && active)
+            cancel()
             val session = recordingFactory(activity.cacheDir, scope)
             recording = session
             stopping = false
@@ -110,33 +112,42 @@ internal class AiVoiceInput(
         session.stopCapture()
         activity.findViewById<ProgressBar>(R.id.task_voice_level).visibility = View.GONE
         presenter.processing()
+        launchTranscription(session)
+    }
+
+    // Recorder/provider failures are sanitized at this UI boundary; never expose unknown exception text.
+    @Suppress("TooGenericExceptionCaught")
+    private fun launchTranscription(session: VoiceRecording) {
         val language = settings.language
         transcription =
             scope.launch {
                 try {
+                    val file = withContext(ioDispatcher) { session.finish() }
+                    if (!retryReady && recording === session && active) {
+                        retryReady = true
+                        handler.postDelayed({
+                            if (recording === session) {
+                                // launch supplies a CoroutineScope receiver; release the audio owner, not that scope.
+                                this@AiVoiceInput.cancel()
+                                presenter.cancel()
+                                dialog?.dismiss()
+                            }
+                        }, RETRY_LIFETIME_MILLIS)
+                    }
                     val text =
                         withContext(ioDispatcher) {
-                            val file = session.finish()
-                            transcribeTemporaryAudio(file) { transcribe(it, language) }
+                            transcribe(file, language)
                         }
-                    if (recording === session && active) presenter.result(text)
+                    if (recording === session && active) {
+                        cancel(cancelTranscription = false)
+                        presenter.result(text)
+                    }
                 } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (_: AudioUnsupportedException) {
-                    failure(session, R.string.voice_ai_unsupported)
-                } catch (_: AudioKeyMissingException) {
-                    failure(session, R.string.voice_ai_key_missing)
-                } catch (_: AudioIncompleteException) {
-                    failure(session, R.string.voice_ai_incomplete)
-                } catch (error: AudioProviderException) {
-                    failure(session, providerFailure(error.status))
-                } catch (_: IOException) {
-                    failure(session, R.string.voice_ai_network)
-                } catch (_: Exception) {
-                    failure(session, R.string.voice_ai_error)
-                } finally {
                     session.cancel()
-                    if (recording === session) recording = null
+                    throw cancelled
+                } catch (error: Exception) {
+                    if (!retryReady) session.cancel()
+                    if (recording === session && active) showFailure(failureMessage(error))
                 }
             }
     }
@@ -153,33 +164,37 @@ internal class AiVoiceInput(
         handler.postDelayed({ recordingStatus(session) }, STATUS_INTERVAL_MILLIS)
     }
 
-    private fun failure(
-        session: VoiceRecording,
-        message: Int,
-    ) {
-        if (recording !== session || !active) return
-        showFailure(message)
-    }
-
     private fun showFailure(message: Int) {
         presenter.error(VoiceInputState.ERROR)
         activity.findViewById<TextView>(R.id.task_voice_state).setText(message)
-        dialog =
+        val builder =
             AlertDialog
                 .Builder(activity)
                 .setMessage(message)
-                .setPositiveButton(R.string.voice_use_phone) { _, _ ->
+                .setNeutralButton(R.string.voice_use_phone) { _, _ ->
+                    cancel()
                     settings.engine = VoiceEngine.PHONE
                     presenter.availability(SpeechRecognizer.isRecognitionAvailable(activity))
-                }.setNegativeButton(android.R.string.cancel, null)
-                .show()
+                }.setNegativeButton(android.R.string.cancel) { _, _ -> cancel() }
+                .setOnCancelListener { cancel() }
+        if (retryReady) {
+            builder.setPositiveButton(R.string.voice_try_again) { _, _ ->
+                val session = recording
+                if (active && session != null && retryReady) {
+                    presenter.processing(retry = true)
+                    launchTranscription(session)
+                }
+            }
+        }
+        dialog = builder.show()
     }
 
-    fun cancel() {
+    fun cancel(cancelTranscription: Boolean = true) {
         handler.removeCallbacksAndMessages(null)
         val session = recording
         recording = null
-        transcription?.cancel()
+        retryReady = false
+        if (cancelTranscription) transcription?.cancel()
         transcription = null
         session?.cancel()
         activity.findViewById<ProgressBar>(R.id.task_voice_level).visibility = View.GONE
@@ -202,13 +217,24 @@ internal class AiVoiceInput(
         private const val STATUS_INTERVAL_MILLIS = 250L
         private const val MILLIS_PER_SECOND = 1000L
         private const val SECONDS_PER_MINUTE = 60L
+        private const val RETRY_LIFETIME_MILLIS = 600000L
         private val KEY_FAILURE_STATUSES = setOf(401, 403)
         private val MODEL_FAILURE_STATUSES = setOf(400, 404, 422)
 
         internal fun providerFailure(status: Int): Int =
             when (status) {
-                in KEY_FAILURE_STATUSES -> R.string.voice_ai_key_missing
+                in KEY_FAILURE_STATUSES -> R.string.voice_ai_key_rejected
                 in MODEL_FAILURE_STATUSES -> R.string.voice_ai_unsupported
+                else -> R.string.voice_ai_error
+            }
+
+        private fun failureMessage(error: Exception): Int =
+            when (error) {
+                is AudioUnsupportedException -> R.string.voice_ai_unsupported
+                is AudioKeyMissingException -> R.string.voice_ai_key_missing
+                is AudioIncompleteException -> R.string.voice_ai_incomplete
+                is AudioProviderException -> providerFailure(error.status)
+                is IOException -> R.string.voice_ai_network
                 else -> R.string.voice_ai_error
             }
     }
