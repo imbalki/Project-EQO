@@ -217,21 +217,38 @@ class EqoAutomation(
         target: String,
         byViewId: Boolean,
     ): A11yNode? {
-        val passes: List<(A11yNode) -> Boolean> =
-            if (byViewId) {
-                listOf { node -> NodeTreeSearch.matches(node, target, true) }
-            } else {
-                listOf(
-                    { node -> NodeTreeSearch.matchesExactly(node, target) && !NodeTreeSearch.isTextInput(node) },
-                    { node -> NodeTreeSearch.matchesExactly(node, target) },
-                    { node -> NodeTreeSearch.matches(node, target, false) && !NodeTreeSearch.isTextInput(node) },
-                    { node -> NodeTreeSearch.matches(node, target, false) },
-                )
+        val alternatives =
+            if (byViewId) listOf(target) else target.split(',').map(String::trim).filter(String::isNotEmpty)
+        val exactPasses = if (byViewId) listOf(true) else listOf(true, false)
+        for (exact in exactPasses) {
+            for (label in alternatives) {
+                val hit = findTappable(root, label, byViewId, exact)
+                if (hit != null) return hit
             }
-        for (accepts in passes) {
+        }
+        return null
+    }
+
+    private fun findTappable(
+        root: A11yNode,
+        label: String,
+        byViewId: Boolean,
+        exact: Boolean,
+    ): A11yNode? {
+        for (allowInput in listOf(false, true)) {
             val hit =
                 NodeTreeSearch.findFirst(root) { node ->
-                    accepts(node) && NodeTreeSearch.clickableSelfOrAncestor(node) != null
+                    val matches =
+                        when {
+                            byViewId -> NodeTreeSearch.matches(node, label, true)
+                            exact ->
+                                NodeTreeSearch.matchesExactly(node, label) || NodeTreeSearch.matches(node, label, true)
+                            else -> NodeTreeSearch.matches(node, label, false)
+                        }
+                    !node.isPassword &&
+                        matches &&
+                        (allowInput || !NodeTreeSearch.isTextInput(node)) &&
+                        NodeTreeSearch.clickableSelfOrAncestor(node) != null
                 }
             if (hit != null) return NodeTreeSearch.clickableSelfOrAncestor(hit)
         }

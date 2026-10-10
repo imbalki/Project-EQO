@@ -59,7 +59,7 @@ class AndroidActionRegistry internal constructor(
             return ActionResult.Failure("Missing or invalid parameters: ${validation.params.joinToString(", ")}.")
         }
         val ready = enriched.mapValues { it.value.toString() }
-        val blankRequired = ActionSchema.getAction(actionName)!!.params.filter { it.required && ready[it.name].isNullOrBlank() }
+        val blankRequired = blankRequiredParams(actionName, ready)
         if (blankRequired.isNotEmpty()) {
             return ActionResult.Failure("Required parameters must not be empty: ${blankRequired.joinToString { it.name }}.")
         }
@@ -92,6 +92,16 @@ class AndroidActionRegistry internal constructor(
         } catch (_: Exception) {
             ActionResult.Failure("This action could not be completed. No success was verified.")
         }
+    }
+
+    private fun blankRequiredParams(
+        actionName: String,
+        params: Map<String, String>,
+    ) = ActionSchema.getAction(actionName)!!.params.filter {
+        it.required &&
+            params[it.name].isNullOrBlank() &&
+            !ai.eqo.core.agent.AttachmentSpec
+                .allowsEmptyText(actionName, it.name, params)
     }
 
     /** Lookup is local and happens before approval. The approved snapshot contains the literal destination. */

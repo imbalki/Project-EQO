@@ -24,15 +24,19 @@ internal object RunStatusMapping {
         val draft =
             progress.state == StepProgressState.DONE &&
                 progress.name.lowercase() in setOf("compose_sms", "compose_email")
-        val needsYou = draft || (handoff != null && progress.state == StepProgressState.FAILED)
-        val params = step?.action?.params.orEmpty()
+        val missingControl = progress.state == StepProgressState.FAILED && progress.detail == "control_not_found"
+        val needsYou = draft || missingControl || (handoff != null && progress.state == StepProgressState.FAILED)
         return progress.copy(
             state = if (needsYou) StepProgressState.NEEDS_YOU else progress.state,
             detail = if (needsYou) handoff ?: progress.detail else progress.detail,
-            targetLabel =
-                params["target"] ?: params["searchText"] ?: params["viewId"] ?: params["view_id"]
-                    ?: params["appName"] ?: params["app_name"] ?: params["app"] ?: params["text"].orEmpty(),
+            targetLabel = targetLabel(step),
         )
+    }
+
+    private fun targetLabel(step: LoopStep?): String {
+        val params = step?.action?.params.orEmpty()
+        return params["target"] ?: params["searchText"] ?: params["viewId"] ?: params["view_id"]
+            ?: params["appName"] ?: params["app_name"] ?: params["app"] ?: params["text"].orEmpty()
     }
 
     fun terminal(receipt: RunReceipt): String =
@@ -60,6 +64,12 @@ internal object RunStatusMapping {
                 )
             -> Text(R.string.run_accessibility_off)
             step.detail == FailureClass.BINDER_DEAD.repair -> Text(R.string.task_helper_lost)
+            RunDiagnostics.failureKind(
+                ai.eqo.core.agent.ExecuteResult
+                    .Failure(step.detail),
+            ) in
+                setOf("no_eqo_screenshot_yet", "no_matching_file", "needs_all_files_access", "protected_screen") ->
+                Text(R.string.run_user_action, fileFailureInstruction(step.detail))
             step.detail.contains("EQO did not save a screenshot") ->
                 Text(
                     R.string.run_user_action,
@@ -96,8 +106,24 @@ internal object RunStatusMapping {
         }
     }
 
+    private fun fileFailureInstruction(reason: String): String =
+        when (
+            RunDiagnostics.failureKind(
+                ai.eqo.core.agent.ExecuteResult
+                    .Failure(reason),
+            )
+        ) {
+            "no_eqo_screenshot_yet" ->
+                "No recent EQO screenshot or matching gallery screenshot. Take one and try again."
+            "no_matching_file" -> "No matching file. Check the name, type or date and try again."
+            "needs_all_files_access" -> "Turn on All files access for EQO, then start the task again."
+            else -> "This screen is protected. EQO cannot capture it."
+        }
+
     private fun handoff(step: StepProgress): Text =
-        if (!step.detail.contains("draft opened", ignoreCase = true)) {
+        if (step.detail == "control_not_found") {
+            Text(R.string.run_control_not_found)
+        } else if (!step.detail.contains("draft opened", ignoreCase = true)) {
             Text(R.string.run_user_action, TaskDisplayText.escape(step.detail))
         } else {
             when (step.name.lowercase()) {

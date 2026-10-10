@@ -71,6 +71,149 @@ Phone checklist (lead/owner; record build commit and pass/fail, no real identifi
       retain existing guards. Unknown effects/manual draft handoffs do not offer blind retry.
 - [ ] Process death does not start/repeat any step; no persistent delivery/dedup guarantee.
       Check logs for counts/status only, never positions, Maps link, names or numbers.
+## Keep and app-specific taps — t_2f7fbd22 — NOT TESTED ON PHONE
+
+- Local-only `fix-keep`, based on `9716dbd`. No phone, private notes, provider or credentials accessed.
+- Static package-keyed `AppControlHints` feeds the registry planner: Keep's Take a note / New text note entry,
+  Title and Note fields, Back autosave; Gmail, Messages, WhatsApp search, Chrome, Calendar, Contacts,
+  Calculator and Clock controls. These are public guidance, not proof of every app version/language.
+- CLICK_TEXT accepts ordered comma-separated alternatives. Exact text/content-description/ID suffix matches
+  precede partial labels; existing non-input preference and clickable-ancestor handling remain. Accepted or
+  rejected mutations are never followed by a second alternative. Password, own-window and takeover guards remain.
+- CLICK_TEXT/CLICK_ID use four missing-node probes with 700 ms intervals (2.1 seconds waiting, not 17 retries).
+  Exhaustion reports `control_not_found`; run presentation says Needs you with manual/reapproval guidance.
+  Legacy tap_text reports the same fixed reason immediately rather than retrying an irreversible tap.
+- Added the missing registry PRESS_BACK schema/executor through the existing gated Android Back facade;
+  advanced-control risk, registry execution/approval scope and no automatic fallback are retained (99 actions).
+- Named-note plans use open + wait + entry alternatives + title/body typing + Back. Title-only requests must
+  omit body rather than invent it. Note-edit draft validation checks EVERY alternative and allows Back autosave;
+  Send/Share/Publish, arbitrary IDs and communication draft submit routes remain rejected before approval.
+- This base has no enabled vision-locate fallback/settings; no fictitious vision button or automatic upload was
+  added. Explain screen is separate from locate/tap. A vision offer needs integration with a real enabled fallback.
+- Broad five-module host gate ran with `--continue --no-daemon --max-workers=2`, in-process Kotlin,
+  `-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m -XX:ActiveProcessorCount=2 -Dfile.encoding=UTF-8`.
+  Tasks per core-llm/platform-a11y/core-agent/actions-android/app: ktlintFormat, lintDebug, ktlintCheck,
+  detekt, testDebugUnitTest. Actual output: BUILD FAILED in 1h 32m 33s (477 tasks, 362 executed).
+  XML: core-llm 277 (one existing skip), platform 120, core-agent 115, actions 169 (one macro failure,
+  three Windows symlink capability skips), app 309; 990 tests, one failure, zero errors, four skips.
+  All new tests passed; the sole test failure is historical macro delete/list UncompletedCoroutinesError,
+  not baseline-reproduced here. All five lintDebug tasks completed; static checks passed except app progress
+  complexity 16 (limit 15), now fixed by extracting existing target selection without a suppression.
+- Final corrected-source confirmation: platform-a11y/app ktlintFormat, lintDebug, ktlintCheck, detekt,
+  testDebugUnitTest with the same memory/worker/compiler flags exited 0: BUILD SUCCESSFUL in 22m 28s
+  (389 tasks: 52 executed, 337 up-to-date). Fresh XML: platform 120 + app 309, zero failures/errors/skips.
+  All five module lint XMLs contain zero issues. Earlier attempt crashed from native memory allocation;
+  retries caught/fixed a long line, app complexity and facade method count, without global suppressions.
+- Repo secret/branding/provenance gate passes (488 Kotlin files/rows); added Kotlin lines <=120 and
+  git diff --check pass. The broad actions macro failure remains; full gate is NOT green. Release/APK,
+  instrumentation, other-module suites and live provider/device/CI were not run. No push/PR/gh/install.
+  Lead owns CI and phone checks; same-card independent review must approve before publication.
+
+Phone checklist (lead/owner, synthetic content only; record build and result):
+- [ ] Keep: “add a note called Test in Keep”; preview has correct entry alternatives, Title and Back, no
+      invented body. With an explicit synthetic body, verify both fields and autosave after Back.
+- [ ] Keep-like variants: text-bar and content-description FAB; missing labels stop promptly with Needs you,
+      no repeated mutation and no next typing step. Explicit new plan/reapproval only after manual correction.
+- [ ] Gmail: Compose and To/Subject/Compose email fields; verify draft vs approved Send behavior.
+- [ ] Calendar: Create/Event entry and title; verify Save only when the approved plan requests it.
+- [ ] Different language/version, delayed launch, Stop/Pause/takeover and own EQO approval window refusal.
+- [ ] When an actual vision-locate fallback lands/enables: offer only after failure, require existing consent,
+      capability and fresh approval; disabled state must never capture/upload or automatically tap.
+
+Task-supplied Round-3 evidence: OPEN_APP Keep and WAIT succeeded; CLICK_TEXT NodeNotFound repeated x17
+at 09:24 before failure. This is historical owner evidence, not a phone result for this branch. The checked-in
+starting log has historical round-1/round-2 material, not a separate Round-3 table; no missing results invented.
+## Screenshot/gallery repair — t_f123214e — NOT TESTED ON PHONE
+
+Local branch `fix-shots`; no phone contacted, no model request, no push/PR/gh action.
+Task-supplied Round-3 evidence: All files access ON, latest-screenshot WhatsApp requests failed
+with misleading `no_screenshot_permission` or ASK_USER; capture correctly refused EQO foreground.
+The supplied evidence is motivation, not a new phone result. This checkout has no separately
+labelled Round-2/Round-3 phone tables; the existing history and card evidence were read.
+
+Phone checklist (lead/owner; synthetic files and contacts, record actual result and build commit):
+- [ ] Send my latest/last screenshot to a test contact on WhatsApp: gallery search, correct chosen
+  file named before Continue, correct chat/file; no new capture of EQO.
+- [ ] Dated screenshot, latest photo/picture/PDF/file, and the eBay bill: correct `find:` filters;
+  several matches show a chooser (including latest), zero matches show no_matching_file.
+- [ ] Refer to the bill and say WhatsApp it to a test contact / email it to me; unresolved it or
+  unknown own email asks rather than inventing a file/address. Repeat SMS attachment route.
+- [ ] Explicit take a screenshot and send it: preview instructs opening the app first; EQO
+  foreground hands off with eqo_in_foreground, protected window remains refused, no automatic resume.
+- [ ] No recent EQO capture: last_screenshot uses newest gallery screenshot, displays exact name
+  before Continue; tied newest timestamps require choice. Cancel/background/Stop sends nothing.
+- [ ] Fresh private EQO capture works without All files access; stale/deleted capture falls back;
+  gallery lookup without access says needs_all_files_access. No match says no_eqo_screenshot_yet.
+- [ ] Delete/revoke access after disclosure; no stale file or private/excluded/link path is shared.
+- [ ] Verify EqoRun logs never include search terms, file/contact names or paths; capture/copy
+  failures without a proven protected-window diagnosis do not claim missing permission/protection.
+
+Final frozen-source Gradle exits 0: BUILD SUCCESSFUL in 36m 5s, 416 tasks (224 executed,
+192 up-to-date). One serial invocation from `android/`: all three modules' ktlintFormat,
+ktlintCheck, detekt, testDebugUnitTest and lintDebug, with `--max-workers=2 --no-daemon
+-Dorg.gradle.jvmargs='-Xmx1536m -XX:MaxMetaspaceSize=1024m'
+-Pkotlin.compiler.execution.strategy=in-process --console=plain`. All three debug lint XML
+reports have zero issues. Total 491 tests, zero failures/errors, three disclosed capability skips.
+Repo/branding/provenance gate passes (487 Kotlin files/rows); no new Kotlin files; diff check and
+changed Kotlin lines <=120 pass. Logs: ignored `android/app/build/reports/screenshot-fix/`.
+NOT RUN: full actions suite (untouched macro cases), other-module unit suites, root/all-module
+Gradle gate, APK/release build, install, device instrumentation, live model/provider or GitHub CI.
+Lead owns publication and phone verification; worker requests same-card review, not completion.
+
+Host coverage (synthetic fixtures): final XML reports actions 66 tests (zero failures/errors,
+three Windows real-link capability skips), core-agent 117 and app 308 tests (zero failures/errors/skips).
+Actions filter: `--tests 'ai.eqo.actions.impl.*File*Test' --tests 'ai.eqo.actions.impl.SharedStorage*Test'`;
+core-agent/app suites unfiltered. Fake registry covers all nine combinations of three send routes and
+search/gallery fallback references, empty-caption sends, URI/read grants and disclosure before staging.
+Fake planner supplies proposals for latest/last/date screenshot, photo/picture/PDF/file, eBay bill,
+WhatsApp it, email it to me and explicit capture. This is not live-model or actual delivery proof.
+The shared AttachmentSpec blank-text exception permits only message/body/subject with a valid
+attachment; recipients are never waived. The real registry uses the same exception as the planner.
+
+Host validation caveats: initial static findings were corrected; the two-worker host exhausted
+Windows commit/paging-file memory, then a reduced-heap compile exhausted Metaspace. Retried with
+one Gradle at a time and bounded memory; these failed attempts are not passing verification.
+## Voice v3 — t_112c2517 — NOT TESTED ON PHONE
+
+Local-only `feat/voice-v3`. The checked-in log has no Round 3 heading; this card's supplied
+Realme Android 11 early-stop result motivated the change, but is not verification of this build.
+No real microphone, provider upload, APK install or device interaction was performed.
+Verified code checkpoint `51c1125` (external in-progress checkpoint). Final serial command from
+`android/`: `./gradlew :app:ktlintFormat :core-llm:ktlintFormat :app:ktlintCheck :app:detekt
+:core-llm:ktlintCheck :core-llm:detekt :app:testDebugUnitTest :core-llm:testDebugUnitTest
+:app:lintDebug :core-llm:lintDebug --continue --max-workers=2
+-Pkotlin.compiler.execution.strategy=in-process --console=plain`.
+Saved ignored `app/build/reports/voice-v3/final-gates-2.log`: `BUILD SUCCESSFUL in 25m 45s`,
+394 tasks (26 executed, 368 up-to-date). Fresh XML: app 322 and core-llm 279 tests, zero
+failures/errors, one existing core skip. All 51 voice/provider tests pass; both module lint
+XML reports have zero issues. Repo/provenance 491/491, diff and changed Kotlin line lengths pass.
+Earlier failed runs found static findings, fake scheduling after key-check suspension, a
+safe-error assertion and timer idle-endpoint mismatch; corrected, not baselined or concealed.
+NOT RUN: all-module/root checks, other module unit suites, APK/release build, instrumentation,
+real provider/mic, remote CI and all phone items below. Host tests do not establish phone quality.
+
+Phone checklist (lead/owner must record build commit and outcomes; synthetic requests only):
+- [ ] New/unset engine preference defaults to AI; a previously explicit Phone choice stays Phone.
+      First-use consent declines without capture/upload; accept is remembered. Grant/deny/cancel
+      microphone permission at first tap, never startup; typing remains possible after denial.
+- [ ] English 20-word fixture: "Please open my notes tomorrow morning and remind me to buy milk
+      bread fruit vegetables and rice after finishing work". Pause 3–4 seconds after "notes" and
+      "milk": Recording continues, timer and level update; second tap stops and starts Transcribing.
+- [ ] Hindi 20-word fixture: "कृपया कल सुबह नोट्स खोलकर मुझे दूध रोटी फल सब्जियां और चावल खरीदने की याद
+      दिलाना जब काम खत्म हो". Pause 3–4 seconds after "नोट्स" and "चावल"; repeat with Hinglish,
+      proper nouns and spoken numbers. Confirm original language, no translation or task execution.
+- [ ] Review/edit the returned text; no auto-submit. Second session appends to the current draft.
+- [ ] Six seconds of initial/post-speech silence stops capture; shorter pauses continue. Repeat
+      quiet/noisy rooms and soft/loud voices; report threshold errors, not assumed reliability.
+- [ ] Continuous speech reaches 90-second cap, never longer; the timer stops, no stuck microphone.
+- [ ] Choose an audio model in setup: only catalog audio INPUT models, remembered separate from
+      planner model; advertised Gemini default when available. Unsupported/text-only model gives
+      a plain message without uploading; missing/rejected key gives its plain setup message.
+- [ ] Airplane mode: plain cannot-reach-provider message, request draft unchanged, no auto-retry;
+      choose Use Phone voice, then verify its recognizer/language pack or plain offline failure.
+- [ ] Cancel during Transcribing, edit draft, leave/rotate while recording/uploading, retry and
+      fail capture/provider: microphone released, voice cache file deleted, no late draft overwrite.
+      Cancellation does not claim to recall provider audio already sent. No transcript/audio logs.
 
 ## Fixes for round 1 — t_7a91b291 — NOT TESTED ON PHONE
 

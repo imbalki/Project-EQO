@@ -33,10 +33,114 @@
   NOT TESTED ON PHONE; checklist is in PHASE-ONE-TEST-LOG.md. Same-card review requested
   under the lead's revised policy, not a claim of passing Android checks.
   No push, PR or gh action. Lead owns publication and full CI.
+## Screenshot/gallery repair — t_f123214e (local-only `fix-shots`)
+
+- Existing gallery requests use `find:latest,type=screenshot`, dated screenshots use
+  `find:type=screenshot,date=YYYY-MM-DD`, and latest photo/picture/PDF/file use the corresponding
+  run-time search. eBay bill uses `find:ebay bill`; no invented path or FIND_FILES output binding.
+- An explicit capture uses TAKE_SCREENSHOT then `last_screenshot`. The preview says to open the
+  intended app first, not EQO. Own-window, protected-screen, takeover and approval gates are unchanged.
+- `last_screenshot` prefers an EQO capture no older than one hour (file modification time); missing,
+  deleted, stale or future-dated captures fall back to the newest shared-gallery screenshot. Equal
+  newest timestamps require choice. Fallback requires the existing foreground exact-name disclosure
+  and Continue before staging/compose. Cancel, missing UI and post-wait deletion refuse to send.
+- Natural `find:latest` searches still require choice among multiple matches; only the explicitly
+  previewed compatibility fallback selects a uniquely newest screenshot. All files access is required
+  for gallery lookup, not for a fresh private EQO capture. No new permission or runtime dependency.
+- File-only sends can have empty message/body/subject without inventing a caption. Planner and
+  registry share the narrow exception; a valid attachment and nonblank recipient remain required.
+- Diagnostics no longer equate every screenshot error with missing screenshot permission. Specific
+  reasons: no_eqo_screenshot_yet, no_matching_file, needs_all_files_access, eqo_in_foreground,
+  protected_screen; unknown capture/copy failures stay unknown. Logs contain only allowlisted kinds.
+- Final scoped host gate exits 0: three-module ktlintFormat/check, detekt, debug lint and unit tests
+  (actions attachment/storage filters; full core-agent/app suites), max two workers/in-process compiler.
+  BUILD SUCCESSFUL in 36m 5s; XML 491 tests, no failures/errors, three Windows real-link skips;
+  all three lint XML reports have zero issues. Repo gate passes (487 files/provenance rows).
+- NOT TESTED ON PHONE. Fake-provider tests verify supplied model proposals and the prompt contract,
+  not real model interpretation. Fake registry tests exercise attachment resolution/disclosure/staging
+  and outgoing intents, not actual delivery or real Send buttons. See the test-log checklist.
+## Voice v3 (t_112c2517, local-only `feat/voice-v3`): NOT TESTED ON PHONE
+
+- AI is the default for unset preferences; explicitly saved Phone selection is preserved.
+  Owned AudioRecord WAV capture (16 kHz mono), tap-to-stop, recording timer/level meter,
+  six-second quiet-audio stop and 90-second sample/wall-clock caps. No primary SpeechRecognizer.
+- Setup offers AI / Phone and a separate audio-model picker using the shared catalog/cache.
+  Only advertised audio-input models are listed. Prefer advertised Gemini 2.5 Flash, otherwise
+  the first audio model by ID. The configured planning model/key is not changed.
+- First-use provider-audio consent is remembered; microphone permission stays first-tap only.
+  Transcribing shows Cancel; success fills the editable draft only. Error/cancel/leave/edit
+  delete temporary audio and reject late results; network/key/model messages offer Phone.
+- Design: ADR 0012 supersedes ADR 0011 defaults/limits/model selection. Fixed silence threshold
+  is hardware/noise-sensitive and must be phone-tested. No real provider, microphone or phone used.
+- Verified code checkpoint: `51c1125` (external in-progress checkpoint, no worker history rewrite).
+  Final serial app/core-llm ktlintFormat, ktlintCheck, detekt, testDebugUnitTest and lintDebug:
+  `BUILD SUCCESSFUL in 25m 45s`, 394 tasks (26 executed, 368 up-to-date); saved ignored log
+  `android/app/build/reports/voice-v3/final-gates-2.log`. Flags: `--continue --max-workers=2
+  -Pkotlin.compiler.execution.strategy=in-process --console=plain`. Fresh XML: app 322, core-llm
+  279 tests; zero failures/errors, one existing core skip; all 51 voice/provider cases pass.
+  Both lint XML reports contain zero issues. Repo/provenance (491/491), diff and changed Kotlin
+  line-length checks pass. Earlier failed iterations caught static issues, blocking fake-test
+  scheduling after the key check, safe-error expectation and a fake-clock endpoint assertion;
+  fixed without baselines. Intermediate failed runs are not final passing evidence.
+- NOT RUN: full all-module/root Gradle gate, other modules' unit tests, APK/release build,
+  instrumentation, live provider/microphone, phone testing or remote CI. Lead owns publication,
+  CI and phone tests; worker uses same-card review, never self-completion.
+- Phone checklist and exact 20-word English/Hindi fixtures: Voice v3 in PHASE-ONE-TEST-LOG.md.
+
+The Voice v2 section below is historical, not the current default/limit.
 
 Last updated: 2026-10-10 (round-1 accepted permission preflight implemented; awaiting review). Update this file in the same PR as every merge to `main`.
 
 Last updated: 2026-10-09 (voice v2). Update this file in the same PR as every merge to `main`.
+
+## Keep and app-specific taps — t_2f7fbd22 — NOT TESTED ON PHONE
+
+- Local-only `fix-keep`, based on `9716dbd`. No phone, private notes, provider or credentials accessed.
+- Static package-keyed `AppControlHints` feeds the registry planner: Keep's Take a note / New text note entry,
+  Title and Note fields, Back autosave; Gmail, Messages, WhatsApp search, Chrome, Calendar, Contacts,
+  Calculator and Clock controls. These are public guidance, not proof of every app version/language.
+- CLICK_TEXT accepts ordered comma-separated alternatives. Exact text/content-description/ID suffix matches
+  precede partial labels; existing non-input preference and clickable-ancestor handling remain. Accepted or
+  rejected mutations are never followed by a second alternative. Password, own-window and takeover guards remain.
+- CLICK_TEXT/CLICK_ID use four missing-node probes with 700 ms intervals (2.1 seconds waiting, not 17 retries).
+  Exhaustion reports `control_not_found`; run presentation says Needs you with manual/reapproval guidance.
+  Legacy tap_text reports the same fixed reason immediately rather than retrying an irreversible tap.
+- Added the missing registry PRESS_BACK schema/executor through the existing gated Android Back facade;
+  advanced-control risk, registry execution/approval scope and no automatic fallback are retained (99 actions).
+- Named-note plans use open + wait + entry alternatives + title/body typing + Back. Title-only requests must
+  omit body rather than invent it. Note-edit draft validation checks EVERY alternative and allows Back autosave;
+  Send/Share/Publish, arbitrary IDs and communication draft submit routes remain rejected before approval.
+- This base has no enabled vision-locate fallback/settings; no fictitious vision button or automatic upload was
+  added. Explain screen is separate from locate/tap. A vision offer needs integration with a real enabled fallback.
+- Broad five-module host gate ran with `--continue --no-daemon --max-workers=2`, in-process Kotlin,
+  `-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m -XX:ActiveProcessorCount=2 -Dfile.encoding=UTF-8`.
+  Tasks per core-llm/platform-a11y/core-agent/actions-android/app: ktlintFormat, lintDebug, ktlintCheck,
+  detekt, testDebugUnitTest. Actual output: BUILD FAILED in 1h 32m 33s (477 tasks, 362 executed).
+  XML: core-llm 277 (one existing skip), platform 120, core-agent 115, actions 169 (one macro failure,
+  three Windows symlink capability skips), app 309; 990 tests, one failure, zero errors, four skips.
+  All new tests passed; the sole test failure is historical macro delete/list UncompletedCoroutinesError,
+  not baseline-reproduced here. All five lintDebug tasks completed; static checks passed except app progress
+  complexity 16 (limit 15), now fixed by extracting existing target selection without a suppression.
+- Final corrected-source confirmation: platform-a11y/app ktlintFormat, lintDebug, ktlintCheck, detekt,
+  testDebugUnitTest with the same memory/worker/compiler flags exited 0: BUILD SUCCESSFUL in 22m 28s
+  (389 tasks: 52 executed, 337 up-to-date). Fresh XML: platform 120 + app 309, zero failures/errors/skips.
+  All five module lint XMLs contain zero issues. Earlier attempt crashed from native memory allocation;
+  retries caught/fixed a long line, app complexity and facade method count, without global suppressions.
+- Repo secret/branding/provenance gate passes (488 Kotlin files/rows); added Kotlin lines <=120 and
+  git diff --check pass. The broad actions macro failure remains; full gate is NOT green. Release/APK,
+  instrumentation, other-module suites and live provider/device/CI were not run. No push/PR/gh/install.
+  Lead owns CI and phone checks; same-card independent review must approve before publication.
+
+Phone checklist (lead/owner, synthetic content only; record build and result):
+- [ ] Keep: “add a note called Test in Keep”; preview has correct entry alternatives, Title and Back, no
+      invented body. With an explicit synthetic body, verify both fields and autosave after Back.
+- [ ] Keep-like variants: text-bar and content-description FAB; missing labels stop promptly with Needs you,
+      no repeated mutation and no next typing step. Explicit new plan/reapproval only after manual correction.
+- [ ] Gmail: Compose and To/Subject/Compose email fields; verify draft vs approved Send behavior.
+- [ ] Calendar: Create/Event entry and title; verify Save only when the approved plan requests it.
+- [ ] Different language/version, delayed launch, Stop/Pause/takeover and own EQO approval window refusal.
+- [ ] When an actual vision-locate fallback lands/enables: offer only after failure, require existing consent,
+      capability and fresh approval; disabled state must never capture/upload or automatically tap.
 
 ## Voice v2 (t_e9801e01, local-only branch `feat/voice-v2`)
 - Phone remains the default: 4/3/5-second speech-intent pause hints, live partials, Stop listening control,

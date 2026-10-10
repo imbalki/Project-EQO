@@ -46,7 +46,11 @@ class AttachmentSpecTest {
 
     @Test fun displayNamesShowOnlyFileNamesAndTheScreenshotWording() {
         assertEquals(
-            listOf("\"report.pdf\"", "your latest EQO screenshot", "\"c.jpg\""),
+            listOf(
+                "\"report.pdf\"",
+                "your recent EQO screenshot, or newest gallery screenshot (name confirmed before sending)",
+                "\"c.jpg\"",
+            ),
             AttachmentSpec.displayNames("/storage/emulated/0/Download/report.pdf|last_screenshot|Pictures\\c.jpg"),
         )
     }
@@ -69,7 +73,8 @@ class AttachmentSpecTest {
                 enabled,
             )
         val preview = TaskPlanPreview.describe(steps)
-        assertTrue(preview, preview.contains("attaching 3 files: \"a.pdf\", \"b.pdf\", your latest EQO screenshot"))
+        assertTrue(preview, preview.contains("attaching 3 files: \"a.pdf\", \"b.pdf\", your recent EQO screenshot"))
+        assertTrue(preview, preview.contains("or newest gallery screenshot (name confirmed before sending)"))
     }
 
     @Test fun previewUsesSingularForOneFileAndIsUnchangedWithoutAttachment() {

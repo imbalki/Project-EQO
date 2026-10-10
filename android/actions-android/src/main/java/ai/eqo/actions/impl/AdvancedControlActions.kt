@@ -34,6 +34,7 @@ internal class AdvancedControlActions {
             ScrollAction(),
             GetScreenTextAction(),
             ClickCoordinatesAction(),
+            PressBackAction(),
             PressEnterAction(),
             WaitAction(),
         )
@@ -187,7 +188,7 @@ internal class AdvancedControlActions {
             val text = params["text"] ?: return ActionResult(false, null, "text parameter is missing")
             val outcome = GenericAppAutomator.clickText(text)
             val success = outcome.isSuccess
-            if (!success) return outcome.toActionResult()
+            if (!success) return outcome.toControlResult()
             return ActionResult(success, if (success) "Tapped on '$text'!" else "Couldn't find '$text' to tap on.", null)
         }
     }
@@ -203,7 +204,7 @@ internal class AdvancedControlActions {
             val viewId = params["viewId"] ?: return ActionResult(false, null, "viewId parameter is missing")
             val outcome = GenericAppAutomator.clickId(viewId)
             val success = outcome.isSuccess
-            if (!success) return outcome.toActionResult()
+            if (!success) return outcome.toControlResult()
             return ActionResult(success, if (success) "Tapped the element!" else "Couldn't find that element.", null)
         }
     }
@@ -301,6 +302,19 @@ internal class AdvancedControlActions {
             val success = outcome.isSuccess
             if (!success) return outcome.toActionResult()
             return ActionResult(success, if (success) "Tapped there!" else "Couldn't tap at that spot.", null)
+        }
+    }
+
+    /** Uses the existing takeover/own-window gated global-action facade, never raw service Back. */
+    private class PressBackAction : Action {
+        override val name: String = "PRESS_BACK"
+
+        override suspend fun execute(
+            params: Map<String, String>,
+            context: Context,
+        ): ActionResult {
+            requireRegistryExecution()?.let { return it }
+            return GenericAppAutomator.pressBackInApp().toActionResult()
         }
     }
 

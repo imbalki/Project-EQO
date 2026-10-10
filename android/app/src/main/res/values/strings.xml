@@ -7,18 +7,39 @@
     <string name="voice_permission_message">EQO needs microphone access only to turn your speech into an editable request. EQO does not save audio. Your phone’s speech service may send audio to its provider. You can keep typing instead.</string>
     <string name="voice_listening">Listening… tap Stop listening to finish. You can pause between words.</string>
     <string name="voice_stop">Stop listening</string>
-    <string name="voice_processing">Transcribing… tap Mic to cancel.</string>
+    <string name="voice_stop_recording">Stop recording</string>
+    <string name="voice_processing">Transcribing… tap Cancel to discard.</string>
+    <string name="voice_recording">Recording %1$d:%2$02d — tap Stop recording to transcribe.</string>
+    <string name="voice_level_description">Microphone level</string>
+    <string name="voice_model_title">Voice audio model</string>
+    <string name="voice_model_selected">Voice audio model: %1$s</string>
+    <string name="voice_model_row">%1$s (%2$s)</string>
+    <string name="voice_models_unavailable">
+        No audio-input models are available in the catalog. Check your internet connection and try again,
+        or use Phone voice.
+    </string>
+    <string name="voice_ai_key_missing">
+        OpenRouter key is missing or not accepted. Add your key in setup, or use Phone voice.
+    </string>
+    <string name="voice_ai_network">
+        Cannot reach your AI provider. Check your internet connection and airplane mode, or use Phone voice.
+    </string>
+    <string name="voice_ai_incomplete">
+        The transcript was cut short. Try a shorter recording or another audio model, or use Phone voice.
+        Your draft is unchanged.
+    </string>
     <string name="voice_engine_title">Voice engine</string>
     <string-array name="voice_engines">
-        <item>Phone (default)</item>
-        <item>AI model via OpenRouter</item>
+        <item>AI (default) via OpenRouter</item>
+        <item>Phone</item>
     </string-array>
     <string name="voice_language_title">Voice language</string>
     <string name="voice_language_default">Device default</string>
     <string name="voice_ai_disclosure">
-        Optional AI voice sends up to 60 seconds of audio to your configured model via OpenRouter, using your saved key.
+        AI voice sends up to 90 seconds of audio to your chosen audio model via OpenRouter, using your saved key.
         Your provider may charge for it. The temporary audio file is deleted after transcription, error or cancellation.
-        Phone is the default. Cancelling cannot recall audio already sent; your provider controls its retention.
+        AI is the default; Phone voice is an optional fallback. Cancelling cannot recall audio already sent;
+        your provider controls its retention.
     </string>
     <string name="voice_ai_consent_title">Send voice audio to your AI provider?</string>
     <string name="voice_ai_unsupported">
@@ -276,6 +297,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="run_permission_missing">EQO needs %1$s permission. Allow it in Android Settings > Apps > EQO > Permissions, then try again. This step did not run.</string>
     <string name="run_permission_explanation">%1$s Android access was not allowed. Allow it, then try again. This step did not run.</string>
     <string name="run_app_missing">%1$s is not installed. Install or enable it, then try again.</string>
+    <string name="run_control_not_found">EQO could not find the planned control. Open the right screen or finish this step yourself. Stop and approve a new plan to try again.</string>
     <string name="run_target_missing">EQO could not find “%1$s”. Open the right screen, or tell EQO the button or field label to look for.</string>
     <string name="run_action_rejected">The app did not accept the tap or text entry. Check the current screen, then try again.</string>
     <string name="run_failed_unknown">This step could not finish. EQO did not receive a specific reason. Check the current screen before trying again.</string>

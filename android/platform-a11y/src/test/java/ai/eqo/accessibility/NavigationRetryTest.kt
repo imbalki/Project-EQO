@@ -41,6 +41,41 @@ class NavigationRetryTest {
         }
 
     @Test
+    fun missingTapStopsAfterFourProbesWithinSixSeconds() =
+        runTest {
+            var attempts = 0
+            val result =
+                GenericAppAutomator.retryTap {
+                    attempts++
+                    A11yResult.failure(A11yError.NodeNotFound("entry"))
+                }
+            assertTrue(result is A11yResult.Failure)
+            assertEquals(4, attempts)
+            assertEquals(2100L, testScheduler.currentTime)
+        }
+
+    @Test
+    fun tapStopsOnSuccessAndNeverRetriesOtherFailures() =
+        runTest {
+            listOf(
+                A11yResult.success("accepted"),
+                A11yResult.failure(A11yError.ActionRejected("entry")),
+                A11yResult.failure(A11yError.AccessibilityDisabled),
+                A11yResult.failure(A11yError.TakeoverDetected),
+            ).forEach { expected ->
+                var attempts = 0
+                val result =
+                    GenericAppAutomator.retryTap {
+                        attempts++
+                        expected
+                    }
+                assertEquals(expected, result)
+                assertEquals(1, attempts)
+            }
+            assertEquals(0L, testScheduler.currentTime)
+        }
+
+    @Test
     fun disabledTakeoverAndRejectedActionsNeverRetry() =
         runTest {
             listOf(

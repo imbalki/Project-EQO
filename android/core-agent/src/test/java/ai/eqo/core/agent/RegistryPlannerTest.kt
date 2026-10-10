@@ -75,7 +75,7 @@ class RegistryPlannerTest {
 
     @Test fun notesEditingExceptionCannotHideAnOutwardActionOrUnknownTap() =
         runTest {
-            val note = "write a note called Test in Keep"
+            val note = "add a note called Test in Keep"
             for (target in listOf("Send", "Share", "Publish", "Submit", "Example recipient", "New note and Send")) {
                 val output = """{"steps":[{"action":"CLICK_TEXT","params":{"text":"$target"}}]}"""
                 try {
@@ -102,6 +102,118 @@ class RegistryPlannerTest {
                 } catch (_: IllegalArgumentException) {
                 }
             }
+        }
+
+    @Test fun keepPlanUsesEntryAlternativesTitleBodyAndBackWithoutWeakeningDraftGuard() =
+        runTest {
+            val output =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
+                    """{"action":"WAIT","params":{"durationMs":"3000"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Take a note,New text note"}},""" +
+                    """{"action":"TYPE_TEXT","params":{"searchText":"Title","content":"Test"}},""" +
+                    """{"action":"TYPE_TEXT","params":{"searchText":"Note","content":"Example body"}},""" +
+                    """{"action":"PRESS_BACK","params":{}}]}"""
+            val actions = enabled + setOf("WAIT", "PRESS_BACK")
+            val fake = Fake(listOf(output))
+            val steps = TaskPlanner(fake, actions).plan("write a note called Test in Keep with body Example body")
+            assertEquals(6, steps.size)
+            assertEquals("PRESS_BACK", steps.last().action.name)
+            assertEquals("Test", steps[3].action.params["content"])
+            assertEquals("Example body", steps[4].action.params["content"])
+            assertTrue(ApprovedTaskPlan(steps).matches(steps))
+            val prompt = fake.requests.single().systemPrompt
+            AppControlHints.byPackage.keys.forEach { assertTrue(prompt.contains(it)) }
+            assertTrue(prompt.contains("Take a note,New text note"))
+            assertTrue(prompt.contains("PRESS_BACK to autosave"))
+            assertTrue(prompt.contains("omit body typing"))
+            for (unsafe in listOf("Take a note,Send", "Take a note,", "New text note,Share")) {
+                try {
+                    TaskPlanner(Fake(listOf(output.replace("Take a note,New text note", unsafe))), actions)
+                        .plan("write a note in Keep")
+                    error("Unsafe alternative must be rejected")
+                } catch (_: IllegalArgumentException) {
+                }
+            }
+        }
+
+    @Test fun fileOnlySendCanOmitTextButNeverItsRecipientOrAValidAttachment() {
+        val send =
+            """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"", """ +
+                """"attachment":"find:ebay bill"}}]}"""
+        assertEquals(
+            "",
+            RegistryPlanVocabulary
+                .parse(send, setOf("SEND_WHATSAPP"))
+                .single()
+                .action.params["message"],
+        )
+        for (invalid in listOf(
+            send.replace("Example", ""),
+            send.replace("find:ebay bill", ""),
+            send.replace("find:ebay bill", "../private"),
+        )) {
+            assertThrows(IllegalArgumentException::class.java) {
+                RegistryPlanVocabulary.parse(invalid, setOf("SEND_WHATSAPP"))
+            }
+        }
+    }
+
+    @Test fun naturalFileRequestsKeepRuntimeReferencesThroughFakePlannerAndApproval() =
+        runTest {
+            val cases =
+                mapOf(
+                    "send my latest screenshot to Example on WhatsApp" to "find:latest,type=screenshot",
+                    "send my last screenshot to Example on WhatsApp" to "find:latest,type=screenshot",
+                    "send the screenshot from 7 October to Example on WhatsApp" to
+                        "find:type=screenshot,date=2026-10-07",
+                    "send my latest photo to Example on WhatsApp" to "find:latest,type=image",
+                    "send my latest picture to Example on WhatsApp" to "find:latest,type=image",
+                    "send my latest PDF to Example on WhatsApp" to "find:latest,type=pdf",
+                    "send my latest file to Example on WhatsApp" to "find:latest",
+                    "send the eBay bill to Example on WhatsApp" to "find:ebay bill",
+                    "the eBay bill: WhatsApp it to Example" to "find:ebay bill",
+                )
+            for ((request, reference) in cases) {
+                val output =
+                    """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"", """ +
+                        """"attachment":"$reference"}}]}"""
+                val fake = Fake(listOf(output))
+                val steps = TaskPlanner(fake, setOf("SEND_WHATSAPP")).plan(request)
+                assertEquals(reference, steps.single().action.params["attachment"])
+                assertTrue(ApprovedTaskPlan(steps).matches(steps))
+                assertTrue(
+                    fake.requests
+                        .single()
+                        .systemPrompt
+                        .contains("NOT TAKE_SCREENSHOT"),
+                )
+                assertTrue(TaskPlanPreview.describe(steps).contains("attach"))
+            }
+        }
+
+    @Test fun emailItAndExplicitCaptureKeepTheirDistinctContracts() =
+        runTest {
+            val email =
+                """{"steps":[{"action":"SEND_EMAIL","params":{"to":"owner@example.test","subject":"", """ +
+                    """"body":"","attachment":"find:ebay bill"}}]}"""
+            val fake = Fake(listOf(email))
+            val steps = TaskPlanner(fake, setOf("SEND_EMAIL")).plan("the eBay bill: email it to me")
+            assertEquals("find:ebay bill", steps.single().action.params["attachment"])
+            assertTrue(
+                fake.requests
+                    .single()
+                    .systemPrompt
+                    .contains("own email is unknown"),
+            )
+            val capture =
+                """{"steps":[{"action":"TAKE_SCREENSHOT","params":{}},""" +
+                    """{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"", """ +
+                    """"attachment":"last_screenshot"}}]}"""
+            val plan =
+                TaskPlanner(Fake(listOf(capture)), setOf("TAKE_SCREENSHOT", "SEND_WHATSAPP"))
+                    .plan("take a screenshot and send it to Example on WhatsApp")
+            assertEquals(listOf("TAKE_SCREENSHOT", "SEND_WHATSAPP"), plan.map { it.action.name })
+            assertTrue(TaskPlanPreview.describe(plan).contains("open that app first, not EQO"))
         }
 
     private val enabled = setOf("OPEN_APP", "TYPE_TEXT", "CLICK_TEXT")

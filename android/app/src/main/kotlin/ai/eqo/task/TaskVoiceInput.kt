@@ -25,7 +25,7 @@ internal class TaskVoiceInput(
     recordingFactory: (File, CoroutineScope) -> VoiceRecording = ::VoiceAudioRecorder,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     transcribe: suspend (File, String) -> String = { file, language ->
-        val model = StudyModelChoice.read(activity) ?: error("Set up a model first")
+        val model = VoiceModelPicker.selectedModel(activity, VoiceSettings(activity))
         TaskPlanningRuntime.voiceProvider(activity).transcribe(
             model,
             InputAudio(Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)),
@@ -148,7 +148,18 @@ internal class TaskVoiceInput(
 
     private fun render(state: VoiceInputState) {
         mic.isEnabled = state !in VoiceInputState.BLOCKS_TAP
-        mic.setText(if (state == VoiceInputState.LISTENING) R.string.voice_stop else R.string.voice_button)
+        mic.setText(
+            when (state) {
+                VoiceInputState.LISTENING ->
+                    if (settings.engine == VoiceEngine.OPENROUTER) {
+                        R.string.voice_stop_recording
+                    } else {
+                        R.string.voice_stop
+                    }
+                VoiceInputState.PROCESSING -> android.R.string.cancel
+                else -> R.string.voice_button
+            },
+        )
         mic.contentDescription = mic.text
         status.setText(
             when (state) {

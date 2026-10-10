@@ -12,14 +12,14 @@ import android.widget.Button
 import androidx.core.content.edit
 import java.util.Locale
 
-internal enum class VoiceEngine { PHONE, OPENROUTER }
+internal enum class VoiceEngine { OPENROUTER, PHONE }
 
 internal class VoiceSettings(
     context: Context,
 ) {
     private val prefs = context.getSharedPreferences("eqo_voice_settings", Context.MODE_PRIVATE)
     var engine: VoiceEngine
-        get() = if (prefs.getBoolean("ai_engine", false)) VoiceEngine.OPENROUTER else VoiceEngine.PHONE
+        get() = if (prefs.getBoolean("ai_engine", true)) VoiceEngine.OPENROUTER else VoiceEngine.PHONE
         set(value) {
             prefs.edit { putBoolean("ai_engine", value == VoiceEngine.OPENROUTER) }
         }
@@ -34,9 +34,16 @@ internal class VoiceSettings(
             prefs.edit { putBoolean("audio_consent", value) }
         }
 
+    var audioModel: String?
+        get() = prefs.getString("audio_model", null)
+        set(value) {
+            prefs.edit { putString("audio_model", value) }
+        }
+
     companion object {
-        fun bind(activity: Activity) {
+        fun bind(activity: Activity): VoiceModelPicker {
             val settings = VoiceSettings(activity)
+            val models = VoiceModelPicker(activity, settings).apply { bind() }
             activity.findViewById<Button>(R.id.voice_engine_setting).setOnClickListener {
                 AlertDialog
                     .Builder(activity)
@@ -83,6 +90,7 @@ internal class VoiceSettings(
                     }.setNegativeButton(android.R.string.cancel, null)
                     .show()
             }
+            return models
         }
     }
 }

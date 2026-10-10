@@ -23,6 +23,14 @@ internal fun A11yResult.toActionResult(): ActionResult =
             )
     }
 
+/** Missing taps have a fixed diagnostic; no target/screen data is exposed. */
+internal fun A11yResult.toControlResult(): ActionResult =
+    if (this is A11yResult.Failure && error is A11yError.NodeNotFound) {
+        ActionResult.Failure("control_not_found")
+    } else {
+        toActionResult()
+    }
+
 internal class GatedIntentLauncher(
     val context: Context,
     private val automation: () -> EqoAutomation?,

@@ -35,6 +35,7 @@ import java.util.Locale
 @Config(sdk = [30])
 class TaskVoiceInputTest {
     private fun installRecognizer(activity: Activity) {
+        VoiceSettings(activity).engine = VoiceEngine.PHONE
         val service =
             ServiceInfo().apply {
                 packageName = "test.speech"
@@ -165,6 +166,7 @@ class TaskVoiceInputTest {
         val controller = Robolectric.buildActivity(Activity::class.java).setup()
         val activity = controller.get()
         activity.setContentView(R.layout.task_screen)
+        VoiceSettings(activity).engine = VoiceEngine.PHONE
         val voice = TaskVoiceInput(activity)
         assertNull(shadowOf(activity).lastRequestedPermission)
         assertEquals(PackageManager.PERMISSION_DENIED, activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO))

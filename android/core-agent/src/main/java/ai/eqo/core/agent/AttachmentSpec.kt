@@ -19,6 +19,21 @@ object AttachmentSpec {
     /** Actions that accept [PARAM]. */
     val ACTIONS: Set<String> = setOf("SEND_EMAIL", "SEND_WHATSAPP", "SEND_SMS")
 
+    /** File-only communication must not invent a caption; recipient constraints are never waived. */
+    fun allowsEmptyText(
+        action: String,
+        field: String,
+        params: Map<String, String>,
+    ): Boolean {
+        val attachment = params[PARAM]
+        if (attachment.isNullOrBlank() || errors(attachment).isNotEmpty()) return false
+        return when (action) {
+            "SEND_EMAIL" -> field in setOf("subject", "body")
+            "SEND_SMS", "SEND_WHATSAPP" -> field == "message"
+            else -> false
+        }
+    }
+
     /** Trimmed, non-blank references in the order given. */
     fun parse(raw: String?): List<String> =
         raw
@@ -55,7 +70,7 @@ object AttachmentSpec {
     /** What the owner sees in the plan preview for one reference: the file name, never the content. */
     fun displayName(reference: String): String =
         if (isLastScreenshot(reference)) {
-            "your latest EQO screenshot"
+            "your recent EQO screenshot, or newest gallery screenshot (name confirmed before sending)"
         } else if (AttachmentSearch.isSearch(reference)) {
             "a file matching \"${TaskDisplayText.escape(reference.substringAfter(':'))}\""
         } else {

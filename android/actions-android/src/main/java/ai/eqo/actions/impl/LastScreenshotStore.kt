@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.core.content.edit
 import java.io.File
 
-/** The one screenshot EQO took most recently. `attachment=last_screenshot` means this file. */
+/** The most recent EQO capture. AttachmentShare applies its recency limit and disclosed gallery fallback. */
 internal interface LastScreenshotStore {
     /** The recorded file, or null when none was recorded or it has been deleted since. */
     fun get(): File?

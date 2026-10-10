@@ -38,6 +38,27 @@ class ForegroundPlanRunTest {
         PlanApprovalSettings.setRequired(ApplicationProvider.getApplicationContext(), true)
     }
 
+    @Test fun missingLegacyTapIsNonTransientAndTakeoverIsNeverReclassified() {
+        val takeover = ai.eqo.accessibility.TakeoverDetector()
+        val automation =
+            ai.eqo.accessibility.EqoAutomation(
+                { null },
+                { ai.eqo.accessibility.EqoAutomation.ServiceState.AVAILABLE },
+                takeover,
+            )
+        val port = EqoAutomationPort({ automation }, { _, _ -> false })
+        assertFalse(port.tap("Take a note,New text note"))
+        assertEquals("control_not_found", port.lastFailure?.reason)
+        assertEquals(false, port.lastFailure?.transient)
+        assertFalse(port.tapById("new_note"))
+        assertEquals("control_not_found", port.lastFailure?.reason)
+        takeover.onAgentActionStarted()
+        takeover.onTouch(ai.eqo.accessibility.TakeoverDetector.TouchSource.USER, Long.MAX_VALUE)
+        takeover.onAgentActionFinished()
+        assertFalse(port.tap("Take a note"))
+        assertEquals("a11y_takeover", port.lastFailure?.reason)
+    }
+
     @Test fun everyEnabledRegistryActionIsReachableThroughExecutor() =
         runTest {
             val context = ApplicationProvider.getApplicationContext<android.content.Context>()

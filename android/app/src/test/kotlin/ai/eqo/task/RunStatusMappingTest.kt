@@ -42,6 +42,34 @@ class RunStatusMappingTest {
         )
     }
 
+    @Test fun missingControlStopsAsNeedsYouWithPlainCopyAndFixedDiagnostics() {
+        val progress = RunStatusMapping.progress(null, failed("control_not_found").copy(name = "CLICK_TEXT"), null)
+        assertEquals(StepProgressState.NEEDS_YOU, progress.state)
+        assertEquals(R.string.run_control_not_found, RunStatusMapping.detail(progress)?.resource)
+        assertEquals("NEEDS_YOU", RunStatusMapping.terminal(RunReceipt(listOf(progress), "FAILED")))
+        assertEquals("control_not_found", RunDiagnostics.code(ExecuteResult.Failure("control_not_found")))
+        assertEquals("control_not_found", RunDiagnostics.failureKind(ExecuteResult.Failure("control_not_found")))
+        assertTrue(RunReceipt(listOf(progress), "FAILED").executedStepIds.isEmpty())
+    }
+
+    @Test fun screenshotAndFileReasonsAreSpecificAndNeverLeakNamesIntoLogs() {
+        val reasons =
+            mapOf(
+                "No EQO screenshot taken recently and no matching gallery screenshot." to "no_eqo_screenshot_yet",
+                "No files found for private-file." to "no_matching_file",
+                "EQO cannot capture its own permission or approval screen." to "eqo_in_foreground",
+                "This is a protected screen. EQO will not read it." to "protected_screen",
+                "a11y_secure_window" to "protected_screen",
+                "Screenshot copy failed for private-file" to "execution_failed",
+            )
+        reasons.forEach { (reason, expected) ->
+            assertEquals(expected, RunDiagnostics.failureKind(ExecuteResult.Failure(reason)))
+        }
+        val shown = RunStatusMapping.detail(failed("No files found for private-file."))!!.argument
+        assertTrue(shown.contains("No matching"))
+        assertFalse(shown.contains("private-file"))
+    }
+
     private fun failed(
         reason: String,
         target: String = "",

@@ -10,6 +10,8 @@ import kotlinx.coroutines.delay
 object GenericAppAutomator {
     private const val MAX_ATTEMPTS = 18
     private const val RETRY_INTERVAL_MS = 300L
+    private const val TAP_ATTEMPTS = 4
+    private const val TAP_RETRY_INTERVAL_MS = 700L
     private const val SETTLE_AFTER_TYPE_MS = 700L
 
     /**
@@ -34,6 +36,16 @@ object GenericAppAutomator {
         return attempt()
     }
 
+    /** Four missing-control probes, 2.1 seconds total waiting; never repeat an accepted/rejected mutation. */
+    internal suspend fun retryTap(attempt: () -> A11yResult): A11yResult {
+        repeat(TAP_ATTEMPTS - 1) {
+            val result = attempt()
+            if (result !is A11yResult.Failure || result.error !is A11yError.NodeNotFound) return result
+            delay(TAP_RETRY_INTERVAL_MS)
+        }
+        return attempt()
+    }
+
     private fun automationOrNull(): EqoAutomation? = EQOAccessibilityService.getInstance()?.automation
 
     /**
@@ -51,12 +63,12 @@ object GenericAppAutomator {
     }
 
     suspend fun clickText(text: String): A11yResult =
-        retryUntilSettled {
+        retryTap {
             automationOrNull()?.tap(text) ?: A11yResult.failure(A11yError.AccessibilityDisabled)
         }
 
     suspend fun clickId(viewId: String): A11yResult =
-        retryUntilSettled {
+        retryTap {
             automationOrNull()?.tapById(viewId) ?: A11yResult.failure(A11yError.AccessibilityDisabled)
         }
 
@@ -141,6 +153,8 @@ object GenericAppAutomator {
     }
 
     fun pressBack(): A11yResult = gated { it.pressBack() }
+
+    fun pressBackInApp(): A11yResult = gated { it.pressBack(restrictToApp = true) }
 
     fun pressHome(): A11yResult = gated { it.pressHome() }
 
