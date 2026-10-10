@@ -128,12 +128,6 @@ class TaskActivity : Activity() {
         val startButton = findViewById<Button>(R.id.task_start_button)
 
         startButton.setOnClickListener {
-            if (TaskRunSession.retry.remaining() != null &&
-                findViewById<EditText>(R.id.task_request).text.toString() == TaskRunSession.requestDraft
-            ) {
-                findViewById<Button>(R.id.task_retry_button).performClick()
-                return@setOnClickListener
-            }
             // A NEW run is an explicit hand-back, not an agent/recovery reset.
             val confirmation = UserResumeConfirmation.forExplicitUserConfirmation(SystemClock.elapsedRealtime())
             TakeoverDetector.shared.resume(confirmation)
@@ -734,11 +728,18 @@ class TaskActivity : Activity() {
 
     private var planning = false
 
+    @Suppress("ReturnCount")
     private fun planRequest() {
         val active =
             (TaskRunSession.controller ?: controller)?.currentState() in
                 setOf(LoopState.RUNNING, LoopState.PAUSED)
         if (planning || active) return
+        if (TaskRunSession.retry.remaining() != null &&
+            findViewById<EditText>(R.id.task_request).text.toString() == TaskRunSession.requestDraft
+        ) {
+            findViewById<Button>(R.id.task_retry_button).performClick()
+            return
+        }
         val request = findViewById<EditText>(R.id.task_request).text.toString().trim()
         if (ai.eqo.explain.ExplainSession
                 .isScreenRequest(request)
