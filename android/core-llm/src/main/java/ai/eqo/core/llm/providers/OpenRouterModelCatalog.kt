@@ -58,6 +58,7 @@ data class OpenRouterModel(
     val contextLength: Long?,
     val inputPrice: String?,
     val outputPrice: String?,
+    val inputModalities: Set<String> = emptySet(),
 ) {
     val provider: String get() = id.substringBefore('/')
 }
@@ -94,6 +95,7 @@ object OpenRouterModelCatalog {
                     contextLength = text(obj, "context_length")?.toLongOrNull()?.takeIf { it > 0 },
                     inputPrice = pricing?.let { text(it, "prompt") },
                     outputPrice = pricing?.let { text(it, "completion") },
+                    inputModalities = modalities(obj),
                 )
             }.distinctBy { it.id }
             .toList()
@@ -139,6 +141,18 @@ object OpenRouterModelCatalog {
         obj: JsonObject,
         key: String,
     ): String? = obj.get(key)?.takeIf { it.isJsonPrimitive }?.asString
+
+    private fun modalities(obj: JsonObject): Set<String> =
+        obj
+            .get("architecture")
+            ?.takeIf { it.isJsonObject }
+            ?.asJsonObject
+            ?.get("input_modalities")
+            ?.takeIf { it.isJsonArray }
+            ?.asJsonArray
+            ?.mapNotNull { it.takeIf { value -> value.isJsonPrimitive && value.asJsonPrimitive.isString }?.asString }
+            ?.toSet()
+            .orEmpty()
 }
 
 /** App-private persistence is supplied by Android; fake storage/HTTP keep JVM tests offline. */

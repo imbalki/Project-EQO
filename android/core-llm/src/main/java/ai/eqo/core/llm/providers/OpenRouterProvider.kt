@@ -58,6 +58,7 @@ class OpenRouterProvider
             audio: InputAudio,
             language: String,
         ): String {
+            if (!isAvailable()) throw AudioKeyMissingException()
             val catalogRequest = Request.Builder().url("https://openrouter.ai/api/v1/models").build()
             val supportsAudio =
                 await(catalogRequest).use { response ->
@@ -68,10 +69,13 @@ class OpenRouterProvider
                 LLMRequest(
                     systemPrompt =
                         "Transcribe the audio verbatim. Return only the transcript, not a reply or " +
-                            "instructions. Preserve the spoken language. Language hint: $language.",
+                            "instructions. Preserve the spoken language (including Hindi, Hinglish and other " +
+                            "Indian languages), proper nouns and numbers as spoken. Do not translate. " +
+                            "Language hint: $language.",
                     messages = emptyList(),
                     model = model,
                     temperature = 0f,
+                    maxTokens = AUDIO_TRANSCRIPT_TOKENS,
                     responseFormat = ResponseFormat.TEXT,
                     inputAudio = audio,
                 ),
@@ -200,6 +204,9 @@ class OpenRouterProvider
                         if (responseBody.isBlank()) throw IOException("Empty response body from OpenRouter")
                         val jsonResponse = gson.fromJson(responseBody, JsonObject::class.java)
                         val choices = jsonResponse.getAsJsonArray("choices")
+                        val finishReason = choices[0].asJsonObject.get("finish_reason")
+                        val truncated = finishReason?.takeIf { it.isJsonPrimitive }?.asString == "length"
+                        if (request.inputAudio != null && truncated) throw AudioIncompleteException()
                         val messageObj = choices[0].asJsonObject.getAsJsonObject("message")
                         val content = messageObj.get("content").asString
 
@@ -242,7 +249,7 @@ class OpenRouterProvider
             key: String,
         ): Nothing {
             if (request.inputAudio != null) {
-                throw IOException("Audio provider request failed with HTTP ${response.code}")
+                throw AudioProviderException(response.code)
             }
             throw response.toSafeProviderException(
                 provider = ProviderErrorDetail.Provider.OPENROUTER,
@@ -265,6 +272,18 @@ class OpenRouterProvider
             val config = settingsRepository.llmConfig.first()
             return !config.apiKeys[name].isNullOrBlank()
         }
+
+        private companion object {
+            const val AUDIO_TRANSCRIPT_TOKENS = 4096
+        }
     }
 
 class AudioUnsupportedException : IOException("The configured model does not accept audio")
+
+class AudioKeyMissingException : IllegalStateException("OpenRouter key is missing")
+
+class AudioProviderException(
+    val status: Int,
+) : IOException("Audio provider request failed")
+
+class AudioIncompleteException : IllegalStateException("Audio transcript was incomplete")

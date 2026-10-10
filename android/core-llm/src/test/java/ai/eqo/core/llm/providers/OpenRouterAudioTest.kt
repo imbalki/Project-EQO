@@ -52,12 +52,16 @@ class OpenRouterAudioTest {
     private var acceptsAudio = true
     private var completionCode = 200
     private var uploads = 0
+    private var requests = 0
     private var payload = ""
+    private var finishReason = "stop"
+    private val credentials = FakeCredentials()
     private val client =
         OkHttpClient
             .Builder()
             .addInterceptor { chain ->
                 val request = chain.request()
+                requests++
                 val catalog = request.url.encodedPath.endsWith("/models")
                 val body =
                     if (catalog) {
@@ -68,7 +72,7 @@ class OpenRouterAudioTest {
                         val buffer = Buffer()
                         request.body!!.writeTo(buffer)
                         payload = buffer.readUtf8()
-                        """{"choices":[{"message":{"content":"verbatim words"}}]}"""
+                        """{"choices":[{"finish_reason":"$finishReason","message":{"content":"verbatim words"}}]}"""
                     }
                 Response
                     .Builder()
@@ -85,7 +89,7 @@ class OpenRouterAudioTest {
                 PreferenceDataStoreFactory.create(scope = scope) {
                     directory.resolve("settings.preferences_pb")
                 },
-            providerCredentialStore = FakeCredentials(),
+            providerCredentialStore = credentials,
             runStartupMigration = false,
         )
     private val provider = OpenRouterProvider(client, repository)
@@ -103,6 +107,7 @@ class OpenRouterAudioTest {
             assertEquals("verbatim words", provider.transcribe("test/model", InputAudio("synthetic-audio"), "hi-IN"))
             val json = JsonParser.parseString(payload).asJsonObject
             assertEquals("test/model", json.get("model").asString)
+            assertEquals(4096, json.get("max_tokens").asInt)
             assertFalse(json.has("response_format"))
             val messages = json.getAsJsonArray("messages")
             assertTrue(
@@ -140,7 +145,8 @@ class OpenRouterAudioTest {
             assertThrows(java.io.IOException::class.java) {
                 runBlocking { provider.transcribe("test/model", InputAudio("synthetic-audio"), "en-IN") }
             }
-        assertEquals("Audio provider request failed with HTTP 400", failure.message)
+        assertEquals("Audio provider request failed", failure.message)
+        assertEquals(400, (failure as AudioProviderException).status)
     }
 
     @Test
@@ -167,7 +173,7 @@ class OpenRouterAudioTest {
                     }.build()
             try {
                 val job =
-                    launch(start = CoroutineStart.UNDISPATCHED) {
+                    launch(Dispatchers.IO, start = CoroutineStart.UNDISPATCHED) {
                         val provider = OpenRouterProvider(fakeClient, repository)
                         provider.transcribe("test/model", InputAudio("audio"), "en-IN")
                     }
@@ -228,7 +234,7 @@ class OpenRouterAudioTest {
                     }.build()
             try {
                 val job =
-                    launch(start = CoroutineStart.UNDISPATCHED) {
+                    launch(Dispatchers.IO, start = CoroutineStart.UNDISPATCHED) {
                         val provider = OpenRouterProvider(fakeClient, repository)
                         provider.transcribe("test/model", InputAudio("audio"), "en-IN")
                     }
@@ -241,7 +247,26 @@ class OpenRouterAudioTest {
             }
         }
 
+    @Test
+    fun truncatedTranscriptIsNeverReturnedAsComplete() {
+        finishReason = "length"
+        assertThrows(AudioIncompleteException::class.java) {
+            runBlocking { provider.transcribe("test/model", InputAudio("synthetic-audio"), "hi-IN") }
+        }
+    }
+
+    @Test
+    fun missingKeyFailsBeforeCatalogOrAudioRequest() {
+        credentials.hasKey = false
+        assertThrows(AudioKeyMissingException::class.java) {
+            runBlocking { provider.transcribe("test/model", InputAudio("synthetic-audio"), "en-IN") }
+        }
+        assertEquals(0, uploads)
+        assertEquals(0, requests)
+    }
+
     private class FakeCredentials : ProviderCredentialStore {
+        var hasKey = true
         override val recoveryState =
             MutableStateFlow<ProviderCredentialRecoveryState>(ProviderCredentialRecoveryState.Ready)
 
@@ -249,7 +274,7 @@ class OpenRouterAudioTest {
             CredentialStoreResult.Success("synthetic-test-key")
 
         override fun readProviderApiKeys(): CredentialStoreResult<Map<String, String>> =
-            CredentialStoreResult.Success(mapOf("OpenRouter" to "synthetic-test-key"))
+            CredentialStoreResult.Success(if (hasKey) mapOf("OpenRouter" to "synthetic-test-key") else emptyMap())
 
         override fun write(
             credential: ProviderCredentialId,

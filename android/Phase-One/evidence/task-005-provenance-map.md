@@ -3,6 +3,12 @@
 ## Keep and app-control hints (t_2f7fbd22)
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AppControlHints.kt` | EQO-NEW | `ai.eqo.core.agent` | Static public app hints consumed by the approved task planner |
+## Voice v3 additions (t_112c2517)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceCapturePolicy.kt` | EQO-NEW | `ai.eqo.task` | Sample-clock silence/cap and PCM level policy |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceModelPicker.kt` | EQO-NEW | `ai.eqo.task` | Shared catalog audio-only choice and default selection |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceCapturePolicyTest.kt` | EQO-NEW | `ai.eqo.task` | Synthetic PCM policy regressions, no microphone/network |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceModelPickerTest.kt` | EQO-NEW | `ai.eqo.task` | Fake catalog/preferences selection and fallback tests |
 
 ## Voice v2 additions (t_e9801e01)
 
