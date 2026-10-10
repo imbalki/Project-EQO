@@ -5,8 +5,10 @@ import ai.eqo.R
 import ai.eqo.accessibility.EQOAccessibilityService
 import ai.eqo.actions.impl.AndroidActionRegistry
 import ai.eqo.actions.impl.AttachmentChoice
+import ai.eqo.actions.impl.AttachmentDecision
 import ai.eqo.actions.impl.AttachmentSelection
 import ai.eqo.actions.impl.PermissionRequester
+import ai.eqo.actions.impl.PickedAttachment
 import ai.eqo.actions.impl.RegistryOptions
 import ai.eqo.core.agent.ActionLoop
 import ai.eqo.core.agent.ApprovedTaskPlan
@@ -132,6 +134,12 @@ class TaskRunService : Service() {
                                     search: String,
                                     files: List<AttachmentChoice>,
                                 ): Int? = TaskRunSession.attachmentSelection?.choose(search, files)
+
+                                override suspend fun pick(initialFolder: String): PickedAttachment? =
+                                    TaskRunSession.attachmentSelection?.pick(initialFolder)
+
+                                override suspend fun confirm(files: List<AttachmentChoice>): AttachmentDecision =
+                                    TaskRunSession.attachmentSelection?.confirm(files) ?: AttachmentDecision.CANCEL
 
                                 override suspend fun showResolved(files: List<AttachmentChoice>): Boolean =
                                     TaskRunSession.attachmentSelection?.showResolved(files) ?: false

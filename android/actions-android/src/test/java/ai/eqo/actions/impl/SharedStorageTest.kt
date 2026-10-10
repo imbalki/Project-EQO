@@ -261,7 +261,7 @@ class SharedStorageTest {
     @Test fun `last_screenshot uses the recorded file and fails clearly when none exists`() {
         val last = FakeLast()
         val none = share(last).prepare("last_screenshot") as PreparedShare.Refused
-        assertTrue(none.message.contains("No EQO screenshot"))
+        assertTrue(none.message.startsWith("no_matching_file:"))
         val shot = file("Pictures/EQO/eqo-screenshot-1.png", "P")
         last.record(shot)
         val ready = share(last).prepare("last_screenshot") as PreparedShare.Ready
@@ -275,11 +275,11 @@ class SharedStorageTest {
         val big = File(root, "Download/big.bin")
         java.io.RandomAccessFile(big, "rw").use { it.setLength(AttachmentShare.MAX_TOTAL_BYTES + 1) }
         val service = share()
-        assertTrue(refusal(service, "Download/missing.txt").contains("not found"))
-        assertTrue(refusal(service, "Download").contains("folder"))
-        assertTrue(refusal(service, "/data/data/ai.eqo.app/shared_prefs/x.xml").contains("outside"))
-        assertTrue(refusal(service, "Download/ok.txt|Download/big.bin").contains("too big"))
-        assertTrue(refusal(service, "../x").contains(".."))
+        assertTrue(refusal(service, "Download/missing.txt").startsWith("attachment_unavailable:"))
+        assertTrue(refusal(service, "Download").startsWith("attachment_unavailable:"))
+        assertTrue(refusal(service, "/data/data/ai.eqo.app/shared_prefs/x.xml").startsWith("attachment_not_allowed:"))
+        assertTrue(refusal(service, "Download/ok.txt|Download/big.bin").startsWith("attachment_too_large:"))
+        assertTrue(refusal(service, "../x").startsWith("attachment_invalid:"))
         assertTrue(stagingRoot.listFiles().orEmpty().isEmpty())
     }
 

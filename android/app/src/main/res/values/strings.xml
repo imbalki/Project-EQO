@@ -326,4 +326,14 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="task_retry_notice">Completed steps will not run again. Review and approve only what is left.</string>
     <string name="task_permission_not_granted">Permission was not granted. No run started. Tap Start to explicitly try this plan again.</string>
     <string name="task_files_access_needed">Turn on All files access for EQO, then try this plan again.</string>
+    <string name="attach_choose_title">Choose the file to attach</string>
+    <string name="attach_ready_title">Ready to attach</string>
+    <string name="attach_send">Send</string>
+    <string name="attach_different">Choose a different file</string>
+    <string name="attach_date_unknown">Date unavailable</string>
+    <plurals name="attach_file_metadata">
+        <item quantity="one">%1$s\n%2$s · %3$d byte</item>
+        <item quantity="other">%1$s\n%2$s · %3$d bytes</item>
+    </plurals>
+    <string name="attach_confirm_message">%1$s\n\nSend these files? EQO will try to press Send; delivery is not verified.</string>
 </resources>

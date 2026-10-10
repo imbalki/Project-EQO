@@ -101,6 +101,15 @@ class TaskActivity : Activity() {
         actionPermissions.onRequestPermissionsResult(requestCode)
     }
 
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?,
+    ) {
+        super.onActivityResult(requestCode, resultCode, data)
+        attachmentSelection.picker.onResult(requestCode, resultCode, data)
+    }
+
     override fun onResume() {
         super.onResume()
         voiceInput?.refreshAvailability()
@@ -245,7 +254,7 @@ class TaskActivity : Activity() {
             x: Int,
             y: Int,
         ): Boolean =
-            listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE).any {
+            listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL).any {
                 containsTouch(dialog.getButton(it), x, y)
             } ||
                 (fileChoices && dialog.listView?.let { containsTouch(it, x, y) } == true)
@@ -885,6 +894,7 @@ class TaskActivity : Activity() {
     }
 
     override fun onDestroy() {
+        attachmentSelection.picker.destroy()
         voiceInput?.close()
         debugPlanReceiver?.let { unregisterReceiver(it) }
         TaskRunSession.observer = null

@@ -100,6 +100,30 @@ class SharedStorageCatalogTest {
         }
     }
 
+    @Test fun missingMediaProviderFallsBackToDcimScreenshotFiles() {
+        val screenshot = file("DCIM/Screenshots/Screenshot_2026-10-09-12-13-14-00_fake.jpg")
+        val catalog =
+            SharedStorageCatalog(
+                layout,
+                SharedMediaSource { throw IllegalStateException("synthetic media failure") },
+                MemoryMap(),
+            )
+        assertEquals(listOf(screenshot), find("find:type=screenshot,date=2026-10-09", catalog))
+    }
+
+    @Test fun screenshotNameInMediaIndexWorksWithoutKnownBucketOrFolder() {
+        val name = "Screenshot_2026-10-09-12-13-14-00_fake.jpg"
+        val screenshot = file("Vendor/Unclassified/$name")
+        val entry = SharedMediaEntry("Vendor/Unclassified/", name, null, "image/jpeg", day, day)
+        val catalog =
+            SharedStorageCatalog(
+                layout,
+                SharedMediaSource { listOf(entry) },
+                MemoryMap(),
+            )
+        assertEquals(listOf(screenshot), find("find:type=screenshot,date=2026-10-09", catalog))
+    }
+
     @Test fun mediaBucketLearnsBrandSpecificPathAndMimeAndDatesTakePriority() {
         file("Vendor/GalleryShots/receipt.bin").setLastModified(day - 10 * DAY_MS)
         val entries =

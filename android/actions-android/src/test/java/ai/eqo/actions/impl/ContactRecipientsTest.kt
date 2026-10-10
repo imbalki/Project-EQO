@@ -487,6 +487,15 @@ class ContactRecipientsTest {
                     it.storageRoot = root
                     it.allFilesAccess = { true }
                     it.shareUri = { file -> Uri.parse("content://test/${file.name}") }
+                    it.attachmentSelection =
+                        object : AttachmentSelection {
+                            override suspend fun choose(
+                                search: String,
+                                files: List<AttachmentChoice>,
+                            ): Int? = null
+
+                            override suspend fun showResolved(files: List<AttachmentChoice>): Boolean = true
+                        }
                 }
             handler(
                 Intent(Intent.ACTION_SEND).setType("text/plain").setPackage("com.google.android.gm"),

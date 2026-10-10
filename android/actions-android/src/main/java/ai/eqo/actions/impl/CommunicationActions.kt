@@ -6,6 +6,7 @@ package ai.eqo.actions.impl
 
 import ai.eqo.actions.base.Action
 import ai.eqo.actions.base.ActionResult
+import ai.eqo.core.agent.AttachmentFailure
 import ai.eqo.core.agent.ContactResolution
 import ai.eqo.core.agent.ContactResolver
 import ai.eqo.core.agent.failureMessage
@@ -125,7 +126,7 @@ private fun grantRead(
     }
 }
 
-private const val NO_ATTACHMENTS = "Attaching files is not available in this build."
+private val NO_ATTACHMENTS = AttachmentFailure.reason("provider_failed")
 private const val MIN_JID_DIGITS = 7
 private const val SEND_SETTLE_MS = 1500L
 
@@ -582,15 +583,16 @@ internal class CommunicationActions constructor(
                 )
             } else {
                 ActionResult.UserActionRequired(
-                    "WhatsApp opened with the file, but EQO could not press Send. Nothing was verified as sent.",
+                    AttachmentFailure.reason("send_requires_user"),
                 )
             }
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            share.discard(ready.files)
             throw cancelled
         } catch (e: Exception) {
             share.discard(ready.files)
             Log.e("SendWhatsApp", "WhatsApp file share failed")
-            ActionResult.Failure("WhatsApp didn't open with the file. Is WhatsApp installed?")
+            ActionResult.Failure(AttachmentFailure.reason("send_route_failed"))
         }
     }
 
@@ -602,7 +604,7 @@ internal class CommunicationActions constructor(
         val share = attachments ?: return ActionResult.Failure(NO_ATTACHMENTS)
         val smsApp =
             Telephony.Sms.getDefaultSmsPackage(launcher.context)
-                ?: return ActionResult.Failure("No messaging app is available to compose a text message.")
+                ?: return ActionResult.Failure(AttachmentFailure.reason("send_route_failed"))
         val ready =
             when (val prepared = share.prepareOnIo(attachment)) {
                 is PreparedShare.Refused -> return ActionResult.Failure(prepared.message)
@@ -633,14 +635,15 @@ internal class CommunicationActions constructor(
                 )
             } else {
                 ActionResult.UserActionRequired(
-                    "The message opened with the file, but EQO could not press Send. Nothing was verified as sent.",
+                    AttachmentFailure.reason("send_requires_user"),
                 )
             }
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            share.discard(ready.files)
             throw cancelled
         } catch (e: Exception) {
             share.discard(ready.files)
-            ActionResult.Failure("Couldn't open the messaging app with the file.")
+            ActionResult.Failure(AttachmentFailure.reason("send_route_failed"))
         }
     }
 
@@ -702,17 +705,36 @@ internal class CommunicationActions constructor(
                             ActionResult.Success(mapOf("message" to "Gmail Send pressed; delivery is not verified."))
                         } else {
                             ActionResult.UserActionRequired(
-                                "Email draft opened, but EQO could not press Send. Nothing was verified as sent.",
+                                if (shared != null) {
+                                    AttachmentFailure.reason("send_requires_user")
+                                } else {
+                                    "Email draft opened, but EQO could not press Send. Nothing was verified as sent."
+                                },
                             )
                         }
                     }
                     EmailComposeOutcome.UNAVAILABLE ->
-                        ActionResult(false, null, "Couldn't open the email app. Is one installed?")
+                        ActionResult.Failure(
+                            if (shared != null) {
+                                AttachmentFailure.reason("send_route_failed")
+                            } else {
+                                "Couldn't open the email app. Is one installed?"
+                            },
+                        )
                 }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                if (shared != null) attachments?.discard(shared.files)
+                throw cancelled
             } catch (e: Exception) {
                 if (shared != null) attachments?.discard(shared.files)
                 Log.e("SendEmail", "Email compose launch failed")
-                ActionResult(false, null, "Couldn't open the email app. Is one installed?")
+                ActionResult.Failure(
+                    if (shared != null) {
+                        AttachmentFailure.reason("send_route_failed")
+                    } else {
+                        "Couldn't open the email app. Is one installed?"
+                    },
+                )
             }
         }
     }

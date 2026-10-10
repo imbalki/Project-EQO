@@ -252,6 +252,25 @@ class RegistryPlannerTest {
             assertTrue(TaskPlanPreview.describe(plan).contains("open that app first, not EQO"))
         }
 
+    @Test fun attachmentFewShotsAreExecutableJsonAndKeepCaptureDistinct() {
+        val actions = setOf("SEND_WHATSAPP", "SEND_EMAIL", "TAKE_SCREENSHOT")
+        val prompt = RegistryPlanVocabulary.prompt(actions)
+        val examples =
+            Regex("\\{\"steps\":.*?\\]}", RegexOption.DOT_MATCHES_ALL)
+                .findAll(prompt.substringAfter("TAKE_SCREENSHOT is ONLY"))
+                .map { RegistryPlanVocabulary.parse(it.value, actions) }
+                .toList()
+        assertEquals(5, examples.size)
+        assertEquals("find:type=screenshot,latest", examples[0].single().action.params["attachment"])
+        assertEquals("find:type=screenshot,date=2026-10-09", examples[1].single().action.params["attachment"])
+        assertEquals("find:type=photo,latest", examples[2].single().action.params["attachment"])
+        assertEquals(listOf("TAKE_SCREENSHOT", "SEND_WHATSAPP"), examples[3].map { it.action.name })
+        assertEquals("last_screenshot", examples[3].last().action.params["attachment"])
+        assertEquals("find:ebay bill", examples[4].single().action.params["attachment"])
+        assertTrue(prompt.contains("use the real request date"))
+        assertTrue(prompt.contains("ASK_USER; do not invent one"))
+    }
+
     private val enabled = setOf("OPEN_APP", "TYPE_TEXT", "CLICK_TEXT")
     private val valid = """{"steps":[{"action":"OPEN_APP","params":{"appName":"gmail"}}]}"""
 

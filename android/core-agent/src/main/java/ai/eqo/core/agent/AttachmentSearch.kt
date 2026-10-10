@@ -17,6 +17,7 @@ data class AttachmentSearch(
         private val types =
             setOf(
                 "image",
+                "photo",
                 "screenshot",
                 "camera",
                 "gallery",

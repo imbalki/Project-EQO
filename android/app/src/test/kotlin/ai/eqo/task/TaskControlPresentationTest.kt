@@ -50,6 +50,7 @@ class TaskControlPresentationTest {
     }
 
     @Test
+    @Suppress("LongMethod") // Exercise positive/neutral hitboxes and background takeover in one real dialog lifecycle.
     fun `confirmation dialog registers only buttons and background touch still takes over`() {
         val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup().visible()
         val activity = lifecycle.get()
@@ -59,6 +60,7 @@ class TaskControlPresentationTest {
                 .setMessage("Approve this practice step")
                 .setPositiveButton("Approve", null)
                 .setNegativeButton("Reject", null)
+                .setNeutralButton("Choose a different file", null)
                 .show()
         val prepare =
             TaskActivity::class.java.getDeclaredMethod(
@@ -73,20 +75,23 @@ class TaskControlPresentationTest {
         val detector = TakeoverDetector.shared
         detector.onAgentActionStarted()
         try {
-            val button = dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)
-            assertTrue(button.getGlobalVisibleRect(bounds))
-            assertTrue(detector.isControlTouch(bounds.centerX(), bounds.centerY()))
-            val touch =
-                MotionEvent.obtain(
-                    0L,
-                    0L,
-                    MotionEvent.ACTION_DOWN,
-                    bounds.centerX().toFloat(),
-                    bounds.centerY().toFloat(),
-                    0,
-                )
-            dialog.window!!.callback.dispatchTouchEvent(touch)
-            touch.recycle()
+            val controls = listOf(android.app.AlertDialog.BUTTON_POSITIVE, android.app.AlertDialog.BUTTON_NEUTRAL)
+            for (control in controls) {
+                val button = dialog.getButton(control)
+                assertTrue(button.getGlobalVisibleRect(bounds))
+                assertTrue(detector.isControlTouch(bounds.centerX(), bounds.centerY()))
+                val touch =
+                    MotionEvent.obtain(
+                        0L,
+                        0L,
+                        MotionEvent.ACTION_DOWN,
+                        bounds.centerX().toFloat(),
+                        bounds.centerY().toFloat(),
+                        0,
+                    )
+                dialog.window!!.callback.dispatchTouchEvent(touch)
+                touch.recycle()
+            }
             assertFalse("approval must not cause takeover", detector.isPaused)
             val message = dialog.findViewById<TextView>(android.R.id.message)
             assertTrue(message.getGlobalVisibleRect(bounds))
