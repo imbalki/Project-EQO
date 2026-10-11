@@ -27,6 +27,36 @@ class RegistryPlannerTest {
             assertEquals("SEND_WHATSAPP", named.single().action.name)
         }
 
+    @Test fun noteRequestsAllowOrdinarySteps() =
+        runTest {
+            val plan =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Keep"}},""" +
+                    """{"action":"WAIT","params":{"durationMs":"3000"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Text"}},""" +
+                    """{"action":"TYPE_TEXT","params":{"searchText":"Title","content":"eqo test"}},""" +
+                    """{"action":"PRESS_ENTER","params":{}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Save"}},""" +
+                    """{"action":"PRESS_BACK","params":{}}]}"""
+            val actions = enabled + setOf("WAIT", "PRESS_BACK", "PRESS_ENTER")
+            val request = "open a note, type eqo test and save it as eqo test in Keep"
+            val steps = TaskPlanner(Fake(listOf(plan)), actions).plan(request)
+            val expected = listOf("OPEN_APP", "WAIT", "CLICK_TEXT", "TYPE_TEXT", "PRESS_ENTER", "PRESS_BACK")
+            assertEquals(expected, steps.map { it.action.name })
+            assertEquals((1..steps.size).map { "task-$it" }, steps.map { it.stepId })
+        }
+
+    @Test fun wordsInsideAQuotedMessageDoNotMakeItADraftRequest() {
+        val planner = TaskPlanner(Fake(listOf("{}")), setOf("SEND_SMS"))
+        assertFalse(planner.isDraftRequest("Send this text to big friend 'Testing EQO , type Testing 123 Test EQO'"))
+        assertFalse(planner.isDraftRequest("send hi to Example and write it clearly"))
+        assertFalse(planner.isDraftRequest("message Example \"please type the report\""))
+        assertTrue(planner.isDraftRequest("type hi on WhatsApp"))
+        assertTrue(planner.isDraftRequest("write hi to Example, don't send"))
+        assertTrue(planner.isDraftRequest("draft hi"))
+        assertTrue(planner.isDraftRequest("only type it, do not send"))
+        assertFalse(planner.isDraftRequest("I don't mind, just send it to Example"))
+    }
+
     @Test fun draftRequestsCannotGainSendingSteps() =
         runTest {
             val send = """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"hi"}}]}"""
@@ -73,11 +103,11 @@ class RegistryPlannerTest {
     @Test fun notesEditingExceptionCannotHideAnOutwardActionOrUnknownTap() =
         runTest {
             val note = "add a note called Test in Keep"
-            for (target in listOf("Send", "Share", "Publish", "Submit", "Example recipient", "New note and Send")) {
+            for (target in listOf("Send", "Share", "Publish", "Submit", "New note and Send")) {
                 val output = """{"steps":[{"action":"CLICK_TEXT","params":{"text":"$target"}}]}"""
                 try {
                     TaskPlanner(Fake(listOf(output)), enabled).plan(note)
-                    error("Unknown note tap must be rejected: $target")
+                    error("Outward note tap must be rejected: $target")
                 } catch (_: IllegalArgumentException) {
                 }
             }
@@ -137,12 +167,11 @@ class RegistryPlannerTest {
                 } catch (_: IllegalArgumentException) {
                 }
             }
-            // A harmless extra tap (not outward) is dropped, not fatal: the AI keeps its plan.
-            val dropped =
+            // An unusual non-outward tap is kept (the AI decides); it is not silently removed.
+            val kept =
                 TaskPlanner(Fake(listOf(output.replace("Create a note", "id:new_list_button"))), actions)
                     .plan("write a note in Keep")
-            assertEquals(steps.size - 1, dropped.size)
-            assertEquals(dropped.indices.map { "task-${it + 1}" }, dropped.map { it.stepId })
+            assertEquals(steps.size, kept.size)
         }
 
     @Test fun titleOnlyKeepRequestsUseTheSameFlowWithoutInventingBody() =
