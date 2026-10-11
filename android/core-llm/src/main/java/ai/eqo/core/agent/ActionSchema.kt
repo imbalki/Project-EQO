@@ -66,6 +66,18 @@ object ActionSchema {
                 category = ActionCategory.SYSTEM,
             ),
             ActionDefinition(
+                name = "CREATE_NOTE",
+                description = "Saves a note in the Keep notes app through its own share-to-note screen",
+                params =
+                    listOf(
+                        ParamDefinition("body", ParamType.STRING, true, "Text of the note"),
+                        ParamDefinition("title", ParamType.STRING, false, "Optional title"),
+                        ParamDefinition("appName", ParamType.STRING, false, "Notes app; Keep when omitted"),
+                    ),
+                examples = listOf("save a note in Keep: buy milk"),
+                category = ActionCategory.PRODUCTIVITY,
+            ),
+            ActionDefinition(
                 name = "TOGGLE_FLASHLIGHT",
                 description = """Turns flashlight/torch on, off, or toggles.
                 'toggle' flips current state automatically.
