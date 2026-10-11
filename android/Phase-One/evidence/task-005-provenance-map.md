@@ -1,5 +1,14 @@
 # TASK-005 per-file provenance map
 
+## App resolution v2 (t_5f379e1b)
+
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/AppNameMatcher.kt` | EQO-NEW | `ai.eqo.actions.impl` | Ranked normalized label/package matching and bounded edit distance |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/RememberedApps.kt` | EQO-NEW | `ai.eqo.task` | Opaque normalized-name keys and package-only local memory |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/AppPlanResolution.kt` | EQO-NEW | `ai.eqo.task` | Fake-testable pre-approval resolution, choice and package pin |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/AppChoiceDialog.kt` | EQO-NEW | `ai.eqo.task` | Bounded name/icon chooser and memory deletion settings |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskAppPlanning.kt` | EQO-NEW | `ai.eqo.task` | Shared launcher inventory and existing fallback integration |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/AppResolutionTest.kt` | EQO-NEW | `ai.eqo.task` | Synthetic launcher, persistence, approval and cancellation regressions |
+
 ## Screenshot runtime resolver and document picker (t_62291cf6)
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AttachmentFailure.kt` | EQO-NEW | `ai.eqo.core.agent` | Allowlisted attachment diagnoses with no filenames, URIs or exception payloads |

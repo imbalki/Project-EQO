@@ -20,26 +20,54 @@ class LaunchableAppResolver(
         },
     )
 
-    // Explicit fail-closed exits keep alias and ambiguous-name checks independent.
+    data class Candidate(
+        val packageName: String,
+        val label: String,
+        val score: Int,
+    )
+
+    fun installedApps(): List<Pair<String, String>> =
+        launcherApps()
+            .distinctBy { it.first }
+            .filter { launch(it.first) != null }
+
+    fun candidates(appName: String): List<Candidate> {
+        val alias = AliasResolver.appPackage(appName)
+        // Soft aliases only count for an installed, launchable package (installedApps() already filters).
+        val soft = SOFT_ALIASES[appName.trim().lowercase()]
+        return installedApps()
+            .map { (pkg, label) ->
+                val score =
+                    if (pkg == alias || pkg == soft || pkg.equals(appName.trim(), true)) {
+                        AppNameMatcher.ALIAS_SCORE
+                    } else {
+                        AppNameMatcher.score(appName, label, pkg)
+                    }
+                Candidate(pkg, label, score)
+            }.filter { it.score > 0 }
+            .sortedWith(compareByDescending<Candidate> { it.score }.thenBy { it.label }.thenBy { it.packageName })
+    }
+
+    fun clearWinner(candidates: List<Candidate>): Candidate? {
+        val best = candidates.firstOrNull()
+        val gap = (best?.score ?: 0) - (candidates.getOrNull(1)?.score ?: 0)
+        return best?.takeIf { it.score >= AppNameMatcher.CLEAR_SCORE && gap >= AppNameMatcher.CLEAR_GAP }
+    }
+
+    // Only explicit package targets are accepted here; approved execution never fuzzy-redirects.
+    fun resolvePackage(packageName: String): Intent? = launch(packageName)
+
+    // Explicit fail-closed exits keep settings and empty-input handling independent.
     @Suppress("ReturnCount")
     fun resolve(appName: String): Intent? {
         val name = appName.trim()
         if (name.isEmpty()) return null
         if (name.equals("settings", true)) return Intent(Settings.ACTION_SETTINGS)
-        // Known aliases must never resolve to a similarly named unrelated app.
-        AliasResolver.appPackage(name)?.let { return launch(it) }
-        // Soft aliases only apply when that exact package is installed; otherwise normal name matching continues.
-        SOFT_ALIASES[name.lowercase()]?.let(launch)?.let { return it }
-        launch(name)?.let { return it }
-        val apps = launcherApps()
-        val exact = apps.filter { (pkg, label) -> pkg.equals(name, true) || label.equals(name, true) }
-        val matches =
-            exact.ifEmpty {
-                apps.filter { (pkg, label) -> label.contains(name, true) || pkg.contains(name, true) }
-            }
-        // Ambiguous names are not proof that the requested app is installed.
-        val packages = matches.map { it.first }.distinct()
-        return packages.singleOrNull()?.let(launch)
+        val winner = clearWinner(candidates(name)) ?: return null
+        // A name that claims the publisher ("Google Keep") must never open another publisher's look-alike
+        // without a person choosing it; only a known alias package may satisfy it here.
+        if (winner.score < AppNameMatcher.ALIAS_SCORE && name.startsWith("google ", true)) return null
+        return launch(winner.packageName)
     }
 
     private companion object {

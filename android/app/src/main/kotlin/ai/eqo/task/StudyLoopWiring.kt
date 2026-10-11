@@ -237,7 +237,7 @@ class StudyActionExecutor(
             "click_text" to { port.tap(it.value("text")) },
             "tap_text" to { port.tap(it.value("text")) },
             "click_id" to { port.tapById(it.value("view_id")) },
-            "open_app" to { port.openApp(it.value("app")) },
+            "open_app" to { port.openApp(it["packageName"] ?: it.value("app")) },
             "type_text" to { type(it) },
             "paste" to { type(it) },
             "press_back" to { port.back() },
@@ -291,13 +291,22 @@ class StudyActionExecutor(
             if (verb in setOf("compose_sms", "compose_email")) handoffs[stepId] = successDetail(verb)
             ExecuteResult.Success(successDetail(verb))
         } else {
-            port.lastFailure
-                ?: ExecuteResult.Failure(
-                    "study_action_not_applied",
-                    transient = verb != "observe" && !action.irreversible,
-                )
+            actionFailure(verb, action)
         }
     }
+
+    private fun actionFailure(
+        verb: String,
+        action: ExecutedAction,
+    ): ExecuteResult.Failure =
+        if (verb == "open_app") {
+            ExecuteResult.Failure("The approved app is no longer installed or cannot be opened.")
+        } else {
+            port.lastFailure ?: ExecuteResult.Failure(
+                "study_action_not_applied",
+                transient = verb != "observe" && !action.irreversible,
+            )
+        }
 
     private fun type(params: Map<String, String>): Boolean =
         if (approvedPlan == null) {

@@ -34,6 +34,10 @@ class SetupHubActivity : Activity() {
             ai.eqo.task.VoiceSettings
                 .bind(this)
         configureHandle()
+        findViewById<Button>(R.id.remembered_apps_setting).setOnClickListener {
+            ai.eqo.task.RememberedAppsSettings
+                .show(this)
+        }
         findViewById<Button>(R.id.hub_background).setOnClickListener {
             try {
                 startActivity(Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))

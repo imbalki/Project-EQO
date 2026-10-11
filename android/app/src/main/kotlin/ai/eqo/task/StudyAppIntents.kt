@@ -1,6 +1,6 @@
 package ai.eqo.task
 
-import ai.eqo.core.agent.AliasResolver
+import ai.eqo.actions.impl.LaunchableAppResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -35,17 +35,9 @@ class StudyAppLauncher(
     private val context: Context,
 ) {
     fun open(name: String): Boolean {
-        val pm = context.packageManager
-        val query = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-        val matches = pm.queryIntentActivities(query, 0)
-        val alias = AliasResolver.appPackage(name)
-        val candidates =
-            matches
-                .filter {
-                    it.activityInfo.packageName == alias || it.loadLabel(pm).toString().equals(name, ignoreCase = true)
-                }.map { it.activityInfo.packageName }
-                .distinct()
-        val intent = candidates.singleOrNull()?.let { pm.getLaunchIntentForPackage(it) } ?: return false
+        val resolver = LaunchableAppResolver(context.packageManager)
+        val intent =
+            (if (name.contains('.')) resolver.resolvePackage(name) else resolver.resolve(name)) ?: return false
         return try {
             context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             true

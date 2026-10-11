@@ -1,5 +1,86 @@
 # Phase One phone test log
 
+## App resolution v2 — t_5f379e1b — NOT TESTED ON PHONE
+
+Review rework: frozen app-only gates PASS; original three-module suite remains NOT GREEN (macro timeout).
+Local branch feat/app-chooser; commit locally only. No installation, device,
+live model/provider, personal data or credentials accessed.
+
+### Review round 1 recovery fix
+
+- Explicit None of these retains Play Store search even without Chrome, after an
+  unusable browser plan, or after a planner/network exception. Recovery offers no
+  task approval/run action; store search and Cancel/Back remain explicit choices.
+  Zero candidates retain the existing missing-app flow; cancellation propagates.
+- PASS frozen `:app:ktlintCheck :app:detekt :app:lintDebug :app:testDebugUnitTest`:
+  BUILD SUCCESSFUL in 13m 15s; 349 tasks (15 executed), exit 0. App XML confirms
+  361 tests, zero failures/errors/skips; lint XML has zero issues. AppResolutionTest
+  19/19, MissingAppFallbackTest 9/9, StudyLoopWiringTest 11/11.
+- Four new integration regressions use the real chooser, TaskAppPlanning and task
+  recovery surface: None without Chrome, unusable replan, failed network request,
+  and recovery cancellation. Store search opens only an encoded market search;
+  cancellation opens nothing, neither path runs a task or saves a remembered choice.
+- Exact invocation from `android/`: `./gradlew :app:ktlintCheck :app:detekt
+  :app:lintDebug :app:testDebugUnitTest --continue --no-daemon --max-workers=1
+  -Pkotlin.compiler.execution.strategy=in-process
+  '-Dorg.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=1024m -XX:ActiveProcessorCount=2 -Dfile.encoding=UTF-8'
+  --console=plain`. Evidence: ignored `android/app/build/reports/appchooser/review-recovery-verified.log`.
+- PASS repository/provenance checks (502 Kotlin files/rows) and `git diff --check`.
+  No new Kotlin files; reflective call sites inspected, existing signatures unchanged.
+- Intermediate invocations are not final passing evidence: detekt's exclusive
+  complexity threshold required a small chooser helper; one two-worker wrapper
+  stalled after all 361 app tests passed and was stopped (own verified process tree
+  only). Final serial rerun completed all gates on unchanged Kotlin source.
+- Only app code changed in this review round. Actions/core-agent gates below are
+  prior-run evidence, not a new baseline. The macro failure was not independently
+  baseline-reproduced or fixed here; no phone/provider/installation tests were run.
+
+### Original implementation three-module gates
+
+- PASS `:actions-android:ktlintCheck`, `:actions-android:detekt`,
+  `:core-agent:ktlintCheck`, `:core-agent:detekt`, `:app:ktlintCheck`,
+  `:app:detekt`, `:app:lintDebug` and `scripts/check.sh` (502 Kotlin files/provenance rows).
+- PASS `:core-agent:testDebugUnitTest`: 121 tests, zero failures/errors/skips.
+- PASS `:app:testDebugUnitTest`: 357 tests, zero failures/errors/skips, including
+  AppResolutionTest 15/15, MissingAppFallbackTest 9/9 and StudyLoopWiringTest 11/11.
+- FAIL `:actions-android:testDebugUnitTest`: 190 tests, one failure, zero errors,
+  three Windows symlink skips. The only failure is the previously documented,
+  untouched AutomationExecutorsTest `delete and list macros keep system macros
+  and sort names`: 10-second UncompletedCoroutinesError. Macro source/tests are
+  unchanged from the checkpoint's parent; no clean-parent baseline run was performed.
+- Final invocation: `./gradlew :actions-android:ktlintCheck :actions-android:detekt
+  :actions-android:testDebugUnitTest :core-agent:ktlintCheck :core-agent:detekt
+  :core-agent:testDebugUnitTest :app:ktlintCheck :app:detekt :app:lintDebug
+  :app:testDebugUnitTest --continue --no-daemon --max-workers=2
+  -Pkotlin.compiler.execution.strategy=in-process
+  '-Dorg.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=1024m -XX:ActiveProcessorCount=2 -Dfile.encoding=UTF-8'
+  --console=plain`; BUILD FAILED in 20m 41s, 386 tasks (26 executed).
+- Earlier checks caught and corrected formatting, an invalid untrusted-data import,
+  and exact-package suffix normalization ambiguity. Final source was unchanged
+  during this last gate invocation. Logs are retained under ignored
+  `android/app/build/reports/appchooser/`; no raw logs are committed.
+- Read-only audit fixes: selected-package fallback handles duplicate labels,
+  chooser cancellation discards all new mappings, chooser content rejects obscured
+  touches, and Chrome fallback requires the actual Chrome package. Exact installed
+  package identifiers remain authoritative; no approved app is fuzzily redirected.
+
+Phone checklist (all unchecked):
+- [ ] Realme Android 11: "Google Keep" and "Keep" resolve to Keep notes before approval.
+- [ ] WhatsApp/whats app, gmail/google mail, calc and chorme show the expected app.
+- [ ] Ambiguous "Google" shows <=5 installed names and icons; no app opens yet.
+- [ ] Selecting an app previews its exact label; Run opens only the approved package.
+- [ ] The same name after restarting EQO skips the chooser using remembered choice.
+- [ ] Setup > Apps EQO remembers > Forget removes the choice; ambiguity returns.
+- [ ] None of these offers the existing Chrome plan and Play Store search.
+- [ ] None of these with Chrome absent still offers Play Store search; no browser approval.
+- [ ] None of these after a failed/unusable Chrome replan still offers Play Store search.
+- [ ] Cancel/back in store-only recovery opens nothing and runs no task.
+- [ ] An unrelated missing app follows the existing fallback unchanged.
+- [ ] Cancel, Back and closing the task screen run nothing and persist no choice.
+- [ ] With two ambiguous apps, select the first then cancel the second; neither choice is remembered.
+- [ ] Uninstall the selected app after approval; Run fails with a plain reason, no redirect.
+- [ ] A single weak match still asks; duplicate launcher activities appear only once.
+
 ## Voice first use — t_3a0b1c25 — NOT TESTED ON PHONE
 
 - Local-only `feat/voice-first-use`; no push/PR/gh, install, real microphone, provider

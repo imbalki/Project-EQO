@@ -14,7 +14,6 @@ package ai.eqo.task
 
 import ai.eqo.R
 import ai.eqo.accessibility.TakeoverDetector
-import ai.eqo.accessibility.UntrustedScreenText
 import ai.eqo.core.agent.ApprovedTaskPlan
 import ai.eqo.core.agent.LoopState
 import ai.eqo.core.agent.TaskPlanPreview
@@ -714,6 +713,8 @@ class TaskActivity : Activity() {
                             ai.eqo.core.agent.RegistryPlanVocabulary
                                 .parse(json, portedActions.enabledActionNames)
                         if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
+                    } catch (_: AppChoiceCancelled) {
+                        findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
                     } catch (failure: ai.eqo.actions.impl.RecipientPreparationException) {
                         findViewById<TextView>(R.id.task_state).text = failure.message
                     } catch (_: IllegalArgumentException) {
@@ -766,6 +767,13 @@ class TaskActivity : Activity() {
         }
     }
 
+    internal fun showStoppedAppPlan(result: MissingAppFallback.Result.Stopped) {
+        findViewById<TextView>(R.id.task_state).text = result.message
+        if (result.storeSearch.isNotEmpty()) {
+            PlanFallbackDialog(this) { error("A stopped plan must never be approved") }.showRecovery(result)
+        }
+    }
+
     @Suppress("TooGenericExceptionCaught", "SwallowedException", "CyclomaticComplexMethod")
     private suspend fun makePlan(request: String) {
         try {
@@ -778,19 +786,21 @@ class TaskActivity : Activity() {
                     val resolver =
                         ai.eqo.actions.impl
                             .LaunchableAppResolver(packageManager)
-                    val fallback = MissingAppFallback { resolver.resolve(it) != null }
-                    val first = planWithOneNetworkRetry { planner.plan(request, UntrustedScreenText.wrap("")) }
-                    fallback.prepare(request, first) { constrained ->
-                        planWithOneNetworkRetry { planner.plan(constrained, UntrustedScreenText.wrap("")) }
+                    val apps = TaskAppPlanning(this@TaskActivity, resolver)
+                    val first = planWithOneNetworkRetry { planner.plan(request, apps.plannerInventory()) }
+                    apps.prepare(request, first) { constrained ->
+                        planWithOneNetworkRetry { planner.plan(constrained, apps.plannerInventory()) }
                     }
                 }
             if (!isFinishing && !isDestroyed) {
                 when (result) {
                     is MissingAppFallback.Result.Ready -> prepareAndShowPlan(result.steps, result.missing)
                     is MissingAppFallback.Result.Stopped ->
-                        findViewById<TextView>(R.id.task_state).text = result.message
+                        showStoppedAppPlan(result)
                 }
             }
+        } catch (_: AppChoiceCancelled) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (_: MissingTaskKey) {
@@ -825,23 +835,40 @@ class TaskActivity : Activity() {
         }
     }
 
+    @Suppress("ReturnCount") // Pre-approval cancellation and permission failures must exit without showing approval.
     internal suspend fun prepareAndShowPlan(
         steps: List<ai.eqo.core.agent.LoopStep>,
         missing: List<String> = emptyList(),
         retry: Boolean = false,
     ) {
         val generation = preparationGeneration
+        val appPreparation =
+            try {
+                TaskAppPlanning(this).resolve(steps)
+            } catch (_: AppChoiceCancelled) {
+                findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
+                return
+            }
+        if (appPreparation.rejected.isNotEmpty()) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_unresolved)
+            return
+        }
+        val resolved = appPreparation.steps
         findViewById<TextView>(R.id.task_preview).text =
-            getString(R.string.task_preview_with_permissions, TaskPlanPreview.describe(steps), permissionPreview(steps))
-        if (!portedActions.prepareRuntimeAccess(steps)) {
+            getString(
+                R.string.task_preview_with_permissions,
+                TaskPlanPreview.describe(resolved),
+                permissionPreview(resolved),
+            )
+        if (!portedActions.prepareRuntimeAccess(resolved)) {
             findViewById<TextView>(R.id.task_state).setText(R.string.task_permission_not_granted)
             return
         }
-        if (!portedActions.prepareFileAccess(steps)) {
+        if (!portedActions.prepareFileAccess(resolved)) {
             findViewById<TextView>(R.id.task_state).setText(R.string.task_files_access_needed)
             return
         }
-        val prepared = portedActions.prepareRecipients(steps)
+        val prepared = portedActions.prepareRecipients(resolved)
         if (generation == preparationGeneration && !isFinishing && !isDestroyed) {
             showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing, retry)
         }

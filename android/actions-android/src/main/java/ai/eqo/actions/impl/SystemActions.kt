@@ -425,9 +425,11 @@ internal class SystemActions(
         ): ActionResult {
             requireRegistryExecution()?.let { return it }
             val appName = params["appName"] ?: return ActionResult(false, null, "appName parameter missing")
+            val resolver = LaunchableAppResolver(context.packageManager)
+            val pinned = params["packageName"]
             val intent =
-                LaunchableAppResolver(context.packageManager).resolve(appName)
-                    ?: return ActionResult.Failure("Requested app is not installed or cannot be opened.")
+                (if (pinned == null) resolver.resolve(appName) else resolver.resolvePackage(pinned))
+                    ?: return ActionResult.Failure("The approved app is no longer installed or cannot be opened.")
             launcher.open(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             kotlinx.coroutines.delay(2000)
             return ActionResult.Success(mapOf("message" to "Requested app launched."))
