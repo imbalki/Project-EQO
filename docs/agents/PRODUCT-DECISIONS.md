@@ -13,3 +13,11 @@ Decisions made by the owner, in the owner's words where possible. Agents and the
 7. **Voice:** EQO records the audio itself (tap to start, tap to stop) and transcribes with the user's configured OpenRouter audio model; the phone's own recogniser is a fallback.
 8. **Working style:** the lead acts as CTO. Inconsequential architecture or developer-quality changes go ahead with a short example. Anything that changes how the app works or its ideology is discussed first and never changed without the owner's permission.
 9. **POC target:** a working proof of concept by the evening of 2026-10-11.
+
+## 2026-10-11 (later): edge handle additions and the next release
+
+Approved for the release after the POC (not for the POC):
+1. **Edge handle mic = dictation anywhere.** Tap a text field in any app, tap the handle mic, speak, tap again; EQO transcribes with the user's AI model and inserts the text at the cursor. Never into password fields; a small recording bubble shows it is listening; the handle must not steal focus; one tap undoes the last insert.
+2. **Edge handle screenshot.** One tap saves a screenshot of the current app to Pictures/EQO (protected screens are refused) and offers "Send to...".
+3. **Screen recording: parked for the next release.** Owner's purpose: record how a task is done so EQO can learn actions when it falters. CTO proposal for the owner to decide then: capture an ACTION TRACE (taps, typed text excluding passwords, app changes, optional per-step screenshots) instead of raw video, turn it into a plan/macro the user approves, and offer "Show me how?" when EQO falters; video stays optional for human review.
+4. **Permission prompt UX (phase 2):** show "Allow this time / Always allow / Don't allow" for each app inside the plan preview the user already approves (owner: "good").
