@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="voice_button">Mic</string>
+    <string name="voice_first_use_title">How should EQO listen?</string>
+    <string name="voice_first_use_ai">AI model (recommended)</string>
+    <string name="voice_first_use_phone">Phone voice (less accurate)</string>
+    <string name="voice_first_use_key_missing">Save your OpenRouter key first</string>
+    <string name="voice_choose_later">Choose later</string>
     <string name="voice_button_description">Speak your request</string>
     <string name="voice_ready">Type your request or tap Mic to speak.</string>
     <string name="voice_permission_title">Allow microphone for voice input?</string>

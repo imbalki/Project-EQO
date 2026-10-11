@@ -87,6 +87,7 @@ class VoiceInputV2Test {
 
     private fun ai(consent: Boolean = true) {
         settings.engine = VoiceEngine.OPENROUTER
+        settings.audioModel = "test/audio"
         settings.consent = consent
     }
 
