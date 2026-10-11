@@ -84,6 +84,10 @@ class StudyTaskController(
             },
         )
 
+    // The executor's own answer (for example the calculated value) survives into the receipt; the verifier only
+    // knows whether the step ran, not what it produced.
+    private val executorDetail = mutableMapOf<String, String>()
+
     private companion object {
         const val LOCATION_APPLY_TIMEOUT_MS = 30_000L
     }
@@ -94,6 +98,7 @@ class StudyTaskController(
         onStepProgress(StepProgress(step.stepId, step.action.name, StepProgressState.RUNNING))
         val result = executor.execute(step)
         RunDiagnostics.result(steps.indexOf(step) + 1, result)
+        if (result is ExecuteResult.Success && result.detail.isNotBlank()) executorDetail[step.stepId] = result.detail
         onStepProgress(
             present(
                 step,
@@ -206,7 +211,9 @@ class StudyTaskController(
                         name = step?.action?.name ?: record.stepId,
                         state = record.outcome.toProgressState(),
                         elapsedMs = 0L,
-                        detail = record.outcome.toDetail(),
+                        detail =
+                            executorDetail[record.stepId].takeIf { record.outcome is StepOutcome.Completed }
+                                ?: record.outcome.toDetail(),
                     ),
                 )
             }

@@ -31,6 +31,11 @@ internal fun A11yResult.toControlResult(): ActionResult =
         toActionResult()
     }
 
+/** A launch the accessibility gate refused; carries only the fixed, user-readable reason. */
+internal class GatedLaunchException(
+    message: String,
+) : IllegalStateException(message)
+
 internal class GatedIntentLauncher(
     val context: Context,
     private val automation: () -> EqoAutomation?,
@@ -41,6 +46,6 @@ internal class GatedIntentLauncher(
                 context.startActivity(intent)
                 A11yResult.success("App opened.")
             } ?: A11yResult.failure(A11yError.AccessibilityDisabled)
-        if (!result.isSuccess) throw IllegalStateException(result.toActionResult().error)
+        if (!result.isSuccess) throw GatedLaunchException(result.toActionResult().error.orEmpty())
     }
 }
