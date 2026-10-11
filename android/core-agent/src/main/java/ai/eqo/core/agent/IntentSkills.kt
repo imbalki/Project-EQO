@@ -117,8 +117,50 @@ object IntentPlanProtection {
             val forbidden = CHANNEL_ACTIONS.filterKeys { it != channel }.values.flatten()
             require(names.none { it in forbidden }) { "Plan must use the understood message channel" }
         }
-        return steps
+        return if (intent.action == "create_note") noteSteps(steps) else steps
     }
+
+    /**
+     * A note plan may use any ordinary step the AI chooses. Pure Save/Done taps are dropped (notes apps save by
+     * themselves, so tapping them only fails); anything that communicates or shares outward is refused.
+     */
+    private fun noteSteps(steps: List<LoopStep>): List<LoopStep> {
+        val kept = steps.filterNot(::saveNoise)
+        require(kept.isNotEmpty() && kept.none(::outward)) { "Note editing cannot include communication steps" }
+        return kept.mapIndexed { index, step -> step.copy(stepId = "task-${index + 1}") }
+    }
+
+    private fun tapText(step: LoopStep) = step.action.params["text"].orEmpty().trim().lowercase()
+
+    private fun isTap(step: LoopStep) = step.action.name.uppercase() in setOf("CLICK_TEXT", "TAP_TEXT")
+
+    private fun saveNoise(step: LoopStep) = isTap(step) && tapText(step) in SAVE_NOISE_TAPS
+
+    private fun outward(step: LoopStep): Boolean =
+        step.action.name.uppercase() in OUTWARD_ACTIONS ||
+            (isTap(step) && OUTWARD_WORDS.containsMatchIn(tapText(step)))
+
+    private val SAVE_NOISE_TAPS = setOf("save", "done", "ok", "okay", "finish", "confirm", "close")
+    private val OUTWARD_ACTIONS =
+        setOf(
+            "SEND_WHATSAPP",
+            "SEND_WHATSAPP_GROUP",
+            "SEND_SMS",
+            "SEND_EMAIL",
+            "SEND_TELEGRAM",
+            "COMPOSE_SMS",
+            "COMPOSE_EMAIL",
+            "MAKE_CALL",
+            "MAKE_VIDEO_CALL",
+            "WHATSAPP_CALL",
+            "SHARE_CONTACT",
+            "SHARE_LOCATION",
+        )
+    private val OUTWARD_WORDS =
+        Regex(
+            "send|share|post|publish|submit|reply|forward|message|whatsapp|sms|email|mail|telegram|call|pay|buy",
+            RegexOption.IGNORE_CASE,
+        )
 
     private fun submits(step: LoopStep): Boolean =
         when (step.action.name) {

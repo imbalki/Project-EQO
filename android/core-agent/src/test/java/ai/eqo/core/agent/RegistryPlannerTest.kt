@@ -41,6 +41,50 @@ class RegistryPlannerTest {
             assertEquals("SEND_WHATSAPP", named.single().action.name)
         }
 
+    @Test fun noteRequestsAllowOrdinarySteps() =
+        runTest {
+            val plan =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Keep"}},""" +
+                    """{"action":"WAIT","params":{"durationMs":"3000"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Text"}},""" +
+                    """{"action":"TYPE_TEXT","params":{"searchText":"Title","content":"eqo test"}},""" +
+                    """{"action":"PRESS_ENTER","params":{}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Save"}},""" +
+                    """{"action":"PRESS_BACK","params":{}}]}"""
+            val actions = enabled + setOf("WAIT", "PRESS_BACK", "PRESS_ENTER")
+            val request = "open a note, type eqo test and save it as eqo test in Keep"
+            // An app without a pinned template keeps the AI's own plan; only Save/Done noise is dropped.
+            val intent =
+                TaskIntent(
+                    "Create note",
+                    app = "Notes",
+                    action = "create_note",
+                    params = mapOf("body" to "eqo test"),
+                    confidence = 1.0,
+                )
+            val steps = TaskPlanner(Fake(listOf(plan)), actions).plan(request, intent = intent)
+            val expected = listOf("OPEN_APP", "WAIT", "CLICK_TEXT", "TYPE_TEXT", "PRESS_ENTER", "PRESS_BACK")
+            assertEquals(expected, steps.map { it.action.name })
+            assertEquals((1..steps.size).map { "task-$it" }, steps.map { it.stepId })
+        }
+
+    @Test fun noteIntentsRefuseOutwardStepsAndKeepUnusualNonOutwardTaps() =
+        runTest {
+            val intent = TaskIntent("Create note", app = "Notes", action = "create_note", confidence = 1.0)
+            val actions = enabled + setOf("WAIT", "PRESS_BACK")
+            val outward = """{"steps":[{"action":"OPEN_APP","params":{"appName":"Notes"}},""" +
+                """{"action":"CLICK_TEXT","params":{"text":"Share"}}]}"""
+            try {
+                TaskPlanner(Fake(listOf(outward)), actions).plan("add a note in Notes", intent = intent)
+                error("An outward note step must be rejected")
+            } catch (_: IllegalArgumentException) {
+            }
+            val unusual = """{"steps":[{"action":"OPEN_APP","params":{"appName":"Notes"}},""" +
+                """{"action":"CLICK_TEXT","params":{"text":"New list"}}]}"""
+            val kept = TaskPlanner(Fake(listOf(unusual)), actions).plan("add a note in Notes", intent = intent)
+            assertEquals(listOf("OPEN_APP", "CLICK_TEXT"), kept.map { it.action.name })
+        }
+
     @Test fun draftRequestsCannotGainSendingSteps() =
         runTest {
             val send =

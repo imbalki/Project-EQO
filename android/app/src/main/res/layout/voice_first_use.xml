@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/voice_first_use_ai" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/voice_ai_disclosure" />
+
+        <TextView
+            android:id="@+id/voice_first_use_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite"
+            android:text="@string/model_catalog_loading" />
+
+        <Button
+            android:id="@+id/voice_first_use_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/voice_first_use_key_missing"
+            android:visibility="gone" />
+
+        <RadioGroup
+            android:id="@+id/voice_first_use_models"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </LinearLayout>
+</ScrollView>

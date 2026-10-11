@@ -24,6 +24,12 @@ internal class VoiceModelPicker(
     private var generation = 0
     private var dialog: AlertDialog? = null
     private var warning: AlertDialog? = null
+    private val firstUse =
+        VoiceFirstUse(activity, settings, { repository.load().models }, loadInBackground = loadInBackground)
+
+    fun chooseEngine() {
+        if (active) firstUse.show { label(activity.findViewById(R.id.voice_model_setting)) }
+    }
 
     fun activate() {
         active = true
@@ -31,6 +37,7 @@ internal class VoiceModelPicker(
 
     fun pause() {
         active = false
+        firstUse.close()
         generation++
         dialog?.dismiss()
         dialog = null
@@ -65,8 +72,7 @@ internal class VoiceModelPicker(
 
     private fun label(button: Button) {
         val models = cachedModels(activity)
-        if (settings.audioModel == null) settings.audioModel = defaultAudioModel(models)
-        val selected = settings.audioModel
+        val selected = settings.audioModel ?: defaultAudioModel(models)
         if (selected == null) {
             button.setText(R.string.voice_model_title)
         } else {
@@ -78,7 +84,6 @@ internal class VoiceModelPicker(
         models: List<OpenRouterModel>,
         button: Button,
     ) {
-        if (settings.audioModel == null) settings.audioModel = defaultAudioModel(models)
         label(button)
         val recommended = defaultAudioModel(models)
         val builder = AlertDialog.Builder(activity).setTitle(R.string.voice_model_title)
@@ -87,7 +92,7 @@ internal class VoiceModelPicker(
         } else {
             builder.setSingleChoiceItems(
                 models.map { modelLabel(it, recommended) }.toTypedArray(),
-                models.indexOfFirst { it.id == settings.audioModel },
+                models.indexOfFirst { it.id == (settings.audioModel ?: recommended) },
             ) { dialog, which ->
                 val selected = models[which]
                 if ("audio" in selected.inputModalities) {
@@ -96,7 +101,8 @@ internal class VoiceModelPicker(
                     dialog.dismiss()
                 } else {
                     (dialog as AlertDialog).listView.setItemChecked(which, false)
-                    dialog.listView.setItemChecked(models.indexOfFirst { it.id == settings.audioModel }, true)
+                    val prior = settings.audioModel ?: recommended
+                    dialog.listView.setItemChecked(models.indexOfFirst { it.id == prior }, true)
                     warning?.dismiss()
                     warning =
                         AlertDialog

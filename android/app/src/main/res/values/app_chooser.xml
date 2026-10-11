@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_chooser_title">Which app did you mean?</string>
+    <string name="app_chooser_none">None of these</string>
+    <string name="app_chooser_install">Install %1$s from Play Store</string>
+    <string name="app_chooser_store_opened">Play Store search opened. The task did not run.</string>
+    <string name="app_chooser_store_failed">Could not open Play Store search. Nothing ran.</string>
+    <string name="app_chooser_cancelled">App choice cancelled. Nothing ran.</string>
+    <string name="app_chooser_unresolved">App not selected or installed. Make a new plan for store or web alternatives. Nothing ran.</string>
+    <string name="app_chooser_row">%1$s\n%2$s</string>
+    <string name="remembered_apps_title">Apps EQO remembers</string>
+    <string name="remembered_apps_empty">No app choices saved. Tap an entry to forget its choice.</string>
+    <string name="remembered_apps_delete">Forget this app choice</string>
+    <dimen name="app_chooser_icon">40dp</dimen>
+</resources>

@@ -203,11 +203,25 @@ class ApprovedTaskPlan(
 
     init {
         require(PlanOutputReferences.errors(approved).isEmpty()) { "Invalid approved output reference" }
+        // Local preflight pins only OPEN_APP targets. The model vocabulary still rejects this parameter.
+        val vocabularySteps =
+            approved.map { step ->
+                val params = step.action.params
+                val pinned = params["packageName"]
+                if (pinned != null && step.action.name in setOf("OPEN_APP", "open_app")) {
+                    require(pinned.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+"))) {
+                        "Invalid resolved app package"
+                    }
+                    step.copy(action = step.action.copy(params = params - "packageName"))
+                } else {
+                    step
+                }
+            }
         val errors =
             if (approved.all { it.action.name in PlanValidator.STUDY_PARAMS }) {
-                PlanValidator.validateStudySteps(approved)
+                PlanValidator.validateStudySteps(vocabularySteps)
             } else {
-                PlanValidator.validateRegistrySteps(approved, ActionSchema.ALL_ACTIONS.map { it.name }.toSet())
+                PlanValidator.validateRegistrySteps(vocabularySteps, ActionSchema.ALL_ACTIONS.map { it.name }.toSet())
             }
         require(errors.isEmpty()) { errors.joinToString("; ") }
     }
@@ -286,6 +300,7 @@ object TaskPlanPreview {
             "observe" -> "look at the screen"
             "scroll" -> "scroll ${quote(p["direction"].orEmpty())}"
             "open_app" -> "open ${quote(p["app"].orEmpty())}"
+            "OPEN_APP" -> "open ${quote(p["appName"].orEmpty())}"
             "tap_text" -> "tap ${quote(p["text"].orEmpty())} in the current app (may submit or send)"
             "type_text", "paste" ->
                 "put ${quote(p["text"].orEmpty())} into ${quote(p["target"].orEmpty())}" + " in the current app"

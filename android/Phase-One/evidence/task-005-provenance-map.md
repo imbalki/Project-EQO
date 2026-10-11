@@ -15,6 +15,14 @@
 | :app | `android/app/src/main/kotlin/ai/eqo/task/IntentChoiceSheet.kt` | EQO-NEW | `ai.eqo.task` | Protected pre-plan choices and editable explicit answers |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/IntentChoiceSheetTest.kt` | EQO-NEW | `ai.eqo.task` | Robolectric choice, free-text and cancel controls |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/LaunchableAppResolverTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | Synthetic installed-label cache and ambiguity regression |
+## App resolution v2 (t_5f379e1b)
+
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/AppNameMatcher.kt` | EQO-NEW | `ai.eqo.actions.impl` | Ranked normalized label/package matching and bounded edit distance |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/RememberedApps.kt` | EQO-NEW | `ai.eqo.task` | Opaque normalized-name keys and package-only local memory |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/AppPlanResolution.kt` | EQO-NEW | `ai.eqo.task` | Fake-testable pre-approval resolution, choice and package pin |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/AppChoiceDialog.kt` | EQO-NEW | `ai.eqo.task` | Bounded name/icon chooser and memory deletion settings |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskAppPlanning.kt` | EQO-NEW | `ai.eqo.task` | Shared launcher inventory and existing fallback integration |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/AppResolutionTest.kt` | EQO-NEW | `ai.eqo.task` | Synthetic launcher, persistence, approval and cancellation regressions |
 
 ## Screenshot runtime resolver and document picker (t_62291cf6)
 
@@ -453,6 +461,13 @@ line-by-line semantic equivalence of the adapters (that is TASK-004's verify-mov
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/core/agent/NeedsInputParamKeyTest.kt` | MOVE | `ai.eqo.core.agent` | yashab-cyber/opendroid @ 6ff5a061755b597b0558fed1f565587837ed4d51 (upstream path: `app/src/test/java/com/opendroid/ai/core/agent/NeedsInputParamKeyTest.kt`) |
 
 (Count: 202 Kotlin files — 100% coverage of `git ls-files android/` *.kt.)
+
+## Voice first-use additions (t_3a0b1c25)
+
+| Module | Local file | Kind | Namespace | Origin |
+|---|---|---|---|---|
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceFirstUse.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, voice first-use choice t_3a0b1c25) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceFirstUseTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, fake first-use voice tests t_3a0b1c25) |
 
 ## TASK-007 additions (issue #12): forked privileged helper
 

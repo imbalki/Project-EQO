@@ -34,11 +34,13 @@ internal class TaskVoiceInput(
             catalog,
         )
     },
+    firstUseFactory: (Activity, VoiceSettings) -> VoiceFirstUse = { host, prefs -> VoiceFirstUse(host, prefs) },
 ) {
     private val mic = activity.findViewById<Button>(R.id.task_voice_button)
     private val status = activity.findViewById<TextView>(R.id.task_voice_state)
     private val draft = activity.findViewById<EditText>(R.id.task_request)
     private val settings = VoiceSettings(activity)
+    private val firstUse = firstUseFactory(activity, settings)
     private var rationale: AlertDialog? = null
     private var resumed = true
     private var pendingGrant: Boolean? = null
@@ -84,10 +86,13 @@ internal class TaskVoiceInput(
         }
         presenter.availability(engineAvailable())
         mic.setOnClickListener {
-            if (settings.engine == VoiceEngine.OPENROUTER) {
-                audio.tap { presenter.tap(micGranted()) }
-            } else {
-                presenter.tap(micGranted())
+            firstUse.tap {
+                presenter.availability(engineAvailable())
+                if (settings.engine == VoiceEngine.OPENROUTER) {
+                    audio.tap { presenter.tap(micGranted()) }
+                } else {
+                    presenter.tap(micGranted())
+                }
             }
         }
     }
@@ -114,6 +119,7 @@ internal class TaskVoiceInput(
 
     fun pause() {
         resumed = false
+        firstUse.close()
         // Android's permission dialog itself can pause the activity. Edits/close invalidate permission intent.
         presenter.cancel(preservePermission = true)
         phone.cancel()
@@ -149,7 +155,7 @@ internal class TaskVoiceInput(
 
     private fun engineAvailable(): Boolean {
         val ai = settings.engine == VoiceEngine.OPENROUTER
-        return ai || SpeechRecognizer.isRecognitionAvailable(activity)
+        return !settings.hasChoice || ai || SpeechRecognizer.isRecognitionAvailable(activity)
     }
 
     private fun render(state: VoiceInputState) {
