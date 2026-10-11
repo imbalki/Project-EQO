@@ -6,8 +6,10 @@ import ai.eqo.actions.impl.LaunchableAppResolver
 import ai.eqo.core.agent.LoopStep
 
 internal sealed interface AppChoice {
+    /** [remember] is true only for "Always"; "This time" keeps the answer for this plan and stores nothing. */
     data class Selected(
         val app: LaunchableAppResolver.Candidate,
+        val remember: Boolean = false,
     ) : AppChoice
 
     data object None : AppChoice
@@ -58,7 +60,7 @@ internal class AppPlanResolution(
                     output += step
                 }
                 is AppChoice.Selected -> {
-                    if (direct == null) pendingMemory[query] = choice.app.packageName
+                    rememberAnswer(direct, choice, query, pendingMemory)
                     resolved[query] = choice.app
                     output += pin(step, choice.app)
                 }
@@ -66,6 +68,16 @@ internal class AppPlanResolution(
         }
         pendingMemory.forEach(memory::remember)
         return Prepared(output, rejected, storeSearch = storeSearch.toList())
+    }
+
+    // Only an explicit "Always" is stored (after every chooser finishes); "This time" lives in this plan alone.
+    private fun rememberAnswer(
+        direct: LaunchableAppResolver.Candidate?,
+        choice: AppChoice.Selected,
+        query: String,
+        pending: MutableMap<String, String>,
+    ) {
+        if (direct == null && choice.remember) pending[query] = choice.app.packageName
     }
 
     private suspend fun offeredChoice(

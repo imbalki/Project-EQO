@@ -18,31 +18,61 @@ import kotlin.coroutines.resume
 internal class AppChoiceDialog(
     private val activity: Activity,
 ) {
+    /** Pick the app, then say whether that answer is for this plan only or always. Cancel at either step stops. */
     suspend fun choose(apps: List<LaunchableAppResolver.Candidate>): AppChoice =
         withContext(Dispatchers.Main) {
             suspendCancellableCoroutine { continuation ->
+                var shown: AlertDialog? = null
+
+                fun finish(choice: AppChoice) {
+                    if (continuation.isActive) continuation.resume(choice)
+                }
+
+                fun askScope(app: LaunchableAppResolver.Candidate) {
+                    val scope =
+                        AlertDialog
+                            .Builder(activity)
+                            .setTitle(activity.getString(R.string.app_chooser_scope_title, app.label))
+                            .setMessage(R.string.app_chooser_scope_message)
+                            .setPositiveButton(R.string.app_chooser_always) { _, _ ->
+                                finish(AppChoice.Selected(app, remember = true))
+                            }.setNegativeButton(R.string.app_chooser_this_time) { _, _ ->
+                                finish(AppChoice.Selected(app))
+                            }.setNeutralButton(android.R.string.cancel) { _, _ -> finish(AppChoice.Cancelled) }
+                            .setOnCancelListener { finish(AppChoice.Cancelled) }
+                            .create()
+                    shown = scope
+                    if (continuation.isActive) {
+                        scope.show()
+                        protect(scope)
+                    }
+                }
+
                 val dialog =
                     AlertDialog
                         .Builder(activity)
                         .setTitle(R.string.app_chooser_title)
                         .setAdapter(AppAdapter(activity, apps.take(AppPlanResolution.MAX_CHOICES))) { _, index ->
-                            if (continuation.isActive) continuation.resume(AppChoice.Selected(apps[index]))
-                        }.setNeutralButton(R.string.app_chooser_none) { _, _ ->
-                            if (continuation.isActive) continuation.resume(AppChoice.None)
-                        }.setNegativeButton(android.R.string.cancel) { _, _ ->
-                            if (continuation.isActive) continuation.resume(AppChoice.Cancelled)
-                        }.setOnCancelListener {
-                            if (continuation.isActive) continuation.resume(AppChoice.Cancelled)
-                        }.create()
-                continuation.invokeOnCancellation { activity.runOnUiThread { dialog.dismiss() } }
+                            if (continuation.isActive) askScope(apps[index])
+                        }.setNeutralButton(R.string.app_chooser_none) { _, _ -> finish(AppChoice.None) }
+                        .setNegativeButton(android.R.string.cancel) { _, _ -> finish(AppChoice.Cancelled) }
+                        .setOnCancelListener { finish(AppChoice.Cancelled) }
+                        .create()
+                shown = dialog
+                continuation.invokeOnCancellation { activity.runOnUiThread { shown?.dismiss() } }
                 if (continuation.isActive) {
                     dialog.show()
-                    dialog.getButton(AlertDialog.BUTTON_NEUTRAL).filterTouchesWhenObscured = true
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).filterTouchesWhenObscured = true
-                    protectConfirmationTouches(dialog.findViewById(android.R.id.content))
+                    protect(dialog)
                 }
             }
         }
+
+    // Every button and the content reject touches while another window overlays the dialog.
+    private fun protect(dialog: AlertDialog) {
+        listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL)
+            .forEach { dialog.getButton(it)?.filterTouchesWhenObscured = true }
+        protectConfirmationTouches(dialog.findViewById(android.R.id.content))
+    }
 
     private class AppAdapter(
         private val activity: Activity,
