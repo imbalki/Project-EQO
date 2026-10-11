@@ -70,13 +70,25 @@ class TaskPlanner(
         }
     }
 
+    /**
+     * A request asks for a draft only when the user's own instruction says so ("type it", "don't send").
+     * Words inside a quoted message body are content, not instructions, and an explicit "send" wins.
+     */
+    internal fun isDraftRequest(request: String): Boolean {
+        val outside = QUOTED_TEXT.replace(request, " ")
+        val explicitNoSend = NO_SEND.containsMatchIn(outside)
+        val withoutNegations = NO_SEND.replace(outside, " ")
+        val draftWord = DRAFT_WORD.containsMatchIn(withoutNegations)
+        val wantsSend = SEND_WORD.containsMatchIn(withoutNegations)
+        return explicitNoSend || (draftWord && !wantsSend)
+    }
+
     /** Fail closed before approval if a model adds outward effects to a draft request. */
     internal fun respectDraftRequest(
         request: String,
         steps: List<LoopStep>,
     ): List<LoopStep> {
-        val draft = Regex("\\b(type|write|draft)\\b|don['’]?t send|do not send", RegexOption.IGNORE_CASE)
-        if (!draft.containsMatchIn(request) && !isNamedNoteEditingRequest(request)) return steps
+        if (!isDraftRequest(request) && !isNamedNoteEditingRequest(request)) return steps
         return if (isNamedNoteEditingRequest(request)) {
             // Keep saves by itself, so harmless extra taps (Save, Done, OK) are dropped, not fatal.
             // Anything that could communicate or submit is still refused.
@@ -185,6 +197,14 @@ class TaskPlanner(
     }
 
     companion object {
+        private val QUOTED_TEXT = Regex("\"[^\"]*\"|“[^”]*”|(?<![A-Za-z])'[^']*'(?![A-Za-z])")
+        private val NO_SEND =
+            Regex(
+                "don['’]?t send|do not send|only type|just type|without sending|don['’]?t press send",
+                RegexOption.IGNORE_CASE,
+            )
+        private val DRAFT_WORD = Regex("\\b(type|write|draft)\\b", RegexOption.IGNORE_CASE)
+        private val SEND_WORD = Regex("\\bsend\\b", RegexOption.IGNORE_CASE)
         private val OUTWARD_WORDS =
             Regex(
                 "send|share|post|publish|submit|reply|forward|message|whatsapp|sms|email|mail|telegram|call|pay|buy",
