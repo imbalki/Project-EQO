@@ -72,15 +72,17 @@ class RegistryPlannerTest {
         runTest {
             val intent = TaskIntent("Create note", app = "Notes", action = "create_note", confidence = 1.0)
             val actions = enabled + setOf("WAIT", "PRESS_BACK")
-            val outward = """{"steps":[{"action":"OPEN_APP","params":{"appName":"Notes"}},""" +
-                """{"action":"CLICK_TEXT","params":{"text":"Share"}}]}"""
+            val outward =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Notes"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Share"}}]}"""
             try {
                 TaskPlanner(Fake(listOf(outward)), actions).plan("add a note in Notes", intent = intent)
                 error("An outward note step must be rejected")
             } catch (_: IllegalArgumentException) {
             }
-            val unusual = """{"steps":[{"action":"OPEN_APP","params":{"appName":"Notes"}},""" +
-                """{"action":"CLICK_TEXT","params":{"text":"New list"}}]}"""
+            val unusual =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Notes"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"New list"}}]}"""
             val kept = TaskPlanner(Fake(listOf(unusual)), actions).plan("add a note in Notes", intent = intent)
             assertEquals(listOf("OPEN_APP", "CLICK_TEXT"), kept.map { it.action.name })
         }

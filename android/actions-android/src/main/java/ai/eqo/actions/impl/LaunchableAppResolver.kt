@@ -29,10 +29,10 @@ class LaunchableAppResolver(
     // Labels shown to stage-one intent understanding; nothing is stored or logged.
     fun installedLabels(): List<String> = installedApps().map { it.second }.distinct().sorted()
 
-    fun installedApps(): List<Pair<String, String>> =
-        launcherApps()
-            .distinctBy { it.first }
-            .filter { launch(it.first) != null }
+    // Process-local snapshot per resolver; no installed-app data is stored or logged.
+    private val snapshot by lazy { launcherApps().distinctBy { it.first } }
+
+    fun installedApps(): List<Pair<String, String>> = snapshot.filter { launch(it.first) != null }
 
     fun candidates(appName: String): List<Candidate> {
         val alias = AliasResolver.appPackage(appName)

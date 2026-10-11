@@ -130,7 +130,11 @@ object IntentPlanProtection {
         return kept.mapIndexed { index, step -> step.copy(stepId = "task-${index + 1}") }
     }
 
-    private fun tapText(step: LoopStep) = step.action.params["text"].orEmpty().trim().lowercase()
+    private fun tapText(step: LoopStep): String =
+        step.action.params["text"]
+            .orEmpty()
+            .trim()
+            .lowercase()
 
     private fun isTap(step: LoopStep) = step.action.name.uppercase() in setOf("CLICK_TEXT", "TAP_TEXT")
 
