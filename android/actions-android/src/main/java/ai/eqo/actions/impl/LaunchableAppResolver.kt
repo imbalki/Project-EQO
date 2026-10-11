@@ -28,6 +28,8 @@ class LaunchableAppResolver(
         if (name.equals("settings", true)) return Intent(Settings.ACTION_SETTINGS)
         // Known aliases must never resolve to a similarly named unrelated app.
         AliasResolver.appPackage(name)?.let { return launch(it) }
+        // Soft aliases only apply when that exact package is installed; otherwise normal name matching continues.
+        SOFT_ALIASES[name.lowercase()]?.let(launch)?.let { return it }
         launch(name)?.let { return it }
         val apps = launcherApps()
         val exact = apps.filter { (pkg, label) -> pkg.equals(name, true) || label.equals(name, true) }
@@ -38,5 +40,15 @@ class LaunchableAppResolver(
         // Ambiguous names are not proof that the requested app is installed.
         val packages = matches.map { it.first }.distinct()
         return packages.singleOrNull()?.let(launch)
+    }
+
+    private companion object {
+        val SOFT_ALIASES =
+            mapOf(
+                "keep" to "com.google.android.keep",
+                "google keep" to "com.google.android.keep",
+                "keep notes" to "com.google.android.keep",
+                "google keep notes" to "com.google.android.keep",
+            )
     }
 }

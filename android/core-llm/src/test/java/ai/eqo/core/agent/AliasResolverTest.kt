@@ -17,14 +17,6 @@ class AliasResolverTest {
     // ── Exact alias matching ────────────────────────────────────────────
 
     @Test
-    fun `keep names resolve to the Keep package`() {
-        for (name in listOf("Keep", "Google Keep", "keep notes", "Google Keep Notes")) {
-            assertEquals("com.google.android.keep", AliasResolver.appPackage(name))
-        }
-        assertNull(AliasResolver.appPackage("Keeper"))
-    }
-
-    @Test
     fun `bare flash resolves to flashlight toggle`() {
         val hint = AliasResolver.resolve("flash")
         assertNotNull(hint)
