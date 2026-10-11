@@ -19,6 +19,7 @@ object AliasResolver {
             "telegram" -> "org.telegram.messenger"
             "chrome", "google chrome" -> "com.android.chrome"
             "gmail", "google mail" -> "com.google.android.gm"
+            "keep", "google keep", "keep notes", "google keep notes" -> "com.google.android.keep"
             else -> null
         }
 
