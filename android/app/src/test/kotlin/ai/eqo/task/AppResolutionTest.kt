@@ -129,7 +129,7 @@ class AppResolutionTest {
             val result =
                 AppPlanResolution(resolver(), memory) { apps ->
                     choices++
-                    AppChoice.Selected(apps.first { it.packageName == "com.google.android.keep" })
+                    AppChoice.Selected(apps.first { it.packageName == "com.google.android.keep" }, remember = true)
                 }.prepare(listOf(step("Google")))
             assertEquals(
                 "com.google.android.keep",
@@ -357,7 +357,7 @@ class AppResolutionTest {
             val result =
                 AppPlanResolution(resolver(), memory) { candidates ->
                     choices++
-                    if (choices == 1) AppChoice.Selected(candidates.first()) else AppChoice.Cancelled
+                    if (choices == 1) AppChoice.Selected(candidates.first(), remember = true) else AppChoice.Cancelled
                 }.prepare(listOf(step("Google"), step("my calculator")))
             assertEquals(2, choices)
             assertTrue(result.cancelled)
@@ -425,11 +425,137 @@ class AppResolutionTest {
             dialog.getButton(AlertDialog.BUTTON_NEUTRAL).performClick()
             shadowOf(Looper.getMainLooper()).idle()
             assertEquals(AppChoice.None, none.await())
-            val selected = async(start = CoroutineStart.UNDISPATCHED) { AppChoiceDialog(activity).choose(apps) }
-            shadowOf(Looper.getMainLooper()).idle()
-            ShadowAlertDialog.getLatestAlertDialog().listView.performItemClick(null, 0, 0)
-            shadowOf(Looper.getMainLooper()).idle()
-            assertEquals(AppChoice.Selected(apps.first()), selected.await())
             activity.finish()
         }
+
+    private fun AppPlanResolution.Prepared.pinned(): String? =
+        steps
+            .single()
+            .action.params["packageName"]
+
+    @Test fun pickingARowAsksThisTimeOrAlwaysAndEachAnswerIsDistinct() =
+        runBlocking {
+            val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+            val apps = resolver().candidates("Google")
+            val answers =
+                listOf(
+                    AlertDialog.BUTTON_NEGATIVE to AppChoice.Selected(apps.first(), remember = false),
+                    AlertDialog.BUTTON_POSITIVE to AppChoice.Selected(apps.first(), remember = true),
+                    AlertDialog.BUTTON_NEUTRAL to AppChoice.Cancelled,
+                )
+            answers.forEach { (button, expected) ->
+                val selected = async(start = CoroutineStart.UNDISPATCHED) { AppChoiceDialog(activity).choose(apps) }
+                shadowOf(Looper.getMainLooper()).idle()
+                ShadowAlertDialog.getLatestAlertDialog().listView.performItemClick(null, 0, 0)
+                shadowOf(Looper.getMainLooper()).idle()
+                val scope = ShadowAlertDialog.getLatestAlertDialog()
+                assertTrue(shadowOf(scope).title.toString().contains(apps.first().label))
+                assertEquals("This time", scope.getButton(AlertDialog.BUTTON_NEGATIVE).text.toString())
+                assertEquals("Always", scope.getButton(AlertDialog.BUTTON_POSITIVE).text.toString())
+                assertTrue(scope.getButton(AlertDialog.BUTTON_POSITIVE).filterTouchesWhenObscured)
+                assertTrue(scope.getButton(AlertDialog.BUTTON_NEGATIVE).filterTouchesWhenObscured)
+                assertTrue(scope.findViewById<android.view.View>(android.R.id.content).filterTouchesWhenObscured)
+                scope.getButton(button).performClick()
+                shadowOf(Looper.getMainLooper()).idle()
+                assertEquals(expected, selected.await())
+            }
+            activity.finish()
+        }
+
+    @Test fun thisTimeStoresNothingAndAlwaysIsRememberedAndNeverAskedAgain() =
+        runBlocking {
+            val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+            val memory = RememberedApps(activity)
+
+            suspend fun answer(button: Int): AppPlanResolution.Prepared {
+                val prepared =
+                    async(start = CoroutineStart.UNDISPATCHED) {
+                        AppPlanResolution(resolver(), memory, AppChoiceDialog(activity)::choose)
+                            .prepare(listOf(step("Google")))
+                    }
+                shadowOf(Looper.getMainLooper()).idle()
+                ShadowAlertDialog.getLatestAlertDialog().listView.performItemClick(null, 0, 0)
+                shadowOf(Looper.getMainLooper()).idle()
+                ShadowAlertDialog.getLatestAlertDialog().getButton(button).performClick()
+                shadowOf(Looper.getMainLooper()).idle()
+                return prepared.await()
+            }
+            val once = answer(AlertDialog.BUTTON_NEGATIVE)
+            assertEquals("com.google.android.gm", once.pinned())
+            assertTrue(memory.entries().isEmpty())
+            val always = answer(AlertDialog.BUTTON_POSITIVE)
+            assertEquals("com.google.android.gm", always.pinned())
+            assertEquals(listOf("com.google.android.gm"), memory.entries().values.toList())
+            val remembered =
+                AppPlanResolution(resolver(), memory) { error("Always must never be asked again") }
+                    .prepare(listOf(step("google")))
+            assertEquals("com.google.android.gm", remembered.pinned())
+            activity.finish()
+        }
+
+    @Test fun thisTimeAnswerIsReusedWithinOnePlanWithoutAskingTwiceOrStoring() =
+        runBlocking {
+            var choices = 0
+            val memory = RememberedApps(context)
+            val result =
+                AppPlanResolution(resolver(), memory) { apps ->
+                    choices++
+                    AppChoice.Selected(apps.first())
+                }.prepare(listOf(step("Google"), step("Google", legacy = true)))
+            assertEquals(1, choices)
+            assertEquals(2, result.steps.size)
+            assertTrue(memory.entries().isEmpty())
+        }
+
+    @Test fun singleStrongCandidateNeverShowsTheChooser() =
+        runBlocking {
+            val names =
+                mapOf(
+                    "Whatsap" to "com.whatsapp",
+                    "watsapp" to "com.whatsapp",
+                    "WHATSAPP" to "com.whatsapp",
+                    "whats app" to "com.whatsapp",
+                    "Google Chrome" to "com.android.chrome",
+                    "Google Keep" to "com.google.android.keep",
+                    "keep notes" to "com.google.android.keep",
+                    "Gmail" to "com.google.android.gm",
+                    "calc" to "example.calculator",
+                )
+            names.forEach { (name, pkg) ->
+                val result =
+                    AppPlanResolution(resolver(), RememberedApps(context)) { error("Must not ask for $name") }
+                        .prepare(listOf(step(name)))
+                assertTrue(name, result.rejected.isEmpty())
+                assertEquals(name, pkg, result.pinned())
+            }
+        }
+
+    @Test fun exactLabelWinsOutrightButIdenticalLabelsAndSharedPrefixesStillAsk() =
+        runBlocking {
+            val apps = listOf("com.whatsapp" to "WhatsApp", "com.whatsapp.w4b" to "WhatsApp Business")
+            val matcher = resolver(apps)
+            assertEquals("com.whatsapp", matcher.clearWinner(matcher.candidates("WhatsApp"))?.packageName)
+            assertEquals("com.whatsapp", matcher.clearWinner(matcher.candidates("whatsapp"))?.packageName)
+            assertEquals("com.whatsapp.w4b", matcher.clearWinner(matcher.candidates("WhatsApp Business"))?.packageName)
+            // A typo is a prefix of both labels: ask. Two apps with one identical label: ask.
+            assertNull(matcher.clearWinner(matcher.candidates("whatsap")))
+            val twins = resolver(listOf("example.one" to "Notebook", "example.two" to "Notebook"))
+            assertNull(twins.clearWinner(twins.candidates("Notebook")))
+            var asked = 0
+            AppPlanResolution(twins, RememberedApps(context)) {
+                asked++
+                AppChoice.None
+            }.prepare(listOf(step("Notebook")))
+            assertEquals(1, asked)
+            val outright =
+                AppPlanResolution(matcher, RememberedApps(context)) { error("Exact label must win outright") }
+                    .prepare(listOf(step("WhatsApp")))
+            assertEquals("com.whatsapp", outright.pinned())
+        }
+
+    @Test fun publisherGuardStillRefusesALookAlikeAfterTheExactMatchRule() {
+        val matcher = resolver(listOf("example.notes" to "Keep Notes"))
+        assertEquals("example.notes", matcher.clearWinner(matcher.candidates("Google Keep"))?.packageName)
+        assertNull(matcher.resolve("Google Keep"))
+    }
 }

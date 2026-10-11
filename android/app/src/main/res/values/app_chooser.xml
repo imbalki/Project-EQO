@@ -2,6 +2,10 @@
 <resources>
     <string name="app_chooser_title">Which app did you mean?</string>
     <string name="app_chooser_none">None of these</string>
+    <string name="app_chooser_scope_title">Use %1$s?</string>
+    <string name="app_chooser_scope_message">Always remembers this answer so EQO does not ask again. You can forget it under Apps EQO remembers.</string>
+    <string name="app_chooser_this_time">This time</string>
+    <string name="app_chooser_always">Always</string>
     <string name="app_chooser_install">Install %1$s from Play Store</string>
     <string name="app_chooser_store_opened">Play Store search opened. The task did not run.</string>
     <string name="app_chooser_store_failed">Could not open Play Store search. Nothing ran.</string>

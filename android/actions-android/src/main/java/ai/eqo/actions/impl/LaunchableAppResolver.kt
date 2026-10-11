@@ -51,10 +51,15 @@ class LaunchableAppResolver(
             .sortedWith(compareByDescending<Candidate> { it.score }.thenBy { it.label }.thenBy { it.packageName })
     }
 
+    // An exact label (or an alias) wins outright even when other apps merely start with the same word
+    // ("WhatsApp" beats "WhatsApp Business"); two exact matches, or any weaker tie, still need a person.
     fun clearWinner(candidates: List<Candidate>): Candidate? {
         val best = candidates.firstOrNull()
-        val gap = (best?.score ?: 0) - (candidates.getOrNull(1)?.score ?: 0)
-        return best?.takeIf { it.score >= AppNameMatcher.CLEAR_SCORE && gap >= AppNameMatcher.CLEAR_GAP }
+        val runnerUp = candidates.getOrNull(1)?.score ?: 0
+        val score = best?.score ?: 0
+        val outright = score >= AppNameMatcher.EXACT_SCORE && runnerUp < AppNameMatcher.EXACT_SCORE
+        val clear = score >= AppNameMatcher.CLEAR_SCORE && score - runnerUp >= AppNameMatcher.CLEAR_GAP
+        return best?.takeIf { outright || clear }
     }
 
     // Only explicit package targets are accepted here; approved execution never fuzzy-redirects.
