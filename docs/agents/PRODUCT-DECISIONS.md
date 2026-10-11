@@ -19,5 +19,12 @@ Decisions made by the owner, in the owner's words where possible. Agents and the
 Approved for the release after the POC (not for the POC):
 1. **Edge handle mic = dictation anywhere.** Tap a text field in any app, tap the handle mic, speak, tap again; EQO transcribes with the user's AI model and inserts the text at the cursor. Never into password fields; a small recording bubble shows it is listening; the handle must not steal focus; one tap undoes the last insert.
 2. **Edge handle screenshot.** One tap saves a screenshot of the current app to Pictures/EQO (protected screens are refused) and offers "Send to...".
-3. **Screen recording: parked for the next release.** Owner's purpose: record how a task is done so EQO can learn actions when it falters. CTO proposal for the owner to decide then: capture an ACTION TRACE (taps, typed text excluding passwords, app changes, optional per-step screenshots) instead of raw video, turn it into a plan/macro the user approves, and offer "Show me how?" when EQO falters; video stays optional for human review.
+3. **Screen recording: parked for the next release.** Owner's purpose: record how a task is done so EQO can learn actions when it falters. APPROVED DIRECTION (owner, 2026-10-11, for the next release): capture an ACTION TRACE (taps, typed text excluding passwords, app changes, optional per-step screenshots) instead of raw video, turn it into a plan/macro the user approves, and offer "Show me how?" when EQO falters; video stays optional for human review.
 4. **Permission prompt UX (phase 2):** show "Allow this time / Always allow / Don't allow" for each app inside the plan preview the user already approves (owner: "good").
+
+## Next release plan (owner-approved direction, not for the POC)
+1. Dictation anywhere from the edge handle mic.
+2. Screenshot from the edge handle.
+3. "Teach EQO": record an action trace (not video) with a Teach / Stop control on the handle, review and name it, store it as a routine on top of the existing macro and routine system (MacroActions, RoutineDetection, HabitRoutineEngine); when EQO falters it offers "Show me how?".
+4. Apps screen with Allow this time / Always allow / Don't allow, shown inside the plan preview.
+5. Setup wizard with "Do it later" on every option, and the auto-mode question with the elegant disclaimer.
