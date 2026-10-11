@@ -965,3 +965,20 @@ Capture running (`EqoRun`, `EqoActions`, `EqoExplain`). Results are the owner's 
 | Handle disappears briefly | BUG: after closing the panel the handle was not drawn until the owner switched to another app and came back. | Handle is not redrawn after the panel closes. | Same card. |
 | Handle: Ask EQO vs Open EQO | UX: two near-identical entries. | Ask EQO goes to the full task screen, Open EQO to the main screen. | Same card: Ask EQO becomes a compact in-place panel; Open EQO stays as "Full EQO" plus a "Back to previous app" option. |
 | Task from Gmail: "reply to this mail" | UNCLEAR to the owner ("nothing happened"). Log 09:01: `OPEN_APP`, `GET_SCREEN_TEXT`, tap `reply_button`, `TYPE_TEXT` (two NodeNotFound retries, then success), tap `send`, `COMPLETED`. | The run did type and press Send; the owner saw no result (the run screen is behind the app, with no visible progress). | Same card: live progress inside the compact panel. Owner to check Gmail's Sent folder. |
+
+## Round 5 (2026-10-11 evening, lead-run on the phone, builds from main 9fb1782 to b48996b)
+
+Method: driven over adb from the lead's machine (typed requests, approve, read the screen and live log). EQO's accessibility service was switched off once by an adb force-stop of EQO and re-enabled by the owner.
+
+| Item | Result |
+|---|---|
+| Owner report: mic first tap did not show the choice | By design: a saved voice choice skips first-use; change it in Voice settings. |
+| Owner report: "key missing / set up again" | Root cause: app crashed building any plan (ICU regex needed escaped `}`); fixed #35. Key row also followed process memory; now follows the saved key. |
+| "what is 238 times 8" then approve | PASS after #35: result line shows `238*8 = 1904`. |
+| "save a note in Keep: buy milk and eggs" | Before #36 the note saved EMPTY (editor ignores accessibility text). After #36 PASS via share-to-Keep + Save; note appears in Keep. |
+| "open Whatsap" | PASS after #37: opens WhatsApp, no question. |
+| "make a note" | PASS: asks "What should the note say?". |
+| "open the browser" (five browsers installed) | FAIL: picked Brave silently. Fix in progress (role choice with This time / Always). |
+| Text message / WhatsApp / calculate-then-send | Not re-run this round (they would send real messages). |
+
+Owner decision: SMS stays draft-and-you-press-Send for the POC (see PRODUCT-DECISIONS 10).

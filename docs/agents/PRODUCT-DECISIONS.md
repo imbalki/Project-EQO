@@ -28,3 +28,7 @@ Approved for the release after the POC (not for the POC):
 3. "Teach EQO": record an action trace (not video) with a Teach / Stop control on the handle, review and name it, store it as a routine on top of the existing macro and routine system (MacroActions, RoutineDetection, HabitRoutineEngine); when EQO falters it offers "Show me how?".
 4. Apps screen with Allow this time / Always allow / Don't allow, shown inside the plan preview.
 5. Setup wizard with "Do it later" on every option, and the auto-mode question with the elegant disclaimer.
+
+## 2026-10-12: SMS sending for the POC
+10. **Text messages (SMS): for this POC EQO opens the text draft with the message typed and the user presses Send.** Owner: "if it is going to be a long work we will have B for this POC and when auto mode it can send". Sending by itself belongs to the opt-in auto mode (next release), with a setting to turn it off. WhatsApp keeps its current behaviour.
+11. **Ask which app only when needed:** when EQO cannot find the app, or several installed apps fit a generic role (for example several browsers), offer the choices with "This time" / "Always". Never ask for a clearly named app, including typos (`open Whatsap`).
