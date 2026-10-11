@@ -24,12 +24,9 @@ internal class MissingAppFallback(
 
     fun missing(steps: List<LoopStep>): List<String> =
         steps
-            .filter { it.action.name == "OPEN_APP" }
-            .map {
-                it.action.params["appName"]
-                    .orEmpty()
-                    .trim()
-            }.distinctBy { it.lowercase() }
+            .mapNotNull(AppPlanResolution::appName)
+            .map { it.trim() }
+            .distinctBy { it.lowercase() }
             .filterNot(installed)
 
     // Bounded preflight exits are intentionally explicit; none execute a task.

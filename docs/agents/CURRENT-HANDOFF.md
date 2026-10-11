@@ -1,5 +1,28 @@
 # Current handoff (any agent can take over from this page)
 
+## Standing product rule: tolerant names, explicit choice, remembered answers
+
+EQO must never fail just because it cannot find something the user named. Find it
+fuzzily, offer a short choice ("Is this the app you mean?"), and REMEMBER the answer
+for next time. Rigid exact-name matching is not how users use it. Do not silently
+substitute a browser for an installed app that a short choice could identify.
+
+## App resolution v2 (`t_5f379e1b`, local `feat/app-chooser`) — NOT TESTED ON PHONE
+
+- Ranked launcher-label/package matching with alias priority and a clear-winner
+  threshold; otherwise a task-screen chooser with up to five names/icons/packages.
+- Choice occurs before approval; preview names the installed app and execution
+  pins its package. Removed approved apps fail plainly, never fuzzy-redirect.
+- None of these and zero candidates retain the existing Chrome/store fallback.
+  Cancel/back runs nothing and saves no choice. Both OPEN_APP and open_app use it.
+- App-private memory stores normalized-name hashes -> package only; no raw names,
+  full requests, timestamps or name logs. Setup > Apps EQO remembers deletes entries.
+- The planner receives the same launcher inventory as untrusted data during its
+  existing explicit planning request. Choices and memory are not sent to the model.
+- ADR 0013 records scoring, privacy limitations and approval pin validation.
+- Host gates and phone checklist are recorded in PHASE-ONE-TEST-LOG.md below.
+  No push/PR/gh, installation, real model call, key access or phone verification.
+
 ## Voice v3.1 (`t_1598bf81`, local-only `fix/voice-key`) — NOT TESTED ON PHONE
 
 - Verified case-sensitive credential mismatch: voice checked `apiKeys["OpenRouter"]`, but Setup,

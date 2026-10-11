@@ -1,5 +1,24 @@
 # Phase One phone test log
 
+## App resolution v2 — t_5f379e1b — NOT TESTED ON PHONE
+
+Host verification is in progress; only final frozen-source gates count as PASS.
+Local branch feat/app-chooser; commit locally only. No installation, device,
+live model/provider, personal data or credentials accessed.
+
+Phone checklist (all unchecked):
+- [ ] Realme Android 11: "Google Keep" and "Keep" resolve to Keep notes before approval.
+- [ ] WhatsApp/whats app, gmail/google mail, calc and chorme show the expected app.
+- [ ] Ambiguous "Google" shows <=5 installed names and icons; no app opens yet.
+- [ ] Selecting an app previews its exact label; Run opens only the approved package.
+- [ ] The same name after restarting EQO skips the chooser using remembered choice.
+- [ ] Setup > Apps EQO remembers > Forget removes the choice; ambiguity returns.
+- [ ] None of these offers the existing Chrome plan and Play Store search.
+- [ ] An unrelated missing app follows the existing fallback unchanged.
+- [ ] Cancel, Back and closing the task screen run nothing and persist no choice.
+- [ ] Uninstall the selected app after approval; Run fails with a plain reason, no redirect.
+- [ ] A single weak match still asks; duplicate launcher activities appear only once.
+
 ## Runtime screenshot resolver and picker — t_62291cf6 — NOT TESTED ON PHONE
 
 - Local-only branch `fix/find-screenshots`, worktree `w-findshots`; no push/PR/gh,
