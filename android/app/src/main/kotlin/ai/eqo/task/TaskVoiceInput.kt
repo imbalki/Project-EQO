@@ -43,11 +43,14 @@ internal class TaskVoiceInput(
     private var resumed = true
     private var pendingGrant: Boolean? = null
     private var writingDraft = false
+    var hasVoiceDraft = false
+        private set
     private val presenter: VoiceInputPresenter =
         VoiceInputPresenter(
             render = ::render,
             fillDraft = { text ->
                 writingDraft = true
+                hasVoiceDraft = true
                 try {
                     draft.setText(text)
                     draft.setSelection(draft.length())
@@ -73,6 +76,7 @@ internal class TaskVoiceInput(
         VoiceAudioRecorder.removeStaleFiles(activity.cacheDir)
         draft.doAfterTextChanged {
             if (!writingDraft) {
+                hasVoiceDraft = false
                 presenter.cancel()
                 phone.cancel()
                 audio.cancel()

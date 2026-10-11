@@ -26,6 +26,16 @@
         android:layout_height="wrap_content"
         android:paddingHorizontal="@dimen/study_page_padding"
         android:accessibilityLiveRegion="polite" />
+    <TextView
+        android:id="@+id/task_result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/study_page_padding"
+        android:textStyle="bold"
+        android:maxLines="3"
+        android:ellipsize="end"
+        android:visibility="gone"
+        android:accessibilityLiveRegion="polite" />
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"

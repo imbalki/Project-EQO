@@ -72,6 +72,20 @@ class TaskActivity : Activity() {
     private var waitingPermission: String? = null
     private var displayedStatus = PlanStatus.PENDING
     private var preparationGeneration = 0
+    private var understoodPreview = ""
+    private var understandingRequest = false
+    private var resultSpeaker: TaskResultSpeaker? = null
+    private val displayedResults = linkedMapOf<String, StepProgress>()
+    private val resultReadout =
+        TaskResultReadout(TaskRunSession.spokenResultIds) { text ->
+            val speaker = resultSpeaker ?: TaskResultSpeaker(applicationContext).also { resultSpeaker = it }
+            speaker.speak(text)
+        }
+    private val appResolver by lazy {
+        ai.eqo.actions.impl
+            .LaunchableAppResolver(packageManager)
+    }
+    private val intentChoices by lazy { IntentChoiceSheet(this) { prepareTaskDialog(it, fileChoices = true) } }
     private val actionPermissions by lazy {
         TaskPermissionRequester(
             this,
@@ -145,6 +159,9 @@ class TaskActivity : Activity() {
         findViewById<Button>(R.id.task_pause_button).setOnClickListener { control { it.pause() } }
         findViewById<Button>(R.id.task_stop_button).setOnClickListener {
             preparationGeneration++
+            intentChoices.cancel()
+            TaskRunSession.readAloud = false
+            resultSpeaker?.stop()
             actionPermissions.cancelWaiting()
             control { it.stop() }
         }
@@ -191,6 +208,8 @@ class TaskActivity : Activity() {
     }
 
     override fun onPause() {
+        if (understandingRequest) preparationGeneration++
+        intentChoices.cancel()
         attachmentSelection.background()
         if (TaskRunSession.attachmentSelection === attachmentSelection) TaskRunSession.attachmentSelection = null
         voiceInput?.pause()
@@ -339,6 +358,7 @@ class TaskActivity : Activity() {
     }
 
     private fun startRun(approved: ApprovedTaskPlan) {
+        prepareResultReadout()
         TakeoverDetector.shared.startNewRun()
         if (approved.steps().all { it.action.name == it.action.name.uppercase() }) {
             TaskRunSession.requestDraft = findViewById<EditText>(R.id.task_request).text.toString()
@@ -395,6 +415,12 @@ class TaskActivity : Activity() {
                 if (controller === newController) controller = null
             }
         }
+    }
+
+    private fun prepareResultReadout() {
+        TaskRunSession.readAloud = voiceInput?.hasVoiceDraft == true
+        TaskRunSession.spokenResultIds.clear()
+        resultSpeaker?.stop()
     }
 
     private fun observeTaskScreen(): String {
@@ -553,9 +579,14 @@ class TaskActivity : Activity() {
         val container = findViewById<LinearLayout>(R.id.task_steps_container)
         container.removeAllViews()
         steps.forEach { step -> container.addView(stepView(step)) }
+        displayedResults.clear()
+        steps.forEach { displayedResults[it.stepId] = it }
+        renderResults()
     }
 
     private fun renderStep(step: StepProgress) {
+        displayedResults[step.stepId] = step
+        renderResults()
         if (step.state == StepProgressState.RUNNING) {
             findViewById<TextView>(R.id.task_practice_countdown).text = ""
         }
@@ -567,6 +598,16 @@ class TaskActivity : Activity() {
                 return
             }
         }
+    }
+
+    private fun renderResults() {
+        val results = displayedResults.values.toList()
+        val lines = TaskResultPresentation.lines(results)
+        findViewById<TextView>(R.id.task_result).apply {
+            visibility = if (lines.isBlank()) View.GONE else View.VISIBLE
+            text = getString(R.string.task_result_format, lines)
+        }
+        resultReadout.update(results, TaskRunSession.readAloud)
     }
 
     private fun stepView(step: StepProgress): TextView =
@@ -713,6 +754,7 @@ class TaskActivity : Activity() {
                         val steps =
                             ai.eqo.core.agent.RegistryPlanVocabulary
                                 .parse(json, portedActions.enabledActionNames)
+                        understoodPreview = ""
                         if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
                     } catch (failure: ai.eqo.actions.impl.RecipientPreparationException) {
                         findViewById<TextView>(R.id.task_state).text = failure.message
@@ -769,22 +811,9 @@ class TaskActivity : Activity() {
     @Suppress("TooGenericExceptionCaught", "SwallowedException", "CyclomaticComplexMethod")
     private suspend fun makePlan(request: String) {
         try {
-            val result =
-                withContext(Dispatchers.IO) {
-                    val planner =
-                        TaskPlanningRuntime.planner(applicationContext, portedActions.enabledActionNames)
-                            ?: throw MissingTaskKey()
-                    // Never capture EQO's key/setup/request UI; execution observations stay local.
-                    val resolver =
-                        ai.eqo.actions.impl
-                            .LaunchableAppResolver(packageManager)
-                    val fallback = MissingAppFallback { resolver.resolve(it) != null }
-                    val first = planWithOneNetworkRetry { planner.plan(request, UntrustedScreenText.wrap("")) }
-                    fallback.prepare(request, first) { constrained ->
-                        planWithOneNetworkRetry { planner.plan(constrained, UntrustedScreenText.wrap("")) }
-                    }
-                }
-            if (!isFinishing && !isDestroyed) {
+            val generation = preparationGeneration
+            val result = buildTaskPlan(request, generation) ?: return
+            if (generation == preparationGeneration && !isFinishing && !isDestroyed) {
                 when (result) {
                     is MissingAppFallback.Result.Ready -> prepareAndShowPlan(result.steps, result.missing)
                     is MissingAppFallback.Result.Stopped ->
@@ -818,11 +847,73 @@ class TaskActivity : Activity() {
             // No raw exception/model output/request is logged or displayed.
             findViewById<TextView>(R.id.task_state).setText(R.string.task_plan_invalid)
         } finally {
+            understandingRequest = false
             planning = false
             findViewById<Button>(R.id.task_start_button).isEnabled =
                 TaskRunSession.pending == null &&
                 TaskRunSession.controller == null
         }
+    }
+
+    private suspend fun buildTaskPlan(
+        request: String,
+        generation: Int,
+    ): MissingAppFallback.Result? {
+        understoodPreview = ""
+        val planner =
+            withContext(Dispatchers.IO) {
+                TaskPlanningRuntime.planner(applicationContext, portedActions.enabledActionNames)
+                    ?: throw MissingTaskKey()
+            }
+        val understood =
+            understandRequest(request, planner, generation)
+                ?.takeIf { generation == preparationGeneration } ?: return null
+        understoodPreview =
+            getString(
+                R.string.intent_understood_preview,
+                ai.eqo.core.agent.TaskDisplayText
+                    .escape(understood.intent.goal),
+                if (understood.bestGuess) getString(R.string.intent_best_guess) else "",
+            )
+        return withContext(Dispatchers.IO) {
+            // Never capture EQO's key/setup/request UI; execution observations stay local.
+            val fallback = MissingAppFallback { appResolver.resolve(it) != null }
+            fallback.prepare(request, understood.steps) { constrained ->
+                planWithOneNetworkRetry {
+                    planner.plan(
+                        constrained,
+                        UntrustedScreenText.wrap(""),
+                        understood.intent.copy(action = "other", app = null),
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun understandRequest(
+        request: String,
+        planner: ai.eqo.core.agent.TaskPlanner,
+        generation: Int,
+    ): ai.eqo.core.agent.IntentPlanningSession.Result? {
+        understandingRequest = true
+        val result =
+            withContext(Dispatchers.IO) {
+                val labels = appResolver.installedLabels()
+                val session =
+                    ai.eqo.core.agent
+                        .IntentPlanningSession(planner.understanding(labels), planner)
+                session.prepare(request) { intent ->
+                    withContext(Dispatchers.Main) {
+                        if (generation == preparationGeneration && !isFinishing && !isDestroyed) {
+                            intentChoices.ask(intent)
+                        } else {
+                            null
+                        }
+                    }
+                }
+            }
+        understandingRequest = false
+        return result
     }
 
     internal suspend fun prepareAndShowPlan(
@@ -832,7 +923,12 @@ class TaskActivity : Activity() {
     ) {
         val generation = preparationGeneration
         findViewById<TextView>(R.id.task_preview).text =
-            getString(R.string.task_preview_with_permissions, TaskPlanPreview.describe(steps), permissionPreview(steps))
+            getString(
+                R.string.task_preview_with_permissions,
+                understoodPreview,
+                TaskPlanPreview.describe(steps),
+                permissionPreview(steps),
+            )
         if (!portedActions.prepareRuntimeAccess(steps)) {
             findViewById<TextView>(R.id.task_state).setText(R.string.task_permission_not_granted)
             return
@@ -864,7 +960,9 @@ class TaskActivity : Activity() {
                     " is not installed on this phone, so this plan uses Chrome instead.\n\n"
             }
         val retryNotice = if (retry) getString(R.string.task_retry_notice) + "\n\n" else ""
-        val preview = retryNotice + notice + TaskPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
+        val preview =
+            understoodPreview + retryNotice + notice +
+                TaskPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
         if (!retry && !PlanApprovalSettings.requiredFor(this, steps)) {
@@ -894,6 +992,8 @@ class TaskActivity : Activity() {
     }
 
     override fun onDestroy() {
+        resultSpeaker?.close()
+        intentChoices.cancel()
         attachmentSelection.picker.destroy()
         voiceInput?.close()
         debugPlanReceiver?.let { unregisterReceiver(it) }

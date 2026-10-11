@@ -84,15 +84,17 @@ internal class InformationActions(
     }
 
     private fun calculate(expression: String): ActionResult {
-        val result = SimpleCalculation.evaluate(expression)
-        return if (result == null) {
+        val answer =
+            ai.eqo.core.agent.PlainArithmetic
+                .evaluate(expression)
+        return if (answer == null) {
             if (SimpleCalculation.isArithmetic(expression)) {
                 ActionResult.Failure("EQO could not evaluate that arithmetic. Use one operation and a nonzero divisor.")
             } else {
                 web(expression)
             }
         } else {
-            ActionResult.Success(mapOf("message" to "$expression = $result"))
+            ActionResult.Success(mapOf("message" to "$expression = ${answer.result}", "result" to answer.result))
         }
     }
 
@@ -201,59 +203,12 @@ internal object SimpleCalculation {
                 RegexOption.IGNORE_CASE,
             ).containsMatchIn(expression)
 
-    private const val MAX_EXPRESSION_CHARS = 256
-    private const val ZERO_DIVISOR = 0.0
-    private const val PERCENT_SCALE = 100.0
-    private const val NUMBER = "[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)"
-    private val operation = Regex("^($NUMBER)([+*/-])($NUMBER)$")
-
-    fun evaluate(expression: String): Double? {
-        if (expression.length > MAX_EXPRESSION_CHARS) return null
-        var normalized =
-            expression
-                .lowercase(Locale.ROOT)
-                .trim()
-                .removePrefix("what is ")
-                .removeSuffix("?")
-        val percent = Regex("^($NUMBER)\\s+percent of\\s+($NUMBER)$").matchEntire(normalized)
-        val percentValue =
-            percent?.let {
-                it.groupValues[1].toDouble() / PERCENT_SCALE * it.groupValues[2].toDouble()
-            }
-        val words =
-            mapOf(
-                "multiplied by" to "*",
-                "times" to "*",
-                "x" to "*",
-                "plus" to "+",
-                "minus" to "-",
-                "divided by" to "/",
-                "over" to "/",
-            )
-        words.forEach { (word, symbol) ->
-            normalized = normalized.replace(Regex("\\b$word\\b"), symbol)
-        }
-        val clean = normalized.replace(Regex("\\s+"), "")
-        val match = operation.matchEntire(clean)
-        val result = percentValue ?: if (match == null) clean.toDoubleOrNull() else apply(match)
-        return result?.takeIf { it.isFinite() }
-    }
-
-    private fun apply(match: MatchResult): Double? {
-        val (leftText, operator, rightText) = match.destructured
-        val left = leftText.toDoubleOrNull()
-        val right = rightText.toDoubleOrNull()
-        return if (left == null || right == null) {
-            null
-        } else {
-            when (operator) {
-                "+" -> left + right
-                "-" -> left - right
-                "*" -> left * right
-                else -> if (right == ZERO_DIVISOR) null else left / right
-            }
-        }
-    }
+    fun evaluate(expression: String): Double? =
+        ai.eqo.core.agent.PlainArithmetic
+            .evaluate(expression)
+            ?.result
+            ?.toDoubleOrNull()
+            ?.takeIf { it.isFinite() }
 }
 
 /** Browser hand-off validation, not a promise to control browser DNS or later redirects. */

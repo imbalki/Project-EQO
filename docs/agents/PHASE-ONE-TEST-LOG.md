@@ -1,5 +1,79 @@
 # Phase One phone test log
 
+## Two-stage intent understanding — t_661803d1 — NOT TESTED ON PHONE
+
+- Owner product decisions and the checked-in historical phone log were read first.
+  This checkout has no separately labelled Round 4 section; the task's reported Keep
+  and arithmetic failures are motivation, not new phone evidence.
+- Local-only `feat/intent-understanding`, worktree `w-intent`; no push/PR/gh, install,
+  phone, real request/contact content, credentials or live provider call.
+- Small zero-temperature understanding call, installed-label snapshot and six skills;
+  protected choice/free-text sheet BEFORE planning when uncertain/incomplete. Two
+  clarification answers maximum, then best-guess disclosure. Exact installed-app opens
+  skip understanding. Structured send/channel replace request regex/notes whitelists.
+- Deterministic Keep, direct arithmetic, message, call, open and search skills remain
+  schema validated and require the existing preview/approval flow. SMS/email are still
+  native drafts. Send=no rejects submit/send actions and shares one repair with schema.
+- 125 synthetic paraphrase fixtures (25 each notes/calculation/message/call/open),
+  supplied model answers, not real inference or an accuracy score. Additional fake and
+  Robolectric cases exercise clarification ordering/bounds/cancel, slots, quote content,
+  alias boundaries, telemetry, repair, snapshot approval and installed-label caching.
+- Final checks: ktlintCheck and detekt on core-agent/actions-android/app, plus
+  :app:lintDebug passed after correcting new findings without baselines. Core's
+  final standalone ktlintCheck/detekt/testDebugUnitTest returned BUILD SUCCESSFUL
+  in 4m 35s. Core: 265 tests, zero failures; app: 350 tests, zero failures.
+- The broad gate is NOT all green: actions-android ran 192 tests, one failure,
+  three skipped. Existing AutomationExecutorsTest `delete and list macros keep
+  system macros and sort names` repeatedly times out after 10 seconds with
+  UncompletedCoroutinesError, including a standalone class rerun. That macro test
+  and its executor were not modified by this task. Resolver and arithmetic-related
+  tests passed. Review must account for this unresolved suite failure.
+- Exact broad tasks: :core-agent:ktlintCheck :actions-android:ktlintCheck
+  :app:ktlintCheck :core-agent:detekt :actions-android:detekt :app:detekt
+  :app:lintDebug :core-agent:testDebugUnitTest :actions-android:testDebugUnitTest
+  :app:testDebugUnitTest --continue --no-daemon --max-workers=2
+  -Pkotlin.compiler.execution.strategy=in-process (JDK 21, 1536m heap).
+- Owner addendum from build a465525 is included, not claimed phone-verified: dedicated
+  successful Result line, voice-only TTS, locally normalized arithmetic/literal preview
+  and runtime backward payload placeholders. Recipient/action/approved snapshot stay fixed.
+
+Owner phone/live-model checklist (synthetic content/recipient only; record build/results):
+
+- [ ] `open a note, type test eqo, save it as eqo test`: understands BOTH content and
+      title, chooses installed Keep, previews full speed-dial/title/body/Back flow.
+- [ ] `save a note`: asks for missing title/body before any app launch or permission;
+      answer `title eqo test, body test eqo in Keep`, then inspect the preview.
+- [ ] `jot test eqo down as eqo test`; `creat a not eqo test with test eqo`;
+      `Keep mein eqo test naam se test eqo likho`; Hindi note phrasing; title-only note.
+- [ ] `238 times 8 calculate and let me know`; `238 guna 8 kitna hai`; `238 × 8`:
+      direct local CALCULATE result, no stale Calculator keys or web search.
+- [ ] `calculate 238 times 8 and let me know`: preview says 1904, successful run shows
+      `238*8 = 1904` in Result, not only Completed. Repeat via voice: answer is read once.
+      Typed request does not auto-read; Stop/new run cancels queued speech.
+- [ ] `7 plus 3`, `7 minus 3`, `12 divided by 4`, `10 percent of 250`, `0.1 + 0.2`:
+      literal local answers in preview and runtime; division by zero refuses, no code.
+- [ ] Calculate then send the answer to a synthetic WhatsApp contact and by SMS:
+      literal 1904 messages still work; result placeholders preview as result of step N
+      and resolve from completed output. Failed/missing output does not send a placeholder.
+- [ ] `open a tool for numbers or notes`: short choices plus editable answer;
+      no planning/launch before response, maximum two questions and guess notice if unsure.
+- [ ] `message Example hi`; `Example ko hi message bhejo`: SMS draft, never WhatsApp.
+      Explicit `send hi to Example on WhatsApp`: correct chat and previewed send.
+- [ ] Draft WhatsApp text `send this SMS email, don't send` inside quotes: no Send.
+      Explicitly send that same quoted content: quote words do not flip channel/send.
+- [ ] `call Example`; `Example ko phone lagao`; explicit WhatsApp voice/video call:
+      correct intent and recipient, real-call warning and normal approval; no retry.
+- [ ] `open Gmail`, `open Google Mail`, `opn Gmal`, `Gmail kholo`: appropriate open;
+      exact shortcut skips understanding, typo/mixed-language uses understanding.
+- [ ] Search Keep/Gmail/Chrome and an unfamiliar installed app; other note apps use
+      free planning with hints where known, never a Keep-only request whitelist.
+- [ ] Cancel/Back, Stop during understanding/choice, edit/leave/rotate, provider failure:
+      no late plan starts, no automatic approval, no hidden clarification answer reuse.
+- [ ] Password input refused, EQO own dialog untappable by automation, takeover and
+      Pause/Stop retained; only the user's Resume confirmation hands control back.
+- [ ] Default plan approval retained; existing explicit auto-mode opt-in unchanged.
+      Check EqoRun for kinds/confidence buckets only, no requests/answers/params/app list.
+
 ## Runtime screenshot resolver and picker — t_62291cf6 — NOT TESTED ON PHONE
 
 - Local-only branch `fix/find-screenshots`, worktree `w-findshots`; no push/PR/gh,

@@ -253,6 +253,9 @@ class StudyActionExecutor(
         )
 
     private val handoffs = mutableMapOf<String, String>()
+    private val outputs =
+        ai.eqo.core.agent
+            .ApprovedPlanOutputs(approvedPlan?.steps().orEmpty())
 
     fun handoffDetail(stepId: String): String? = handoffs[stepId]
 
@@ -261,9 +264,23 @@ class StudyActionExecutor(
         return if (approvedPlan != null && !approvedPlan.permits(step)) {
             ExecuteResult.Failure("Step was not approved")
         } else {
-            dispatch(step.action, step.stepId)
+            val params = resolveParams(step)
+            if (params == null) {
+                ExecuteResult.Failure("previous_result_unavailable")
+            } else {
+                dispatch(step.action.copy(params = params), step.stepId)
+            }
         }
     }
+
+    private fun resolveParams(step: LoopStep): Map<String, String>? =
+        try {
+            outputs.resolve(step)
+        } catch (_: IllegalStateException) {
+            null
+        } catch (_: IllegalArgumentException) {
+            null
+        }
 
     @Suppress("ReturnCount") // One early return per gated action kind.
     private suspend fun dispatch(action: ExecutedAction, stepId: String): ExecuteResult {
@@ -278,6 +295,8 @@ class StudyActionExecutor(
             }
             android.util.Log.i("EqoRun", "action=${action.name} result=${result.javaClass.simpleName}")
             return if (result.success) {
+                val values = (result as? ai.eqo.actions.base.ActionResult.Success)?.dataMap.orEmpty()
+                outputs.record(stepId, values + mapOf("message" to result.data.orEmpty()))
                 ExecuteResult.Success(result.data.orEmpty())
             } else {
                 ExecuteResult.Failure(result.error ?: "Action not completed")

@@ -13,12 +13,26 @@ class TaskPlanner(
     private val enabledActions: Set<String>? = null,
     private val diagnostic: (String) -> Unit = {},
 ) {
+    fun understanding(installedApps: List<String>): IntentUnderstanding =
+        IntentUnderstanding(
+            provider,
+            installedApps,
+            diagnostic,
+        )
+
+    /** Stage two. Production callers must resolve clarification through IntentPlanningSession first. */
     suspend fun plan(
         request: String,
         screenData: String = "",
+        intent: TaskIntent = TaskIntent("Plan the requested task", confidence = 1.0),
     ): List<LoopStep> {
         require(request.isNotBlank() && request.length <= MAX_TEXT)
-        val input = Json.encodeToString(PlannerInput(request, screenData.take(MAX_TEXT)))
+        val template = enabledActions?.let { IntentSkills.plan(intent, it) }
+        if (template != null) return IntentPlanProtection.validate(intent, template)
+        val arithmetic =
+            intent.params["expression"]?.let(PlainArithmetic::evaluate) ?: PlainArithmetic.fromRequest(request)
+        val localResult = arithmetic?.let { mapOf("expression" to it.expression, "result" to it.result) }.orEmpty()
+        val input = Json.encodeToString(PlannerInput(request, screenData.take(MAX_TEXT), intent, localResult))
         val prompt =
             (enabledActions?.let(RegistryPlanVocabulary::prompt) ?: PROMPT) +
                 "\nLocal calendar date: ${java.time.LocalDate.now()}; timezone: ${java.time.ZoneId.systemDefault()}."
@@ -30,139 +44,19 @@ class TaskPlanner(
                     temperature = 0f,
                 ),
             )
-        if (enabledActions == null) return respectDraftRequest(request, parse(response.content))
-        val planned =
-            try {
-                RegistryPlanVocabulary.parse(response.content, enabledActions)
-            } catch (failure: IllegalArgumentException) {
-                repair(input, prompt, failure.message.orEmpty())
-            } catch (_: IllegalStateException) {
-                repair(input, prompt, "Plan JSON has an invalid structure")
-            }
-        // A guard that refuses the plan sends its reason back to the model once, so the AI can fix its own plan.
-        return try {
-            respectDraftRequest(request, respectMessageChannel(request, planned))
-        } catch (failure: IllegalArgumentException) {
-            val fixed = repair(input, prompt, failure.message.orEmpty())
-            respectDraftRequest(request, respectMessageChannel(request, fixed))
-        }
-    }
-
-    private fun respectMessageChannel(
-        request: String,
-        steps: List<LoopStep>,
-    ): List<LoopStep> {
-        val genericMessage = Regex("\\bmessage\\b", RegexOption.IGNORE_CASE).containsMatchIn(request)
-        val channelNamed =
-            Regex(
-                "\\b(whatsapp|sms|email|telegram)\\b|text message",
-                RegexOption.IGNORE_CASE,
-            ).containsMatchIn(request)
-        if (!genericMessage || channelNamed) return steps
-        // A plain "message" means a text message (SMS). WhatsApp is used only when the user says WhatsApp.
-        return steps.map { step ->
-            if (step.action.name == "SEND_WHATSAPP") {
-                val kept = step.action.params.filterKeys { it in setOf("contact", "to", "message", "attachment") }
-                step.copy(action = step.action.copy(name = "SEND_SMS", params = kept))
-            } else {
-                step
-            }
-        }
-    }
-
-    /** Fail closed before approval if a model adds outward effects to a draft request. */
-    internal fun respectDraftRequest(
-        request: String,
-        steps: List<LoopStep>,
-    ): List<LoopStep> {
-        val draft = Regex("\\b(type|write|draft)\\b|don['’]?t send|do not send", RegexOption.IGNORE_CASE)
-        if (!draft.containsMatchIn(request) && !isNamedNoteEditingRequest(request)) return steps
-        return if (isNamedNoteEditingRequest(request)) {
-            // Keep saves by itself, so harmless extra taps (Save, Done, OK) are dropped, not fatal.
-            // Anything that could communicate or submit is still refused.
-            val kept = steps.filterNot(::isHarmlessExtraNoteTap)
-            require(kept.isNotEmpty() && kept.all(::isNoteEditingStep)) {
-                "Note editing cannot include communication or submit steps"
-            }
-            kept.mapIndexed { index, step -> step.copy(stepId = "task-${index + 1}") }
+        // One total repair budget, shared by schema and intent protection failures.
+        return if (enabledActions == null) {
+            IntentPlanProtection.validate(intent, parse(response.content))
         } else {
-            respectCommunicationDraft(steps)
-        }
-    }
-
-    private fun respectCommunicationDraft(steps: List<LoopStep>): List<LoopStep> {
-        val safe =
-            setOf(
-                "OPEN_APP",
-                "WAIT",
-                "TYPE_TEXT",
-                "SEND_WHATSAPP",
-                "ASK_USER",
-                "CHAT",
-                "open_app",
-                "type_text",
-                "paste",
-                "compose_sms",
-                "compose_email",
-                "observe",
-            )
-        require(steps.all { it.action.name in safe }) { "Draft-only request cannot include Send or submit steps" }
-        return steps.map { step ->
-            if (step.action.name == "SEND_WHATSAPP") {
-                step.copy(action = step.action.copy(params = step.action.params + ("draftOnly" to "true")))
-            } else {
-                step
+            try {
+                IntentPlanProtection.validate(intent, RegistryPlanVocabulary.parse(response.content, enabledActions))
+            } catch (failure: IllegalArgumentException) {
+                val fixed = repair(input, prompt, failure.message.orEmpty())
+                IntentPlanProtection.validate(intent, fixed)
+            } catch (_: IllegalStateException) {
+                IntentPlanProtection.validate(intent, repair(input, prompt, "Plan JSON has an invalid structure"))
             }
         }
-    }
-
-    /** A notes-app edit is not a communication draft. Unknown routes still use the stricter draft guard. */
-    private fun isNamedNoteEditingRequest(request: String): Boolean =
-        Regex("\\bnotes?\\b", RegexOption.IGNORE_CASE).containsMatchIn(request) &&
-            Regex("\\b(keep|notes)\\b", RegexOption.IGNORE_CASE).containsMatchIn(request) &&
-            !Regex(
-                "\\b(send|message|whatsapp|sms|email|telegram|share|publish|post)\\b",
-                RegexOption.IGNORE_CASE,
-            ).containsMatchIn(request)
-
-    /** Only known local note navigation is allowed; arbitrary taps/IDs can hide a sending action. */
-    private fun isNoteEditingStep(step: LoopStep): Boolean {
-        val params = step.action.params
-        return when (step.action.name) {
-            "OPEN_APP", "open_app" ->
-                (params["appName"] ?: params["app"]).orEmpty().trim().lowercase() in
-                    setOf("keep", "google keep", "keep notes", "notes", "google keep notes", "com.google.android.keep")
-            "CLICK_TEXT", "tap_text" ->
-                safeNoteTap(params["text"].orEmpty())
-            "WAIT", "TYPE_TEXT", "type_text", "paste", "observe", "PRESS_BACK", "press_back" -> true
-            else -> false
-        }
-    }
-
-    /** A tap that is not note navigation but also names nothing outward (no send, share, post, call...). */
-    private fun isHarmlessExtraNoteTap(step: LoopStep): Boolean {
-        val text = step.action.params["text"].orEmpty()
-        return step.action.name in setOf("CLICK_TEXT", "tap_text") &&
-            !safeNoteTap(text) &&
-            !OUTWARD_WORDS.containsMatchIn(text)
-    }
-
-    private fun safeNoteTap(text: String): Boolean {
-        val alternatives = text.split(',').map { it.trim().lowercase() }
-        val allowed =
-            setOf(
-                "new note",
-                "create note",
-                "create a note",
-                "id:new_note_button",
-                "take a note",
-                "take a note…",
-                "new text note",
-                "title",
-                "note",
-                "body",
-            )
-        return alternatives.isNotEmpty() && alternatives.all { it in allowed }
     }
 
     private suspend fun repair(
@@ -170,7 +64,7 @@ class TaskPlanner(
         prompt: String,
         errors: String,
     ): List<LoopStep> {
-        diagnostic("planner validation failed: $errors; repair=1")
+        diagnostic("planner validation failed; repair=1")
         val repaired =
             provider.complete(
                 LLMRequest(
@@ -185,11 +79,6 @@ class TaskPlanner(
     }
 
     companion object {
-        private val OUTWARD_WORDS =
-            Regex(
-                "send|share|post|publish|submit|reply|forward|message|whatsapp|sms|email|mail|telegram|call|pay|buy",
-                RegexOption.IGNORE_CASE,
-            )
         private const val MAX_TEXT = 8000
         private const val MAX_RESPONSE = 32000
         private val json =
@@ -252,6 +141,8 @@ class TaskPlanner(
 private data class PlannerInput(
     @SerialName("user_request") val userRequest: String,
     @SerialName("screen_data") val screenData: String,
+    val intent: TaskIntent,
+    @SerialName("local_arithmetic") val localArithmetic: Map<String, String>,
 )
 
 @Serializable
@@ -303,6 +194,7 @@ class ApprovedTaskPlan(
     }
 
     init {
+        require(PlanOutputReferences.errors(approved).isEmpty()) { "Invalid approved output reference" }
         val errors =
             if (approved.all { it.action.name in PlanValidator.STUDY_PARAMS }) {
                 PlanValidator.validateStudySteps(approved)
@@ -354,7 +246,8 @@ object TaskPlanPreview {
         }
     }
 
-    private fun quote(value: String): String = "\"" + TaskDisplayText.escape(value).replace("\"", "\\\"") + "\""
+    private fun quote(value: String): String =
+        "\"" + TaskDisplayText.escape(PlanOutputReferences.describe(value)).replace("\"", "\\\"") + "\""
 
     private fun whatsappCallPreview(params: Map<String, String>): String =
         "place a WhatsApp ${if (params["video"] == "true") "video" else "voice"} call to " +
@@ -366,6 +259,11 @@ object TaskPlanPreview {
         val p = step.action.params
         val recipient = TaskDisplayText.escape(p["to"].orEmpty().ifBlank { "a recipient you fill in" })
         return when (step.action.name) {
+            "CALCULATE" -> {
+                val expression = p["expression"].orEmpty()
+                val answer = PlainArithmetic.evaluate(expression)
+                "calculate ${quote(expression)}" + (answer?.let { " = ${it.result} (local preview answer)" } ?: "")
+            }
             "SEND_WHATSAPP" ->
                 "${if (p["draftOnly"] == "true") "draft" else "send"} a WhatsApp message to " +
                     quote(p["contact"].orEmpty()) + " saying " + quote(p["message"].orEmpty()) +

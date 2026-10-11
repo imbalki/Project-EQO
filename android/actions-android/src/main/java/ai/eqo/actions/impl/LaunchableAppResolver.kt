@@ -20,6 +20,11 @@ class LaunchableAppResolver(
         },
     )
 
+    // Process-local snapshot, refreshed by a new resolver; no installed-app data is stored or logged.
+    private val cachedApps by lazy { launcherApps().distinctBy { it.first }.toList() }
+
+    fun installedLabels(): List<String> = cachedApps.map { it.second }.distinct().sorted()
+
     // Explicit fail-closed exits keep alias and ambiguous-name checks independent.
     @Suppress("ReturnCount")
     fun resolve(appName: String): Intent? {
@@ -31,7 +36,7 @@ class LaunchableAppResolver(
         // Soft aliases only apply when that exact package is installed; otherwise normal name matching continues.
         SOFT_ALIASES[name.lowercase()]?.let(launch)?.let { return it }
         launch(name)?.let { return it }
-        val apps = launcherApps()
+        val apps = cachedApps
         val exact = apps.filter { (pkg, label) -> pkg.equals(name, true) || label.equals(name, true) }
         val matches =
             exact.ifEmpty {
