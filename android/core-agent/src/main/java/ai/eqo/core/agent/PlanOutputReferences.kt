@@ -3,7 +3,8 @@ package ai.eqo.core.agent
 
 /** Syntax: {{step:1:result}} or {{step:1:message}}. Step numbering is the approved preview's one-based order. */
 object PlanOutputReferences {
-    private val reference = Regex("\\{\\{step:([1-9][0-9]*):([a-z][a-z0-9_]{0,31})}}")
+    // Closing braces are escaped on purpose: Android's regex engine rejects a bare "}" that the desktop JVM accepts.
+    private val reference = Regex("\\{\\{step:([1-9][0-9]*):([a-z][a-z0-9_]{0,31})\\}\\}")
     private val payloads =
         mapOf(
             "SEND_SMS" to setOf("message"),

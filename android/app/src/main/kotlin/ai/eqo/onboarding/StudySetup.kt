@@ -13,6 +13,10 @@ import ai.eqo.adb.pairing.AdbCryptoKeyStore
 import ai.eqo.adb.pairing.WirelessAdbActivation
 import ai.eqo.adb.pairing.WirelessLink
 import ai.eqo.adb.pairing.WirelessLinkState
+import ai.eqo.core.security.AndroidProviderCredentialStore
+import ai.eqo.core.security.CredentialStoreResult
+import ai.eqo.core.security.ProviderCredentialId
+import ai.eqo.core.security.ProviderCredentialStore
 import ai.eqo.helper.client.HelperActivationState
 import ai.eqo.study.CapabilityId
 import ai.eqo.study.CapabilityState
@@ -43,6 +47,7 @@ enum class ModelKeyState {
  * browser-consent answer and the model-key state. Nothing here is derived from another
  * capability's state.
  */
+@Suppress("TooManyFunctions") // One probe per capability plus its restore; splitting would scatter the setup state.
 object StudySetup {
     /** Install-scoped wireless-ADB activation gate (fresh install = ACTIVATION_REQUIRED). */
     val wirelessAdb: WirelessAdbActivation = WirelessAdbActivation()
@@ -79,6 +84,39 @@ object StudySetup {
                 .getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
                 .orEmpty()
         return enabled.split(':').any { it.equals(ACCESSIBILITY_COMPONENT, ignoreCase = true) }
+    }
+
+    /**
+     * The key row follows what is stored, not only this process's memory (which resets on every restart).
+     * A saved key plus the model chosen by the last successful test means the setup is still done. Only
+     * the outcome is logged, never any value.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    fun restoreModelKey(
+        context: Context,
+        store: ProviderCredentialStore = AndroidProviderCredentialStore(context.applicationContext),
+    ) {
+        if (modelKey != ModelKeyState.NOT_SET) return
+        val stored =
+            try {
+                store.read(ProviderCredentialId.ApiKey("openrouter"))
+            } catch (_: Exception) {
+                CredentialStoreResult.StorageUnavailable
+            }
+        val present = stored is CredentialStoreResult.Success && !stored.value.isNullOrBlank()
+        val hasModel =
+            !ai.eqo.task.StudyModelChoice
+                .read(context)
+                .isNullOrBlank()
+        val outcome =
+            when {
+                present -> "present"
+                stored is CredentialStoreResult.Success -> "absent"
+                stored is CredentialStoreResult.CredentialsMustBeReentered -> "unreadable"
+                else -> "storage_unavailable"
+            }
+        android.util.Log.i("EqoRun", "credential openrouter=$outcome model=$hasModel")
+        if (present && hasModel) modelKey = ModelKeyState.CONNECTED
     }
 
     fun probeModelKey(): CapabilityStatus =
@@ -201,13 +239,15 @@ object StudySetup {
     fun snapshot(
         context: Context,
         helperState: HelperActivationState.State,
-    ): ReadinessSnapshot =
-        ReadinessSnapshot()
+    ): ReadinessSnapshot {
+        restoreModelKey(context)
+        return ReadinessSnapshot()
             .record(probeModelKey())
             .record(probeAccessibility(context))
             .record(probeWirelessAdb(context))
             .record(probeHelper(helperState))
             .record(probeChromeConsent())
+    }
 
     private fun status(
         id: CapabilityId,

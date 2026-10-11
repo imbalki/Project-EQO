@@ -755,3 +755,5 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/SharedStorageCatalog.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, Files v2 per-phone discovery, t_ecfe91de) |
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/AndroidSharedMediaSource.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, Files v2 MediaStore metadata, t_ecfe91de) |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/SharedStorageCatalogTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, Files v2 Realme/Samsung/Xiaomi fake layouts, t_ecfe91de) |
+| :app | `android/app/src/test/kotlin/ai/eqo/onboarding/ModelKeyRestoreTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, key row persistence tests) |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/GatedLaunchTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, launch-refusal regression) |

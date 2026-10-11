@@ -44,6 +44,8 @@ class AndroidActionRegistry internal constructor(
         require(executors.keys.all { ActionSchema.getAction(it) != null }) { "Executor name absent from ActionSchema" }
     }
 
+    // Early exits are explicit guard results; any executor failure becomes one fixed, user-readable result.
+    @Suppress("TooGenericExceptionCaught", "ReturnCount")
     suspend fun execute(
         actionName: String,
         params: Map<String, String>,
@@ -89,7 +91,11 @@ class AndroidActionRegistry internal constructor(
             }
         } catch (cancelled: CancellationException) {
             throw cancelled
-        } catch (_: Exception) {
+        } catch (refused: GatedLaunchException) {
+            ActionResult.Failure(refused.message.orEmpty().ifBlank { "This action could not be completed." })
+        } catch (failure: Exception) {
+            // Exception class only: its message can echo request content.
+            android.util.Log.w("EqoRun", "action=$actionName exception=${failure.javaClass.simpleName}")
             ActionResult.Failure("This action could not be completed. No success was verified.")
         }
     }

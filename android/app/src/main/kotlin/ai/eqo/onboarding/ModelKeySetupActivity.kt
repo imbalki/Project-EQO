@@ -32,6 +32,7 @@ class ModelKeySetupActivity : Activity() {
         setContentView(R.layout.model_key)
         modelPicker = ModelPicker(this)
         modelPicker.start()
+        StudySetup.restoreModelKey(applicationContext, credentialStore)
         findViewById<Button>(R.id.model_key_validate_button).setOnClickListener { validate() }
         findViewById<Button>(R.id.setup_return_button).setOnClickListener { finish() }
         render()

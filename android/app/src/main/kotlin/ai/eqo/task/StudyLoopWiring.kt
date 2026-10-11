@@ -31,6 +31,8 @@ import ai.eqo.study.ApprovalOutcome
 import ai.eqo.study.ApprovalRequest
 import ai.eqo.study.FailureClass
 
+private const val MAX_REASON = 80
+
 /** Marker permission for steps that need the TASK-007 privileged helper binder. */
 object StudyPermission {
     const val HELPER_BINDER = "ai.eqo.permission.HELPER_BINDER"
@@ -294,6 +296,10 @@ class StudyActionExecutor(
                 else -> Unit
             }
             android.util.Log.i("EqoRun", "action=${action.name} result=${result.javaClass.simpleName}")
+            // App launches carry fixed error text and no user content, so the reason is safe to record.
+            if (!result.success && action.name == "OPEN_APP") {
+                android.util.Log.i("EqoRun", "action=OPEN_APP reason=${result.error.orEmpty().take(MAX_REASON)}")
+            }
             return if (result.success) {
                 val values = (result as? ai.eqo.actions.base.ActionResult.Success)?.dataMap.orEmpty()
                 outputs.record(stepId, values + mapOf("message" to result.data.orEmpty()))
