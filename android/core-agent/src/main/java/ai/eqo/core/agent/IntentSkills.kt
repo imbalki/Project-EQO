@@ -86,13 +86,20 @@ object IntentSkills {
     private fun search(intent: TaskIntent): List<ExecutedAction> =
         if (intent.app == null) {
             listOf(action("WEB_SEARCH", "query" to intent.params.getValue("query")))
-        } else if (intent.app.lowercase() in setOf("keep", "google keep", "gmail", "chrome", "whatsapp")) {
+        } else if (intent.app.equals("whatsapp", ignoreCase = true)) {
+            // Fail closed on restored chats/version differences. Search is live-filtered: never press Enter.
+            // Explicit IDs cannot fall back to the sole message composer when search is absent.
             open(intent.app) +
                 listOf(
-                    action("TYPE_TEXT", "searchText" to "Search", "content" to intent.params.getValue("query")),
-                    action("PRESS_ENTER"),
+                    action("CLICK_TEXT", "text" to "id:com.whatsapp:id/menuitem_search"),
+                    action(
+                        "TYPE_TEXT",
+                        "searchText" to "id:com.whatsapp:id/search_src_text",
+                        "content" to intent.params.getValue("query"),
+                    ),
                 )
         } else {
+            // Apps without a pinned search flow use hint-driven planning, not generic editable-field guesses.
             emptyList()
         }
 }

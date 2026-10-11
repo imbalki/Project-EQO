@@ -38,11 +38,16 @@ execution already supports Keep's speed dial, note fields and Back autosave.
    fall back to the existing registry planner with the structured intent and app hints.
    Keep uses Create a note > id:new_note_button > id:editable_title and/or
    id:edit_note_text > PRESS_BACK; title-only plans do not invent a body.
+   App search is not generic typing: WhatsApp navigates using exact menuitem_search
+   and search_src_text resource IDs and live-filters without Enter. Missing IDs stop
+   with Needs you rather than touching a restored chat composer. Other app searches
+   fall back to hint-driven planning until a pinned app-specific flow is available.
 6. Remove request-keyword draft/note/channel regex guards. IntentPlanProtection runs
    after planning, checks structured channel and send=no, and refuses Send/submit
    controls or outward send executors. SMS/email's existing native draft executors are
    explicitly draft-only; WhatsApp drafts require draftOnly=true. The schema and intent
-   protection share one model repair budget. A second invalid plan is refused.
+   protection share one model repair budget, including template protection failures.
+   A second invalid plan is refused.
 7. Preview begins with "I understood" and the goal, plus best-guess disclosure when
    necessary. Execution still uses the immutable approval snapshot. Existing auto-mode
    opt-in, password-field refusal, untappable EQO windows, takeover/Pause/Stop and

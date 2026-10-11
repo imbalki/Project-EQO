@@ -294,6 +294,57 @@ class IntentPlanningTest {
             assertFalse(approved.matches(changed))
         }
 
+    @Test fun noSendSearchTemplateIsCompliantWithoutRepairOrEnter() =
+        runTest {
+            val intent =
+                TaskIntent(
+                    "Search WhatsApp",
+                    "WhatsApp",
+                    "search",
+                    mapOf("query" to "Synthetic query"),
+                    send = "no",
+                    confidence = 0.95,
+                )
+            val fake = IntentFixtureProvider(emptyList())
+            val steps = TaskPlanner(fake, enabled).plan("search WhatsApp without sending", intent = intent)
+            assertEquals("id:com.whatsapp:id/search_src_text", steps.last().action.params["searchText"])
+            assertEquals(steps, IntentPlanProtection.validate(intent, steps))
+            assertFalse(steps.any { it.action.name == "PRESS_ENTER" })
+            assertTrue(fake.requests.isEmpty())
+        }
+
+    @Test fun unpinnedAppSearchFallsBackAndNoSendStillRepairsOnce() =
+        runTest {
+            val bad = """{"steps":[{"action":"PRESS_ENTER","params":{}}]}"""
+            val good = """{"steps":[{"action":"PRESS_BACK","params":{}}]}"""
+            for (app in listOf("Keep", "Gmail", "Chrome", "Other")) {
+                val intent =
+                    TaskIntent("Search", app, "search", mapOf("query" to "Synthetic query"), send = "no")
+                assertNull(IntentSkills.plan(intent, enabled))
+                val fake = IntentFixtureProvider(listOf(bad, good))
+                val steps = TaskPlanner(fake, enabled).plan("search $app", intent = intent)
+                assertEquals("PRESS_BACK", steps.single().action.name)
+                assertEquals(2, fake.requests.size)
+                assertTrue(
+                    fake.requests
+                        .last()
+                        .systemPrompt
+                        .contains("Intent send=no"),
+                )
+            }
+        }
+
+    @Test fun providerFailureDoesNotTriggerPlanRepair() =
+        runTest {
+            val fake = IntentFixtureProvider(emptyList())
+            try {
+                TaskPlanner(fake, enabled).plan("unsupported synthetic task")
+                error("Must propagate provider failure")
+            } catch (_: IllegalStateException) {
+                assertEquals(1, fake.requests.size)
+            }
+        }
+
     private fun json(intent: TaskIntent): String = Json.encodeToString(intent)
 
     private fun session(fake: IntentFixtureProvider): IntentPlanningSession =

@@ -19,7 +19,9 @@ internal object AppControlHints {
                 "Google Messages: Start chat,New conversation; To; Text message; Send. " +
                 "Prefer SEND_SMS for a self-contained message request.",
             "com.whatsapp" to
-                "WhatsApp: Search content-description opens search; Search field. " +
+                "WhatsApp: CLICK_TEXT text=id:com.whatsapp:id/menuitem_search opens list search; " +
+                "TYPE_TEXT searchText=id:com.whatsapp:id/search_src_text filters results without Enter. " +
+                "If either exact ID is missing, stop; never type a search into a Message composer. " +
                 "A reopened app may be inside a chat, not the chat list; never guess a recipient. " +
                 "Prefer SEND_WHATSAPP or WHATSAPP_CALL for self-contained requests.",
             "com.android.chrome" to
@@ -44,6 +46,7 @@ internal object AppControlHints {
             appendLine("CLICK_TEXT text accepts ordered comma-separated alternatives.")
             appendLine("All exact text/content-description/view-id suffix matches precede partial label matches.")
             appendLine("CLICK_TEXT text and TYPE_TEXT searchText accept id:<view-id suffix> references.")
+            appendLine("App search: navigate to search first and use a search-only id: target, never a generic input.")
             appendLine("For add/write/create a note in Keep, follow the exact Keep flow above.")
             appendLine("If Create a note is missing, stop with Needs you; Keep is not on its home screen.")
             appendLine("Use the requested title/body, never invent content.")

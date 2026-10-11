@@ -36,6 +36,31 @@
 - Owner addendum from build a465525 is included, not claimed phone-verified: dedicated
   successful Result line, voice-only TTS, locally normalized arithmetic/literal preview
   and runtime backward payload placeholders. Recipient/action/approved snapshot stay fixed.
+- Review correction (local-only, NOT TESTED ON PHONE): removed generic app-search
+  templates. WhatsApp now navigates/types using exact package-qualified search IDs,
+  live-filtering without Enter; missing search refuses the restored chat composer.
+  Other apps fall back to hint-driven planning. Template protection shares one repair
+  budget with free plans; provider failures remain outside validation-repair catches.
+- Real production EqoAutomation dispatch on fake trees: restored chat is unchanged,
+  missing search ID refuses typing even if navigation were bypassed, genuine search
+  accepts the query without Enter. Compliant send=no templates need no model call;
+  unsafe fallback proposals repair once. IntentPlanningTest 15/15 and fake-tree 29/29 pass.
+- Correction verification: first foreground gate lost tool output after a 420-second
+  transport timeout; only its wrapper/daemon were stopped and the gate restarted.
+  Intermediate tracked gate FAILED in 17m 28s on the documented macro timeout.
+  Self-review then preserved the provider-failure boundary and added its regression.
+  Final frozen-source gate FAILED in 17m 41s (403 tasks, 56 executed): only actions
+  macro delete/list UncompletedCoroutinesError, still not baseline-reproduced here.
+- Final PASS: ktlintCheck and detekt on core-agent/platform-a11y/actions-android/app;
+  :app:lintDebug (zero XML issues). Unit XML: core 268, platform 125, app 350 with
+  zero failures/errors/skips; actions 192, one failure, zero errors, three skips.
+  Exact tasks: :core-agent:ktlintCheck :platform-a11y:ktlintCheck
+  :actions-android:ktlintCheck :app:ktlintCheck :core-agent:detekt
+  :platform-a11y:detekt :actions-android:detekt :app:detekt :app:lintDebug
+  :core-agent:testDebugUnitTest :platform-a11y:testDebugUnitTest
+  :actions-android:testDebugUnitTest :app:testDebugUnitTest, with the broad flags above.
+  scripts/check.sh, provenance 508/508, git diff --check and added Kotlin <=120 pass.
+  No new Kotlin files. No push/PR, install, phone, live provider or remote CI.
 
 Owner phone/live-model checklist (synthetic content/recipient only; record build/results):
 
@@ -67,6 +92,10 @@ Owner phone/live-model checklist (synthetic content/recipient only; record build
       exact shortcut skips understanding, typo/mixed-language uses understanding.
 - [ ] Search Keep/Gmail/Chrome and an unfamiliar installed app; other note apps use
       free planning with hints where known, never a Keep-only request whitelist.
+- [ ] Search WhatsApp after leaving a chat open: missing exact list-search IDs must
+      stop with Needs you, never overwrite the draft or press Enter. On the list,
+      menuitem_search opens search and search_src_text live-filters without Enter.
+      Repeat with an explicit no-send instruction; inspect the approved preview.
 - [ ] Cancel/Back, Stop during understanding/choice, edit/leave/rotate, provider failure:
       no late plan starts, no automatic approval, no hidden clarification answer reuse.
 - [ ] Password input refused, EQO own dialog untappable by automation, takeover and

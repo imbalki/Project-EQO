@@ -28,7 +28,6 @@ class TaskPlanner(
     ): List<LoopStep> {
         require(request.isNotBlank() && request.length <= MAX_TEXT)
         val template = enabledActions?.let { IntentSkills.plan(intent, it) }
-        if (template != null) return IntentPlanProtection.validate(intent, template)
         val arithmetic =
             intent.params["expression"]?.let(PlainArithmetic::evaluate) ?: PlainArithmetic.fromRequest(request)
         val localResult = arithmetic?.let { mapOf("expression" to it.expression, "result" to it.result) }.orEmpty()
@@ -36,6 +35,27 @@ class TaskPlanner(
         val prompt =
             (enabledActions?.let(RegistryPlanVocabulary::prompt) ?: PROMPT) +
                 "\nLocal calendar date: ${java.time.LocalDate.now()}; timezone: ${java.time.ZoneId.systemDefault()}."
+        // Provider/network failures are not invalid plans and must not consume a repair request.
+        val content = if (template == null) propose(input, prompt) else null
+        // One total repair budget, shared by schema and intent protection failures.
+        return try {
+            val steps =
+                template ?: enabledActions?.let { RegistryPlanVocabulary.parse(requireNotNull(content), it) }
+                    ?: parse(requireNotNull(content))
+            IntentPlanProtection.validate(intent, steps)
+        } catch (failure: IllegalArgumentException) {
+            if (enabledActions == null) throw failure
+            IntentPlanProtection.validate(intent, repair(input, prompt, failure.message.orEmpty()))
+        } catch (failure: IllegalStateException) {
+            if (enabledActions == null) throw failure
+            IntentPlanProtection.validate(intent, repair(input, prompt, "Plan JSON has an invalid structure"))
+        }
+    }
+
+    private suspend fun propose(
+        input: String,
+        prompt: String,
+    ): String {
         val response =
             provider.complete(
                 LLMRequest(
@@ -44,19 +64,7 @@ class TaskPlanner(
                     temperature = 0f,
                 ),
             )
-        // One total repair budget, shared by schema and intent protection failures.
-        return if (enabledActions == null) {
-            IntentPlanProtection.validate(intent, parse(response.content))
-        } else {
-            try {
-                IntentPlanProtection.validate(intent, RegistryPlanVocabulary.parse(response.content, enabledActions))
-            } catch (failure: IllegalArgumentException) {
-                val fixed = repair(input, prompt, failure.message.orEmpty())
-                IntentPlanProtection.validate(intent, fixed)
-            } catch (_: IllegalStateException) {
-                IntentPlanProtection.validate(intent, repair(input, prompt, "Plan JSON has an invalid structure"))
-            }
-        }
+        return response.content
     }
 
     private suspend fun repair(
