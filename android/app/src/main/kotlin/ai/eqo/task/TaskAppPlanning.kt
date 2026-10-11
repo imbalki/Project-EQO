@@ -30,8 +30,32 @@ internal class TaskAppPlanning(
     ): MissingAppFallback.Result {
         val prepared = resolve(first)
         val fallback = MissingAppFallback(resolver, prepared.rejected)
-        return fallback.prepare(request, prepared.steps) { constrained -> resolve(replan(constrained)).steps }
+        val result = prepareFallback(request, prepared, fallback, replan)
+        return if (result is MissingAppFallback.Result.Stopped) {
+            result.copy(storeSearch = prepared.storeSearch)
+        } else {
+            result
+        }
     }
+
+    // Planner/network failures must not remove the explicit store choice; cancellation still propagates.
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    private suspend fun prepareFallback(
+        request: String,
+        prepared: AppPlanResolution.Prepared,
+        fallback: MissingAppFallback,
+        replan: suspend (String) -> List<LoopStep>,
+    ): MissingAppFallback.Result =
+        try {
+            fallback.prepare(request, prepared.steps) { constrained -> resolve(replan(constrained)).steps }
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (cancelled: AppChoiceCancelled) {
+            throw cancelled
+        } catch (failure: Exception) {
+            if (prepared.storeSearch.isEmpty()) throw failure
+            MissingAppFallback.Result.Stopped("EQO could not make a Chrome search plan. Nothing ran.")
+        }
 
     /** Same launchable inventory used by the resolver. Encoded as data, never instructions. */
     fun plannerInventory(): String {

@@ -27,7 +27,12 @@ reason and the existing store/browser alternatives, not an invented success.
 - Auto-select only score >=70 with a runner-up gap >=15. Otherwise show at most
   five ranked launcher apps, with live icon, name and package disambiguation, on
   the task screen. None of these invokes the existing Chrome replan and approval
-  dialog with its explicit Play Store search. Cancel/back cancels preparation.
+  dialog with its explicit Play Store search. If Chrome is absent or the replan
+  fails/is unusable, show store search independently, with no runnable/approvable
+  browser plan. This recovery is only for an explicit chooser rejection; zero
+  candidates retain the existing missing-app flow. Cancel/back cancels preparation
+  or recovery without opening a store or executing a task. Coroutine cancellation
+  propagates instead of being turned into recovery.
   Chooser content rejects obscured touches. New choices are persisted only after
   all app choices finish, so cancelling a later chooser discards earlier choices.
 - Resolution occurs before approval and before an approved execution snapshot is
@@ -49,7 +54,8 @@ reason and the existing store/browser alternatives, not an invented success.
 Weak and ambiguous matches require a person; no extra model call is needed for
 matching. Installed labels/packages are included in the existing opt-in planning
 request as untrusted data; this is not a new background inventory upload. The
-existing absent-app fallback still requires Chrome and a new approval. The fallback
+existing absent-app browser fallback still requires Chrome and a new approval. Store
+search after None of these does not require Chrome or a successful model response. The fallback
 checks the actual Chrome package, not merely a similar app label. New UI and
 Android 11 package visibility/icon behavior require phone verification. Memory
 cannot display the original phrase because it deliberately was not retained.

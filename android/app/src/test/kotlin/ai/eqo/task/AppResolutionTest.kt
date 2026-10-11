@@ -200,6 +200,7 @@ class AppResolutionTest {
                 AppPlanResolution(resolver(), memory) { error("No candidates") }
                     .prepare(listOf(step("unrelated unicorn")))
             assertEquals(setOf("unrelated unicorn"), none.rejected)
+            assertTrue(none.storeSearch.isEmpty())
             val cancelled =
                 AppPlanResolution(resolver(), memory) { AppChoice.Cancelled }
                     .prepare(listOf(step("Google")))
@@ -207,6 +208,67 @@ class AppResolutionTest {
             assertTrue(cancelled.steps.isEmpty())
             assertTrue(memory.entries().isEmpty())
         }
+
+    @Test fun noneWithoutChromeStillOffersStoreOnTaskScreen() {
+        verifyRejectedRecovery(chromeInstalled = false)
+    }
+
+    @Test fun noneWithUnusableBrowserReplanStillOffersStoreOnTaskScreen() {
+        verifyRejectedRecovery(chromeInstalled = true)
+    }
+
+    @Test fun noneWithFailedBrowserRequestStillOffersStoreOnTaskScreen() {
+        verifyRejectedRecovery(chromeInstalled = true, requestFails = true)
+    }
+
+    @Test fun recoveryCancelRunsNothingAndSavesNothing() {
+        verifyRejectedRecovery(chromeInstalled = false, cancel = true)
+    }
+
+    private fun verifyRejectedRecovery(
+        chromeInstalled: Boolean,
+        requestFails: Boolean = false,
+        cancel: Boolean = false,
+    ) = runBlocking {
+        val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
+        val activity = lifecycle.get()
+        val apps = inventory.filter { it.second == "Calculator" || (chromeInstalled && it.second == "Chrome") }
+        var calls = 0
+        val result =
+            async(start = CoroutineStart.UNDISPATCHED) {
+                TaskAppPlanning(activity, resolver(apps)).prepare("open my calculator", listOf(step("my calculator"))) {
+                    calls++
+                    if (requestFails) throw java.io.IOException("Synthetic failure")
+                    emptyList()
+                }
+            }
+        shadowOf(Looper.getMainLooper()).idle()
+        val chooser = ShadowAlertDialog.getLatestAlertDialog()
+        assertEquals("Which app did you mean?", shadowOf(chooser).title.toString())
+        chooser.getButton(AlertDialog.BUTTON_NEUTRAL).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        val stopped = result.await() as MissingAppFallback.Result.Stopped
+        assertEquals(if (chromeInstalled) 1 else 0, calls)
+        assertEquals(listOf("my calculator"), stopped.storeSearch)
+        activity.showStoppedAppPlan(stopped)
+        val recovery = ShadowAlertDialog.getLatestAlertDialog()
+        assertFalse(recovery.getButton(AlertDialog.BUTTON_NEUTRAL).visibility == android.view.View.VISIBLE)
+        assertEquals("Install my calculator from Play Store", recovery.getButton(AlertDialog.BUTTON_POSITIVE).text)
+        assertNull(shadowOf(activity).nextStartedActivity)
+        val button = if (cancel) AlertDialog.BUTTON_NEGATIVE else AlertDialog.BUTTON_POSITIVE
+        recovery.getButton(button).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        if (cancel) {
+            assertNull(shadowOf(activity).nextStartedActivity)
+        } else {
+            val opened = shadowOf(activity).nextStartedActivity
+            assertEquals("market", opened.data?.scheme)
+            assertEquals("my calculator", opened.data?.getQueryParameter("q"))
+        }
+        assertNull(TaskRunSession.pending)
+        assertTrue(RememberedApps(activity).entries().isEmpty())
+        lifecycle.pause().stop().destroy()
+    }
 
     @Test fun realDialogShowsBoundedIconRowsAndCancelReturnsWithoutChoice() =
         runBlocking {

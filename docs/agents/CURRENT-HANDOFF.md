@@ -13,16 +13,21 @@ substitute a browser for an installed app that a short choice could identify.
   threshold; otherwise a task-screen chooser with up to five names/icons/packages.
 - Choice occurs before approval; preview names the installed app and execution
   pins its package. Removed approved apps fail plainly, never fuzzy-redirect.
-- None of these and zero candidates retain the existing Chrome/store fallback.
-  Cancel/back runs nothing and saves no choice. Both OPEN_APP and open_app use it.
+- None of these offers Play Store search even if Chrome is absent or browser
+  replanning fails/is unusable. Only a usable Chrome plan can reach approval.
+  Zero candidates retain the existing missing-app flow unchanged. Cancel/back
+  runs nothing and saves no choice. Both OPEN_APP and open_app use it.
 - App-private memory stores normalized-name hashes -> package only; no raw names,
   full requests, timestamps or name logs. Setup > Apps EQO remembers deletes entries.
 - The planner receives the same launcher inventory as untrusted data during its
   existing explicit planning request. Choices and memory are not sent to the model.
 - ADR 0013 records scoring, privacy limitations and approval pin validation.
 - Host gates and phone checklist are recorded in PHASE-ONE-TEST-LOG.md below.
-  PASS all three modules' ktlintCheck/detekt, app lintDebug, core-agent's 121 tests
-  and app's 357 tests (including 15 app-resolution regressions). Actions' 190 tests
+  Review recovery fix PASS frozen app ktlintCheck/detekt/lintDebug and 361 tests
+  (including 19 app-resolution regressions); lint XML has zero issues. Four new
+  integrated tests cover store recovery without Chrome, unusable/failed replan,
+  and cancel. Original gates PASS all three modules' ktlintCheck/detekt, app lintDebug,
+  core-agent's 121 tests and app's then-357 tests. Actions' 190 tests
   retain one previously documented untouched macro timeout and three Windows
   symlink skips: FULL SUITE IS NOT GREEN. Exact gates/failure are in the test log.
   No push/PR/gh, installation, real model call, key access or phone verification.

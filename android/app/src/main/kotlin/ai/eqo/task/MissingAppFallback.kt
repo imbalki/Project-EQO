@@ -35,6 +35,7 @@ internal class MissingAppFallback(
 
         data class Stopped(
             val message: String,
+            val storeSearch: List<String> = emptyList(),
         ) : Result
     }
 
@@ -93,6 +94,43 @@ internal class PlanFallbackDialog(
     private val activity: android.app.Activity,
     private val approve: (ai.eqo.core.agent.ApprovedTaskPlan) -> Unit,
 ) {
+    /** A rejected chooser still offers store search when no usable browser plan exists. */
+    fun showRecovery(result: MissingAppFallback.Result.Stopped): android.app.AlertDialog {
+        val app = result.storeSearch.first()
+        val dialog =
+            android.app.AlertDialog
+                .Builder(activity)
+                .setTitle(ai.eqo.R.string.app_chooser_title)
+                .setMessage(result.message)
+                .setPositiveButton(
+                    activity.getString(
+                        ai.eqo.R.string.app_chooser_install,
+                        ai.eqo.core.agent.TaskDisplayText
+                            .escape(app),
+                    ),
+                ) { _, _ -> openStore(app) }
+                .setNegativeButton(android.R.string.cancel) { _, _ ->
+                    activity
+                        .findViewById<android.widget.TextView>(ai.eqo.R.id.task_state)
+                        .setText(ai.eqo.R.string.app_chooser_cancelled)
+                }.setOnCancelListener {
+                    activity
+                        .findViewById<android.widget.TextView>(ai.eqo.R.id.task_state)
+                        .setText(ai.eqo.R.string.app_chooser_cancelled)
+                }.show()
+        dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).filterTouchesWhenObscured = true
+        dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).filterTouchesWhenObscured = true
+        protectConfirmationTouches(dialog.findViewById(android.R.id.content))
+        return dialog
+    }
+
+    private fun openStore(app: String) {
+        val opened = StoreSearchOpener { activity.startActivity(it) }.search(app)
+        activity.findViewById<android.widget.TextView>(ai.eqo.R.id.task_state).setText(
+            if (opened) ai.eqo.R.string.app_chooser_store_opened else ai.eqo.R.string.app_chooser_store_failed,
+        )
+    }
+
     fun show(
         plan: ai.eqo.core.agent.ApprovedTaskPlan,
         preview: String,
@@ -117,14 +155,7 @@ internal class PlanFallbackDialog(
                         .escape(app),
                 )
             builder.setNeutralButton(label) { _, _ ->
-                val opened = StoreSearchOpener { activity.startActivity(it) }.search(app)
-                activity.findViewById<android.widget.TextView>(ai.eqo.R.id.task_state).setText(
-                    if (opened) {
-                        ai.eqo.R.string.app_chooser_store_opened
-                    } else {
-                        ai.eqo.R.string.app_chooser_store_failed
-                    },
-                )
+                openStore(app)
             }
         }
         return builder.show()

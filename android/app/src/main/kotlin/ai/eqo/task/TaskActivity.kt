@@ -767,6 +767,13 @@ class TaskActivity : Activity() {
         }
     }
 
+    internal fun showStoppedAppPlan(result: MissingAppFallback.Result.Stopped) {
+        findViewById<TextView>(R.id.task_state).text = result.message
+        if (result.storeSearch.isNotEmpty()) {
+            PlanFallbackDialog(this) { error("A stopped plan must never be approved") }.showRecovery(result)
+        }
+    }
+
     @Suppress("TooGenericExceptionCaught", "SwallowedException", "CyclomaticComplexMethod")
     private suspend fun makePlan(request: String) {
         try {
@@ -789,7 +796,7 @@ class TaskActivity : Activity() {
                 when (result) {
                     is MissingAppFallback.Result.Ready -> prepareAndShowPlan(result.steps, result.missing)
                     is MissingAppFallback.Result.Stopped ->
-                        findViewById<TextView>(R.id.task_state).text = result.message
+                        showStoppedAppPlan(result)
                 }
             }
         } catch (_: AppChoiceCancelled) {

@@ -2,9 +2,40 @@
 
 ## App resolution v2 — t_5f379e1b — NOT TESTED ON PHONE
 
-Final frozen-source host checks completed; FULL SUITE IS NOT GREEN (historical macro timeout).
+Review rework: frozen app-only gates PASS; original three-module suite remains NOT GREEN (macro timeout).
 Local branch feat/app-chooser; commit locally only. No installation, device,
 live model/provider, personal data or credentials accessed.
+
+### Review round 1 recovery fix
+
+- Explicit None of these retains Play Store search even without Chrome, after an
+  unusable browser plan, or after a planner/network exception. Recovery offers no
+  task approval/run action; store search and Cancel/Back remain explicit choices.
+  Zero candidates retain the existing missing-app flow; cancellation propagates.
+- PASS frozen `:app:ktlintCheck :app:detekt :app:lintDebug :app:testDebugUnitTest`:
+  BUILD SUCCESSFUL in 13m 15s; 349 tasks (15 executed), exit 0. App XML confirms
+  361 tests, zero failures/errors/skips; lint XML has zero issues. AppResolutionTest
+  19/19, MissingAppFallbackTest 9/9, StudyLoopWiringTest 11/11.
+- Four new integration regressions use the real chooser, TaskAppPlanning and task
+  recovery surface: None without Chrome, unusable replan, failed network request,
+  and recovery cancellation. Store search opens only an encoded market search;
+  cancellation opens nothing, neither path runs a task or saves a remembered choice.
+- Exact invocation from `android/`: `./gradlew :app:ktlintCheck :app:detekt
+  :app:lintDebug :app:testDebugUnitTest --continue --no-daemon --max-workers=1
+  -Pkotlin.compiler.execution.strategy=in-process
+  '-Dorg.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=1024m -XX:ActiveProcessorCount=2 -Dfile.encoding=UTF-8'
+  --console=plain`. Evidence: ignored `android/app/build/reports/appchooser/review-recovery-verified.log`.
+- PASS repository/provenance checks (502 Kotlin files/rows) and `git diff --check`.
+  No new Kotlin files; reflective call sites inspected, existing signatures unchanged.
+- Intermediate invocations are not final passing evidence: detekt's exclusive
+  complexity threshold required a small chooser helper; one two-worker wrapper
+  stalled after all 361 app tests passed and was stopped (own verified process tree
+  only). Final serial rerun completed all gates on unchanged Kotlin source.
+- Only app code changed in this review round. Actions/core-agent gates below are
+  prior-run evidence, not a new baseline. The macro failure was not independently
+  baseline-reproduced or fixed here; no phone/provider/installation tests were run.
+
+### Original implementation three-module gates
 
 - PASS `:actions-android:ktlintCheck`, `:actions-android:detekt`,
   `:core-agent:ktlintCheck`, `:core-agent:detekt`, `:app:ktlintCheck`,
@@ -41,6 +72,9 @@ Phone checklist (all unchecked):
 - [ ] The same name after restarting EQO skips the chooser using remembered choice.
 - [ ] Setup > Apps EQO remembers > Forget removes the choice; ambiguity returns.
 - [ ] None of these offers the existing Chrome plan and Play Store search.
+- [ ] None of these with Chrome absent still offers Play Store search; no browser approval.
+- [ ] None of these after a failed/unusable Chrome replan still offers Play Store search.
+- [ ] Cancel/back in store-only recovery opens nothing and runs no task.
 - [ ] An unrelated missing app follows the existing fallback unchanged.
 - [ ] Cancel, Back and closing the task screen run nothing and persist no choice.
 - [ ] With two ambiguous apps, select the first then cancel the second; neither choice is remembered.

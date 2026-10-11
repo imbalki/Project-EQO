@@ -24,10 +24,12 @@ internal class AppPlanResolution(
         val steps: List<LoopStep>,
         val rejected: Set<String>,
         val cancelled: Boolean = false,
+        val storeSearch: List<String> = emptyList(),
     )
 
     suspend fun prepare(steps: List<LoopStep>): Prepared {
         val rejected = mutableSetOf<String>()
+        val storeSearch = mutableSetOf<String>()
         val resolved = mutableMapOf<String, LaunchableAppResolver.Candidate>()
         val pendingMemory = mutableMapOf<String, String>()
         val output = mutableListOf<LoopStep>()
@@ -47,7 +49,7 @@ internal class AppPlanResolution(
                     query in rejected -> AppChoice.None
                     direct != null -> AppChoice.Selected(direct)
                     candidates.isEmpty() -> AppChoice.None
-                    else -> choose(candidates.take(MAX_CHOICES))
+                    else -> offeredChoice(query, candidates, storeSearch)
                 }
             when (choice) {
                 AppChoice.Cancelled -> return Prepared(emptyList(), rejected, cancelled = true)
@@ -63,7 +65,17 @@ internal class AppPlanResolution(
             }
         }
         pendingMemory.forEach(memory::remember)
-        return Prepared(output, rejected)
+        return Prepared(output, rejected, storeSearch = storeSearch.toList())
+    }
+
+    private suspend fun offeredChoice(
+        query: String,
+        candidates: List<LaunchableAppResolver.Candidate>,
+        storeSearch: MutableSet<String>,
+    ): AppChoice {
+        val choice = choose(candidates.take(MAX_CHOICES))
+        if (choice == AppChoice.None) storeSearch += query
+        return choice
     }
 
     private fun needsResolution(
