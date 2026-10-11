@@ -1,36 +1,89 @@
 # Current handoff (any agent can take over from this page)
 
-## Standing product rule: tolerant names, explicit choice, remembered answers
+## RESUME HERE (written 2026-10-11 ~09:45 IST, before a laptop RAM upgrade)
 
-EQO must never fail just because it cannot find something the user named. Find it
-fuzzily, offer a short choice ("Is this the app you mean?"), and REMEMBER the answer
-for next time. Rigid exact-name matching is not how users use it. Do not silently
-substitute a browser for an installed app that a short choice could identify.
+**Product:** EQO, an Android assistant (OpenDroid base + OpenRouter bring-your-own-key + accessibility automation).
+**Owner:** non-technical; talks in plain language; wants decisions made, shown with examples, and major
+behaviour/ideology changes discussed first. Read `docs/agents/PRODUCT-DECISIONS.md` before changing behaviour.
 
-## App resolution v2 (`t_5f379e1b`, local `feat/app-chooser`) — NOT TESTED ON PHONE
+### Where the code is
+- Public repo `imbalki/Project-EQO` (Apache-2.0). Local clone `C:\Users\rbkri\Claude\eqo`; per-task git
+  worktrees under `C:\Users\rbkri\Claude\worktrees\w-*` (do not push from the old `project-eqo` clones).
+- `main` at bbec90d. CI (GitHub Actions: `android`, `android-branding`, `repo-checks`) is free and is the real gate.
+- Commit identity `imbalki <imbalki@users.noreply.github.com>`; never write phone numbers, emails, serials,
+  names or keys into the repo. Merge only with the identity check (repo, branch, exact head sha equals CI sha,
+  base main) using `gh pr merge --squash --match-head-commit <full sha>`.
 
-- Ranked launcher-label/package matching with alias priority and a clear-winner
-  threshold; otherwise a task-screen chooser with up to five names/icons/packages.
-- Choice occurs before approval; preview names the installed app and execution
-  pins its package. Removed approved apps fail plainly, never fuzzy-redirect.
-- None of these offers Play Store search even if Chrome is absent or browser
-  replanning fails/is unusable. Only a usable Chrome plan can reach approval.
-  Zero candidates retain the existing missing-app flow unchanged. Cancel/back
-  runs nothing and saves no choice. Both OPEN_APP and open_app use it.
-- App-private memory stores normalized-name hashes -> package only; no raw names,
-  full requests, timestamps or name logs. Setup > Apps EQO remembers deletes entries.
-- The planner receives the same launcher inventory as untrusted data during its
-  existing explicit planning request. Choices and memory are not sent to the model.
-- ADR 0013 records scoring, privacy limitations and approval pin validation.
-- Host gates and phone checklist are recorded in PHASE-ONE-TEST-LOG.md below.
-  Review recovery fix PASS frozen app ktlintCheck/detekt/lintDebug and 361 tests
-  (including 19 app-resolution regressions); lint XML has zero issues. Four new
-  integrated tests cover store recovery without Chrome, unusable/failed replan,
-  and cancel. Original gates PASS all three modules' ktlintCheck/detekt, app lintDebug,
-  core-agent's 121 tests and app's then-357 tests. Actions' 190 tests
-  retain one previously documented untouched macro timeout and three Windows
-  symlink skips: FULL SUITE IS NOT GREEN. Exact gates/failure are in the test log.
-  No push/PR/gh, installation, real model call, key access or phone verification.
+### Merged since 2026-10-08 (all UNVERIFIED on the phone unless noted)
+Contact+location sharing, one-step wireless pairing (auto port discovery, no NsdManager resolve), files and
+attachments (All files access, run-time `find:` references, file-picker fallback, screenshots),
+voice input v1 > v2 > v3 (own recorder, tap to stop, AI transcription via OpenRouter audio model) and v3.1
+(saved-key bug, Audio/Text-only labels, retry keeps the recording), Explain this screen, Edge handle with
+shortcut registry, UX polish (Explain panel, handle switch in Setup hub, background-survival row),
+round-1 fixes (Keep/calculator words/type-only/email recipients/permissions up front), location permission fix,
+Keep real flow (Create a note > id:new_note_button > id:editable_title / id:edit_note_text), lenient note planning
+plus one AI repair after a rejected plan, a plain "message" means SMS, Keep soft alias (#27).
+
+### Open work
+| Item | Where | State |
+|---|---|---|
+| App chooser (fuzzy app names, "is this the app you mean?", remembered choice) | branch `feat/app-chooser`, card `t_5f379e1b`, worktree `w-appchooser` | WIP checkpoint pushed, NOT gate-verified |
+| Voice first-use choice (mic asks AI model or phone voice, choose later) | branch `feat/voice-first-use`, card `t_3a0b1c25`, worktree `w-voicefirst` | WIP checkpoint pushed, NOT gate-verified |
+| Compact Ask panel + Explain markdown/speech controls + handle redraw/hidden-apps | branch `feat/mini-panel`, card `t_edb1be59`, worktree `w-mini` | stalled, 2 commits, not finished |
+| Vision locate fallback (any screen allowed when the setting is on; seam for a later protected-screen setting) | worktree `w-vision`, card `t_cfbe3719` | built on an old base, needs rebase and the owner's "any screen" decision applied |
+| Docs PRs | #28 product decisions, #11 phone test log rounds 1-3 | merge when green |
+
+### Phone (Realme RM10, Android 11, test phone, project-only)
+- Installed build: `main` 5f830b6 (2026-10-11 01:56). It does NOT have the Keep soft alias (#27, bbec90d):
+  build and install a new debug APK from `main` first (`./gradlew :app:assembleDebug`, then `adb install -r`;
+  local debug builds keep the app data and accessibility; CI APKs have another signature and need an uninstall).
+- adb: `C:\Users\rbkri\Android\Sdk\platform-tools\adb.exe`; the device serial is in the owner's environment,
+  never in the repo. Wireless debugging drops often: check `adb devices`.
+- Live log: `adb logcat -s EqoRun EqoActions EqoExplain EqoVoice >> C:\Users\rbkri\Claude\worktrees\eqorun-live.log`
+  (start before every test session; it dies when the phone disconnects).
+- Key-less debug testing: `C:\Users\rbkri\Claude\worktrees\runplan.sh '<plan json>' <seconds>` (debug builds only;
+  it contains the serial, never commit it). Example Keep plan: OPEN_APP "Keep", WAIT 3000, CLICK_TEXT
+  "Create a note", CLICK_TEXT "id:new_note_button", TYPE_TEXT searchText "id:editable_title" content ...,
+  TYPE_TEXT "id:edit_note_text", PRESS_BACK.
+- The owner has NOT yet saved the OpenRouter key on the current install (the key screen said saving failed);
+  voice, Explain and typed requests need it. Agents and the lead never type or read the key.
+
+### Test results so far (details in PHASE-ONE-TEST-LOG.md, rounds 1-3)
+Works: typed requests, SMS compose, WhatsApp send and draft-only, calls, WhatsApp call, share contact, email with
+several recipients, Explain (with internet), edge handle (visible, draggable), Files-app open.
+Failing or untested on the latest builds: Keep note (alias and flow merged, retest), "send my latest screenshot"
+(search fixed, retest), file picker fallback, location (permissions up front, retest), voice AI engine
+(needs the key; never ran), pairing (resolver rewritten, retest with "Find ports" first), Zepto add-to-cart
+(needs re-plan), Explain output shows raw markdown and read-aloud cannot pause (mini-panel card).
+
+### Hermes (agents)
+- Board `eqo-android` (`hermes kanban --board eqo-android ...`), worker profile `eqo-trial` (GPT 6.1 Sol).
+  Cards are briefs in `C:\Users\rbkri\Claude\worktrees\_cards\*.md`; each agent works in its own worktree and
+  COMMITS LOCALLY ONLY; the lead pushes, opens PRs and merges.
+- `dispatch` is BLANKET: it restarts every card in review/ready. Always run `dispatch --dry-run` first and
+  `complete` finished cards before dispatching. Create cards with `--max-runtime 3h`.
+- Cards time out silently at their cap: check card state, worktree commit age and PR CI every report.
+- The Hermes CLI is slow under load; the host gateway restart is refused by design, use `dispatch`.
+- Agent briefs must include the CI lint rules that failed repeatedly: ktlint and detekt on EVERY touched module,
+  no hard-coded text in `setText` (SetTextI18n), no unused resources, no method named `resume()`,
+  lines <= 120, functions <= 60 lines and <= 2 returns, grep tests for reflective `getDeclaredMethod`, and
+  `StudyLoopWiringTest` pins exact code shapes (Run click handler, resume).
+
+### Standing rules from the owner
+Approval before running is the default (auto mode is an opt-in setting with a warning). Fixed protections: plan
+approval, no passwords, EQO's own windows are not tappable by the agent, takeover/pause/stop, resume only by the
+user. A plain "message" means SMS. When EQO cannot find something, offer a choice and remember the answer.
+No strict planner whitelists. Record every phone test in `PHASE-ONE-TEST-LOG.md` with the live capture.
+
+### Next steps (in order)
+1. Merge #28 and #11 when green. 2. Build and install `main`; the owner saves the key. 3. Run the short test list
+(key, calculator, Keep, plain message, voice, screenshot, file, location) with the live capture; record results.
+4. Finish the app chooser and voice first-use cards (rebase on `main`, run all-module lint locally, PR, CI, merge).
+5. Decide the mini-panel and vision cards with the owner. 6. Next release (see PRODUCT-DECISIONS.md): dictation anywhere,
+handle screenshot, Teach EQO by action trace, Apps screen, setup wizard.
+
+---
+## Older agent notes (kept for detail)
 
 ## Voice v3.1 (`t_1598bf81`, local-only `fix/voice-key`) — NOT TESTED ON PHONE
 

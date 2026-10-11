@@ -33,10 +33,12 @@ class LaunchableAppResolver(
 
     fun candidates(appName: String): List<Candidate> {
         val alias = AliasResolver.appPackage(appName)
+        // Soft aliases only count for an installed, launchable package (installedApps() already filters).
+        val soft = SOFT_ALIASES[appName.trim().lowercase()]
         return installedApps()
             .map { (pkg, label) ->
                 val score =
-                    if (pkg == alias || pkg.equals(appName.trim(), true)) {
+                    if (pkg == alias || pkg == soft || pkg.equals(appName.trim(), true)) {
                         AppNameMatcher.ALIAS_SCORE
                     } else {
                         AppNameMatcher.score(appName, label, pkg)
@@ -62,5 +64,15 @@ class LaunchableAppResolver(
         if (name.isEmpty()) return null
         if (name.equals("settings", true)) return Intent(Settings.ACTION_SETTINGS)
         return clearWinner(candidates(name))?.packageName?.let(launch)
+    }
+
+    private companion object {
+        val SOFT_ALIASES =
+            mapOf(
+                "keep" to "com.google.android.keep",
+                "google keep" to "com.google.android.keep",
+                "keep notes" to "com.google.android.keep",
+                "google keep notes" to "com.google.android.keep",
+            )
     }
 }
