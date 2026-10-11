@@ -3,6 +3,7 @@ package ai.eqo.task
 
 import ai.eqo.R
 import ai.eqo.actions.impl.LaunchableAppResolver
+import ai.eqo.core.agent.AppRoles
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.pm.PackageManager
@@ -14,6 +15,25 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
+
+/** What the person said about one app answer: remember it, use it once, or stop. */
+internal enum class AppScope { ALWAYS, THIS_TIME, CANCELLED }
+
+/** The "Use <app>?" question shared by the app chooser and role questions. Not shown or protected here. */
+internal fun appScopeDialog(
+    activity: Activity,
+    label: String,
+    answer: (AppScope) -> Unit,
+): AlertDialog =
+    AlertDialog
+        .Builder(activity)
+        .setTitle(activity.getString(R.string.app_chooser_scope_title, label))
+        .setMessage(R.string.app_chooser_scope_message)
+        .setPositiveButton(R.string.app_chooser_always) { _, _ -> answer(AppScope.ALWAYS) }
+        .setNegativeButton(R.string.app_chooser_this_time) { _, _ -> answer(AppScope.THIS_TIME) }
+        .setNeutralButton(android.R.string.cancel) { _, _ -> answer(AppScope.CANCELLED) }
+        .setOnCancelListener { answer(AppScope.CANCELLED) }
+        .create()
 
 internal class AppChoiceDialog(
     private val activity: Activity,
@@ -30,17 +50,15 @@ internal class AppChoiceDialog(
 
                 fun askScope(app: LaunchableAppResolver.Candidate) {
                     val scope =
-                        AlertDialog
-                            .Builder(activity)
-                            .setTitle(activity.getString(R.string.app_chooser_scope_title, app.label))
-                            .setMessage(R.string.app_chooser_scope_message)
-                            .setPositiveButton(R.string.app_chooser_always) { _, _ ->
-                                finish(AppChoice.Selected(app, remember = true))
-                            }.setNegativeButton(R.string.app_chooser_this_time) { _, _ ->
-                                finish(AppChoice.Selected(app))
-                            }.setNeutralButton(android.R.string.cancel) { _, _ -> finish(AppChoice.Cancelled) }
-                            .setOnCancelListener { finish(AppChoice.Cancelled) }
-                            .create()
+                        appScopeDialog(activity, app.label) { answer ->
+                            finish(
+                                when (answer) {
+                                    AppScope.ALWAYS -> AppChoice.Selected(app, remember = true)
+                                    AppScope.THIS_TIME -> AppChoice.Selected(app)
+                                    AppScope.CANCELLED -> AppChoice.Cancelled
+                                },
+                            )
+                        }
                     shown = scope
                     if (continuation.isActive) {
                         scope.show()
@@ -113,9 +131,10 @@ object RememberedAppsSettings {
     fun show(activity: Activity): AlertDialog {
         val memory = RememberedApps(activity)
         val entries = memory.entries().toList()
+        val roles = AppRoles.ALL.associateBy { RememberedApps.roleKey(it.key) }
         val labels =
             entries
-                .map { (_, pkg) ->
+                .map { (key, pkg) ->
                     val label =
                         try {
                             val info = activity.packageManager.getApplicationInfo(pkg, 0)
@@ -123,7 +142,8 @@ object RememberedAppsSettings {
                         } catch (_: PackageManager.NameNotFoundException) {
                             pkg
                         }
-                    activity.getString(R.string.app_chooser_row, label, pkg)
+                    val row = activity.getString(R.string.app_chooser_row, label, pkg)
+                    roles[key]?.let { activity.getString(R.string.remembered_apps_role_row, it.noun, row) } ?: row
                 }.toTypedArray()
         val builder =
             AlertDialog

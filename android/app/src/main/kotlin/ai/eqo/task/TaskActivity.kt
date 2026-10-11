@@ -909,13 +909,23 @@ class TaskActivity : Activity() {
         val result =
             withContext(Dispatchers.IO) {
                 val labels = appResolver.installedLabels()
+                val installed = appResolver.installedApps()
+                val memory = RememberedApps(this@TaskActivity)
                 val session =
                     ai.eqo.core.agent
-                        .IntentPlanningSession(planner.understanding(labels), planner)
+                        .IntentPlanningSession(
+                            planner.understanding(labels) { role -> memory.labelForRole(role, installed) },
+                            planner,
+                        )
                 session.prepare(request) { intent ->
                     withContext(Dispatchers.Main) {
                         if (generation == preparationGeneration && !isFinishing && !isDestroyed) {
-                            intentChoices.ask(intent)
+                            // A role question ("Which browser?") also offers Always / This time after the pick.
+                            if (intent.role != null) {
+                                intentChoices.askRole(intent, installed, memory)
+                            } else {
+                                intentChoices.ask(intent)
+                            }
                         } else {
                             null
                         }

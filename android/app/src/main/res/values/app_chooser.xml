@@ -14,6 +14,7 @@
     <string name="app_chooser_row">%1$s\n%2$s</string>
     <string name="remembered_apps_title">Apps EQO remembers</string>
     <string name="remembered_apps_empty">No app choices saved. Tap an entry to forget its choice.</string>
+    <string name="remembered_apps_role_row">Default %1$s: %2$s</string>
     <string name="remembered_apps_delete">Forget this app choice</string>
     <dimen name="app_chooser_icon">40dp</dimen>
 </resources>

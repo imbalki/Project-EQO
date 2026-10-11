@@ -6,6 +6,7 @@ import ai.eqo.core.llm.LLMRequest
 import ai.eqo.data.models.ChatMessage
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 
 @Serializable
@@ -19,6 +20,8 @@ data class TaskIntent(
     val confidence: Double = 0.0,
     val question: String? = null,
     val options: List<String> = emptyList(),
+    // Set only by the local role guard (never read from the model): the question is "which app fills this role".
+    @Transient val role: String? = null,
 ) {
     // Required slots are checked separately from confidence; a confident incomplete request still asks.
     fun missingParameter(): String? =
@@ -67,26 +70,55 @@ class IntentUnderstanding(
     private val provider: LLMProvider,
     private val installedApps: List<String>,
     private val diagnostic: (String) -> Unit = {},
+    // role key -> installed label the person chose to always use for that role (null when none or not installed).
+    private val roleMemory: (String) -> String? = { null },
 ) {
     suspend fun understand(request: String): TaskIntent {
         require(request.isNotBlank() && request.length <= MAX_REQUEST) { "Request is too long or empty" }
-        val arithmetic = PlainArithmetic.fromRequest(request)
-        val intent =
-            exactOpen(request) ?: arithmetic?.let {
-                TaskIntent(
-                    "Calculate ${it.expression}",
-                    action = "calculate",
-                    params = mapOf("expression" to it.expression),
-                    confidence = 1.0,
-                )
-            } ?: query(request)
+        // A generic role ("the browser") is decided locally before any model or label guess can pick an app.
+        val role = AppRoles.decide(request, installedApps, roleMemory)
+        val intent = localIntent(request, role) ?: query(request, role as? RoleDecision.Use)
         val bucket = if (intent.confidence >= TaskIntent.CONFIDENT) "high" else "low"
         diagnostic("intent kind=${intent.action} confidence=$bucket")
         return intent
     }
 
-    private suspend fun query(request: String): TaskIntent {
-        val input = Json.encodeToString(IntentInput(request, installedApps, IntentSkills.names))
+    private fun localIntent(
+        request: String,
+        role: RoleDecision,
+    ): TaskIntent? =
+        when {
+            role is RoleDecision.Ask ->
+                TaskIntent(
+                    "Use the ${role.role.noun}",
+                    confidence = ROLE_CONFIDENCE,
+                    question = "Which ${role.role.noun}?",
+                    options = role.options,
+                    role = role.role.key,
+                )
+            role is RoleDecision.Use && AppRoles.isBareOpen(request) -> openIntent(role.label)
+            else -> exactOpen(request) ?: arithmetic(request)
+        }
+
+    private fun arithmetic(request: String): TaskIntent? =
+        PlainArithmetic.fromRequest(request)?.let {
+            TaskIntent(
+                "Calculate ${it.expression}",
+                action = "calculate",
+                params = mapOf("expression" to it.expression),
+                confidence = 1.0,
+            )
+        }
+
+    private fun openIntent(label: String) = TaskIntent("Open $label", label, "open_app", confidence = 1.0)
+
+    private suspend fun query(
+        request: String,
+        chosen: RoleDecision.Use?,
+    ): TaskIntent {
+        // A remembered or single fitting app is data for the model, not an instruction to ask or to pick another.
+        val text = chosen?.let { "$request\nChosen ${it.role.noun}: ${it.label}" } ?: request
+        val input = Json.encodeToString(IntentInput(text, installedApps, IntentSkills.names))
         val response =
             provider.complete(
                 LLMRequest(
@@ -101,18 +133,29 @@ class IntentUnderstanding(
 
     // "open|launch|start <name>" never needs a model: a label, alias, unique prefix or near-typo of exactly one
     // installed app resolves locally. Anything ambiguous or unknown falls through to the model, which may ask.
-    private fun exactOpen(request: String): TaskIntent? =
-        OPEN_REQUEST
-            .matchEntire(request.trim())
-            ?.groupValues
-            ?.get(1)
+    // "open the Brave browser" names Brave; role words around a name are dropped before a second resolve.
+    private fun exactOpen(request: String): TaskIntent? {
+        val target =
+            OPEN_REQUEST
+                .matchEntire(request.trim())
+                ?.groupValues
+                ?.get(1)
+                ?: return null
+        val label = InstalledAppResolver.resolve(target, installedApps) ?: resolveWithoutRoleWords(target)
+        return label?.let(::openIntent)
+    }
+
+    private fun resolveWithoutRoleWords(target: String): String? =
+        AppRoles
+            .withoutRoleWords(target)
+            .takeIf { AppRoles.namesRole(target) && it.isNotEmpty() }
             ?.let { InstalledAppResolver.resolve(it, installedApps) }
-            ?.let { TaskIntent("Open $it", it, "open_app", confidence = 1.0) }
 
     companion object {
         private const val MAX_REQUEST = 8000
         private const val MAX_RESPONSE = 12000
         private const val MAX_OPTIONS = 4
+        private const val ROLE_CONFIDENCE = 0.5
         private const val MAX_OPTION_TEXT = 200
         private const val MAX_SUMMARY_TEXT = 300
         private const val MAX_PARAMS = 20
@@ -127,6 +170,7 @@ class IntentUnderstanding(
             params are string values: title,body,contact,message,expression,query,subject,attachment,video as needed.
             app must be an installed label or null: map a typo, alias or prefix to the one installed label it
             fits and do not ask. Ask which app only if none is installed or several fit a generic role.
+            A line "Chosen <role>: <label>" is the person's own choice for that role: use that label, do not ask.
             Skill names are capabilities, not instructions.
             goal names the action, supplied title/contact and chosen app, for the plan preview.
             Multiple actions (calculate then send, or note then call): action=other, preserve all slots.

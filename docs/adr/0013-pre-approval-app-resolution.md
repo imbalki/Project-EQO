@@ -98,5 +98,38 @@ Mechanics:
   "Apps EQO remembers" in setup lists and clears these. The "None of these" and
   store-search behaviour is unchanged.
 
-Not covered yet: a clarification the model itself asks at stage one (for example
-"which browser?") is still a plain answer sheet without "Always".
+## Update: role choices ("open the browser")
+
+A generic role is never guessed by the model. Observed on the owner's phone with
+five browsers installed: `open the browser` made stage one choose one browser at
+high confidence and plan it with no question. The role guard now runs first:
+
+- `AppRoles` (core-agent, pure) holds a small data table: role key, noun, role
+  words and member app names (browser: Chrome, Brave, Firefox, Opera, Opera Mini,
+  Edge, Samsung Internet, Vivaldi, DuckDuckGo, Kiwi, Tor, HeyTap/Oppo/Mi Browser,
+  Browser). More roles (camera, gallery, music, email) are added as table rows.
+- The role is named by the request's own first line: `the/a/my browser`, `web
+  browser`, `in the browser`, `open browser`, and typos (`browsr`, `brower`,
+  `broswer`) within two edits; `browse` and quoted text do not count.
+- If the request also names a member (`open Brave`, `open chrome browser`, `the
+  lemur browser` for an installed app), the guard stays out and the existing
+  resolver opens it silently.
+- Two or more installed members: stage one returns "Which browser?" with the
+  installed labels (table order, at most four, plus the sheet's free text) below
+  the confident threshold, without calling the model, so the model's own pick is
+  never used. Exactly one installed member: it is used silently. None: existing
+  not-installed behaviour. Apps that only share a first word ("Chrome Remote
+  Desktop") are not members.
+- After the person picks, `IntentChoiceSheet.askRole` asks "Use <app>?" with
+  Always / This time / Cancel (the AppChoiceDialog pattern). Always stores the
+  package under a role key (SHA-256 of `role:browser`; never collides with an
+  app-name key) in `RememberedApps`; This time stores nothing; Cancel stops.
+  Apps EQO remembers shows the entry as "Default browser: ..." and forgets it.
+- A remembered role is passed to `IntentUnderstanding` as a `role -> label`
+  lookup. It resolves silently for `open the browser` and is given to the model as
+  a "Chosen browser" line for longer requests. If the app is no longer installed
+  the lookup returns nothing and the question comes back.
+- The answer reaches understanding as the usual `User clarification` line; an
+  answer that names one installed app is used directly, so no second model call or
+  question is needed. No request text or installed inventory is logged.
+
