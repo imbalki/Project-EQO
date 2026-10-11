@@ -27,6 +27,18 @@ class RegistryPlannerTest {
             assertEquals("SEND_WHATSAPP", named.single().action.name)
         }
 
+    @Test fun wordsInsideAQuotedMessageDoNotMakeItADraftRequest() {
+        val planner = TaskPlanner(Fake(listOf("{}")), setOf("SEND_SMS"))
+        assertFalse(planner.isDraftRequest("Send this text to big friend 'Testing EQO , type Testing 123 Test EQO'"))
+        assertFalse(planner.isDraftRequest("send hi to Example and write it clearly"))
+        assertFalse(planner.isDraftRequest("message Example \"please type the report\""))
+        assertTrue(planner.isDraftRequest("type hi on WhatsApp"))
+        assertTrue(planner.isDraftRequest("write hi to Example, don't send"))
+        assertTrue(planner.isDraftRequest("draft hi"))
+        assertTrue(planner.isDraftRequest("only type it, do not send"))
+        assertFalse(planner.isDraftRequest("I don't mind, just send it to Example"))
+    }
+
     @Test fun draftRequestsCannotGainSendingSteps() =
         runTest {
             val send = """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"hi"}}]}"""
