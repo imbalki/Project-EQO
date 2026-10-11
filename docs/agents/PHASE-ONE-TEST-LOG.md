@@ -81,6 +81,34 @@ Phone checklist (all unchecked):
 - [ ] Uninstall the selected app after approval; Run fails with a plain reason, no redirect.
 - [ ] A single weak match still asks; duplicate launcher activities appear only once.
 
+## Voice first use — t_3a0b1c25 — NOT TESTED ON PHONE
+
+- Local-only `feat/voice-first-use`; no push/PR/gh, install, real microphone, provider
+  request or real credential access. The lead's checkpoint `bff67a4` was preserved.
+- New fake first-use suite covers initial mic wiring before permission, choose later
+  and unchanged typing, restored AI/phone choices, missing AI model, audio-input-only
+  recommendation, missing/unavailable key, existing key-screen route, phone without key,
+  empty catalog, stale background result on close and explicit voice-settings change.
+- Final app-only gate PASS, exit 0, BUILD SUCCESSFUL in 34m 15s (349 tasks):
+  `./gradlew :app:ktlintCheck :app:detekt :app:testDebugUnitTest :app:lintDebug
+  --continue --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process
+  '-Dorg.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=1024m -XX:ActiveProcessorCount=2
+  -Dfile.encoding=UTF-8' --console=plain` from android/ with the task's JDK 21/Android SDK.
+  App XML: 353 tests, zero failures/errors/skips; VoiceFirstUseTest 11/11 and unchanged
+  StudyLoopWiringTest 11/11. App lint XML: zero issues. Repo/provenance passes 498/498;
+  changed Kotlin lines <=120 and whitespace pass. No all-module or release gate claimed.
+- Earlier checkpoint-era gates failed syntax/static checks; first resumed gate passed
+  ktlint but stopped at two detekt long lines, corrected before this final frozen-source run.
+- Phone checklist (all unchecked):
+  - [ ] Fresh install/cleared voice choice: first Mic shows How should EQO listen?
+  - [ ] AI list contains Audio models only, recommended preselection and provider consent.
+  - [ ] Choose later/back leaves typing enabled; next Mic asks again, without permission.
+  - [ ] Missing key shows Save your OpenRouter key first and opens the existing key screen.
+  - [ ] Phone works without a saved key; RECORD_AUDIO is asked only at first recording.
+  - [ ] Confirm AI with saved key, record and review editable transcript without submitting.
+  - [ ] Restart: remembered AI/phone choice skips the sheet; voice settings can change it.
+  - [ ] Slow/offline catalog, rotation/pause, long lists and small screens remain usable.
+
 ## Runtime screenshot resolver and picker — t_62291cf6 — NOT TESTED ON PHONE
 
 - Local-only branch `fix/find-screenshots`, worktree `w-findshots`; no push/PR/gh,

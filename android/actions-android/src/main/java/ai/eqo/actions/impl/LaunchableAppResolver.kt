@@ -63,7 +63,11 @@ class LaunchableAppResolver(
         val name = appName.trim()
         if (name.isEmpty()) return null
         if (name.equals("settings", true)) return Intent(Settings.ACTION_SETTINGS)
-        return clearWinner(candidates(name))?.packageName?.let(launch)
+        val winner = clearWinner(candidates(name)) ?: return null
+        // A name that claims the publisher ("Google Keep") must never open another publisher's look-alike
+        // without a person choosing it; only a known alias package may satisfy it here.
+        if (winner.score < AppNameMatcher.ALIAS_SCORE && name.startsWith("google ", true)) return null
+        return launch(winner.packageName)
     }
 
     private companion object {

@@ -447,6 +447,13 @@ line-by-line semantic equivalence of the adapters (that is TASK-004's verify-mov
 
 (Count: 202 Kotlin files — 100% coverage of `git ls-files android/` *.kt.)
 
+## Voice first-use additions (t_3a0b1c25)
+
+| Module | Local file | Kind | Namespace | Origin |
+|---|---|---|---|---|
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceFirstUse.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, voice first-use choice t_3a0b1c25) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceFirstUseTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, fake first-use voice tests t_3a0b1c25) |
+
 ## TASK-007 additions (issue #12): forked privileged helper
 
 Kind **FORK** = source forked from the privileged-helper upstreams (Shizuku server /

@@ -18,6 +18,9 @@ internal class VoiceSettings(
     context: Context,
 ) {
     private val prefs = context.getSharedPreferences("eqo_voice_settings", Context.MODE_PRIVATE)
+    val hasChoice: Boolean
+        get() = prefs.contains("ai_engine") && (engine == VoiceEngine.PHONE || !audioModel.isNullOrBlank())
+
     var engine: VoiceEngine
         get() = if (prefs.getBoolean("ai_engine", true)) VoiceEngine.OPENROUTER else VoiceEngine.PHONE
         set(value) {
@@ -45,17 +48,7 @@ internal class VoiceSettings(
             val settings = VoiceSettings(activity)
             val models = VoiceModelPicker(activity, settings).apply { bind() }
             activity.findViewById<Button>(R.id.voice_engine_setting).setOnClickListener {
-                AlertDialog
-                    .Builder(activity)
-                    .setTitle(R.string.voice_engine_title)
-                    .setSingleChoiceItems(
-                        activity.resources.getStringArray(R.array.voice_engines),
-                        settings.engine.ordinal,
-                    ) { dialog, which ->
-                        settings.engine = VoiceEngine.entries[which]
-                        dialog.dismiss()
-                    }.setNegativeButton(android.R.string.cancel, null)
-                    .show()
+                models.chooseEngine()
             }
             val languages = linkedSetOf(Locale.getDefault().toLanguageTag(), "en-IN", "hi-IN")
             val details =

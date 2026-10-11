@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="voice_button">Mic</string>
+    <string name="voice_first_use_title">How should EQO listen?</string>
+    <string name="voice_first_use_ai">AI model (recommended)</string>
+    <string name="voice_first_use_phone">Phone voice (less accurate)</string>
+    <string name="voice_first_use_key_missing">Save your OpenRouter key first</string>
+    <string name="voice_first_use_key_unavailable">Cannot read your saved OpenRouter key. Check Setup &gt; Model key.</string>
+    <string name="voice_choose_later">Choose later</string>
     <string name="voice_button_description">Speak your request</string>
     <string name="voice_ready">Type your request or tap Mic to speak.</string>
     <string name="voice_permission_title">Allow microphone for voice input?</string>
@@ -34,10 +40,7 @@
         Your draft is unchanged.
     </string>
     <string name="voice_engine_title">Voice engine</string>
-    <string-array name="voice_engines">
-        <item>AI (default) via OpenRouter</item>
-        <item>Phone</item>
-    </string-array>
+
     <string name="voice_language_title">Voice language</string>
     <string name="voice_language_default">Device default</string>
     <string name="voice_ai_disclosure">
