@@ -13,11 +13,15 @@ class TaskPlanner(
     private val enabledActions: Set<String>? = null,
     private val diagnostic: (String) -> Unit = {},
 ) {
-    fun understanding(installedApps: List<String>): IntentUnderstanding =
+    fun understanding(
+        installedApps: List<String>,
+        roleMemory: (String) -> String? = { null },
+    ): IntentUnderstanding =
         IntentUnderstanding(
             provider,
             installedApps,
             diagnostic,
+            roleMemory,
         )
 
     /** Stage two. Production callers must resolve clarification through IntentPlanningSession first. */

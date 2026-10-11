@@ -21,6 +21,22 @@ internal class RememberedApps(
         preferences.edit { putString(key(name), packageName) }
     }
 
+    /** The app the person chose to always use for a generic role such as "browser"; stored by package only. */
+    fun packageForRole(role: String): String? = preferences.getString(roleKey(role), null)
+
+    /** The remembered role app's label, or null when none is remembered or it is no longer installed. */
+    fun labelForRole(
+        role: String,
+        apps: List<Pair<String, String>>,
+    ): String? = packageForRole(role)?.let { pkg -> apps.firstOrNull { it.first == pkg }?.second }
+
+    fun rememberRole(
+        role: String,
+        packageName: String,
+    ) {
+        preferences.edit { putString(roleKey(role), packageName) }
+    }
+
     fun entries(): Map<String, String> =
         preferences.all
             .mapNotNull { (key, value) ->
@@ -31,9 +47,16 @@ internal class RememberedApps(
         preferences.edit { remove(key) }
     }
 
-    private fun key(name: String): String =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest(AppNameMatcher.normalize(name).toByteArray(Charsets.UTF_8))
-            .joinToString("") { "%02x".format(it) }
+    private fun key(name: String): String = hash(AppNameMatcher.normalize(name))
+
+    companion object {
+        // "role:" survives no app-name normalization, so a role key never collides with an app-name key.
+        fun roleKey(role: String): String = hash("role:$role")
+
+        private fun hash(text: String): String =
+            MessageDigest
+                .getInstance("SHA-256")
+                .digest(text.toByteArray(Charsets.UTF_8))
+                .joinToString("") { "%02x".format(it) }
+    }
 }

@@ -119,7 +119,8 @@ class AppNameResolutionTest {
                 )
             val asked = Json.encodeToString(asks)
             val both = listOf("WhatsApp", "WhatsApp Business", "Chrome", "Firefox")
-            listOf("open the browser", "open whatsap", "open Instagram", "open").forEach { request ->
+            // "open the browser" never reaches the model: the role guard asks locally (see AppRolesTest).
+            listOf("open whatsap", "open Instagram", "open").forEach { request ->
                 val fake = IntentFixtureProvider(listOf(asked))
                 val intent = IntentUnderstanding(fake, both).understand(request)
                 assertEquals(request, 1, fake.requests.size)

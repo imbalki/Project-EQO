@@ -760,3 +760,6 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :app | `android/app/src/test/kotlin/ai/eqo/onboarding/ModelKeyRestoreTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, key row persistence tests) |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/GatedLaunchTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, launch-refusal regression) |
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/NoteActions.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, share-to-note save action) |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AppRoles.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, app-ask policy: generic role table and guard) |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/AppRolesTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, app-ask policy: role question, memory and named-app cases) |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/RoleChoiceTest.kt` | EQO-NEW | `ai.eqo.task` | imbalki/project-eqo (EQO-authored, role question scope step and role memory tests) |
