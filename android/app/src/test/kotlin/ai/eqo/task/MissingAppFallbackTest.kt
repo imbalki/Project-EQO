@@ -86,6 +86,23 @@ class MissingAppFallbackTest {
             )
         }
 
+    @Test fun googleKeepOpensKeepNotesOnlyWhenTheRealKeepPackageIsInstalled() {
+        val real = listOf("com.google.android.keep" to "Keep notes", "example.other" to "Other Notes")
+        val withKeep =
+            LaunchableAppResolver(
+                { pkg -> if (pkg in real.map { it.first }) Intent().setPackage(pkg) else null },
+                { real },
+            )
+        assertEquals("com.google.android.keep", withKeep.resolve("Google Keep")?.`package`)
+        val fake = listOf("example.notes" to "Keep Notes")
+        val withoutKeep =
+            LaunchableAppResolver(
+                { pkg -> if (pkg in fake.map { it.first }) Intent().setPackage(pkg) else null },
+                { fake },
+            )
+        assertNull(withoutKeep.resolve("Google Keep"))
+    }
+
     @Test fun resolverHandlesLabelsPackagesAliasesBlankAmbiguityAndNonLaunchableApps() {
         val apps = listOf("example.notes" to "Keep Notes", "example.other" to "Other Notes")
         val resolver =
