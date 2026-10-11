@@ -98,8 +98,18 @@ class AndroidActionRegistryTest {
     }
 
     @Test
+    fun `save note refuses an empty note and a missing notes app with a fixed reason`() =
+        runTest {
+            val empty = registry.execute("CREATE_NOTE", mapOf("body" to " "))
+            assertFalse(empty.success)
+            val missing = registry.execute("CREATE_NOTE", mapOf("body" to "buy milk", "appName" to "Keep"))
+            assertFalse(missing.success)
+            assertTrue(missing.error.orEmpty().contains("notes app", ignoreCase = true))
+        }
+
+    @Test
     fun `enabled action names exist in the single schema and executor classes are internal`() {
-        assertEquals(99, registry.enabledActionNames.size)
+        assertEquals(100, registry.enabledActionNames.size)
         registry.enabledActionNames.forEach { assertNotNull(ActionSchema.getAction(it)) }
         // Public surface never exposes Action objects, constructors or family lists.
         assertFalse(AndroidActionRegistry::class.java.methods.any { it.returnType == Action::class.java })

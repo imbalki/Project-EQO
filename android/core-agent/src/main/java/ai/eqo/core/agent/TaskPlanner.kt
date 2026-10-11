@@ -281,6 +281,9 @@ object TaskPlanPreview {
         val p = step.action.params
         val recipient = TaskDisplayText.escape(p["to"].orEmpty().ifBlank { "a recipient you fill in" })
         return when (step.action.name) {
+            "CREATE_NOTE" ->
+                "save a note in ${quote(p["appName"].orEmpty().ifBlank { "Keep" })}: " +
+                    (p["title"]?.let { "title ${quote(it)}, " }.orEmpty()) + "text ${quote(p["body"].orEmpty())}"
             "CALCULATE" -> {
                 val expression = p["expression"].orEmpty()
                 val answer = PlainArithmetic.evaluate(expression)

@@ -413,6 +413,7 @@ class AndroidActionRegistry internal constructor(
                     SystemActions(launcher, permissions, automation, options.screenAnalyzer, files.screenshots)
                         .getActions(),
                     CalendarActions(launcher, permissions, automation).getActions(),
+                    NoteActions(launcher).getActions(),
                     ProductivityMemoryActions(
                         automation,
                         options.productivityStore,

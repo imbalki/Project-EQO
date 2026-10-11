@@ -54,6 +54,7 @@ class IntentParaphraseTest(
                 "CLICK_TEXT",
                 "TYPE_TEXT",
                 "PRESS_BACK",
+                "CREATE_NOTE",
                 "CALCULATE",
                 "SEND_SMS",
                 "SEND_WHATSAPP",
@@ -76,7 +77,7 @@ class IntentParaphraseTest(
                         send = "no",
                         confidence = 0.95,
                     )
-                NOTES.forEach { add(arrayOf(it, note, "OPEN_APP")) }
+                NOTES.forEach { add(arrayOf(it, note, "CREATE_NOTE")) }
                 val calculate =
                     TaskIntent(
                         "Calculate 238 times 8",
