@@ -54,7 +54,7 @@ class IntentPlanningTest {
             assertEquals("create_note", result.intent.action)
             assertFalse(result.bestGuess)
             assertEquals(
-                "PRESS_BACK",
+                "CREATE_NOTE",
                 result.steps
                     .last()
                     .action.name,
@@ -237,13 +237,10 @@ class IntentPlanningTest {
 
     @Test fun knownSkillsPreserveTitleOnlyMessageDraftCallAndCalculationSlots() {
         val steps = IntentSkills.plan(note, enabled)!!
-        assertEquals(
-            listOf("id:editable_title"),
-            steps
-                .filter { it.action.name == "TYPE_TEXT" }
-                .map { it.action.params["searchText"] },
-        )
-        assertEquals("PRESS_BACK", steps.last().action.name)
+        // A title-only note is saved through one share-to-note step; the title becomes the text, nothing is invented.
+        assertEquals(listOf("CREATE_NOTE"), steps.map { it.action.name })
+        assertEquals("Test", steps.single().action.params["body"])
+        assertEquals(null, steps.single().action.params["title"])
         val draft =
             note.copy(
                 action = "send_message",

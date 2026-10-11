@@ -32,22 +32,25 @@ object IntentSkills {
             else -> emptyList()
         }
 
-    private fun keep(intent: TaskIntent): List<ExecutedAction> =
-        if (intent.app?.lowercase() in setOf("keep", "google keep", "keep notes", "google keep notes")) {
-            buildList {
-                addAll(open(requireNotNull(intent.app)))
-                add(action("CLICK_TEXT", "text" to "Create a note"))
-                add(action("CLICK_TEXT", "text" to "id:new_note_button"))
-                for ((slot, target) in mapOf("title" to "id:editable_title", "body" to "id:edit_note_text")) {
-                    intent.params[slot]?.takeIf { it.isNotBlank() }?.let {
-                        add(action("TYPE_TEXT", "searchText" to target, "content" to it))
-                    }
-                }
-                add(action("PRESS_BACK"))
-            }
-        } else {
-            emptyList()
+    private fun keep(intent: TaskIntent): List<ExecutedAction> {
+        if (intent.app?.lowercase() !in setOf("keep", "google keep", "keep notes", "google keep notes")) {
+            return emptyList()
         }
+        // Keep ignores text set inside its editor; its share screen saves reliably (see NoteActions).
+        val title = intent.params["title"].orEmpty().trim()
+        val body =
+            intent.params["body"]
+                .orEmpty()
+                .trim()
+                .ifBlank { title }
+        val params =
+            buildMap {
+                put("appName", requireNotNull(intent.app))
+                put("body", body)
+                if (title.isNotBlank() && title != body) put("title", title)
+            }
+        return listOf(ExecutedAction("CREATE_NOTE", params, irreversible = true))
+    }
 
     private fun message(intent: TaskIntent): List<ExecutedAction> {
         val p = intent.params

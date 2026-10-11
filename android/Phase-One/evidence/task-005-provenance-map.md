@@ -759,3 +759,4 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/AppNameResolutionTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, app-ask policy: typo, alias, ambiguity and role cases) |
 | :app | `android/app/src/test/kotlin/ai/eqo/onboarding/ModelKeyRestoreTest.kt` | EQO-NEW | `ai.eqo.onboarding` | imbalki/project-eqo (EQO-authored, key row persistence tests) |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/GatedLaunchTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, launch-refusal regression) |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/NoteActions.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, share-to-note save action) |
