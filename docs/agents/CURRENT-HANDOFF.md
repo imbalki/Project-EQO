@@ -1,5 +1,36 @@
 # Current handoff (any agent can take over from this page)
 
+## Voice first use (`t_3a0b1c25`, local-only `feat/voice-first-use`) — NOT TESTED ON PHONE
+
+- First mic tap opens a bottom-aligned compact choice dialog before permission or recording.
+  AI offers only audio-input models from the existing public catalog, each labeled Audio;
+  the existing recommended default is preselected without writing preferences. The existing
+  provider-audio disclosure is visible before confirmation. Phone voice remains explicit.
+- Choose later/back leaves the engine/model/consent unset, preserves typing and asks again
+  on the next mic tap. Confirming AI saves model, consent and engine; Phone saves its engine.
+  Stored choices skip first-use; an AI engine without a model asks again. Voice settings
+  reuse the chooser to change engine/model. No new permission or runtime dependency.
+- AI requires the existing lowercase OpenRouter credential. Missing key explains and links
+  to ModelKeySetupActivity; unreadable storage is distinguished from an absent key. Phone
+  and Choose later do not depend on the catalog/key result. RECORD_AUDIO remains deferred
+  until the user chooses and starts recording, using the existing rationale/permission path.
+- Fake catalog/key regressions cover first-tap wiring, no early permission, choose later,
+  restored choices, absent model, audio-input-only recommendations, missing/unavailable key,
+  key-screen routing, phone fallback, empty catalog, delayed-close result and settings change.
+  New production/test Kotlin files are recorded in the provenance map.
+- Verification PASS: :app:ktlintCheck :app:detekt :app:testDebugUnitTest :app:lintDebug,
+  exit 0, BUILD SUCCESSFUL in 34m 15s (349 tasks). App XML: 353 tests, zero failures,
+  errors or skips; VoiceFirstUseTest 11/11, unchanged StudyLoopWiringTest 11/11. App lint
+  XML has zero issues. Repo gate passes 498 Kotlin files/provenance rows; whitespace and
+  changed Kotlin lines <=120 pass. Earlier failed attempts are not passing evidence.
+- Exact command from android/: `./gradlew :app:ktlintCheck :app:detekt
+  :app:testDebugUnitTest :app:lintDebug --continue --no-daemon --max-workers=2
+  -Pkotlin.compiler.execution.strategy=in-process
+  '-Dorg.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=1024m -XX:ActiveProcessorCount=2
+  -Dfile.encoding=UTF-8' --console=plain`. Only app source changed; not all-module CI.
+- Preserved the lead's unverified checkpoint `bff67a4`; final changes are a separate local
+  commit. No push, PR, gh, APK install, live provider/key request or phone verification.
+
 ## Voice v3.1 (`t_1598bf81`, local-only `fix/voice-key`) — NOT TESTED ON PHONE
 
 - Verified case-sensitive credential mismatch: voice checked `apiKeys["OpenRouter"]`, but Setup,

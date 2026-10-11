@@ -24,7 +24,8 @@ internal class VoiceModelPicker(
     private var generation = 0
     private var dialog: AlertDialog? = null
     private var warning: AlertDialog? = null
-    private val firstUse = VoiceFirstUse(activity, settings, { repository.load().models }, loadInBackground = loadInBackground)
+    private val firstUse =
+        VoiceFirstUse(activity, settings, { repository.load().models }, loadInBackground = loadInBackground)
 
     fun chooseEngine() {
         if (active) firstUse.show { label(activity.findViewById(R.id.voice_model_setting)) }
@@ -100,7 +101,8 @@ internal class VoiceModelPicker(
                     dialog.dismiss()
                 } else {
                     (dialog as AlertDialog).listView.setItemChecked(which, false)
-                    dialog.listView.setItemChecked(models.indexOfFirst { it.id == settings.audioModel }, true)
+                    val prior = settings.audioModel ?: recommended
+                    dialog.listView.setItemChecked(models.indexOfFirst { it.id == prior }, true)
                     warning?.dismiss()
                     warning =
                         AlertDialog

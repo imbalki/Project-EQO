@@ -131,7 +131,7 @@ class VoiceModelPickerTest {
         assertTrue(rows[1].contains("Audio"))
         assertTrue(rows.drop(2).all { it.contains("Text only") })
         dialog.listView.performItemClick(dialog.listView.getChildAt(3), 3, 3)
-        assertEquals("google/gemini-2.5-flash", settings.audioModel)
+        assertNull(settings.audioModel)
         val warning = ShadowAlertDialog.getLatestAlertDialog()
         assertEquals(activity.getString(R.string.voice_ai_unsupported), shadowOf(warning).message)
         warning.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
