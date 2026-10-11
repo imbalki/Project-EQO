@@ -668,3 +668,15 @@ NOT TESTED ON PHONE. Local-only branch `feat/one-step-pairing`; lead/owner owns 
 - Repo checks: `bash scripts/check.sh`, exit **0**, real output `kt files: 425; provenance rows: 425`, `BRANDING GATE PASSED`, `OK`. `git diff --check` exits 0. The source guard now permits only the activity and its isolated notification service to construct the pinned runner; it also rejects helper hooks or activation completion in the notification service.
 - Verification caveats: the initial build retried a failing Kotlin daemon; using in-process compilation avoided it without changing project configuration. The first full gate hit a timeout in the untouched `AutomationExecutorsTest` macro delete/list case in `actions-android`; one full-gate retry passed all 95 tests in that module without edits. Phone tests and Android device instrumentation were **not run**. Notification permission/channel denial, real mDNS visibility and OEM Settings behavior still need lead/owner confirmation.
 - Required phone checks: Android 11 and 13+ local mDNS announcements, reply with leading-zero code while the pairing dialog remains open, success followed by human helper authorization, wrong/expired code, revocation/key mismatch, notification permission denied/channel blocked, wireless debugging off, ten-second discovery timeout with manual ports, service lost/new dialog, Wi-Fi disconnected/switched, screen rotation and five-minute discovery expiry. No real codes, ports or device identifiers belong in this log.
+
+## Round 4 on main 1162aa5 (2026-10-11, 12:45 build, Realme RM10, Android 11)
+
+Capture: `EqoRun EqoActions EqoExplain EqoVoice`. Results are the owner's account plus the log lines noted.
+
+| Time | Test | Result | Evidence / cause | Fix |
+|---|---|---|---|---|
+| ~12:50 | 1. Save the OpenRouter key | PASS: key saved on the current install. | n/a | n/a |
+| ~12:51 | 2. `what is 238 times 8` | PASS (owner). | n/a | n/a |
+| ~12:54 | 3. Keep note: `save a note in Keep called test and type that I'm testing` | FAIL again. Log 12:54:36: `ASK_USER result=NeedsInput`, run FAILED. | The planner asked a question instead of planning (question text not logged; owner asked to read the screen line). | Open: capture the question; consider keeping ASK_USER for genuinely missing info only. |
+| ~12:55 | 4. `Send this text to <contact> 'Testing EQO , type Testing 123 Test EQO'` | FAIL: "No supported plan: Draft-only request cannot include Send or submit steps." Log 12:55:30 `planner validation failed ... repair=1`, then `PLAN_REJECTED`. | The draft-only detector matched the word `type` inside the quoted message and rejected the AI's send plan. | PR #29 (fix/draft-detector): quoted text is content, an explicit `send` wins. |
+| ~13:00 | 5. Voice: 20 s with a pause, tap to stop | PASS: recorded 20 s uninterrupted, transcribed correctly (owner). | AI recorder works with the saved key. | n/a |
