@@ -17,13 +17,27 @@ class RegistryPlannerTest {
         runTest {
             val send = """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"hi"}}]}"""
             val fake = Fake(listOf(send))
-            val plan = TaskPlanner(fake, setOf("SEND_WHATSAPP", "SEND_SMS")).plan("message Example hi")
-            assertEquals(1, fake.requests.size)
+            val intent =
+                TaskIntent(
+                    "Message Example",
+                    action = "send_message",
+                    params =
+                        mapOf("contact" to "Example", "message" to "hi"),
+                    channel = "sms",
+                    send = "yes",
+                    confidence = 1.0,
+                )
+            val plan = TaskPlanner(fake, setOf("SEND_WHATSAPP", "SEND_SMS")).plan("message Example hi", intent = intent)
+            assertEquals(0, fake.requests.size)
             assertEquals("SEND_SMS", plan.single().action.name)
             assertEquals("Example", plan.single().action.params["contact"])
             assertEquals("hi", plan.single().action.params["message"])
             val both = setOf("SEND_WHATSAPP", "SEND_SMS")
-            val named = TaskPlanner(Fake(listOf(send)), both).plan("message Example hi on WhatsApp")
+            val named =
+                TaskPlanner(Fake(listOf(send)), both).plan(
+                    "message Example hi on WhatsApp",
+                    intent = intent.copy(channel = "whatsapp"),
+                )
             assertEquals("SEND_WHATSAPP", named.single().action.name)
         }
 
@@ -39,35 +53,54 @@ class RegistryPlannerTest {
                     """{"action":"PRESS_BACK","params":{}}]}"""
             val actions = enabled + setOf("WAIT", "PRESS_BACK", "PRESS_ENTER")
             val request = "open a note, type eqo test and save it as eqo test in Keep"
-            val steps = TaskPlanner(Fake(listOf(plan)), actions).plan(request)
+            // An app without a pinned template keeps the AI's own plan; only Save/Done noise is dropped.
+            val intent =
+                TaskIntent(
+                    "Create note",
+                    app = "Notes",
+                    action = "create_note",
+                    params = mapOf("body" to "eqo test"),
+                    confidence = 1.0,
+                )
+            val steps = TaskPlanner(Fake(listOf(plan)), actions).plan(request, intent = intent)
             val expected = listOf("OPEN_APP", "WAIT", "CLICK_TEXT", "TYPE_TEXT", "PRESS_ENTER", "PRESS_BACK")
             assertEquals(expected, steps.map { it.action.name })
             assertEquals((1..steps.size).map { "task-$it" }, steps.map { it.stepId })
         }
 
-    @Test fun wordsInsideAQuotedMessageDoNotMakeItADraftRequest() {
-        val planner = TaskPlanner(Fake(listOf("{}")), setOf("SEND_SMS"))
-        assertFalse(planner.isDraftRequest("Send this text to big friend 'Testing EQO , type Testing 123 Test EQO'"))
-        assertFalse(planner.isDraftRequest("send hi to Example and write it clearly"))
-        assertFalse(planner.isDraftRequest("message Example \"please type the report\""))
-        assertTrue(planner.isDraftRequest("type hi on WhatsApp"))
-        assertTrue(planner.isDraftRequest("write hi to Example, don't send"))
-        assertTrue(planner.isDraftRequest("draft hi"))
-        assertTrue(planner.isDraftRequest("only type it, do not send"))
-        assertFalse(planner.isDraftRequest("I don't mind, just send it to Example"))
-    }
+    @Test fun noteIntentsRefuseOutwardStepsAndKeepUnusualNonOutwardTaps() =
+        runTest {
+            val intent = TaskIntent("Create note", app = "Notes", action = "create_note", confidence = 1.0)
+            val actions = enabled + setOf("WAIT", "PRESS_BACK")
+            val outward =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Notes"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"Share"}}]}"""
+            try {
+                TaskPlanner(Fake(listOf(outward)), actions).plan("add a note in Notes", intent = intent)
+                error("An outward note step must be rejected")
+            } catch (_: IllegalArgumentException) {
+            }
+            val unusual =
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Notes"}},""" +
+                    """{"action":"CLICK_TEXT","params":{"text":"New list"}}]}"""
+            val kept = TaskPlanner(Fake(listOf(unusual)), actions).plan("add a note in Notes", intent = intent)
+            assertEquals(listOf("OPEN_APP", "CLICK_TEXT"), kept.map { it.action.name })
+        }
 
     @Test fun draftRequestsCannotGainSendingSteps() =
         runTest {
-            val send = """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"hi"}}]}"""
+            val send =
+                """{"steps":[{"action":"SEND_WHATSAPP","params":
+                {"contact":"Example","message":"hi","draftOnly":"true"}}]}"""
+            val intent = TaskIntent("Draft", send = "no", confidence = 1.0)
             for (request in listOf("type hi on WhatsApp", "write hi", "draft hi", "don't send hi", "only type hi")) {
-                val plan = TaskPlanner(Fake(listOf(send)), setOf("SEND_WHATSAPP")).plan(request)
+                val plan = TaskPlanner(Fake(listOf(send)), setOf("SEND_WHATSAPP")).plan(request, intent = intent)
                 assertEquals("true", plan.single().action.params["draftOnly"])
                 assertTrue(TaskPlanPreview.describe(plan).contains("you press Send"))
             }
             val unsafe = """{"steps":[{"action":"CLICK_TEXT","params":{"text":"Send"}}]}"""
             try {
-                TaskPlanner(Fake(listOf(unsafe)), enabled).plan("draft hi, don't send")
+                TaskPlanner(Fake(listOf(unsafe)), enabled).plan("draft hi, don't send", intent = intent)
                 error("Send tap must be rejected")
             } catch (_: IllegalArgumentException) {
             }
@@ -100,34 +133,38 @@ class RegistryPlannerTest {
             }
         }
 
-    @Test fun notesEditingExceptionCannotHideAnOutwardActionOrUnknownTap() =
+    @Test fun structuredNoSendRejectsSubmitTargetsButDoesNotWhitelistNoteNavigation() =
         runTest {
             val note = "add a note called Test in Keep"
+            val intent = TaskIntent("Create note", send = "no", confidence = 1.0)
             for (target in listOf("Send", "Share", "Publish", "Submit", "New note and Send")) {
                 val output = """{"steps":[{"action":"CLICK_TEXT","params":{"text":"$target"}}]}"""
                 try {
-                    TaskPlanner(Fake(listOf(output)), enabled).plan(note)
-                    error("Outward note tap must be rejected: $target")
+                    TaskPlanner(Fake(listOf(output)), enabled).plan(note, intent = intent)
+                    error("Unknown note tap must be rejected: $target")
                 } catch (_: IllegalArgumentException) {
                 }
             }
             val send = """{"steps":[{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"hi"}}]}"""
             try {
-                TaskPlanner(Fake(listOf(send)), setOf("SEND_WHATSAPP")).plan(note)
+                TaskPlanner(Fake(listOf(send)), setOf("SEND_WHATSAPP")).plan(note, intent = intent)
                 error("Notes route must not acquire a communication action")
             } catch (_: IllegalArgumentException) {
             }
         }
 
-    @Test fun communicationDraftsStillRejectEvenNoteCreationTaps() =
+    @Test fun noSendIsNotARequestKeywordOrNoteNavigationWhitelist() =
         runTest {
             val output = """{"steps":[{"action":"CLICK_TEXT","params":{"text":"New note"}}]}"""
             for (request in listOf("write a WhatsApp message about Keep notes", "write a note in Keep, don't send")) {
-                try {
-                    TaskPlanner(Fake(listOf(output)), enabled).plan(request)
-                    error("Explicit communication draft must not allow taps")
-                } catch (_: IllegalArgumentException) {
-                }
+                val intent = TaskIntent("Local navigation", send = "no", confidence = 1.0)
+                assertEquals(
+                    "CLICK_TEXT",
+                    TaskPlanner(Fake(listOf(output)), enabled)
+                        .plan(request, intent = intent)
+                        .single()
+                        .action.name,
+                )
             }
         }
 
@@ -142,6 +179,7 @@ class RegistryPlannerTest {
                     """{"action":"TYPE_TEXT","params":{"searchText":"id:edit_note_text","content":"Example body"}},""" +
                     """{"action":"PRESS_BACK","params":{}}]}"""
             val actions = enabled + setOf("WAIT", "PRESS_BACK")
+            val intent = TaskIntent("Create note", send = "no", confidence = 1.0)
             val fake = Fake(listOf(output))
             val steps = TaskPlanner(fake, actions).plan("write a note called Test in Keep with body Example body")
             assertEquals(7, steps.size)
@@ -162,16 +200,17 @@ class RegistryPlannerTest {
             for (unsafe in outwardTargets) {
                 try {
                     TaskPlanner(Fake(listOf(output.replace("Create a note", unsafe))), actions)
-                        .plan("write a note in Keep")
+                        .plan("write a note in Keep", intent = intent)
                     error("Outward alternative must be rejected")
                 } catch (_: IllegalArgumentException) {
                 }
             }
-            // An unusual non-outward tap is kept (the AI decides); it is not silently removed.
-            val kept =
+            // No keyword-derived note whitelist: local controls remain the AI's plan.
+            val dropped =
                 TaskPlanner(Fake(listOf(output.replace("Create a note", "id:new_list_button"))), actions)
                     .plan("write a note in Keep")
-            assertEquals(steps.size, kept.size)
+            assertEquals(steps.size, dropped.size)
+            assertEquals(dropped.indices.map { "task-${it + 1}" }, dropped.map { it.stepId })
         }
 
     @Test fun titleOnlyKeepRequestsUseTheSameFlowWithoutInventingBody() =
@@ -313,10 +352,10 @@ class RegistryPlannerTest {
             val fake = Fake(listOf(bad, good))
             val steps =
                 TaskPlanner(fake, enabled + setOf("WAIT", "PRESS_BACK", "SEND_WHATSAPP"))
-                    .plan("save a note in Keep called test")
+                    .plan("save a note in Keep called test", intent = TaskIntent("Create note", send = "no"))
             assertEquals(4, steps.size)
             assertEquals(2, fake.requests.size)
-            assertTrue(fake.requests[1].systemPrompt.contains("Note editing cannot include"))
+            assertTrue(fake.requests[1].systemPrompt.contains("Intent send=no"))
         }
 
     @Test fun wrappersAndMinorSyntaxKeepSchema() {

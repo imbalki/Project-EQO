@@ -33,6 +33,8 @@ import kotlinx.coroutines.launch
 internal object TaskRunSession {
     var retry = TaskPlanRetry()
     var requestDraft: String = ""
+    var readAloud: Boolean = false
+    val spokenResultIds = mutableSetOf<String>()
     var pending: ApprovedTaskPlan? = null
     var controller: StudyTaskController? = null
     var status: PlanStatus = PlanStatus.PENDING

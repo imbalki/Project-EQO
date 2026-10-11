@@ -1,5 +1,43 @@
 # Current handoff (any agent can take over from this page)
 
+## Intent understanding v1 — t_661803d1 — local-only / NOT TESTED ON PHONE
+
+- Branch `feat/intent-understanding`, worktree `w-intent`, based on `1162aa5`.
+  Stage one understands action/app/slots/send/channel using the configured provider,
+  installed launcher labels and six skill names; exact installed-app opens bypass it.
+- TaskActivity enters IntentPlanningSession, offers protected choices/free text before
+  planning when confidence <0.7 or slots/intent are ambiguous, maximum two answers.
+  Preview starts with the understood goal and discloses a remaining best guess.
+- Stage two fills schema-validated Keep/calculation/message/call/open/search templates;
+  unknown/unavailable flows retain free registry planning with structured intent/hints.
+  TaskPlanner no longer inspects request keywords for note/draft/channel guards.
+  Send=no/channel validation share one model repair with schema validation.
+- Existing immutable plan approval, auto-mode opt-in, password/own-window refusal,
+  takeover/Pause/Stop and user-only resume paths are not loosened. No new runtime.
+- Owner addendum included: visible successful Result line, voice-origin device TTS,
+  shared bounded decimal arithmetic/word normalization with literal preview answers,
+  and backward payload-only {{step:N:result|message}} substitution at runtime.
+  Immutable approved template/recipient stays fixed; missing outputs refuse dispatch.
+  Literal calculate-then-send message content remains unchanged. See ADR limitations.
+- ADR `docs/adr/0014-two-stage-intent-planning.md`; twelve new Kotlin provenance rows.
+  125 fake-provider paraphrase cases are contract/skill tests, NOT live-model accuracy.
+  Choice-sheet/cancel/repair/privacy/cache regressions and owner phrasing checklist are
+  in PHASE-ONE-TEST-LOG.md. No phone, key or real provider was contacted.
+- Initial candidate `b0a6e08`: scoped core-agent/actions-android/app ktlintCheck and
+  detekt plus app lint passed; core 265/app 350 tests passed. Actions 192 tests had
+  one macro delete/list timeout and three skips. Broad gate FAILED, not all green.
+- Review correction: WhatsApp search uses exact navigation/search IDs, no Enter;
+  restored-chat composers cannot be sole-input fallbacks. Other app search templates
+  fall back to hints. Template protection now shares the single repair path.
+  Production EqoAutomation fake-tree dispatch tests cover restored chat and genuine
+  search; no-send template/fallback repair and provider-failure regressions added.
+  Provider errors do not trigger plan repair. Final frozen-source gate FAILED in
+  17m 41s solely on the same untouched macro timeout (not baseline-reproduced here).
+  PASS ktlintCheck/detekt on core-agent/platform-a11y/actions-android/app and app lint
+  (zero issues). Core 268, platform 125, app 350 tests pass; actions 192 has one
+  failure/three skips. Repo checks and provenance 508/508 pass; no new Kotlin files.
+  NOT TESTED ON PHONE/live provider. Local commit only; independent same-card review.
+
 ## RESUME HERE (written 2026-10-11 ~09:45 IST, before a laptop RAM upgrade)
 
 **Product:** EQO, an Android assistant (OpenDroid base + OpenRouter bring-your-own-key + accessibility automation).

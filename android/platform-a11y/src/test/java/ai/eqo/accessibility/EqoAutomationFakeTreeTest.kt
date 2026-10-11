@@ -87,6 +87,73 @@ class EqoAutomationFakeTreeTest {
         assertEquals(listOf(0, 0, 0), listOf(label, partial, password).map { it.clickCount })
     }
 
+    @Test
+    fun whatsappSearchTemplateStopsOnRestoredChatWithoutChangingComposer() {
+        val composer =
+            FakeNode(text = "Message", viewIdResourceName = "com.whatsapp:id/entry", isEditable = true)
+        val runner = automation(FakeNode(packageName = "com.whatsapp").child(composer))
+        val steps = whatsappSearchSteps()
+        val dispatched = mutableListOf<String>()
+        for (step in steps) {
+            dispatched += step.action.name
+            val result = dispatchSearch(runner, step.action)
+            if (!result.isSuccess) break
+        }
+        assertEquals(listOf("OPEN_APP", "WAIT", "CLICK_TEXT"), dispatched)
+        assertNull(composer.typedValue)
+        // Even if navigation falsely succeeded, strict typing itself must refuse the sole composer.
+        assertFalse(dispatchSearch(runner, steps.last().action).isSuccess)
+        assertNull(composer.typedValue)
+        assertTrue(composer.actions.isEmpty())
+    }
+
+    @Test
+    fun whatsappSearchTemplateTypesOnlyInGenuineSearchWithoutEnter() {
+        val searchButton = FakeNode(viewIdResourceName = "com.whatsapp:id/menuitem_search", isClickable = true)
+        val searchField = FakeNode(viewIdResourceName = "com.whatsapp:id/search_src_text", isEditable = true)
+        val composer = FakeNode(text = "Message", viewIdResourceName = "com.whatsapp:id/entry", isEditable = true)
+        var root = FakeNode(packageName = "com.whatsapp").child(searchButton).child(composer)
+        val runner =
+            EqoAutomation({ root }, { serviceState }, takeover)
+        val steps = whatsappSearchSteps()
+        for (step in steps) {
+            assertTrue(dispatchSearch(runner, step.action).isSuccess)
+            if (step.action.name == "CLICK_TEXT") {
+                root = FakeNode(packageName = "com.whatsapp").child(searchField).child(composer)
+            }
+        }
+        assertEquals(1, searchButton.clickCount)
+        assertEquals("Synthetic query", searchField.typedValue)
+        assertNull(composer.typedValue)
+        assertTrue(composer.actions.isEmpty())
+        assertFalse(steps.any { it.action.name == "PRESS_ENTER" })
+    }
+
+    private fun whatsappSearchSteps(): List<ai.eqo.core.agent.LoopStep> =
+        requireNotNull(
+            ai.eqo.core.agent.IntentSkills.plan(
+                ai.eqo.core.agent.TaskIntent(
+                    "Search WhatsApp",
+                    "WhatsApp",
+                    "search",
+                    mapOf("query" to "Synthetic query"),
+                    send = "no",
+                ),
+                setOf("OPEN_APP", "WAIT", "CLICK_TEXT", "TYPE_TEXT", "PRESS_ENTER"),
+            ),
+        )
+
+    private fun dispatchSearch(
+        runner: EqoAutomation,
+        action: ai.eqo.core.agent.ExecutedAction,
+    ): A11yResult =
+        when (action.name) {
+            "OPEN_APP", "WAIT" -> A11yResult.success("Fake launch/wait")
+            "CLICK_TEXT" -> runner.tap(action.params.getValue("text"))
+            "TYPE_TEXT" -> runner.type(action.params.getValue("searchText"), action.params.getValue("content"))
+            else -> error("Unexpected dispatch, including Enter: ${action.name}")
+        }
+
     /** A small "test app" screen: headline, decoy, target row, text field, list. */
     private fun probeScreen(): Pair<FakeNode, Screen> {
         val root = FakeNode()
