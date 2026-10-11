@@ -137,44 +137,26 @@ class TaskPlanner(
                 RegexOption.IGNORE_CASE,
             ).containsMatchIn(request)
 
-    /** Only known local note navigation is allowed; arbitrary taps/IDs can hide a sending action. */
+    /**
+     * A note plan may use any ordinary step the AI chooses (open an app, wait, tap, type, scroll, go back).
+     * Only steps that communicate or share outward are refused: this is a notes request, not a message.
+     */
     private fun isNoteEditingStep(step: LoopStep): Boolean {
-        val params = step.action.params
-        return when (step.action.name) {
-            "OPEN_APP", "open_app" ->
-                (params["appName"] ?: params["app"]).orEmpty().trim().lowercase() in
-                    setOf("keep", "google keep", "keep notes", "notes", "google keep notes", "com.google.android.keep")
-            "CLICK_TEXT", "tap_text" ->
-                safeNoteTap(params["text"].orEmpty())
-            "WAIT", "TYPE_TEXT", "type_text", "paste", "observe", "PRESS_BACK", "press_back" -> true
-            else -> false
-        }
+        val name = step.action.name.uppercase()
+        val tapsOutward =
+            name in setOf("CLICK_TEXT", "TAP_TEXT") &&
+                OUTWARD_WORDS.containsMatchIn(step.action.params["text"].orEmpty())
+        return name !in OUTWARD_ACTIONS && !tapsOutward
     }
 
-    /** A tap that is not note navigation but also names nothing outward (no send, share, post, call...). */
+    /** Pure save-noise taps are dropped: the notes app saves by itself, so tapping Save or Done only fails. */
     private fun isHarmlessExtraNoteTap(step: LoopStep): Boolean {
-        val text = step.action.params["text"].orEmpty()
-        return step.action.name in setOf("CLICK_TEXT", "tap_text") &&
-            !safeNoteTap(text) &&
-            !OUTWARD_WORDS.containsMatchIn(text)
-    }
-
-    private fun safeNoteTap(text: String): Boolean {
-        val alternatives = text.split(',').map { it.trim().lowercase() }
-        val allowed =
-            setOf(
-                "new note",
-                "create note",
-                "create a note",
-                "id:new_note_button",
-                "take a note",
-                "take a note…",
-                "new text note",
-                "title",
-                "note",
-                "body",
-            )
-        return alternatives.isNotEmpty() && alternatives.all { it in allowed }
+        val text =
+            step.action.params["text"]
+                .orEmpty()
+                .trim()
+                .lowercase()
+        return step.action.name in setOf("CLICK_TEXT", "tap_text") && text in SAVE_NOISE_TAPS
     }
 
     private suspend fun repair(
@@ -197,6 +179,22 @@ class TaskPlanner(
     }
 
     companion object {
+        private val SAVE_NOISE_TAPS = setOf("save", "done", "ok", "okay", "finish", "confirm", "close")
+        private val OUTWARD_ACTIONS =
+            setOf(
+                "SEND_WHATSAPP",
+                "SEND_WHATSAPP_GROUP",
+                "SEND_SMS",
+                "SEND_EMAIL",
+                "SEND_TELEGRAM",
+                "COMPOSE_SMS",
+                "COMPOSE_EMAIL",
+                "MAKE_CALL",
+                "MAKE_VIDEO_CALL",
+                "WHATSAPP_CALL",
+                "SHARE_CONTACT",
+                "SHARE_LOCATION",
+            )
         private val QUOTED_TEXT = Regex("\"[^\"]*\"|“[^”]*”|(?<![A-Za-z])'[^']*'(?![A-Za-z])")
         private val NO_SEND =
             Regex(
