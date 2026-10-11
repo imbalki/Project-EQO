@@ -9,8 +9,24 @@ import androidx.core.net.toUri
 
 /** Local preflight is separate from the explicitly requested planner call. Never takes an approved plan. */
 internal class MissingAppFallback(
+    private val installedPackage: ((String) -> Boolean)? = null,
     private val installed: (String) -> Boolean,
 ) {
+    constructor(
+        resolver: ai.eqo.actions.impl.LaunchableAppResolver,
+        rejected: Set<String> = emptySet(),
+    ) : this(
+        { pkg -> resolver.resolvePackage(pkg) != null },
+        { name ->
+            name !in rejected &&
+                if (name.equals("Chrome", true)) {
+                    resolver.resolvePackage("com.android.chrome") != null
+                } else {
+                    resolver.resolve(name) != null
+                }
+        },
+    )
+
     sealed interface Result {
         data class Ready(
             val steps: List<LoopStep>,
@@ -24,10 +40,17 @@ internal class MissingAppFallback(
 
     fun missing(steps: List<LoopStep>): List<String> =
         steps
-            .mapNotNull(AppPlanResolution::appName)
-            .map { it.trim() }
-            .distinctBy { it.lowercase() }
-            .filterNot(installed)
+            .mapNotNull { step ->
+                val name = AppPlanResolution.appName(step)?.trim()
+                val pkg = step.action.params["packageName"]
+                val present =
+                    if (pkg != null && installedPackage != null) {
+                        installedPackage.invoke(pkg)
+                    } else {
+                        name != null && installed(name)
+                    }
+                name?.takeUnless { present }
+            }.distinctBy { it.lowercase() }
 
     // Bounded preflight exits are intentionally explicit; none execute a task.
     @Suppress("ReturnCount")
@@ -87,15 +110,21 @@ internal class PlanFallbackDialog(
                         .setText(ai.eqo.R.string.task_rejected)
                 }
         missing.firstOrNull()?.let { app ->
-            val label = "Install ${ai.eqo.core.agent.TaskDisplayText.escape(app)} from Play Store"
+            val label =
+                activity.getString(
+                    ai.eqo.R.string.app_chooser_install,
+                    ai.eqo.core.agent.TaskDisplayText
+                        .escape(app),
+                )
             builder.setNeutralButton(label) { _, _ ->
                 val opened = StoreSearchOpener { activity.startActivity(it) }.search(app)
-                activity.findViewById<android.widget.TextView>(ai.eqo.R.id.task_state).text =
+                activity.findViewById<android.widget.TextView>(ai.eqo.R.id.task_state).setText(
                     if (opened) {
-                        "Play Store search opened. The task did not run."
+                        ai.eqo.R.string.app_chooser_store_opened
                     } else {
-                        "Could not open Play Store search. Nothing ran."
-                    }
+                        ai.eqo.R.string.app_chooser_store_failed
+                    },
+                )
             }
         }
         return builder.show()

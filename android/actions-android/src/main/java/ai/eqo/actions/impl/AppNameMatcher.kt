@@ -11,10 +11,7 @@ object AppNameMatcher {
     const val ALIAS_SCORE = 120
 
     fun normalize(name: String): String =
-        name
-            .lowercase(Locale.ROOT)
-            .replace(Regex("[^\\p{L}\\p{N}]+"), " ")
-            .trim()
+        clean(name)
             .removePrefix("google ")
             .removeSuffix(" app")
             .removeSuffix(" notes")
@@ -26,9 +23,11 @@ object AppNameMatcher {
         pkg: String,
     ): Int {
         val query = normalize(name)
-        val targets = listOf(normalize(label), normalize(pkg), normalize(pkg.substringAfterLast('.')))
+        val targets = listOf(normalize(label), clean(label), normalize(pkg))
         return if (query.isBlank()) 0 else targets.maxOf { compare(query, it) }
     }
+
+    private fun clean(name: String): String = name.lowercase(Locale.ROOT).replace(Regex("[^\\p{L}\\p{N}]+"), " ").trim()
 
     private fun compare(
         query: String,

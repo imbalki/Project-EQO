@@ -36,7 +36,11 @@ class LaunchableAppResolver(
         return installedApps()
             .map { (pkg, label) ->
                 val score =
-                    if (pkg == alias) AppNameMatcher.ALIAS_SCORE else AppNameMatcher.score(appName, label, pkg)
+                    if (pkg == alias || pkg.equals(appName.trim(), true)) {
+                        AppNameMatcher.ALIAS_SCORE
+                    } else {
+                        AppNameMatcher.score(appName, label, pkg)
+                    }
                 Candidate(pkg, label, score)
             }.filter { it.score > 0 }
             .sortedWith(compareByDescending<Candidate> { it.score }.thenBy { it.label }.thenBy { it.packageName })

@@ -21,6 +21,10 @@ substitute a browser for an installed app that a short choice could identify.
   existing explicit planning request. Choices and memory are not sent to the model.
 - ADR 0013 records scoring, privacy limitations and approval pin validation.
 - Host gates and phone checklist are recorded in PHASE-ONE-TEST-LOG.md below.
+  PASS all three modules' ktlintCheck/detekt, app lintDebug, core-agent's 121 tests
+  and app's 357 tests (including 15 app-resolution regressions). Actions' 190 tests
+  retain one previously documented untouched macro timeout and three Windows
+  symlink skips: FULL SUITE IS NOT GREEN. Exact gates/failure are in the test log.
   No push/PR/gh, installation, real model call, key access or phone verification.
 
 ## Voice v3.1 (`t_1598bf81`, local-only `fix/voice-key`) — NOT TESTED ON PHONE

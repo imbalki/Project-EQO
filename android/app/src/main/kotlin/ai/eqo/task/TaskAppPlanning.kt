@@ -1,9 +1,9 @@
 // Origin: EQO shared pre-approval app resolution and existing missing-app fallback integration.
 package ai.eqo.task
 
+import ai.eqo.accessibility.UntrustedScreenText
 import ai.eqo.actions.impl.LaunchableAppResolver
 import ai.eqo.core.agent.LoopStep
-import ai.eqo.core.agent.UntrustedScreenText
 import android.app.Activity
 import org.json.JSONArray
 import org.json.JSONObject
@@ -29,17 +29,7 @@ internal class TaskAppPlanning(
         replan: suspend (String) -> List<LoopStep>,
     ): MissingAppFallback.Result {
         val prepared = resolve(first)
-        val packages = prepared.steps.mapNotNull { it.action.params["packageName"] }.toSet()
-        val selectedLabels =
-            resolver
-                .installedApps()
-                .filter { it.first in packages }
-                .map { it.second }
-                .toSet()
-        val fallback =
-            MissingAppFallback { name ->
-                name !in prepared.rejected && (name in selectedLabels || resolver.resolve(name) != null)
-            }
+        val fallback = MissingAppFallback(resolver, prepared.rejected)
         return fallback.prepare(request, prepared.steps) { constrained -> resolve(replan(constrained)).steps }
     }
 

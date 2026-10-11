@@ -29,6 +29,7 @@ internal class AppPlanResolution(
     suspend fun prepare(steps: List<LoopStep>): Prepared {
         val rejected = mutableSetOf<String>()
         val resolved = mutableMapOf<String, LaunchableAppResolver.Candidate>()
+        val pendingMemory = mutableMapOf<String, String>()
         val output = mutableListOf<LoopStep>()
         for (step in steps) {
             val name = appName(step)
@@ -55,12 +56,13 @@ internal class AppPlanResolution(
                     output += step
                 }
                 is AppChoice.Selected -> {
-                    if (direct == null) memory.remember(query, choice.app.packageName)
+                    if (direct == null) pendingMemory[query] = choice.app.packageName
                     resolved[query] = choice.app
                     output += pin(step, choice.app)
                 }
             }
         }
+        pendingMemory.forEach(memory::remember)
         return Prepared(output, rejected)
     }
 

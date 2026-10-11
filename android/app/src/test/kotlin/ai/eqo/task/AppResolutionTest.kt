@@ -4,6 +4,7 @@ package ai.eqo.task
 import ai.eqo.actions.impl.AppNameMatcher
 import ai.eqo.actions.impl.LaunchableAppResolver
 import ai.eqo.core.agent.ApprovedTaskPlan
+import ai.eqo.core.agent.ExecuteResult
 import ai.eqo.core.agent.ExecutedAction
 import ai.eqo.core.agent.LoopStep
 import ai.eqo.core.agent.TaskPlanPreview
@@ -178,7 +179,7 @@ class AppResolutionTest {
                     AppChoice.None
                 }.prepare(listOf(step("my calculator")))
             assertTrue(offered)
-            val fallback = MissingAppFallback { it !in result.rejected && matcher.resolve(it) != null }
+            val fallback = MissingAppFallback(matcher, result.rejected)
             val ready =
                 fallback.prepare("open calculator", result.steps) {
                     listOf(LoopStep("2", ExecutedAction("OPEN_URL", mapOf("url" to "https://example.org"))))
@@ -210,9 +211,10 @@ class AppResolutionTest {
     @Test fun realDialogShowsBoundedIconRowsAndCancelReturnsWithoutChoice() =
         runBlocking {
             val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-            val choice = async(start = CoroutineStart.UNDISPATCHED) {
-                AppChoiceDialog(activity).choose(resolver().candidates("Google"))
-            }
+            val choice =
+                async(start = CoroutineStart.UNDISPATCHED) {
+                    AppChoiceDialog(activity).choose(resolver().candidates("Google"))
+                }
             shadowOf(Looper.getMainLooper()).idle()
             val dialog = ShadowAlertDialog.getLatestAlertDialog()
             assertEquals("Which app did you mean?", shadowOf(dialog).title.toString())
@@ -222,6 +224,150 @@ class AppResolutionTest {
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
             shadowOf(Looper.getMainLooper()).idle()
             assertEquals(AppChoice.Cancelled, choice.await())
+            activity.finish()
+        }
+
+    @Test fun settingsDeletesOnlySelectedEntry() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val memory = RememberedApps(activity)
+        memory.remember("Google", "com.google.android.keep")
+        memory.remember("mail", "com.google.android.gm")
+        val entries = memory.entries().toList()
+        val dialog = RememberedAppsSettings.show(activity)
+        dialog.listView.performItemClick(null, 0, 0)
+        shadowOf(Looper.getMainLooper()).idle()
+        val confirmation = ShadowAlertDialog.getLatestAlertDialog()
+        confirmation.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(mapOf(entries[1]), RememberedApps(activity).entries())
+        activity.finish()
+    }
+
+    @Test fun sharedPlannerInventoryAndFallbackUseTheSameLauncherResolution() =
+        runBlocking {
+            val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+            val matcher = resolver()
+            val planning = TaskAppPlanning(activity, matcher)
+            assertTrue(planning.plannerInventory().contains("Keep notes"))
+            assertTrue(planning.plannerInventory().contains("com.google.android.keep"))
+            val ready =
+                planning.prepare("open Google Keep", listOf(step("Google Keep"))) {
+                    error("Installed fuzzy match must not silently replan in Chrome")
+                } as MissingAppFallback.Result.Ready
+            assertEquals(
+                "Keep notes",
+                ready.steps
+                    .single()
+                    .action.params["appName"],
+            )
+            assertTrue(MissingAppFallback(matcher).missing(ready.steps).isEmpty())
+            val fallback =
+                planning.prepare("open unicorn", listOf(step("unicorn"))) {
+                    listOf(LoopStep("2", ExecutedAction("OPEN_URL", mapOf("url" to "https://example.org"))))
+                } as MissingAppFallback.Result.Ready
+            assertEquals(listOf("unicorn"), fallback.missing)
+            activity.finish()
+        }
+
+    @Test fun duplicateLabelsDoNotOverrideTheExplicitPackageChoiceInFallback() =
+        runBlocking {
+            val apps = listOf("example.one" to "Notebook", "example.two" to "Notebook")
+            val matcher = resolver(apps)
+            val prepared =
+                AppPlanResolution(matcher, RememberedApps(context)) { candidates ->
+                    AppChoice.Selected(candidates.last())
+                }.prepare(listOf(step("Notebook")))
+            assertEquals(
+                "example.two",
+                prepared.steps
+                    .single()
+                    .action.params["packageName"],
+            )
+            assertTrue(MissingAppFallback(matcher).missing(prepared.steps).isEmpty())
+            assertEquals(listOf("Notebook"), MissingAppFallback(resolver(emptyList())).missing(prepared.steps))
+            assertEquals(listOf("Notebook"), MissingAppFallback(resolver(apps.take(1))).missing(prepared.steps))
+        }
+
+    @Test fun cancellingALaterChooserDiscardsAllNewMemory() =
+        runBlocking {
+            val memory = RememberedApps(context)
+            var choices = 0
+            val result =
+                AppPlanResolution(resolver(), memory) { candidates ->
+                    choices++
+                    if (choices == 1) AppChoice.Selected(candidates.first()) else AppChoice.Cancelled
+                }.prepare(listOf(step("Google"), step("my calculator")))
+            assertEquals(2, choices)
+            assertTrue(result.cancelled)
+            assertTrue(memory.entries().isEmpty())
+        }
+
+    @Test fun legacyExecutionUsesApprovedPackageAndReportsDisappearanceWithoutRedirect() =
+        runBlocking {
+            var opened: String? = null
+            val port =
+                object : StudyAutomationPort {
+                    override fun observe() = ""
+
+                    override fun tap(text: String) = false
+
+                    override fun tapById(viewId: String) = false
+
+                    override fun typeText(text: String) = false
+
+                    override fun scroll(direction: String) = false
+
+                    override fun back() = false
+
+                    override fun home() = false
+
+                    override fun composeSmsDraft(
+                        recipient: String,
+                        body: String,
+                    ) = false
+
+                    override fun openApp(app: String): Boolean {
+                        opened = app
+                        return false
+                    }
+                }
+            val prepared =
+                AppPlanResolution(resolver(), RememberedApps(context)) { error("Clear winner") }
+                    .prepare(listOf(step("Google Keep", legacy = true)))
+            val plan = ApprovedTaskPlan(prepared.steps)
+            val failure = StudyActionExecutor(port, plan).execute(plan.steps().single()) as ExecuteResult.Failure
+            assertEquals("com.google.android.keep", opened)
+            assertEquals("The approved app is no longer installed or cannot be opened.", failure.reason)
+            assertFalse(failure.transient)
+        }
+
+    @Test fun chromeFallbackRequiresChromePackageNotAnUnrelatedMatchingLabel() =
+        runBlocking {
+            val matcher = resolver(listOf("example.browser" to "Chrome"))
+            val result =
+                MissingAppFallback(matcher).prepare("open unicorn", listOf(step("unicorn"))) {
+                    error("Cannot pin a browser plan to an absent Chrome package")
+                }
+            assertTrue(result is MissingAppFallback.Result.Stopped)
+        }
+
+    @Test fun realDialogNoneAndSelectionReturnDistinctAnswers() =
+        runBlocking {
+            val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+            val apps = resolver().candidates("Google")
+            val none = async(start = CoroutineStart.UNDISPATCHED) { AppChoiceDialog(activity).choose(apps) }
+            shadowOf(Looper.getMainLooper()).idle()
+            val dialog = ShadowAlertDialog.getLatestAlertDialog()
+            assertTrue(dialog.findViewById<android.view.View>(android.R.id.content).filterTouchesWhenObscured)
+            assertTrue(dialog.getButton(AlertDialog.BUTTON_NEUTRAL).filterTouchesWhenObscured)
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(AppChoice.None, none.await())
+            val selected = async(start = CoroutineStart.UNDISPATCHED) { AppChoiceDialog(activity).choose(apps) }
+            shadowOf(Looper.getMainLooper()).idle()
+            ShadowAlertDialog.getLatestAlertDialog().listView.performItemClick(null, 0, 0)
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(AppChoice.Selected(apps.first()), selected.await())
             activity.finish()
         }
 }

@@ -35,7 +35,12 @@ internal class AppChoiceDialog(
                             if (continuation.isActive) continuation.resume(AppChoice.Cancelled)
                         }.create()
                 continuation.invokeOnCancellation { activity.runOnUiThread { dialog.dismiss() } }
-                if (continuation.isActive) dialog.show()
+                if (continuation.isActive) {
+                    dialog.show()
+                    dialog.getButton(AlertDialog.BUTTON_NEUTRAL).filterTouchesWhenObscured = true
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).filterTouchesWhenObscured = true
+                    protectConfirmationTouches(dialog.findViewById(android.R.id.content))
+                }
             }
         }
 

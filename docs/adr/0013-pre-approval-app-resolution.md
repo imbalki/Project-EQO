@@ -22,10 +22,14 @@ reason and the existing store/browser alternatives, not an invented success.
   trailing ` app` and ` notes`. AliasResolver packages rank first (120), then
   exact (100), prefix (90), word contains (80), edit distance <=2 (70), token
   overlap (40). Distance matching requires at least three query characters.
+  An explicitly named installed package is authoritative (120); suffix cleanup
+  must not turn an exact package into an ambiguous prefix of another package.
 - Auto-select only score >=70 with a runner-up gap >=15. Otherwise show at most
   five ranked launcher apps, with live icon, name and package disambiguation, on
   the task screen. None of these invokes the existing Chrome replan and approval
   dialog with its explicit Play Store search. Cancel/back cancels preparation.
+  Chooser content rejects obscured touches. New choices are persisted only after
+  all app choices finish, so cancelling a later chooser discards earlier choices.
 - Resolution occurs before approval and before an approved execution snapshot is
   created. Both `open_app` and `OPEN_APP` preserve the installed label in preview
   and carry a local-only `packageName` pin. Model parsing still rejects that extra
@@ -45,6 +49,7 @@ reason and the existing store/browser alternatives, not an invented success.
 Weak and ambiguous matches require a person; no extra model call is needed for
 matching. Installed labels/packages are included in the existing opt-in planning
 request as untrusted data; this is not a new background inventory upload. The
-existing absent-app fallback still requires Chrome and a new approval. New UI and
+existing absent-app fallback still requires Chrome and a new approval. The fallback
+checks the actual Chrome package, not merely a similar app label. New UI and
 Android 11 package visibility/icon behavior require phone verification. Memory
 cannot display the original phrase because it deliberately was not retained.

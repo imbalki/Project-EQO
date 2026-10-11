@@ -835,12 +835,13 @@ class TaskActivity : Activity() {
         retry: Boolean = false,
     ) {
         val generation = preparationGeneration
-        val appPreparation = try {
-            TaskAppPlanning(this).resolve(steps)
-        } catch (_: AppChoiceCancelled) {
-            findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
-            return
-        }
+        val appPreparation =
+            try {
+                TaskAppPlanning(this).resolve(steps)
+            } catch (_: AppChoiceCancelled) {
+                findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
+                return
+            }
         if (appPreparation.rejected.isNotEmpty()) {
             findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_unresolved)
             return

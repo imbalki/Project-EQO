@@ -2,9 +2,36 @@
 
 ## App resolution v2 — t_5f379e1b — NOT TESTED ON PHONE
 
-Host verification is in progress; only final frozen-source gates count as PASS.
+Final frozen-source host checks completed; FULL SUITE IS NOT GREEN (historical macro timeout).
 Local branch feat/app-chooser; commit locally only. No installation, device,
 live model/provider, personal data or credentials accessed.
+
+- PASS `:actions-android:ktlintCheck`, `:actions-android:detekt`,
+  `:core-agent:ktlintCheck`, `:core-agent:detekt`, `:app:ktlintCheck`,
+  `:app:detekt`, `:app:lintDebug` and `scripts/check.sh` (502 Kotlin files/provenance rows).
+- PASS `:core-agent:testDebugUnitTest`: 121 tests, zero failures/errors/skips.
+- PASS `:app:testDebugUnitTest`: 357 tests, zero failures/errors/skips, including
+  AppResolutionTest 15/15, MissingAppFallbackTest 9/9 and StudyLoopWiringTest 11/11.
+- FAIL `:actions-android:testDebugUnitTest`: 190 tests, one failure, zero errors,
+  three Windows symlink skips. The only failure is the previously documented,
+  untouched AutomationExecutorsTest `delete and list macros keep system macros
+  and sort names`: 10-second UncompletedCoroutinesError. Macro source/tests are
+  unchanged from the checkpoint's parent; no clean-parent baseline run was performed.
+- Final invocation: `./gradlew :actions-android:ktlintCheck :actions-android:detekt
+  :actions-android:testDebugUnitTest :core-agent:ktlintCheck :core-agent:detekt
+  :core-agent:testDebugUnitTest :app:ktlintCheck :app:detekt :app:lintDebug
+  :app:testDebugUnitTest --continue --no-daemon --max-workers=2
+  -Pkotlin.compiler.execution.strategy=in-process
+  '-Dorg.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=1024m -XX:ActiveProcessorCount=2 -Dfile.encoding=UTF-8'
+  --console=plain`; BUILD FAILED in 20m 41s, 386 tasks (26 executed).
+- Earlier checks caught and corrected formatting, an invalid untrusted-data import,
+  and exact-package suffix normalization ambiguity. Final source was unchanged
+  during this last gate invocation. Logs are retained under ignored
+  `android/app/build/reports/appchooser/`; no raw logs are committed.
+- Read-only audit fixes: selected-package fallback handles duplicate labels,
+  chooser cancellation discards all new mappings, chooser content rejects obscured
+  touches, and Chrome fallback requires the actual Chrome package. Exact installed
+  package identifiers remain authoritative; no approved app is fuzzily redirected.
 
 Phone checklist (all unchecked):
 - [ ] Realme Android 11: "Google Keep" and "Keep" resolve to Keep notes before approval.
@@ -16,6 +43,7 @@ Phone checklist (all unchecked):
 - [ ] None of these offers the existing Chrome plan and Play Store search.
 - [ ] An unrelated missing app follows the existing fallback unchanged.
 - [ ] Cancel, Back and closing the task screen run nothing and persist no choice.
+- [ ] With two ambiguous apps, select the first then cancel the second; neither choice is remembered.
 - [ ] Uninstall the selected app after approval; Run fails with a plain reason, no redirect.
 - [ ] A single weak match still asks; duplicate launcher activities appear only once.
 
