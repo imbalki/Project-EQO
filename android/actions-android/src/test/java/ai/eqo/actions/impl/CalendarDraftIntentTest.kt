@@ -77,7 +77,7 @@ class CalendarDraftIntentTest {
             assertEquals(CalendarContract.Events.CONTENT_URI, intent.data)
             assertEquals("Puja", intent.getStringExtra(CalendarContract.Events.TITLE))
             assertEquals(utcMidnight(2026, 10, 19), intent.begin())
-            assertEquals(utcMidnight(2026, 10, 20), intent.end())
+            assertEquals(utcMidnight(2026, 10, 19), intent.end()) // editor treats an all-day end as inclusive
             assertTrue(intent.getBooleanExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false))
             assertTrue(intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
         }

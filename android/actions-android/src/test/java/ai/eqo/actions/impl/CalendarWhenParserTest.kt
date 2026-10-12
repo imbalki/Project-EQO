@@ -46,7 +46,7 @@ class CalendarWhenParserTest {
     ) {
         assertTrue(value.allDay)
         assertEquals(utcMidnight(expected.year, expected.monthValue, expected.dayOfMonth), value.startMillis)
-        assertEquals(value.startMillis + DAY_MS, value.endMillis)
+        assertEquals(value.startMillis, value.endMillis)
     }
 
     @Test

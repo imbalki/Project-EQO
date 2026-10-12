@@ -156,7 +156,9 @@ internal object CalendarWhenParser {
 
     private fun allDay(day: LocalDate): CalendarWhen {
         val begin = day.toEpochDay() * MILLIS_PER_DAY
-        val end = begin + MILLIS_PER_DAY
+        // The Calendar editor treats the end of an all-day hand-off as the last day shown (inclusive), so a one-day
+        // event ends on the same midnight; begin + 1 day made it span two days on the phone.
+        val end = begin
         return CalendarWhen(begin, end, allDay = true, label = "${dateLabel(day)}, all day")
     }
 
