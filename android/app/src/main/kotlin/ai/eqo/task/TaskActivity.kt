@@ -65,6 +65,9 @@ class TaskActivity : Activity() {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var controller: StudyTaskController? = null
     private var voiceInput: TaskVoiceInput? = null
+
+    // The latest plan/choice/permission dialog; a voice transcript must not plan underneath an open one.
+    private var taskDialog: AlertDialog? = null
     private val attachmentSelection by lazy {
         TaskAttachmentSelection(this) { prepareTaskDialog(it, fileChoices = true) }
     }
@@ -145,7 +148,7 @@ class TaskActivity : Activity() {
             }
         }
         configureRetry()
-        voiceInput = TaskVoiceInput(this)
+        voiceInput = TaskVoiceInput(this, onTranscribed = { planFromVoice() })
         registerDebugPlanReceiver()
         val startButton = findViewById<Button>(R.id.task_start_button)
 
@@ -264,6 +267,7 @@ class TaskActivity : Activity() {
         dialog: AlertDialog,
         fileChoices: Boolean = false,
     ) {
+        taskDialog = dialog
         protectConfirmationDialog(dialog)
         val window = dialog.window ?: return
         val callback = window.callback
@@ -807,6 +811,26 @@ class TaskActivity : Activity() {
             findViewById<TextView>(R.id.task_state).setText(R.string.task_planning)
             scope.launch { makePlan(request) }
         }
+    }
+
+    /**
+     * A final voice transcript starts planning exactly like a Plan tap and stops at the same plan approval.
+     * It never mints a resume confirmation (only the Plan tap and the Resume dialog may), so a latched takeover
+     * or a run that is active, paused or being prepared, or an open dialog, leaves the words in the box for the user's own Plan tap.
+     * Returns true only when planning actually started.
+     */
+    internal fun planFromVoice(): Boolean {
+        val ready =
+            !isFinishing &&
+                !isDestroyed &&
+                !planning &&
+                taskDialog?.isShowing != true &&
+                findViewById<Button>(R.id.task_start_button).isEnabled &&
+                TaskRunSession.controller == null &&
+                TaskRunSession.pending == null &&
+                !TakeoverDetector.shared.isPaused
+        if (ready) planRequest()
+        return ready && planning
     }
 
     internal fun showStoppedAppPlan(result: MissingAppFallback.Result.Stopped) {

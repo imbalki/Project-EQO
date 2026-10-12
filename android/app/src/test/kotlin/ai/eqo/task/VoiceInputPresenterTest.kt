@@ -1,4 +1,4 @@
-// Origin: EQO-authored draft-only voice presenter regressions.
+// Origin: EQO-authored voice presenter regressions: draft filling and the final-transcript hand-off.
 package ai.eqo.task
 
 import org.junit.Assert.assertEquals
@@ -128,5 +128,51 @@ class VoiceInputPresenterTest {
         assertEquals(true, cancelled)
         assertEquals(VoiceInputState.READY, states.last())
         assertEquals(emptyList<String>(), drafts)
+    }
+
+    @Test
+    fun finalTranscriptIsReportedOnceAfterTheDraftIsFilled() {
+        val heard = mutableListOf<String>()
+        val order = mutableListOf<String>()
+        val voice =
+            VoiceInputPresenter(
+                { order += "state:$it" },
+                { order += "draft:$it" },
+                {},
+                {},
+                onTranscribed = {
+                    order += "heard:$it"
+                    heard += it
+                },
+            )
+        voice.tap(true)
+        voice.result("  Open notes  ")
+        voice.result("late duplicate")
+        assertEquals(listOf("Open notes"), heard)
+        assertEquals(
+            listOf("state:LISTENING", "draft:Open notes", "state:REVIEW", "heard:Open notes"),
+            order,
+        )
+    }
+
+    @Test
+    fun partialsEmptyErrorsAndCancelNeverReportATranscript() {
+        val heard = mutableListOf<String>()
+        val voice = VoiceInputPresenter({}, {}, {}, {}, onTranscribed = heard::add)
+        voice.tap(true)
+        voice.partial("half a sentence")
+        voice.result(null)
+        assertEquals("a partial kept after a timeout stays in the draft for review", emptyList<String>(), heard)
+        listOf(null, "", "  ").forEach {
+            voice.tap(true)
+            voice.result(it)
+        }
+        voice.tap(true)
+        voice.error(VoiceInputState.ERROR)
+        voice.result("after the error")
+        voice.tap(true)
+        voice.cancel()
+        voice.result("after cancel")
+        assertEquals(emptyList<String>(), heard)
     }
 }

@@ -68,6 +68,7 @@
         Review or edit your words. Tap Mic again to add more, or the normal task button when ready.
         Nothing has been submitted.
     </string>
+    <string name="voice_heard_planning">Heard you — making a plan.</string>
     <string name="voice_not_caught">Did not catch more. Words are kept; tap Mic to try again.</string>
     <string name="voice_not_allowed">Microphone not allowed. You can keep typing.</string>
     <string name="voice_unavailable">Voice input is not available on this phone. You can keep typing.</string>
