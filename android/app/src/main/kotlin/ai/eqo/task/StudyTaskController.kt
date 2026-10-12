@@ -194,7 +194,7 @@ class StudyTaskController(
         // remain balanced. The service still attributes EQO gestures, not user fingers.
         takeoverDetector.onAgentActionStarted()
         return try {
-            toReceipt(loop.run()).also { RunDiagnostics.outcome(RunStatusMapping.terminal(it)) }
+            toReceipt(loop.run())
         } finally {
             takeoverDetector.onAgentActionFinished()
         }

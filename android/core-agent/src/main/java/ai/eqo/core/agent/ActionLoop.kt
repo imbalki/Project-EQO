@@ -515,7 +515,7 @@ private val ExecuteResult.diagnosticCode: String
     get() =
         when (this) {
             is ExecuteResult.Success -> "executor_success"
-            is ExecuteResult.Failure -> if (handoff) "needs_user_action" else "execution_failed"
+            is ExecuteResult.Failure -> "execution_failed"
             is ExecuteResult.Interrupted -> "apply_interrupted_effect_unknown"
         }
 

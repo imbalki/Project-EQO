@@ -12,9 +12,6 @@ import ai.eqo.study.StepProgressState
 
 /** Presentation only: never changes executor success, retries, gates or takeover. */
 internal object RunStatusMapping {
-    private val takeoverReasons =
-        setOf("a11y_takeover", "You took control. Resume the task explicitly before continuing.")
-
     data class Text(
         val resource: Int,
         val argument: String = "",
@@ -29,7 +26,9 @@ internal object RunStatusMapping {
             progress.state == StepProgressState.DONE &&
                 progress.name.lowercase() in setOf("compose_sms", "compose_email")
         val missingControl = progress.state == StepProgressState.FAILED && progress.detail == "control_not_found"
-        val fileNeedsYou = HandoffSentences.isFileNeedsYou(progress.detail)
+        val fileNeedsYou =
+            AttachmentFailure.kind(progress.detail) in
+                setOf("attachment_cancelled", "attachment_selection_required")
         val needsYou =
             draft ||
                 missingControl ||
@@ -64,7 +63,7 @@ internal object RunStatusMapping {
         val step = original.copy(detail = original.detail.removePrefix("permission denied: "))
         return when {
             AttachmentFailure.message(step.detail) != null ->
-                Text(R.string.run_user_action, requireNotNull(AttachmentFailure.message(step.detail)))
+                Text(R.string.run_attachment_status, requireNotNull(AttachmentFailure.message(step.detail)))
             step.state == StepProgressState.NEEDS_YOU -> handoff(step)
             step.detail == FailureClass.A11Y_LOST.repair ||
                 step.detail in
@@ -75,7 +74,6 @@ internal object RunStatusMapping {
                 )
             -> Text(R.string.run_accessibility_off)
             step.detail == FailureClass.BINDER_DEAD.repair -> Text(R.string.task_helper_lost)
-            step.detail in takeoverReasons -> Text(R.string.run_took_control)
             RunDiagnostics.failureKind(
                 ai.eqo.core.agent.ExecuteResult
                     .Failure(step.detail),
@@ -136,10 +134,7 @@ internal object RunStatusMapping {
         if (step.detail == "control_not_found") {
             Text(R.string.run_control_not_found)
         } else if (!step.detail.contains("draft opened", ignoreCase = true)) {
-            HandoffSentences
-                .instruction(step.name, step.detail)
-                ?.let { Text(it.resource, it.args.firstOrNull().orEmpty()) }
-                ?: Text(R.string.run_user_action, TaskDisplayText.escape(step.detail))
+            Text(R.string.run_user_action, TaskDisplayText.escape(step.detail))
         } else {
             when (step.name.lowercase()) {
                 "compose_sms", "send_sms" -> Text(R.string.run_sms_draft)

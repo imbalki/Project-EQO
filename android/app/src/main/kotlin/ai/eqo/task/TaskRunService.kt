@@ -12,7 +12,6 @@ import ai.eqo.actions.impl.PickedAttachment
 import ai.eqo.actions.impl.RegistryOptions
 import ai.eqo.core.agent.ActionLoop
 import ai.eqo.core.agent.ApprovedTaskPlan
-import ai.eqo.core.agent.LoopStep
 import ai.eqo.data.models.PlanStatus
 import ai.eqo.study.ApprovalOutcome
 import ai.eqo.study.RunReceipt
@@ -37,9 +36,6 @@ internal object TaskRunSession {
     var readAloud: Boolean = false
     val spokenResultIds = mutableSetOf<String>()
     var pending: ApprovedTaskPlan? = null
-
-    /** The approved steps of the current or last run: the run summary reads their actions and parameters. */
-    var runSteps: List<LoopStep> = emptyList()
     var controller: StudyTaskController? = null
     var status: PlanStatus = PlanStatus.PENDING
     var receipt: RunReceipt? = null
@@ -195,7 +191,7 @@ class TaskRunService : Service() {
                     TaskRunSession.changed()
                 },
                 config = ActionLoop.Config(),
-                // The owner choosing a file (chooser, picker, confirmation) is not a step overrunning its budget.
+                // Choosing a file is an owner wait, not an executor overrunning its action budget.
                 isPermissionWaiting = {
                     TaskRunSession.permissionRequester?.isWaiting() == true ||
                         TaskRunSession.attachmentSelection?.isWaiting() == true

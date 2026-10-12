@@ -47,6 +47,27 @@ class TaskAttachmentSelectionTest {
             it.setContentView(R.layout.task_screen)
         }
 
+    @Test fun attachmentEndStateIsPlainAndDoesNotAppendAdviceToSendAgain() {
+        val reason =
+            ai.eqo.core.agent.AttachmentFailure
+                .reason("send_result_unknown")
+        val step =
+            ai.eqo.study.StepProgress(
+                "file",
+                "SEND_EMAIL",
+                ai.eqo.study.StepProgressState.FAILED,
+                detail = reason,
+            )
+        val detail = requireNotNull(RunStatusMapping.detail(step))
+        val text = activity().getString(detail.resource, detail.argument)
+        assertEquals(
+            "The attachment opened, but I could not confirm whether it was sent. Check before sending again.",
+            text,
+        )
+        assertFalse(text.contains("send_result_unknown"))
+        assertFalse(text.contains("tell EQO to retry"))
+    }
+
     @Test fun chooserShowsNameDateSizeAndReturnsOnlyTheHumanChoice() =
         runTest {
             Dispatchers.setMain(StandardTestDispatcher(testScheduler))

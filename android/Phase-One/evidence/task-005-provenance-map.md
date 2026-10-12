@@ -7,10 +7,6 @@
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/PlanArithmeticOutputsTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Synthetic local math, preview, literal-send and reference regressions |
 | :app | `android/app/src/main/kotlin/ai/eqo/task/TaskResultReadout.kt` | EQO-NEW | `ai.eqo.task` | Visible successful result text and transient voice-only device speech |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/TaskResultsTest.kt` | EQO-NEW | `ai.eqo.task` | Actual run result line plus fake readout and registry data chaining |
-| :app | `android/app/src/main/kotlin/ai/eqo/task/RunSummary.kt` | EQO-NEW | `ai.eqo.task` | One plain sentence per run from approved actions and outcomes, never executor text |
-| :app | `android/app/src/main/kotlin/ai/eqo/task/RunSentences.kt` | EQO-NEW | `ai.eqo.task` | Fixed plain wording tables for done, hand-off and search sentences |
-| :app | `android/app/src/test/kotlin/ai/eqo/task/RunSummaryTest.kt` | EQO-NEW | `ai.eqo.task` | Real-string checks of the run sentences, hand-offs, failures and calculate answer |
-| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ActionLoopHandoffDiagnosticTest.kt` | EQO-NEW | `ai.eqo.core.agent` | A hand-off is logged as needs_user_action and still stops the plan |
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/TaskIntent.kt` | EQO-NEW | `ai.eqo.core.agent` | Ephemeral structured understanding and bounded clarification session |
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/IntentSkills.kt` | EQO-NEW | `ai.eqo.core.agent` | Deterministic intent-slot templates and send/channel protection |

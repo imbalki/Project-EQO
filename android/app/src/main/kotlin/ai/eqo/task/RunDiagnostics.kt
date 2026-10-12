@@ -6,9 +6,6 @@ import android.util.Log
 
 /** Allowlisted codes, never arbitrary executor detail, parameters or exception messages. */
 internal object RunDiagnostics {
-    /** A draft or question left for the owner: EQO did its part, so this is not an execution failure. */
-    const val HANDOFF_CODE = "needs_user_action"
-
     private val failureCodes =
         setOf(
             "a11y_not_bound",
@@ -29,7 +26,6 @@ internal object RunDiagnostics {
             is ExecuteResult.Success -> "executor_success_not_independent_receipt"
             is ExecuteResult.Failure ->
                 AttachmentFailure.kind(result.reason)
-                    ?: HANDOFF_CODE.takeIf { result.handoff }
                     ?: result.reason.takeIf { it in failureCodes } ?: "execution_failed"
             is ExecuteResult.Interrupted -> "apply_interrupted_effect_unknown"
         }
@@ -41,21 +37,9 @@ internal object RunDiagnostics {
         Log.i("EqoRun", "step=$stepIndex code=${code(result)} reason=${failureKind(result)}")
     }
 
-    /** One fixed label per run: NEEDS_YOU is reported as such, never as FAILED. */
-    fun outcome(label: String) {
-        Log.i("EqoRun", "run_outcome=$label")
-    }
-
     fun failureKind(result: ExecuteResult): String {
         val reason = (result as? ExecuteResult.Failure)?.reason.orEmpty()
-        val handoff = result is ExecuteResult.Failure && result.handoff
-        return specificKind(reason)
-            ?: HANDOFF_CODE.takeIf { handoff }
-            ?: genericKind(reason, result)
-    }
-
-    private fun specificKind(reason: String): String? =
-        when {
+        return when {
             AttachmentFailure.kind(reason) != null -> requireNotNull(AttachmentFailure.kind(reason))
             reason.contains("All files access", ignoreCase = true) -> "needs_all_files_access"
             reason in setOf("a11y_not_bound", "a11y_disabled") ||
@@ -65,18 +49,11 @@ internal object RunDiagnostics {
             reason.contains("EQO cannot capture its own") -> "eqo_in_foreground"
             reason in setOf("a11y_secure_window", "This is a protected screen. EQO will not read it.") ->
                 "protected_screen"
-            else -> null
-        }
-
-    private fun genericKind(
-        reason: String,
-        result: ExecuteResult,
-    ): String =
-        when {
             reason.contains("empty", ignoreCase = true) -> "empty"
             reason == "control_not_found" -> "control_not_found"
             reason.contains("not found", ignoreCase = true) -> "not_found"
             result is ExecuteResult.Failure -> "execution_failed"
             else -> "none"
         }
+    }
 }

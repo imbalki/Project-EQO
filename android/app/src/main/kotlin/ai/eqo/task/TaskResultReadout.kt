@@ -1,37 +1,39 @@
 // Origin: EQO intent v1 owner addendum; transient successful-result readout, never logs or history.
 package ai.eqo.task
 
+import ai.eqo.core.agent.TaskDisplayText
+import ai.eqo.study.StepProgress
+import ai.eqo.study.StepProgressState
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
 import java.util.Locale
 
-/**
- * One plain sentence per finished run feeds both the visible Result line and the optional speech.
- * Internal steps and executor text never reach it; a run the owner stopped has no sentence.
- */
+/** The same completed result feeds the visible line and optional speech; failures are never announced as answers. */
 internal object TaskResultPresentation {
-    fun sentence(
-        sentences: List<RunSentence>,
-        resolve: (RunSentence) -> String,
-    ): String? = sentences.joinToString(" ") { resolve(it) }.trim().ifBlank { null }
+    fun lines(steps: List<StepProgress>): String =
+        completed(steps).joinToString("\n") {
+            "${it.name.replace('_', ' ')}: ${TaskDisplayText.escape(it.detail)}"
+        }
+
+    fun completed(steps: List<StepProgress>): List<StepProgress> =
+        steps.filter { it.state == StepProgressState.DONE && it.detail.isNotBlank() }
 }
 
-/** The run summary is spoken once per run (by id), and only when the request was started by voice. */
 internal class TaskResultReadout(
     private val spokenIds: MutableSet<String>,
     private val speak: (String) -> Unit,
 ) {
     fun update(
-        summary: String?,
+        steps: List<StepProgress>,
         voiceRequest: Boolean,
     ) {
-        if (voiceRequest && !summary.isNullOrBlank() && spokenIds.add(SUMMARY_ID)) speak(summary)
-    }
-
-    private companion object {
-        const val SUMMARY_ID = "run-summary"
+        if (voiceRequest) {
+            TaskResultPresentation.completed(steps).forEach {
+                if (spokenIds.add(it.stepId)) speak(TaskDisplayText.escape(it.detail))
+            }
+        }
     }
 }
 

@@ -43,6 +43,42 @@ class ActionLoopTransitionsTest {
             assertEquals(PlanTerminal.COMPLETED, run.await().terminal)
         }
 
+    @Test fun aLongOwnerAttachmentChoiceDoesNotTimeOutTheSendStep() =
+        runTest {
+            var waiting = true
+            val loop =
+                ActionLoop(
+                    steps =
+                        listOf(
+                            LoopStep(
+                                "file",
+                                ExecutedAction("SEND_EMAIL", mapOf("attachment" to "find:bill"), irreversible = true),
+                            ),
+                        ),
+                    approvalGate = { ApprovalDecision.Approved },
+                    execute = {
+                        kotlinx.coroutines.delay(9 * 60_000L)
+                        waiting = false
+                        ExecuteResult.Failure("Attachment draft opened")
+                    },
+                    observe = { "" },
+                    isPermissionWaiting = { waiting },
+                )
+            val run = async { loop.run() }
+            advanceTimeBy(8 * 60_000L)
+            runCurrent()
+            assertFalse(run.isCompleted)
+            advanceUntilIdle()
+            val outcome =
+                run
+                    .await()
+                    .steps
+                    .single()
+                    .outcome
+            assertTrue(outcome is StepOutcome.Failed)
+            assertEquals("Attachment draft opened", (outcome as StepOutcome.Failed).reason)
+        }
+
     /**
      * Documented transition bounds (virtual time, ms):
      *  - pause/takeover: current apply + one command tick + phase handling

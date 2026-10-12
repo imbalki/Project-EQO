@@ -392,6 +392,17 @@ class FileFeaturesRegistryTest {
         }
 
     @Test
+    fun `an exception after opening the attachment never claims nothing was sent`() {
+        val beforeOpen = attachmentSendFailure(routeOpened = false)
+        assertTrue(beforeOpen is ActionResult.Failure)
+        assertTrue(beforeOpen.error.orEmpty().contains("send_route_failed"))
+        val afterOpen = attachmentSendFailure(routeOpened = true)
+        assertTrue(afterOpen is ActionResult.UserActionRequired)
+        assertFalse(afterOpen.error.orEmpty().contains("Nothing was sent"))
+        assertTrue(afterOpen.error.orEmpty().contains("Check before sending again"))
+    }
+
+    @Test
     fun `a takeover before the file share opens is reported as that, not as a send route failure`() =
         runTest {
             file("Download/report.pdf", "PDF")

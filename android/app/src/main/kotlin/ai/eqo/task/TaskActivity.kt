@@ -172,8 +172,8 @@ class TaskActivity : Activity() {
         TaskRunSession.permissionRequester = actionPermissions
         TaskRunSession.observer = {
             mainHandler.post {
-                renderSteps(TaskRunSession.progress.values.toList())
                 renderPlanStatus(TaskRunSession.status)
+                renderSteps(TaskRunSession.progress.values.toList())
                 TaskRunSession.receipt?.let(::renderReceipt)
                 updateRetry()
             }
@@ -211,7 +211,7 @@ class TaskActivity : Activity() {
         if (understandingRequest) preparationGeneration++
         intentChoices.cancel()
         attachmentSelection.background()
-        // A question still waiting for the owner keeps its registration, so the run knows it is waiting.
+        // Keep the wait registered while the picker or a question is still waiting for the owner.
         if (TaskRunSession.attachmentSelection === attachmentSelection && !attachmentSelection.isWaiting()) {
             TaskRunSession.attachmentSelection = null
         }
@@ -361,7 +361,7 @@ class TaskActivity : Activity() {
     }
 
     private fun startRun(approved: ApprovedTaskPlan) {
-        prepareResultReadout(approved)
+        prepareResultReadout()
         TakeoverDetector.shared.startNewRun()
         if (approved.steps().all { it.action.name == it.action.name.uppercase() }) {
             TaskRunSession.requestDraft = findViewById<EditText>(R.id.task_request).text.toString()
@@ -420,9 +420,7 @@ class TaskActivity : Activity() {
         }
     }
 
-    private fun prepareResultReadout(approved: ApprovedTaskPlan) {
-        // The run summary reads the approved actions and parameters, never the executor text.
-        TaskRunSession.runSteps = approved.steps()
+    private fun prepareResultReadout() {
         TaskRunSession.readAloud = voiceInput?.hasVoiceDraft == true
         TaskRunSession.spokenResultIds.clear()
         resultSpeaker?.stop()
@@ -546,9 +544,7 @@ class TaskActivity : Activity() {
 
     private fun renderPlanStatus(status: PlanStatus) {
         displayedStatus = status
-        // FAILED is for runs where EQO itself failed; a draft the owner finishes reads as "Needs you".
-        val shown = RunStatusMapping.terminal(RunReceipt(displayedResults.values.toList(), status.name))
-        findViewById<TextView>(R.id.task_state).text = planLabel(shown)
+        findViewById<TextView>(R.id.task_state).text = planLabel(status.name)
         waitingPermission?.let {
             findViewById<TextView>(R.id.task_state).text =
                 RunStatusMapping.permissionInstruction(it)
@@ -588,11 +584,12 @@ class TaskActivity : Activity() {
         steps.forEach { step -> container.addView(stepView(step)) }
         displayedResults.clear()
         steps.forEach { displayedResults[it.stepId] = it }
-        findViewById<TextView>(R.id.task_result).visibility = View.GONE
+        renderResults()
     }
 
     private fun renderStep(step: StepProgress) {
         displayedResults[step.stepId] = step
+        renderResults()
         if (step.state == StepProgressState.RUNNING) {
             findViewById<TextView>(R.id.task_practice_countdown).text = ""
         }
@@ -606,18 +603,14 @@ class TaskActivity : Activity() {
         }
     }
 
-    /** One plain sentence for the finished run, shown on the Result line and (voice requests only) spoken once. */
-    private fun renderRunSummary(receipt: RunReceipt) {
-        val plan = TaskRunSession.runSteps
-        val sentence =
-            TaskResultPresentation.sentence(
-                RunSummary.sentences(RunSummary.steps(plan, receipt.steps), RunStatusMapping.terminal(receipt)),
-            ) { it.text(this) }
+    private fun renderResults() {
+        val results = displayedResults.values.toList()
+        val lines = TaskResultPresentation.lines(results)
         findViewById<TextView>(R.id.task_result).apply {
-            visibility = if (sentence == null) View.GONE else View.VISIBLE
-            text = sentence?.let { getString(R.string.task_result_format, it) }.orEmpty()
+            visibility = if (lines.isBlank()) View.GONE else View.VISIBLE
+            text = getString(R.string.task_result_format, lines)
         }
-        resultReadout.update(sentence, TaskRunSession.readAloud)
+        resultReadout.update(results, TaskRunSession.readAloud)
     }
 
     private fun stepView(step: StepProgress): TextView =
@@ -645,7 +638,6 @@ class TaskActivity : Activity() {
         val terminal = RunStatusMapping.terminal(receipt)
         findViewById<TextView>(R.id.task_state).text = planLabel(terminal)
         renderSteps(receipt.steps)
-        renderRunSummary(receipt)
 
         fun names(ids: List<String>): String =
             ids

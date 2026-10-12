@@ -115,6 +115,14 @@ private class AndroidAttachmentEmailComposer(
 private fun gatedReason(failure: GatedLaunchException): String =
     failure.message?.takeIf { it.isNotBlank() } ?: AttachmentFailure.reason("send_route_failed")
 
+/** Once the destination opened, an exception cannot prove that the owner (or EQO) did not send. */
+internal fun attachmentSendFailure(routeOpened: Boolean): ActionResult =
+    if (routeOpened) {
+        ActionResult.UserActionRequired(AttachmentFailure.reason("send_result_unknown"))
+    } else {
+        ActionResult.Failure(AttachmentFailure.reason("send_route_failed"))
+    }
+
 /** Gives the receiving app a read grant for exactly these files; the share also carries the grant flag. */
 private fun grantRead(
     context: Context,
@@ -569,6 +577,7 @@ internal class CommunicationActions constructor(
                 is PreparedShare.Refused -> return ActionResult.Failure(prepared.message)
                 is PreparedShare.Ready -> prepared
             }
+        var routeOpened = false
         return try {
             val digits = phone.filter { it.isDigit() }
             val intent =
@@ -579,6 +588,7 @@ internal class CommunicationActions constructor(
                 }
             grantRead(launcher.context, WHATSAPP_PACKAGE, ready.files)
             launcher.open(intent)
+            routeOpened = true
             if (ai.eqo.accessibility.WhatsAppAutomator
                     .automateSendSharedFiles()
             ) {
@@ -598,9 +608,9 @@ internal class CommunicationActions constructor(
             share.discard(ready.files)
             ActionResult.Failure(gatedReason(gated))
         } catch (e: Exception) {
-            share.discard(ready.files)
+            if (!routeOpened) share.discard(ready.files)
             Log.e("SendWhatsApp", "WhatsApp file share failed")
-            ActionResult.Failure(AttachmentFailure.reason("send_route_failed"))
+            attachmentSendFailure(routeOpened)
         }
     }
 
@@ -618,6 +628,7 @@ internal class CommunicationActions constructor(
                 is PreparedShare.Refused -> return ActionResult.Failure(prepared.message)
                 is PreparedShare.Ready -> prepared
             }
+        var routeOpened = false
         return try {
             val intent =
                 FileShareIntents.build(ready.files, smsApp).apply {
@@ -627,6 +638,7 @@ internal class CommunicationActions constructor(
                 }
             grantRead(launcher.context, smsApp, ready.files)
             launcher.open(intent)
+            routeOpened = true
             kotlinx.coroutines.delay(SEND_SETTLE_MS)
             val current =
                 ai.eqo.accessibility.EQOAccessibilityService
@@ -654,8 +666,8 @@ internal class CommunicationActions constructor(
             share.discard(ready.files)
             ActionResult.Failure(gatedReason(gated))
         } catch (e: Exception) {
-            share.discard(ready.files)
-            ActionResult.Failure(AttachmentFailure.reason("send_route_failed"))
+            if (!routeOpened) share.discard(ready.files)
+            attachmentSendFailure(routeOpened)
         }
     }
 
@@ -696,6 +708,7 @@ internal class CommunicationActions constructor(
                         is PreparedShare.Ready -> prepared
                     }
                 }
+            var routeOpened = false
             return try {
                 val outcome =
                     if (shared != null && composer != null) {
@@ -703,6 +716,7 @@ internal class CommunicationActions constructor(
                     } else {
                         emailComposer.open(context, to, subject, body)
                     }
+                routeOpened = outcome != EmailComposeOutcome.UNAVAILABLE
                 if (shared != null && outcome != EmailComposeOutcome.COMPOSED) attachments?.discard(shared.files)
                 when (outcome) {
                     EmailComposeOutcome.VERIFIED_SENT ->
@@ -741,15 +755,13 @@ internal class CommunicationActions constructor(
                 if (shared != null) attachments?.discard(shared.files)
                 ActionResult.Failure(gatedReason(gated))
             } catch (e: Exception) {
-                if (shared != null) attachments?.discard(shared.files)
+                if (shared != null && !routeOpened) attachments?.discard(shared.files)
                 Log.e("SendEmail", "Email compose launch failed")
-                ActionResult.Failure(
-                    if (shared != null) {
-                        AttachmentFailure.reason("send_route_failed")
-                    } else {
-                        "Couldn't open the email app. Is one installed?"
-                    },
-                )
+                if (shared != null) {
+                    attachmentSendFailure(routeOpened)
+                } else {
+                    ActionResult.Failure("Couldn't open the email app. Is one installed?")
+                }
             }
         }
     }
