@@ -17,6 +17,7 @@ import android.content.pm.PackageManager
 import android.provider.AlarmClock
 import android.provider.CalendarContract
 import kotlinx.coroutines.CancellationException
+import java.time.Clock
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
@@ -34,6 +35,7 @@ internal class CalendarActions(
     private val launcher: GatedIntentLauncher,
     private val permissions: PermissionRequester,
     private val automation: () -> EqoAutomation?,
+    private val clock: Clock = Clock.systemDefaultZone(),
 ) {
     fun getActions(): List<Action> =
         listOf(
@@ -51,7 +53,7 @@ internal class CalendarActions(
             val refusal = writeRefusal(context)
             refusal ?: insertEvent(params, context)
         } else {
-            calendarDraft(params, "Set the requested date, time and details in Calendar; the event is not saved yet.")
+            draft(params, "New Event", legacyBeginMillis = null, lead = null)
         }
 
     private suspend fun writeRefusal(context: Context): ActionResult? {
@@ -77,7 +79,7 @@ internal class CalendarActions(
         params: Map<String, String>,
         context: Context,
     ): ActionResult {
-        val start = Calendar.getInstance().timeInMillis
+        val start = clock.millis()
         val values =
             ContentValues().apply {
                 put(CalendarContract.Events.DTSTART, start)
@@ -105,27 +107,35 @@ internal class CalendarActions(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {
-            calendarDraft(
-                params,
-                "Direct calendar insertion failed. Finish creating the event in Calendar; it is not saved yet.",
+            // The direct path only ever serves "today"/"now" with no time: keep the same "from now" start.
+            draft(
+                params + ("date" to "now"),
+                "New Event",
+                legacyBeginMillis = null,
+                lead = "Saving directly failed.",
             )
         }
     }
 
-    private fun calendarDraft(
+    /**
+     * Opens Calendar's editor with the requested date, time, place and guests filled in. A date or time that cannot
+     * be understood refuses before anything is launched: it never quietly falls back to today.
+     */
+    private fun draft(
         params: Map<String, String>,
-        message: String,
-    ): ActionResult {
-        val intent =
-            Intent(Intent.ACTION_INSERT).apply {
-                data = CalendarContract.Events.CONTENT_URI
-                putExtra(CalendarContract.Events.TITLE, params["title"] ?: params["text"] ?: "New Event")
-                putExtra(CalendarContract.Events.DESCRIPTION, params["description"] ?: "Created by EQO")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        defaultTitle: String,
+        legacyBeginMillis: Long?,
+        lead: String?,
+    ): ActionResult =
+        when (val outcome = CalendarWhenParser.resolve(params, clock)) {
+            is CalendarWhenResult.Invalid -> ActionResult.Failure(CalendarInsertIntent.invalidMessage(outcome))
+            else -> {
+                launcher.open(CalendarInsertIntent.build(params, defaultTitle, outcome, legacyBeginMillis))
+                val prepared =
+                    CalendarInsertIntent.preparedMessage(CalendarInsertIntent.title(params, defaultTitle), outcome)
+                ActionResult.UserActionRequired(listOfNotNull(lead, prepared).joinToString(" "))
             }
-        launcher.open(intent)
-        return ActionResult.UserActionRequired(message)
-    }
+        }
 
     private fun openCalendar(): ActionResult {
         val builder = CalendarContract.CONTENT_URI.buildUpon().appendPath("time")
@@ -136,20 +146,8 @@ internal class CalendarActions(
         )
     }
 
-    private fun reminder(params: Map<String, String>): ActionResult {
-        val intent =
-            Intent(Intent.ACTION_INSERT).apply {
-                data = CalendarContract.Events.CONTENT_URI
-                putExtra(CalendarContract.Events.TITLE, params["title"] ?: params["text"] ?: "New Reminder")
-                putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, Calendar.getInstance().timeInMillis)
-                putExtra(CalendarContract.Events.DESCRIPTION, params["description"] ?: "Created by EQO")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        launcher.open(intent)
-        return ActionResult.UserActionRequired(
-            "Calendar opened. Set the requested reminder time and save it yourself; no reminder was verified.",
-        )
-    }
+    private fun reminder(params: Map<String, String>): ActionResult =
+        draft(params, "New Reminder", legacyBeginMillis = clock.millis(), lead = null)
 
     private companion object {
         const val ONE_HOUR_MS = 60L * 60L * 1000L
