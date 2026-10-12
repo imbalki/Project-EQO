@@ -22,16 +22,41 @@ class TaskPlanner(
             installedApps,
             diagnostic,
             roleMemory,
+            enabledActions?.let(PhoneActions::hints).orEmpty(),
         )
+
+    /** A plan and the plain notes the preview must show with it: parts of the request the plan cannot carry out. */
+    data class Planned(
+        val steps: List<LoopStep>,
+        val notes: List<String> = emptyList(),
+    )
 
     /** Stage two. Production callers must resolve clarification through IntentPlanningSession first. */
     suspend fun plan(
         request: String,
         screenData: String = "",
         intent: TaskIntent = TaskIntent("Plan the requested task", confidence = 1.0),
-    ): List<LoopStep> {
+    ): List<LoopStep> = planWithNotes(request, screenData, intent).steps
+
+    /**
+     * Stage two with the completeness check. A model plan that leaves out a part the understanding named is asked
+     * for once more with the reason; whatever is still missing comes back as a note, never as a plan that merely
+     * looks complete. Templates carry every slot by construction and are not re-checked.
+     */
+    suspend fun planWithNotes(
+        request: String,
+        screenData: String = "",
+        intent: TaskIntent = TaskIntent("Plan the requested task", confidence = 1.0),
+    ): Planned {
         require(request.isNotBlank() && request.length <= MAX_TEXT)
-        val template = enabledActions?.let { IntentSkills.plan(intent, it) }
+        // A template that cannot carry a named website (an open-app template for "open x.org in Chrome") is dropped
+        // so the model plans it and the completeness check below applies.
+        val template =
+            enabledActions?.let { enabled ->
+                IntentSkills
+                    .plan(intent, enabled)
+                    ?.takeIf { PlanCompleteness.gaps(request, intent, it, enabled).isEmpty() }
+            }
         val arithmetic =
             intent.params["expression"]?.let(PlainArithmetic::evaluate) ?: PlainArithmetic.fromRequest(request)
         val localResult = arithmetic?.let { mapOf("expression" to it.expression, "result" to it.result) }.orEmpty()
@@ -41,20 +66,73 @@ class TaskPlanner(
                 "\nLocal calendar date: ${java.time.LocalDate.now()}; timezone: ${java.time.ZoneId.systemDefault()}."
         // Provider/network failures are not invalid plans and must not consume a repair request.
         val content = if (template == null) propose(input, prompt) else null
-        // One total repair budget, shared by schema and intent protection failures.
-        return try {
-            val steps =
-                template ?: enabledActions?.let { RegistryPlanVocabulary.parse(requireNotNull(content), it) }
-                    ?: parse(requireNotNull(content))
-            IntentPlanProtection.validate(intent, steps)
-        } catch (failure: IllegalArgumentException) {
-            if (enabledActions == null) throw failure
-            IntentPlanProtection.validate(intent, repair(input, prompt, failure.message.orEmpty()))
-        } catch (failure: IllegalStateException) {
-            if (enabledActions == null) throw failure
-            IntentPlanProtection.validate(intent, repair(input, prompt, "Plan JSON has an invalid structure"))
+        // One total repair budget, shared by schema, intent protection and completeness.
+        var repaired = false
+        val steps =
+            try {
+                val proposed =
+                    template ?: enabledActions?.let { RegistryPlanVocabulary.parse(requireNotNull(content), it) }
+                        ?: parse(requireNotNull(content))
+                IntentPlanProtection.validate(intent, proposed)
+            } catch (failure: IllegalArgumentException) {
+                if (enabledActions == null) throw failure
+                repaired = true
+                IntentPlanProtection.validate(intent, repair(input, prompt, failure.message.orEmpty()))
+            } catch (failure: IllegalStateException) {
+                if (enabledActions == null) throw failure
+                repaired = true
+                IntentPlanProtection.validate(intent, repair(input, prompt, "Plan JSON has an invalid structure"))
+            }
+        return if (template != null || enabledActions == null) {
+            Planned(steps)
+        } else {
+            complete(Completion(request, intent, input, prompt), steps, repaired)
         }
     }
+
+    private class Completion(
+        val request: String,
+        val intent: TaskIntent,
+        val input: String,
+        val prompt: String,
+    )
+
+    private suspend fun complete(
+        ask: Completion,
+        steps: List<LoopStep>,
+        repaired: Boolean,
+    ): Planned {
+        val enabled = requireNotNull(enabledActions)
+        var best = steps
+        var gaps = PlanCompleteness.gaps(ask.request, ask.intent, best, enabled)
+        if (gaps.isNotEmpty() && !repaired) {
+            val retry = completenessRetry(ask, gaps)
+            val retryGaps = retry?.let { PlanCompleteness.gaps(ask.request, ask.intent, it, enabled) }
+            if (retry != null && retryGaps != null && retryGaps.size < gaps.size) {
+                best = retry
+                gaps = retryGaps
+            }
+        }
+        val purchase = PlanCompleteness.purchaseNote(ask.request, gaps)
+        return Planned(best, gaps.map { it.note } + listOfNotNull(purchase))
+    }
+
+    // The valid first plan stays when the one extra request fails or is not usable; only cancellation propagates.
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    private suspend fun completenessRetry(
+        ask: Completion,
+        gaps: List<PlanCompleteness.Gap>,
+    ): List<LoopStep>? =
+        try {
+            IntentPlanProtection.validate(
+                ask.intent,
+                repair(ask.input, ask.prompt, gaps.joinToString(" ") { it.reason }, "planner completeness; repair=1"),
+            )
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            null
+        }
 
     private suspend fun propose(
         input: String,
@@ -75,8 +153,9 @@ class TaskPlanner(
         input: String,
         prompt: String,
         errors: String,
+        log: String = "planner validation failed; repair=1",
     ): List<LoopStep> {
-        diagnostic("planner validation failed; repair=1")
+        diagnostic(log)
         val repaired =
             provider.complete(
                 LLMRequest(
@@ -207,12 +286,12 @@ class ApprovedTaskPlan(
 
     init {
         require(PlanOutputReferences.errors(approved).isEmpty()) { "Invalid approved output reference" }
-        // Local preflight pins only OPEN_APP targets. The model vocabulary still rejects this parameter.
+        // Local preflight pins only app and browser targets. The model vocabulary still rejects this parameter.
         val vocabularySteps =
             approved.map { step ->
                 val params = step.action.params
                 val pinned = params["packageName"]
-                if (pinned != null && step.action.name in setOf("OPEN_APP", "open_app")) {
+                if (pinned != null && step.action.name in PINNABLE) {
                     require(pinned.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+"))) {
                         "Invalid resolved app package"
                     }
@@ -231,6 +310,10 @@ class ApprovedTaskPlan(
     }
 
     fun permits(step: LoopStep): Boolean = approved.any { it == step }
+
+    private companion object {
+        val PINNABLE = setOf("OPEN_APP", "open_app", "OPEN_URL", "WEB_SEARCH")
+    }
 
     fun steps(): List<LoopStep> = approved.map { it.copy(action = it.action.copy(params = it.action.params.toMap())) }
 }
@@ -275,6 +358,22 @@ object TaskPlanPreview {
     private fun quote(value: String): String =
         "\"" + TaskDisplayText.escape(PlanOutputReferences.describe(value)).replace("\"", "\\\"") + "\""
 
+    private fun browserSuffix(browser: String?): String =
+        browser?.takeIf { it.isNotBlank() }?.let { " in ${TaskDisplayText.escape(it)}" }.orEmpty()
+
+    private fun webText(value: String): String = TaskDisplayText.escape(PlanOutputReferences.describe(value))
+
+    // "open wikipedia.org in Chrome": the site as typed without its scheme, then the browser when one was named.
+    private fun openUrlPreview(params: Map<String, String>): String {
+        val raw = params["url"].orEmpty()
+        val shown =
+            when (val target = WebTargets.resolve(raw)) {
+                is WebTargets.Target.Site -> WebTargets.display(target.url)
+                else -> raw.take(WebTargets.MAX_QUERY)
+            }
+        return "open ${webText(shown)}${browserSuffix(params["browser"])}"
+    }
+
     private fun whatsappCallPreview(params: Map<String, String>): String =
         "place a WhatsApp ${if (params["video"] == "true") "video" else "voice"} call to " +
             quote(params["contact"].orEmpty()) +
@@ -304,6 +403,8 @@ object TaskPlanPreview {
             "TAKE_SCREENSHOT" ->
                 "save a screenshot of the current app; open that app first, not EQO; " +
                     "EQO accessibility must be on; protected screens are refused"
+            "OPEN_URL" -> openUrlPreview(p)
+            "WEB_SEARCH" -> "search the web for ${webText(p["query"].orEmpty())}${browserSuffix(p["browser"])}"
             "observe" -> "look at the screen"
             "scroll" -> "scroll ${quote(p["direction"].orEmpty())}"
             "open_app" -> "open ${quote(p["app"].orEmpty())}"

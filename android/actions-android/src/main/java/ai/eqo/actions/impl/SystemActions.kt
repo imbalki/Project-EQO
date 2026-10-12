@@ -694,33 +694,22 @@ internal class SystemActions(
             context: Context,
         ): ActionResult {
             requireRegistryExecution()?.let { return it }
-            val url = params["url"] ?: return ActionResult(false, null, "No URL provided")
-            val browser = params["browser"]
-            if (browser != null && browser != "chrome") return ActionResult.Failure("Unsupported browser.")
-            return try {
-                // Ensure URL has a scheme
-                val fullUrl =
-                    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                        "https://$url"
-                    } else {
-                        url
-                    }
+            val raw = params["url"] ?: return ActionResult(false, null, "No URL provided")
+            // Only http/https without credentials; a bare word is a web search. Nothing else is ever opened.
+            val url =
+                BrowserTarget.urlFor(raw)
+                    ?: return ActionResult.Failure("Provide a valid HTTP or HTTPS URL without embedded credentials.")
+            return when (val browser = BrowserTarget.choose(params, LaunchableAppResolver(context.packageManager))) {
+                is BrowserChoice.Unavailable -> ActionResult.Failure(browser.reason)
+                else ->
+                    try {
+                        BrowserTarget.open(launcher, url, browser)?.let { ActionResult.Failure(it) }
+                            ?: ActionResult.Success(mapOf("message" to "URL opened."))
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
 
-                val uri = fullUrl.toUri()
-                if (uri.scheme !in setOf("http", "https") || uri.host.isNullOrBlank() || !uri.userInfo.isNullOrBlank()) {
-                    return ActionResult.Failure("Provide a valid HTTP or HTTPS URL without embedded credentials.")
-                }
-                val intent =
-                    Intent(Intent.ACTION_VIEW, uri).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        ActionResult(false, null, "Couldn't open that URL.")
                     }
-                if (browser == "chrome") intent.setPackage("com.android.chrome")
-                launcher.open(intent)
-                ActionResult.Success(mapOf("message" to "URL opened."))
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-
-                ActionResult(false, null, "Couldn't open that URL.")
             }
         }
     }

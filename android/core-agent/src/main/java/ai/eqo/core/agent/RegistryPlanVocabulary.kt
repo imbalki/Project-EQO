@@ -53,6 +53,13 @@ object RegistryPlanVocabulary {
             appendLine("To send where the user is use SHARE_LOCATION.")
             appendLine("Both need via=whatsapp|sms|email and a recipient in to. Never put coordinates in params.")
             appendLine("Use native field hints such as To, Subject, Compose email for Gmail compose.")
+            appendLine("To open a website or search the web in a browser, use ONE OPEN_URL or WEB_SEARCH step;")
+            appendLine("never tap or type into an address bar. A named browser goes in the browser parameter.")
+            appendLine("OPEN_URL url is a plain web address (wikipedia.org) or a bare word, which is searched.")
+            appendLine("intent.params.registry_action names the phone action the request maps to: plan that action")
+            appendLine("(for example TOGGLE_FLASHLIGHT, SET_VOLUME), never OPEN_APP of Settings or Camera for it.")
+            appendLine("Never drop a part of the request silently. If a part cannot be done, plan the rest;")
+            appendLine("EQO tells the person plainly what it could not do.")
             appendLine("TYPE_TEXT searchText=focused means only the currently focused text input.")
             appendLine("Use a visible hint otherwise.")
             appendLine("After OPEN_APP always WAIT 3000 so the app finishes loading before the next step.")
@@ -183,12 +190,18 @@ object RegistryPlanVocabulary {
                             add("${action.name}: invalid ${definition.name} (${definition.type})")
                         } else if (definition.name == AttachmentSpec.PARAM) {
                             AttachmentSpec.errors(value).forEach { add("${action.name}: $it") }
+                        } else if (action.name == "OPEN_URL" && definition.name == "url" && unsafeUrl(value)) {
+                            add("OPEN_URL: url must be a plain http or https address without credentials")
                         }
                     }
                 }
                 if (step.requiredPermission != null) add("Model cannot select permissions")
             }
         }
+
+    // A placeholder from an earlier step is resolved at run time and checked then; everything else is checked now.
+    private fun unsafeUrl(value: String): Boolean =
+        !value.contains("{{step:") && WebTargets.resolve(value) == WebTargets.Target.Refused
 
     private fun validType(
         param: ParamDefinition,
