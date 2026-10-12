@@ -106,7 +106,8 @@ class VoiceAutoPlanActivityTest {
     fun anOpenPlanApprovalDialogBlocksPlanning() {
         val activity = screen()
         activity.typeRequest("open notes")
-        val plan = ApprovedTaskPlan(listOf(LoopStep("1", ExecutedAction("compose_sms", mapOf("body" to "hello")))))
+        val sms = ExecutedAction("compose_sms", mapOf("to" to "", "body" to "hello"))
+        val plan = ApprovedTaskPlan(listOf(LoopStep("1", sms)))
         val show =
             TaskActivity::class.java.getDeclaredMethod(
                 "showPlan",

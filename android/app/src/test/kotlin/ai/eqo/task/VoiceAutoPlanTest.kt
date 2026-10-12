@@ -279,7 +279,9 @@ class VoiceAutoPlanTest {
     }
 
     private fun results(words: String) =
-        Bundle().apply { putStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION, arrayListOf(words)) }
+        Bundle().apply {
+            putStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION, arrayListOf(words))
+        }
 
     private class FakeRecording(
         cache: File,

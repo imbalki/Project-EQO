@@ -24,6 +24,7 @@ internal enum class VoiceInputState {
  * start planning (owner decision 2026-10-12). The presenter itself holds no planner, run or approval capability, and
  * a partial kept after a recognizer timeout is never reported, only left in the draft for the user to review.
  */
+@Suppress("LongParameterList") // Each parameter is one independent UI callback; grouping adds only indirection.
 internal class VoiceInputPresenter(
     private val render: (VoiceInputState) -> Unit,
     private val fillDraft: (String) -> Unit,

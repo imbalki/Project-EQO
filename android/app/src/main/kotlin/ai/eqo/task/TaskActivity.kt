@@ -816,7 +816,8 @@ class TaskActivity : Activity() {
     /**
      * A final voice transcript starts planning exactly like a Plan tap and stops at the same plan approval.
      * It never mints a resume confirmation (only the Plan tap and the Resume dialog may), so a latched takeover
-     * or a run that is active, paused or being prepared, or an open dialog, leaves the words in the box for the user's own Plan tap.
+     * or a run that is active, paused or being prepared, or an open dialog, leaves the words in the box for the
+     * user's own Plan tap.
      * Returns true only when planning actually started.
      */
     internal fun planFromVoice(): Boolean {
