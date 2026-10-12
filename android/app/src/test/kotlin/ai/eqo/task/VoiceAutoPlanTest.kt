@@ -113,7 +113,7 @@ class VoiceAutoPlanTest {
             assertEquals(listOf("spoken words"), planned)
             assertEquals("typed spoken words", draft())
             assertTrue("the readout flag must stay set for a voice-started task", voice.hasVoiceDraft)
-            assertEquals(activity.getString(R.string.voice_heard_planning), voiceLine())
+            assertEquals(activity.getString(R.string.task_planning), voiceLine())
             assertFalse(clip.file.exists())
         }
 

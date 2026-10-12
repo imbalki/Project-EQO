@@ -65,6 +65,8 @@ class TaskActivity : Activity() {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var controller: StudyTaskController? = null
     private var voiceInput: TaskVoiceInput? = null
+    private var voicePlanningRequested = false
+    private var voicePlanRequiresApproval = false
 
     // The latest plan/choice/permission dialog; a voice transcript must not plan underneath an open one.
     private var taskDialog: AlertDialog? = null
@@ -786,10 +788,14 @@ class TaskActivity : Activity() {
 
     @Suppress("ReturnCount")
     private fun planRequest() {
+        // Consume the voice origin here so the existing explicit Plan-click wiring stays unchanged.
+        val fromVoice = voicePlanningRequested
+        voicePlanningRequested = false
         val active =
             (TaskRunSession.controller ?: controller)?.currentState() in
                 setOf(LoopState.RUNNING, LoopState.PAUSED)
         if (planning || active) return
+        voicePlanRequiresApproval = fromVoice
         if (TaskRunSession.retry.remaining() != null &&
             findViewById<EditText>(R.id.task_request).text.toString() == TaskRunSession.requestDraft
         ) {
@@ -830,7 +836,10 @@ class TaskActivity : Activity() {
                 TaskRunSession.controller == null &&
                 TaskRunSession.pending == null &&
                 !TakeoverDetector.shared.isPaused
-        if (ready) planRequest()
+        if (ready) {
+            voicePlanningRequested = true
+            planRequest()
+        }
         return ready && planning
     }
 
@@ -1023,7 +1032,7 @@ class TaskActivity : Activity() {
                 TaskPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
-        if (!retry && !PlanApprovalSettings.requiredFor(this, steps)) {
+        if (!retry && !voicePlanRequiresApproval && !PlanApprovalSettings.requiredFor(this, steps)) {
             startRun(plan)
             return
         }

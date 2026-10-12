@@ -3,10 +3,14 @@ package ai.eqo.task
 
 import ai.eqo.R
 import ai.eqo.accessibility.TakeoverDetector
+import ai.eqo.actions.base.ActionResult
+import ai.eqo.core.agent.ActionLoop
 import ai.eqo.core.agent.ApprovedTaskPlan
 import ai.eqo.core.agent.ExecutedAction
+import ai.eqo.core.agent.LoopState
 import ai.eqo.core.agent.LoopStep
 import ai.eqo.core.agent.UserResumeConfirmation
+import ai.eqo.data.models.PlanStatus
 import android.Manifest
 import android.content.Intent
 import android.content.pm.ResolveInfo
@@ -18,6 +22,12 @@ import android.speech.SpeechRecognizer
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -34,13 +44,22 @@ import org.robolectric.shadows.ShadowSpeechRecognizer
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
+@OptIn(ExperimentalCoroutinesApi::class)
 class VoiceAutoPlanActivityTest {
     private val detector = TakeoverDetector.shared
     private val lifecycle = Robolectric.buildActivity(TaskActivity::class.java)
 
     @After
     fun cleanUp() {
+        TaskRunSession.controller = null
         TaskRunSession.pending = null
+        TaskRunSession.readAloud = false
+        TaskRunSession.status = PlanStatus.PENDING
+        TaskRunSession.receipt = null
+        TaskRunSession.retry = TaskPlanRetry()
+        TaskRunSession.requestDraft = ""
+        TaskRunSession.progress.clear()
+        PlanApprovalSettings.setRequired(lifecycle.get(), true)
         detector.onAgentActionFinished()
         detector.resume(UserResumeConfirmation.forExplicitUserConfirmation(1L))
         lifecycle.pause().stop().destroy()
@@ -51,6 +70,19 @@ class VoiceAutoPlanActivityTest {
     private fun TaskActivity.stateLine() = findViewById<TextView>(R.id.task_state).text.toString()
 
     private fun TaskActivity.typeRequest(text: String) = findViewById<EditText>(R.id.task_request).setText(text)
+
+    private fun TaskActivity.showTestPlan(plan: ApprovedTaskPlan) {
+        val show =
+            TaskActivity::class.java.getDeclaredMethod(
+                "showPlan",
+                ApprovedTaskPlan::class.java,
+                Map::class.java,
+                List::class.java,
+                Boolean::class.javaPrimitiveType,
+            )
+        show.isAccessible = true
+        show.invoke(this, plan, emptyMap<String, String>(), emptyList<String>(), false)
+    }
 
     @Test
     fun voiceHandOffStartsPlanningLikeAPlanTapAndOnlyOnce() {
@@ -108,22 +140,80 @@ class VoiceAutoPlanActivityTest {
         activity.typeRequest("open notes")
         val sms = ExecutedAction("compose_sms", mapOf("to" to "", "body" to "hello"))
         val plan = ApprovedTaskPlan(listOf(LoopStep("1", sms)))
-        val show =
-            TaskActivity::class.java.getDeclaredMethod(
-                "showPlan",
-                ApprovedTaskPlan::class.java,
-                Map::class.java,
-                List::class.java,
-                Boolean::class.javaPrimitiveType,
-            )
-        show.isAccessible = true
-        show.invoke(activity, plan, emptyMap<String, String>(), emptyList<String>(), false)
+        activity.showTestPlan(plan)
         val dialog = ShadowAlertDialog.getLatestAlertDialog()
         assertTrue(dialog.isShowing)
         assertFalse(activity.planFromVoice())
         dialog.dismiss()
         assertTrue(activity.planFromVoice())
     }
+
+    @Test
+    fun voicePlanRequiresApprovalEvenWhenTypedPlanApprovalIsDisabled() {
+        val activity = screen()
+        PlanApprovalSettings.setRequired(activity, false)
+        activity.typeRequest("open notes")
+        assertTrue(activity.planFromVoice())
+        val plan = ApprovedTaskPlan(listOf(LoopStep("1", ExecutedAction("OPEN_APP", mapOf("appName" to "notes")))))
+        activity.showTestPlan(plan)
+        val dialog = ShadowAlertDialog.getLatestAlertDialog()
+        assertTrue(dialog.isShowing)
+        assertEquals(null, TaskRunSession.pending)
+        assertEquals(null, TaskRunSession.controller)
+        dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).performClick()
+        assertEquals(null, TaskRunSession.pending)
+    }
+
+    @Test
+    fun typedPlanStillHonorsTheApprovalPreference() {
+        val activity = screen()
+        PlanApprovalSettings.setRequired(activity, false)
+        activity.typeRequest("open notes")
+        activity.findViewById<Button>(R.id.task_start_button).performClick()
+        val plan = ApprovedTaskPlan(listOf(LoopStep("1", ExecutedAction("OPEN_APP", mapOf("appName" to "notes")))))
+        activity.showTestPlan(plan)
+        assertEquals(plan, TaskRunSession.pending)
+        assertFalse(TaskRunSession.readAloud)
+    }
+
+    @Test
+    fun runningAndPausedControllerBlockVoicePlanning() =
+        runTest {
+            val activity = screen()
+            activity.typeRequest("new request")
+            val step = LoopStep("1", ExecutedAction("OPEN_APP", mapOf("appName" to "notes")))
+            val plan = ApprovedTaskPlan(listOf(step, step.copy(stepId = "2")))
+            val settle = CompletableDeferred<Unit>()
+            val config = ActionLoop.Config()
+            val executor =
+                StudyActionExecutor(EqoAutomationPort({ null }, { _, _ -> false }), plan) { _, _ ->
+                    settle.await()
+                    ActionResult.Success()
+                }
+            val controller =
+                StudyTaskController(
+                    plan.steps(),
+                    StudyPermissionCheck({ true }, { true }, { false }),
+                    StudyApprovalGate(StudyApprovalSurface { error("Already approved") }, { 0L }, plan),
+                    executor,
+                    { "" },
+                    config = config,
+                    takeoverDetector = TakeoverDetector(),
+                )
+            TaskRunSession.controller = controller
+            val running = async { controller.run() }
+            runCurrent()
+            assertEquals(LoopState.RUNNING, controller.currentState())
+            assertFalse(activity.planFromVoice())
+            assertTrue(controller.pause())
+            settle.complete(Unit)
+            advanceTimeBy(config.tickMs)
+            runCurrent()
+            assertEquals(LoopState.PAUSED, controller.currentState())
+            assertFalse(activity.planFromVoice())
+            controller.stop()
+            running.await()
+        }
 
     @Test
     fun spokenWordsFromThePhoneRecognizerStartAPlanThatStillNeedsApproval() {
@@ -149,11 +239,18 @@ class VoiceAutoPlanActivityTest {
         assertEquals("open notes", activity.findViewById<EditText>(R.id.task_request).text.toString())
         assertEquals(activity.getString(R.string.task_planning), activity.stateLine())
         assertEquals(
-            activity.getString(R.string.voice_heard_planning),
+            activity.getString(R.string.task_planning),
             activity.findViewById<TextView>(R.id.task_voice_state).text.toString(),
         )
         // Planning only prepares a plan: nothing is running, so no run was ever pending.
         assertEquals(null, TaskRunSession.pending)
         assertNotEquals(activity.getString(R.string.task_idle), activity.stateLine())
+        val plan = ApprovedTaskPlan(listOf(LoopStep("1", ExecutedAction("OPEN_APP", mapOf("appName" to "notes")))))
+        activity.showTestPlan(plan)
+        assertEquals(null, TaskRunSession.pending)
+        ShadowAlertDialog.getLatestAlertDialog().getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(plan, TaskRunSession.pending)
+        assertTrue("the approved voice-started run must retain spoken readout", TaskRunSession.readAloud)
     }
 }

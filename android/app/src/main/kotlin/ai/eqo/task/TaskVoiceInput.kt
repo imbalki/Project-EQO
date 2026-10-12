@@ -71,7 +71,7 @@ internal class TaskVoiceInput(
             stopListening = {
                 if (settings.engine == VoiceEngine.OPENROUTER) audio.stop() else phone.stop()
             },
-            onTranscribed = { if (onTranscribed(it)) status.setText(R.string.voice_heard_planning) },
+            onTranscribed = { if (onTranscribed(it)) status.setText(R.string.task_planning) },
         )
     private val phone: PhoneVoiceInput by lazy { PhoneVoiceInput(activity, presenter) { settings.language } }
     private val audio: AiVoiceInput by lazy {
