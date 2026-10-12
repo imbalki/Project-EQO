@@ -29,13 +29,14 @@ import kotlin.time.Duration.Companion.seconds
 class BrowserActionsTest {
     private lateinit var context: Context
     private lateinit var launcher: GatedIntentLauncher
-    private val online = object : InformationHttp {
-        var connected = true
+    private val online =
+        object : InformationHttp {
+            var connected = true
 
-        override fun online() = connected
+            override fun online() = connected
 
-        override suspend fun weather(location: String): String = ""
-    }
+            override suspend fun weather(location: String): String = ""
+        }
 
     @Before
     fun setup() {
@@ -99,7 +100,8 @@ class BrowserActionsTest {
     @Test(timeout = 20_000)
     fun `an approved package pin is used as is and Chrome keeps its fixed package`() =
         runTest(timeout = 15.seconds) {
-            assertTrue(open(mapOf("url" to "https://example.org", "browser" to "Brave", "packageName" to "example.firefox")).success)
+            val pinned = mapOf("url" to "https://example.org", "browser" to "Brave", "packageName" to "example.firefox")
+            assertTrue(open(pinned).success)
             assertEquals("example.firefox", started().`package`)
             assertTrue(open(mapOf("url" to "https://example.org", "browser" to "Chrome")).success)
             assertEquals("com.android.chrome", started().`package`)
@@ -111,7 +113,8 @@ class BrowserActionsTest {
     fun `an unknown browser or a package that is gone opens nothing`() =
         runTest(timeout = 15.seconds) {
             assertFalse(open(mapOf("url" to "https://example.org", "browser" to "Vivaldi")).success)
-            assertFalse(open(mapOf("url" to "https://example.org", "browser" to "Brave", "packageName" to "gone.app")).success)
+            val gone = mapOf("url" to "https://example.org", "browser" to "Brave", "packageName" to "gone.app")
+            assertFalse(open(gone).success)
             assertNull(shadowOf(context as Application).nextStartedActivity)
         }
 
@@ -122,9 +125,8 @@ class BrowserActionsTest {
             val intent = started()
             assertEquals("example.firefox", intent.`package`)
             assertEquals("https://www.google.com/search?q=wikipedia+cats", intent.dataString)
-            listOf("javascript:alert(1)", "file:///sdcard/a", "intent://x#Intent;end", "https://u:p@example.org").forEach {
-                assertFalse(it, open(mapOf("url" to it, "browser" to "Brave")).success)
-            }
+            listOf("javascript:alert(1)", "file:///sdcard/a", "intent://x#Intent;end", "https://u:p@example.org")
+                .forEach { assertFalse(it, open(mapOf("url" to it, "browser" to "Brave")).success) }
             assertNull(shadowOf(context as Application).nextStartedActivity)
         }
 

@@ -80,6 +80,7 @@ class IntentUnderstanding(
     private val phoneActions: List<PhoneActions.Hint> = emptyList(),
 ) {
     private val phoneNames = phoneActions.map { it.name }.toSet()
+    private val web = WebIntents(installedApps, roleMemory)
 
     suspend fun understand(request: String): TaskIntent {
         require(request.isNotBlank() && request.length <= MAX_REQUEST) { "Request is too long or empty" }
@@ -105,7 +106,7 @@ class IntentUnderstanding(
                     role = role.role.key,
                 )
             role is RoleDecision.Use && AppRoles.isBareOpen(request) -> openIntent(role.label)
-            else -> exactOpen(request) ?: arithmetic(request) ?: webIntent(request, role) ?: phoneIntent(request)
+            else -> exactOpen(request) ?: arithmetic(request) ?: web.from(request, role) ?: phoneIntent(request)
         }
 
     private fun arithmetic(request: String): TaskIntent? =
@@ -124,56 +125,16 @@ class IntentUnderstanding(
     private fun phoneIntent(request: String): TaskIntent? =
         PhoneActions.match(request, phoneNames)?.let { name ->
             TaskIntent(
-                request.lines().first().trim().take(MAX_SUMMARY_TEXT),
+                request
+                    .lines()
+                    .first()
+                    .trim()
+                    .take(MAX_SUMMARY_TEXT),
                 action = "other",
                 params = mapOf(PhoneActions.PARAM to name),
                 confidence = 1.0,
             )
         }
-
-    // "open wikipedia.org in Chrome", "search cats in Brave", "search the web for cats": direct web steps, no model.
-    private fun webIntent(
-        request: String,
-        role: RoleDecision,
-    ): TaskIntent? {
-        val parsed = WebRequests.parse(request.lines().first()) { browserLabel(it, role) } ?: return null
-        val browser = parsed.browser ?: roleMemory(AppRoles.BROWSER.key)?.takeIf { it in installedApps }
-        val where = browser?.let { " in $it" }.orEmpty()
-        val site = (WebTargets.resolve(parsed.text) as? WebTargets.Target.Site)?.url
-        return if (parsed.open && site != null) {
-            TaskIntent(
-                "Open ${WebTargets.display(site)}$where",
-                browser,
-                "open_url",
-                mapOf("url" to site),
-                confidence = 1.0,
-            )
-        } else {
-            val query = parsed.text.take(WebTargets.MAX_QUERY)
-            val goal = "Search the web for ${query.take(MAX_GOAL_QUERY)}$where"
-            TaskIntent(goal, browser, "search", mapOf("query" to query), confidence = 1.0)
-        }
-    }
-
-    // The browser a spoken phrase names: an installed browser, the person's chosen "the browser", or a known
-    // browser that is not installed (its name is kept so the usual missing-app flow can say so).
-    private fun browserLabel(
-        phrase: String,
-        role: RoleDecision,
-    ): String? {
-        val named = AppRoles.withoutRoleWords(phrase)
-        return if (named.isEmpty()) {
-            (role as? RoleDecision.Use)?.label?.takeIf { AppRoles.namesRole(phrase) }
-        } else {
-            InstalledAppResolver.resolve(named, installedApps)?.takeIf { it.isBrowser() }
-                ?: named.takeIf { it in RoleMembers.names(AppRoles.BROWSER) }?.let(::titleCase)
-        }
-    }
-
-    private fun String.isBrowser() = AppRoles.membersOf(AppRoles.BROWSER, listOf(this)).isNotEmpty()
-
-    private fun titleCase(text: String) =
-        text.split(' ').joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
 
     private suspend fun query(
         request: String,
@@ -222,7 +183,6 @@ class IntentUnderstanding(
         private const val ROLE_CONFIDENCE = 0.5
         private const val MAX_OPTION_TEXT = 200
         private const val MAX_SUMMARY_TEXT = 300
-        private const val MAX_GOAL_QUERY = 120
         private const val PHONE_CONFIDENCE = 0.8
         private const val MAX_PARAMS = 20
         private val json = Json { ignoreUnknownKeys = false }

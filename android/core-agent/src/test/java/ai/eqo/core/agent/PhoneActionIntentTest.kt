@@ -67,7 +67,12 @@ class PhoneActionIntentTest {
             assertEquals(listOf("TOGGLE_FLASHLIGHT"), result.steps.map { it.action.name })
             // One planner request, then one repair because the first plan opened Settings instead of the action.
             assertEquals(2, fake.requests.size)
-            assertTrue(fake.requests.last().systemPrompt.contains("TOGGLE_FLASHLIGHT"))
+            assertTrue(
+                fake.requests
+                    .last()
+                    .systemPrompt
+                    .contains("TOGGLE_FLASHLIGHT"),
+            )
             assertTrue(result.notes.isEmpty())
         }
 
@@ -93,7 +98,12 @@ class PhoneActionIntentTest {
                     .text
             assertTrue(text.contains("phone_actions"))
             assertTrue(text.contains("TOGGLE_FLASHLIGHT: "))
-            assertTrue(fake.requests.single().systemPrompt.contains("never ask \"via which app\""))
+            assertTrue(
+                fake.requests
+                    .single()
+                    .systemPrompt
+                    .contains("never ask \"via which app\""),
+            )
             assertEquals("other", intent.action)
             assertNull(intent.app)
             assertNull(intent.question)

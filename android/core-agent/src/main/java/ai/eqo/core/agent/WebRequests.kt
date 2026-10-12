@@ -27,6 +27,7 @@ object WebRequests {
     private const val SEARCH_VERBS = "search for|search|look up|lookup|google|bing|find"
     private const val PREPS = "in|on|with|using|via|through"
     private const val MAX_LINE = 400
+    private const val TARGET_GROUP = 3
     private const val QUOTES = "\"'‘’“”"
     private val WEB_VERBS = setOf("google", "bing")
     private val NOISE = Regex("[,\\s]*\\bplease\$", RegexOption.IGNORE_CASE)
@@ -39,6 +40,12 @@ object WebRequests {
     private val SEARCH_IN_BROWSER =
         Regex(
             "^(?:search|look up|lookup|find)\\s+(?:in|on|using|with|via)\\s+(.+?)\\s+for\\s+(.+)\$",
+            RegexOption.IGNORE_CASE,
+        )
+    private val WEB_IN_BROWSER =
+        Regex(
+            "^(?:search|look up|lookup|google)\\s+(?:on\\s+)?(?:the\\s+)?(?:web|internet|net|online)\\s+" +
+                "(?:in|on|using|with|via|through)\\s+(.+?)\\s+(?:for|about)\\s+(.+)\$",
             RegexOption.IGNORE_CASE,
         )
     private val BROWSER_THEN =
@@ -71,9 +78,10 @@ object WebRequests {
     ): WebRequest? {
         val text = clean(line.take(MAX_LINE))
         return listOf(
-            { searchInBrowser(text, lookup) },
-            { browserThen(text, lookup) },
-            { leadingBrowser(text, lookup) },
+            { browserFirst(SEARCH_IN_BROWSER, 1 to 2, text, lookup) },
+            { browserFirst(WEB_IN_BROWSER, 1 to 2, text, lookup) },
+            { browserFirst(BROWSER_THEN, 1 to TARGET_GROUP, text, lookup) },
+            { browserFirst(LEADING_BROWSER, 1 to TARGET_GROUP, text, lookup) },
             { openSite(text, lookup) },
             { webSearch(text, lookup) },
             { plainSearch(text, lookup) },
@@ -83,33 +91,16 @@ object WebRequests {
     private fun clean(line: String): String =
         POLITE.replace(NOISE.replace(line.trim().replace(SPACES, " ").trimEnd('.', '!', '?', ',', ' '), ""), "").trim()
 
-    private fun searchInBrowser(
+    // The browser comes first in the phrase: "search in Chrome for cats", "open Chrome and then search cats",
+    // "in Chrome search cats", "search the web in Chrome for cats". Group numbers say where each part sits.
+    private fun browserFirst(
+        pattern: Regex,
+        parts: Pair<Int, Int>,
         text: String,
         lookup: BrowserLookup,
     ): WebRequest? =
-        SEARCH_IN_BROWSER.matchEntire(text)?.let { match ->
-            val browser = lookup.label(match.groupValues[1]) ?: return null
-            request(match.groupValues[2], browser)
-        }
-
-    // "open Chrome and then search cats", "open Brave and go to wikipedia.org".
-    private fun browserThen(
-        text: String,
-        lookup: BrowserLookup,
-    ): WebRequest? =
-        BROWSER_THEN.matchEntire(text)?.let { match ->
-            val browser = lookup.label(match.groupValues[1]) ?: return null
-            request(match.groupValues[3], browser)
-        }
-
-    // "in Chrome search cats".
-    private fun leadingBrowser(
-        text: String,
-        lookup: BrowserLookup,
-    ): WebRequest? =
-        LEADING_BROWSER.matchEntire(text)?.let { match ->
-            val browser = lookup.label(match.groupValues[1]) ?: return null
-            request(match.groupValues[3], browser)
+        pattern.matchEntire(text)?.let { match ->
+            lookup.label(match.groupValues[parts.first])?.let { request(match.groupValues[parts.second], it) }
         }
 
     // "open wikipedia.org", "go to wikipedia.org in Chrome", "open wikipedia in Chrome" (a bare word is searched).
@@ -118,7 +109,7 @@ object WebRequests {
         lookup: BrowserLookup,
     ): WebRequest? {
         val match = OPEN_SITE.matchEntire(text) ?: return null
-        val token = match.groupValues[1].trim(*QUOTES.toCharArray())
+        val token = match.groupValues[1].trim { it in QUOTES }
         val tail = match.groupValues[2]
         val browser = tail.takeIf { it.isNotEmpty() }?.let(lookup::label)
         val named = tail.isEmpty() || browser != null
@@ -164,8 +155,63 @@ object WebRequests {
         target: String,
         browser: String?,
     ): WebRequest? {
-        val text = target.trim().trim(*QUOTES.toCharArray()).trim()
+        val text = target.trim().trim { it in QUOTES }.trim()
         val site = ' ' !in text && WebTargets.looksLikeSite(text)
         return if (text.isEmpty()) null else WebRequest(open = site, text = text, browser = browser)
+    }
+}
+
+/**
+ * Turns a recognised web request into an understood intent: the browser named, the person's chosen "the browser",
+ * or the remembered browser. Pure; installed labels and the role memory are the only inputs.
+ */
+internal class WebIntents(
+    private val installedApps: List<String>,
+    // role key -> installed label the person chose to always use for that role (null when none or not installed).
+    private val roleMemory: (String) -> String?,
+) {
+    // "open wikipedia.org in Chrome", "search cats in Brave", "search the web for cats": direct web steps.
+    fun from(
+        request: String,
+        role: RoleDecision,
+    ): TaskIntent? =
+        WebRequests.parse(request.lines().first()) { browserLabel(it, role) }?.let { parsed ->
+            val browser = parsed.browser ?: roleMemory(AppRoles.BROWSER.key)?.takeIf { it in installedApps }
+            val where = browser?.let { " in $it" }.orEmpty()
+            val site = (WebTargets.resolve(parsed.text) as? WebTargets.Target.Site)?.url
+            if (parsed.open && site != null) {
+                val goal = "Open ${WebTargets.display(site)}$where"
+                TaskIntent(goal, browser, "open_url", mapOf("url" to site), confidence = 1.0)
+            } else {
+                val query = parsed.text.take(WebTargets.MAX_QUERY)
+                val goal = "Search the web for ${query.take(MAX_GOAL_QUERY)}$where"
+                TaskIntent(goal, browser, "search", mapOf("query" to query), confidence = 1.0)
+            }
+        }
+
+    // The browser a spoken phrase names: an installed browser, the person's chosen "the browser", or a known
+    // browser that is not installed (its name is kept so the usual missing-app flow can say so).
+    private fun browserLabel(
+        phrase: String,
+        role: RoleDecision,
+    ): String? {
+        val named = AppRoles.withoutRoleWords(phrase)
+        return if (named.isEmpty()) {
+            (role as? RoleDecision.Use)?.label?.takeIf { AppRoles.namesRole(phrase) }
+        } else {
+            InstalledAppResolver.resolve(named, installedApps)?.takeIf { it.isBrowser() }
+                ?: named.takeIf { it in RoleMembers.names(AppRoles.BROWSER) }?.let(::titleCase)
+        }
+    }
+
+    private fun String.isBrowser() = AppRoles.membersOf(AppRoles.BROWSER, listOf(this)).isNotEmpty()
+
+    private fun titleCase(text: String): String {
+        val words = text.split(' ')
+        return words.joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
+    }
+
+    private companion object {
+        const val MAX_GOAL_QUERY = 120
     }
 }

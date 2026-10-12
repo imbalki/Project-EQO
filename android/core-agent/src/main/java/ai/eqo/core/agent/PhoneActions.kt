@@ -98,8 +98,11 @@ object PhoneActions {
     ): String? {
         val words = InstalledAppResolver.clean(request.lines().first()).split(' ').filter { it.isNotEmpty() }
         val simple =
-            words.isNotEmpty() && words.size <= MAX_WORDS && words.none { it in OTHER_SKILLS } &&
-                '"' !in request && (words.any { it in COMMAND_WORDS } || words.any { word -> word.any(Char::isDigit) })
+            words.isNotEmpty() &&
+                words.size <= MAX_WORDS &&
+                words.none { it in OTHER_SKILLS } &&
+                '"' !in request &&
+                (words.any { it in COMMAND_WORDS } || words.any { word -> word.any(Char::isDigit) })
         val text = " ${words.joinToString(" ")} "
         return NOUNS
             .takeIf { simple }

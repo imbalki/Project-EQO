@@ -8,7 +8,6 @@ import ai.eqo.accessibility.EqoAutomation
 import ai.eqo.accessibility.UntrustedScreenText
 import ai.eqo.actions.base.Action
 import ai.eqo.actions.base.ActionResult
-import ai.eqo.core.agent.WebTargets
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -28,7 +27,10 @@ internal class InformationActions(
 ) {
     fun getActions(): List<Action> =
         listOf(
-            RegisteredExecutor("WEB_SEARCH") { params, context -> webIn(params, context) },
+            RegisteredExecutor("WEB_SEARCH") { params, context ->
+                val resolver = LaunchableAppResolver(context.packageManager)
+                BrowserTarget.search(launcher, params, resolver, http.online()) ?: web(params.getValue("query"))
+            },
             RegisteredExecutor("GET_NEWS") { params, _ ->
                 search("https://news.google.com/search", "news ${params["topic"] ?: "latest news"}")
             },
@@ -44,26 +46,6 @@ internal class InformationActions(
         )
 
     private fun web(query: String): ActionResult = search(GOOGLE_SEARCH, query)
-
-    // WEB_SEARCH may name a browser: the search page is then opened directly in that browser's package.
-    private fun webIn(
-        params: Map<String, String>,
-        context: Context,
-    ): ActionResult {
-        val browser = BrowserTarget.choose(params, LaunchableAppResolver(context.packageManager))
-        return when {
-            browser is BrowserChoice.Unavailable -> ActionResult.Failure(browser.reason)
-            browser is BrowserChoice.Default -> web(params.getValue("query"))
-            !http.online() -> ActionResult.Failure("No internet connection is available; no search was opened.")
-            else ->
-                BrowserTarget
-                    .open(launcher, WebTargets.searchUrl(params.getValue("query")), browser)
-                    ?.let { ActionResult.Failure(it) }
-                    ?: ActionResult.UserActionRequired(
-                        "Search opened. Review the results there; EQO has not retrieved or verified them.",
-                    )
-        }
-    }
 
     private fun search(
         base: String,

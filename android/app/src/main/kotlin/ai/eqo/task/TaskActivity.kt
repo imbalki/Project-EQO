@@ -882,7 +882,10 @@ class TaskActivity : Activity() {
         // looks complete) sit under the understood goal in the preview.
         val understoodNotes =
             listOfNotNull(if (understood.bestGuess) getString(R.string.intent_best_guess) else null) +
-                understood.notes.map { ai.eqo.core.agent.TaskDisplayText.escape(it) }
+                understood.notes.map {
+                    ai.eqo.core.agent.TaskDisplayText
+                        .escape(it)
+                }
         understoodPreview =
             getString(
                 R.string.intent_understood_preview,

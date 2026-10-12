@@ -99,37 +99,47 @@ object WebTargets {
     // A single parse used by every public function, so "what is a site" has one definition.
     private fun parse(raw: String): Parsed? {
         val text = raw.trim()
-        val bad =
-            text.isEmpty() || text.length > MAX_URL ||
-                text.any { it.isWhitespace() || it.isISOControl() || it in FORBIDDEN }
-        if (bad) return null
         val explicit = EXPLICIT.matchEntire(text)
         val scheme = explicit?.groupValues?.get(1)?.lowercase(Locale.ROOT) ?: "https"
-        val rest = explicit?.groupValues?.get(2) ?: text
         val foreign = explicit == null && ANY_SCHEME.containsMatchIn(text) && !HOST_PORT.matches(text)
-        if (foreign || scheme !in setOf("http", "https")) return null
+        val plain =
+            text.isNotEmpty() &&
+                text.length <= MAX_URL &&
+                text.none { it.isWhitespace() || it.isISOControl() || it in FORBIDDEN }
+        return if (plain && !foreign && scheme in setOf("http", "https")) {
+            authority(scheme, explicit?.groupValues?.get(2) ?: text, explicit != null)
+        } else {
+            null
+        }
+    }
+
+    private fun authority(
+        scheme: String,
+        rest: String,
+        explicit: Boolean,
+    ): Parsed? {
         val authority = rest.takeWhile { it !in "/?#" }
-        val tail = rest.substring(authority.length)
         val host = authority.substringBeforeLast(':')
         val port = if (':' in authority) authority.substringAfterLast(':') else ""
         val portOk = port.isEmpty() || port.toIntOrNull()?.let { it in 1..MAX_PORT } == true
         val ok = '@' !in authority && '[' !in authority && portOk && validHost(host)
-        return if (ok) Parsed(scheme, host, if (port.isEmpty()) "" else ":$port", tail, explicit != null) else null
+        val shownPort = if (port.isEmpty()) "" else ":$port"
+        return if (ok) Parsed(scheme, host, shownPort, rest.substring(authority.length), explicit) else null
     }
 
     private fun validHost(host: String): Boolean {
         val labels = host.split('.')
         val wellFormed =
             labels.all { label ->
-                label.isNotEmpty() && !label.startsWith('-') && !label.endsWith('-') &&
+                label.isNotEmpty() &&
+                    !label.startsWith('-') &&
+                    !label.endsWith('-') &&
                     label.all { it.isLetterOrDigit() || it == '-' }
             }
         val named = '.' in host || host.equals("localhost", true)
-        return wellFormed && named && (!isNumericHost(host) || ipv4(labels))
+        val octets = labels.size == IPV4_LABELS && labels.all { it.toIntOrNull()?.let { n -> n <= MAX_OCTET } == true }
+        return wellFormed && named && (!isNumericHost(host) || octets)
     }
 
     private fun isNumericHost(host: String): Boolean = host.split('.').all { label -> label.all { it.isDigit() } }
-
-    private fun ipv4(labels: List<String>): Boolean =
-        labels.size == IPV4_LABELS && labels.all { it.toIntOrNull()?.let { value -> value <= MAX_OCTET } == true }
 }

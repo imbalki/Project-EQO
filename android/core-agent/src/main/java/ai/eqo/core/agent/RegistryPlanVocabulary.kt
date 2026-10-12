@@ -200,8 +200,10 @@ object RegistryPlanVocabulary {
         }
 
     // A placeholder from an earlier step is resolved at run time and checked then; everything else is checked now.
-    private fun unsafeUrl(value: String): Boolean =
-        !value.contains("{{step:") && WebTargets.resolve(value) == WebTargets.Target.Refused
+    private fun unsafeUrl(value: String): Boolean {
+        val deferred = value.contains("{{step:")
+        return !deferred && WebTargets.resolve(value) == WebTargets.Target.Refused
+    }
 
     private fun validType(
         param: ParamDefinition,

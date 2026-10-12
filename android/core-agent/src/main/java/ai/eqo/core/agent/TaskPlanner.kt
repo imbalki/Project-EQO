@@ -49,14 +49,7 @@ class TaskPlanner(
         intent: TaskIntent = TaskIntent("Plan the requested task", confidence = 1.0),
     ): Planned {
         require(request.isNotBlank() && request.length <= MAX_TEXT)
-        // A template that cannot carry a named website (an open-app template for "open x.org in Chrome") is dropped
-        // so the model plans it and the completeness check below applies.
-        val template =
-            enabledActions?.let { enabled ->
-                IntentSkills
-                    .plan(intent, enabled)
-                    ?.takeIf { PlanCompleteness.gaps(request, intent, it, enabled).isEmpty() }
-            }
+        val template = template(request, intent)
         val arithmetic =
             intent.params["expression"]?.let(PlainArithmetic::evaluate) ?: PlainArithmetic.fromRequest(request)
         val localResult = arithmetic?.let { mapOf("expression" to it.expression, "result" to it.result) }.orEmpty()
@@ -66,29 +59,47 @@ class TaskPlanner(
                 "\nLocal calendar date: ${java.time.LocalDate.now()}; timezone: ${java.time.ZoneId.systemDefault()}."
         // Provider/network failures are not invalid plans and must not consume a repair request.
         val content = if (template == null) propose(input, prompt) else null
-        // One total repair budget, shared by schema, intent protection and completeness.
-        var repaired = false
-        val steps =
-            try {
-                val proposed =
-                    template ?: enabledActions?.let { RegistryPlanVocabulary.parse(requireNotNull(content), it) }
-                        ?: parse(requireNotNull(content))
-                IntentPlanProtection.validate(intent, proposed)
-            } catch (failure: IllegalArgumentException) {
-                if (enabledActions == null) throw failure
-                repaired = true
-                IntentPlanProtection.validate(intent, repair(input, prompt, failure.message.orEmpty()))
-            } catch (failure: IllegalStateException) {
-                if (enabledActions == null) throw failure
-                repaired = true
-                IntentPlanProtection.validate(intent, repair(input, prompt, "Plan JSON has an invalid structure"))
-            }
+        val ask = Completion(request, intent, input, prompt)
+        val (steps, repaired) = firstPlan(ask, template, content)
         return if (template != null || enabledActions == null) {
             Planned(steps)
         } else {
-            complete(Completion(request, intent, input, prompt), steps, repaired)
+            complete(ask, steps, repaired)
         }
     }
+
+    // A template that cannot carry a named website (an open-app template for "open x.org in Chrome") is dropped
+    // so the model plans it and the completeness check applies.
+    private fun template(
+        request: String,
+        intent: TaskIntent,
+    ): List<LoopStep>? =
+        enabledActions?.let { enabled ->
+            IntentSkills
+                .plan(intent, enabled)
+                ?.takeIf { PlanCompleteness.gaps(request, intent, it, enabled).isEmpty() }
+        }
+
+    // One total repair budget, shared by schema, intent protection and completeness. True when it was used.
+    private suspend fun firstPlan(
+        ask: Completion,
+        template: List<LoopStep>?,
+        content: String?,
+    ): Pair<List<LoopStep>, Boolean> =
+        try {
+            val proposed =
+                template ?: enabledActions?.let { RegistryPlanVocabulary.parse(requireNotNull(content), it) }
+                    ?: parse(requireNotNull(content))
+            IntentPlanProtection.validate(ask.intent, proposed) to false
+        } catch (failure: IllegalArgumentException) {
+            if (enabledActions == null) throw failure
+            val fixed = repair(ask.input, ask.prompt, failure.message.orEmpty())
+            IntentPlanProtection.validate(ask.intent, fixed) to true
+        } catch (failure: IllegalStateException) {
+            if (enabledActions == null) throw failure
+            val fixed = repair(ask.input, ask.prompt, "Plan JSON has an invalid structure")
+            IntentPlanProtection.validate(ask.intent, fixed) to true
+        }
 
     private class Completion(
         val request: String,

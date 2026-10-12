@@ -1,6 +1,7 @@
 // Origin: EQO direct browser actions; no network, no installed-app telemetry, no logging.
 package ai.eqo.actions.impl
 
+import ai.eqo.actions.base.ActionResult
 import ai.eqo.core.agent.WebTargets
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -68,8 +69,36 @@ internal object BrowserTarget {
             launcher.open(intent(url, choice))
             null
         } catch (_: ActivityNotFoundException) {
-            if (choice is BrowserChoice.Package) "That browser could not open the page." else "No app can open web pages."
+            if (choice is BrowserChoice.Package) {
+                "That browser could not open the page."
+            } else {
+                "No app can open web pages."
+            }
         }
+
+    /**
+     * WEB_SEARCH in a named browser: the search page opens directly in that browser's package. Null when no browser
+     * was named, so the caller keeps the system default.
+     */
+    fun search(
+        launcher: GatedIntentLauncher,
+        params: Map<String, String>,
+        resolver: LaunchableAppResolver,
+        online: Boolean,
+    ): ActionResult? {
+        val browser = choose(params, resolver)
+        return when {
+            browser is BrowserChoice.Default -> null
+            browser is BrowserChoice.Unavailable -> ActionResult.Failure(browser.reason)
+            !online -> ActionResult.Failure("No internet connection is available; no search was opened.")
+            else ->
+                open(launcher, WebTargets.searchUrl(params.getValue("query")), browser)
+                    ?.let { ActionResult.Failure(it) }
+                    ?: ActionResult.UserActionRequired(
+                        "Search opened. Review the results there; EQO has not retrieved or verified them.",
+                    )
+        }
+    }
 
     /** A web address or a search phrase, normalized by the same rules the planner uses. */
     fun urlFor(raw: String): String? =

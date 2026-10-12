@@ -47,14 +47,15 @@ class BrowserStepResolutionTest {
     private fun web(
         name: String,
         vararg params: Pair<String, String>,
-    ) = LoopStep("task-1", ExecutedAction(name, params.toMap(), irreversible = true))
+        id: String = "task-1",
+    ) = LoopStep(id, ExecutedAction(name, params.toMap(), irreversible = true))
 
     @Test fun aNamedBrowserOfAWebStepIsPinnedBeforeApproval() =
         runBlocking {
             val steps =
                 listOf(
                     web("OPEN_URL", "url" to "https://wikipedia.org", "browser" to "brave"),
-                    web("WEB_SEARCH", "query" to "cats", "browser" to "Firefox"),
+                    web("WEB_SEARCH", "query" to "cats", "browser" to "Firefox", id = "task-2"),
                 )
             val prepared =
                 AppPlanResolution(resolver(), RememberedApps(context)) { error("A clear name needs no question") }

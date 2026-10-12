@@ -18,10 +18,7 @@ object PlanCompleteness {
     )
 
     const val SHOPPING = "EQO cannot do the shopping part yet"
-    private const val MIN_WORD = 3
     private const val MAX_TERM = 80
-    private val OPEN_ONLY = setOf("OPEN_APP", "open_app", "WAIT", "observe", "press_home")
-    private val NOT_CARRIERS = setOf("appName", "app", "packageName", "browser")
     private val PURCHASE =
         Regex(
             "\\b(?:buy|purchase|order)\\b(?!\\s+(?:status|history|number|id|details|tracking|update))",
@@ -33,8 +30,6 @@ object PlanCompleteness {
                 "(?:\\s+(?:on|from|at|in|using|via|through)\\s+\\S.*)?\$",
             RegexOption.IGNORE_CASE,
         )
-    private val STOP = "the for and with some any please from this that".split(' ').toSet()
-    private val SPLIT = Regex("[^\\p{L}\\p{N}]+")
 
     /** Parts the plan leaves out. Empty when the plan carries out everything that was understood. */
     fun gaps(
@@ -44,7 +39,7 @@ object PlanCompleteness {
         enabled: Set<String>,
     ): List<Gap> {
         val first = request.lines().first()
-        val values = carried(steps)
+        val values = Carriage.carried(steps)
         return listOfNotNull(
             searchGap(first, intent, steps, values),
             siteGap(first, steps, values),
@@ -74,12 +69,12 @@ object PlanCompleteness {
         values: String,
     ): Gap? {
         val term = searchTerm(first, intent)
-        return if (term == null || carries(values, term)) {
+        return if (term == null || Carriage.carries(values, term)) {
             null
         } else {
             val shopping = isPurchase(first)
             val shown = TaskDisplayText.escape(term.take(MAX_TERM))
-            val limit = limit(steps, "this plan does not include it")
+            val limit = Carriage.limit(steps, "this plan does not include it")
             Gap(
                 "The plan must carry out the understood search for \"$shown\" (use the app's search box with " +
                     "TYPE_TEXT, or WEB_SEARCH / OPEN_URL); it must not stop at opening the app. " +
@@ -108,7 +103,7 @@ object PlanCompleteness {
         return if (url == null || shown == null || values.contains(shown.lowercase(Locale.ROOT))) {
             null
         } else {
-            val limit = limit(steps, "this plan does not open it")
+            val limit = Carriage.limit(steps, "this plan does not open it")
             Gap(
                 "The plan must open the website $url directly with OPEN_URL url=$url (plus browser=<app> when a " +
                     "browser was named). Do not tap an address bar or search box for it.",
@@ -123,8 +118,13 @@ object PlanCompleteness {
         values: String,
     ): Gap? {
         val text = intent.params["message"]?.trim().orEmpty()
-        val referenced = steps.any { step -> step.action.params.values.any { it.contains("{{step:") } }
-        val missing = intent.action == "send_message" && text.isNotEmpty() && !referenced && !carries(values, text, true)
+        val referenced =
+            steps.any { step ->
+                step.action.params.values
+                    .any { it.contains("{{step:") }
+            }
+        val sent = intent.action == "send_message" && text.isNotEmpty() && !referenced
+        val missing = sent && !Carriage.carries(values, text, true)
         return if (missing) {
             Gap(
                 "The plan must carry the understood message text exactly; it was left out.",
@@ -159,12 +159,26 @@ object PlanCompleteness {
     ): String? =
         when {
             intent.action == "search" -> intent.params["query"]?.trim()
-            isPurchase(first) -> ITEM.find(first)?.groupValues?.get(1)?.trim()
+            isPurchase(first) ->
+                ITEM
+                    .find(first)
+                    ?.groupValues
+                    ?.get(1)
+                    ?.trim()
             else -> null
         }?.takeIf { it.isNotEmpty() }
+}
+
+/** What a plan's steps type, search, open by URL or send, and how much of a wanted text they carry. */
+private object Carriage {
+    private const val MIN_WORD = 3
+    private val OPEN_ONLY = setOf("OPEN_APP", "open_app", "WAIT", "observe", "press_home")
+    private val NOT_CARRIERS = setOf("appName", "app", "packageName", "browser")
+    private val STOP = "the for and with some any please from this that".split(' ').toSet()
+    private val SPLIT = Regex("[^\\p{L}\\p{N}]+")
 
     // "it will only open Zepto" when the plan does nothing but open apps; otherwise the stated fallback.
-    private fun limit(
+    fun limit(
         steps: List<LoopStep>,
         otherwise: String,
     ): String = if (steps.all { it.action.name in OPEN_ONLY }) "it will only ${opens(steps)}" else otherwise
@@ -180,10 +194,13 @@ object PlanCompleteness {
     }
 
     // Everything the plan types, searches, opens by URL or sends, lower-cased and URL-decoded. App targets excluded.
-    private fun carried(steps: List<LoopStep>): String =
+    fun carried(steps: List<LoopStep>): String =
         steps
-            .flatMap { step -> step.action.params.filterKeys { it !in NOT_CARRIERS }.values }
-            .joinToString("\n") { (it + "\n" + decode(it)).lowercase(Locale.ROOT) }
+            .flatMap { step ->
+                step.action.params
+                    .filterKeys { it !in NOT_CARRIERS }
+                    .values
+            }.joinToString("\n") { (it + "\n" + decode(it)).lowercase(Locale.ROOT) }
 
     private fun decode(value: String): String =
         try {
@@ -193,7 +210,7 @@ object PlanCompleteness {
         }
 
     // Any significant word of the wanted text is enough; short or stop-word-only text must appear whole.
-    private fun carries(
+    fun carries(
         values: String,
         term: String,
         whole: Boolean = false,

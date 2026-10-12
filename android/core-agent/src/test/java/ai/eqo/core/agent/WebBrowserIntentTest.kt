@@ -38,8 +38,10 @@ class WebBrowserIntentTest {
         return result
     }
 
-    private fun preview(result: IntentPlanningSession.Result) =
-        TaskPlanPreview.describe(result.steps).removePrefix("EQO will:\n")
+    private fun preview(result: IntentPlanningSession.Result): String {
+        val text = TaskPlanPreview.describe(result.steps)
+        return text.removePrefix("EQO will:\n")
+    }
 
     @Test fun addressesAreNormalizedAndUnsafeOnesRefused() {
         val safe =
@@ -109,26 +111,88 @@ class WebBrowserIntentTest {
             assertEquals(mapOf("query" to "cats", "browser" to "Brave"), step.action.params)
             assertEquals("1. search the web for cats in Brave", preview(result))
             val long = prepare("Search for best flights in Mumbai on Samsung Internet please")
-            assertEquals("best flights in Mumbai", long.steps.single().action.params["query"])
-            assertEquals("Samsung Internet", long.steps.single().action.params["browser"])
+            assertEquals(
+                "best flights in Mumbai",
+                long.steps
+                    .single()
+                    .action.params["query"],
+            )
+            assertEquals(
+                "Samsung Internet",
+                long.steps
+                    .single()
+                    .action.params["browser"],
+            )
             // Words that merely end like a browser phrase stay part of the query.
             val place = prepare("search the web for cats in Mumbai")
-            assertEquals("cats in Mumbai", place.steps.single().action.params["query"])
-            assertNull(place.steps.single().action.params["browser"])
+            assertEquals(
+                "cats in Mumbai",
+                place.steps
+                    .single()
+                    .action.params["query"],
+            )
+            assertNull(
+                place.steps
+                    .single()
+                    .action.params["browser"],
+            )
+        }
+
+    @Test fun aSearchNamingTheBrowserInTheMiddleIsDirectToo() =
+        runTest {
+            val step = prepare("search the web in Brave for cats").steps.single()
+            assertEquals(mapOf("query" to "cats", "browser" to "Brave"), step.action.params)
+            val role = prepare("search the web in the browser for cats", memory = { "Firefox" }).steps.single()
+            assertEquals(mapOf("query" to "cats", "browser" to "Firefox"), role.action.params)
         }
 
     @Test fun openingABrowserAndThenSearchingOrGoingToASiteIsDirect() =
         runTest {
             val site = prepare("open Chrome and then search wikipedia.org")
-            assertEquals("OPEN_URL", site.steps.single().action.name)
-            assertEquals("https://wikipedia.org", site.steps.single().action.params["url"])
-            assertEquals("Chrome", site.steps.single().action.params["browser"])
+            assertEquals(
+                "OPEN_URL",
+                site.steps
+                    .single()
+                    .action.name,
+            )
+            assertEquals(
+                "https://wikipedia.org",
+                site.steps
+                    .single()
+                    .action.params["url"],
+            )
+            assertEquals(
+                "Chrome",
+                site.steps
+                    .single()
+                    .action.params["browser"],
+            )
             val query = prepare("open Brave and search for cats")
-            assertEquals("WEB_SEARCH", query.steps.single().action.name)
-            assertEquals(mapOf("query" to "cats", "browser" to "Brave"), query.steps.single().action.params)
+            assertEquals(
+                "WEB_SEARCH",
+                query.steps
+                    .single()
+                    .action.name,
+            )
+            assertEquals(
+                mapOf("query" to "cats", "browser" to "Brave"),
+                query.steps
+                    .single()
+                    .action.params,
+            )
             val visit = prepare("open Firefox and go to youtube.com")
-            assertEquals("Firefox", visit.steps.single().action.params["browser"])
-            assertEquals("https://youtube.com", visit.steps.single().action.params["url"])
+            assertEquals(
+                "Firefox",
+                visit.steps
+                    .single()
+                    .action.params["browser"],
+            )
+            assertEquals(
+                "https://youtube.com",
+                visit.steps
+                    .single()
+                    .action.params["url"],
+            )
         }
 
     @Test fun siteWithoutABrowserUsesTheRememberedBrowserElseTheDefault() =
@@ -160,11 +224,21 @@ class WebBrowserIntentTest {
                     "Chrome"
                 }!!
             assertEquals(1, asked)
-            assertEquals(mapOf("query" to "cats", "browser" to "Chrome"), result.steps.single().action.params)
+            assertEquals(
+                mapOf("query" to "cats", "browser" to "Chrome"),
+                result.steps
+                    .single()
+                    .action.params,
+            )
             assertTrue(fake.requests.isEmpty())
             // The same phrase with a remembered browser needs no question.
             val silent = prepare("search cats in the browser", memory = { "Firefox" })
-            assertEquals("Firefox", silent.steps.single().action.params["browser"])
+            assertEquals(
+                "Firefox",
+                silent.steps
+                    .single()
+                    .action.params["browser"],
+            )
         }
 
     @Test fun aWebsiteInTheBrowserWithSeveralInstalledStillAsks() =
@@ -249,7 +323,12 @@ class WebBrowserIntentTest {
                 )
             val planned = TaskPlanner(fake, enabled).planWithNotes("buy two milk on Zepto", intent = intent)
             assertEquals(2, fake.requests.size)
-            assertTrue(fake.requests.last().systemPrompt.contains("two milk"))
+            assertTrue(
+                fake.requests
+                    .last()
+                    .systemPrompt
+                    .contains("two milk"),
+            )
             assertEquals(listOf("OPEN_APP"), planned.steps.map { it.action.name })
             assertEquals(listOf("EQO cannot do the shopping part yet: it will only open Zepto."), planned.notes)
         }
@@ -286,7 +365,12 @@ class WebBrowserIntentTest {
                 TaskPlanner(fake, enabled).planWithNotes("take me to wikipedia.org using Chrome", intent = intent)
             assertEquals(listOf("OPEN_URL"), planned.steps.map { it.action.name })
             assertTrue(planned.notes.isEmpty())
-            assertTrue(fake.requests.last().systemPrompt.contains("https://wikipedia.org"))
+            assertTrue(
+                fake.requests
+                    .last()
+                    .systemPrompt
+                    .contains("https://wikipedia.org"),
+            )
             // An open-app template cannot carry the site, so the model plans it instead of a silent app open.
             val templated = IntentFixtureProvider(listOf(chromeOnly, direct))
             val open = TaskIntent("Open Chrome", "Chrome", "open_app", confidence = 1.0)
