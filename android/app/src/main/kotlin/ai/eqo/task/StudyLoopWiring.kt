@@ -305,7 +305,8 @@ class StudyActionExecutor(
                 outputs.record(stepId, values + mapOf("message" to result.data.orEmpty()))
                 ExecuteResult.Success(result.data.orEmpty())
             } else {
-                ExecuteResult.Failure(result.error ?: "Action not completed")
+                // A draft or question handed to the owner stays a non-success, but is labelled as a hand-off.
+                ExecuteResult.Failure(result.error ?: "Action not completed", handoff = stepId in handoffs)
             }
         }
         val verb = action.name.lowercase()

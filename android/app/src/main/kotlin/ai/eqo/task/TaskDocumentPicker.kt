@@ -36,7 +36,11 @@ internal class TaskDocumentPicker(
             suspendCancellableCoroutine { continuation ->
                 pending = continuation
                 continuation.invokeOnCancellation {
-                    activity.runOnUiThread { clear() }
+                    // Stop, timeout or a closed screen: take the system picker down with the question.
+                    activity.runOnUiThread {
+                        clear()
+                        activity.finishActivity(REQUEST)
+                    }
                 }
                 try {
                     activity.startActivityForResult(intent(folder), REQUEST)
@@ -72,6 +76,16 @@ internal class TaskDocumentPicker(
             } catch (_: RuntimeException) {
                 continuation.resumeWithException(IllegalStateException("Document provider unavailable"))
             }
+        }
+    }
+
+    /** The question was withdrawn (Stop, closed screen): the pick ends as "nothing chosen", never as a choice. */
+    fun cancelPending() {
+        val continuation = pending
+        clear()
+        if (continuation?.isActive == true) {
+            activity.finishActivity(REQUEST)
+            continuation.resume(null)
         }
     }
 

@@ -392,6 +392,22 @@ class FileFeaturesRegistryTest {
         }
 
     @Test
+    fun `a takeover before the file share opens is reported as that, not as a send route failure`() =
+        runTest {
+            file("Download/report.pdf", "PDF")
+            canResolve(Intent(Intent.ACTION_SEND).setType("application/pdf").setPackage("com.google.android.gm"))
+            takeover.onAgentActionStarted()
+            assertTrue(takeover.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 10L))
+            val result = registry.execute("SEND_EMAIL", emailParams + ("attachment" to "Downloads/report.pdf"))
+            assertFalse(result.success)
+            val error = result.error.orEmpty()
+            assertFalse(error, error.contains("send_route_failed"))
+            assertTrue(error, error.contains("took control"))
+            assertNull(started())
+            assertTrue(stagedCopies().isEmpty())
+        }
+
+    @Test
     fun `email without an attachment is unchanged`() =
         runTest {
             canResolve(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")))

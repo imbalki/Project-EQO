@@ -24,6 +24,11 @@ sealed class ExecuteResult {
         val reason: String,
         /** Retryable only for reversible actions (never for irreversible ones). */
         val transient: Boolean = false,
+        /**
+         * EQO did its part and handed the last tap to the owner (draft opened, question asked). Still not a
+         * success: nothing is verified and later steps do not run. Only diagnostics and labels read this.
+         */
+        val handoff: Boolean = false,
     ) : ExecuteResult()
 
     /** The apply was cancelled or timed out mid-flight: effect unknown. */

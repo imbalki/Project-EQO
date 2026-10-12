@@ -130,6 +130,47 @@ class RunStatusMappingTest {
         }
     }
 
+    @Test fun aHandoffIsLabelledAsOneInDiagnosticsAndNeverAsAnExecutionFailure() {
+        val handoff = ExecuteResult.Failure("SMS draft opened; nothing was sent", handoff = true)
+        assertEquals("needs_user_action", RunDiagnostics.code(handoff))
+        assertEquals("needs_user_action", RunDiagnostics.failureKind(handoff))
+        // Specific diagnoses win, and an ordinary failure is untouched.
+        val attachments = ExecuteResult.Failure(AttachmentFailure.reason("send_requires_user"), handoff = true)
+        assertEquals("send_requires_user", RunDiagnostics.code(attachments))
+        assertEquals("execution_failed", RunDiagnostics.code(ExecuteResult.Failure("draft opened")))
+    }
+
+    @Test fun aHandoffAtFailedStatusIsShownAsNeedsYouAndARealFailureIsNot() {
+        val sms = StepProgress("1", "SEND_SMS", StepProgressState.NEEDS_YOU, detail = "SMS draft opened")
+        val calendar = StepProgress("2", "CREATE_CALENDAR_EVENT", StepProgressState.NEEDS_YOU, detail = "Finish it")
+        assertEquals("NEEDS_YOU", RunStatusMapping.terminal(RunReceipt(listOf(sms), "FAILED")))
+        assertEquals("NEEDS_YOU", RunStatusMapping.terminal(RunReceipt(listOf(sms, calendar), "FAILED")))
+        val broken = StepProgress("3", "OPEN_APP", StepProgressState.FAILED, detail = "a11y_disabled")
+        assertEquals("FAILED", RunStatusMapping.terminal(RunReceipt(listOf(sms, broken), "FAILED")))
+    }
+
+    @Test fun calendarAndClockHandoffRowsGiveThePlainInstruction() {
+        val calendar =
+            StepProgress(
+                "1",
+                "CREATE_CALENDAR_EVENT",
+                StepProgressState.NEEDS_YOU,
+                detail = "Direct calendar insertion failed. Finish creating the event in Calendar.",
+            )
+        assertEquals(R.string.run_say_calendar_ready, RunStatusMapping.detail(calendar)?.resource)
+        val alarm = calendar.copy(name = "SET_ALARM", detail = "Confirm the alarm in Clock; no alarm was verified.")
+        assertEquals(R.string.run_say_alarm_ready, RunStatusMapping.detail(alarm)?.resource)
+        // A question stays the owner's question, not an invented instruction.
+        val question = calendar.copy(name = "GET_WEATHER", detail = "Which city should I check the weather for?")
+        assertEquals(R.string.run_user_action, RunStatusMapping.detail(question)?.resource)
+    }
+
+    @Test fun aTakeoverRefusalReadsAsYouTouchedTheScreen() {
+        for (reason in listOf("a11y_takeover", "You took control. Resume the task explicitly before continuing.")) {
+            assertEquals(R.string.run_took_control, RunStatusMapping.detail(failed(reason))?.resource)
+        }
+    }
+
     @Test fun composeSuccessMeansDraftNotDeliveryAndOrdinarySuccessStaysDone() {
         for (action in listOf("compose_sms", "compose_email")) {
             val progress =

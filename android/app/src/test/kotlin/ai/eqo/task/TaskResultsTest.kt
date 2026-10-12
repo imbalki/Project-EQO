@@ -7,6 +7,7 @@ import ai.eqo.core.agent.ApprovedTaskPlan
 import ai.eqo.core.agent.ExecuteResult
 import ai.eqo.core.agent.ExecutedAction
 import ai.eqo.core.agent.LoopStep
+import ai.eqo.study.RunReceipt
 import ai.eqo.study.StepProgress
 import ai.eqo.study.StepProgressState
 import android.view.View
@@ -30,34 +31,71 @@ class TaskResultsTest {
         TaskRunSession.readAloud = false
         TaskRunSession.spokenResultIds.clear()
         TaskRunSession.receipt = null
+        TaskRunSession.runSteps = emptyList()
     }
 
-    @Test fun completedAnswerIsVisibleInTheActualRunScreenResultLine() {
+    @Test fun theFinishedRunShowsOnePlainSentenceOnTheActualRunScreenResultLine() {
         clearSession()
+        TaskRunSession.runSteps = steps().take(1)
         TaskRunSession.progress[answer.stepId] = answer
+        TaskRunSession.receipt = RunReceipt(listOf(answer), "COMPLETED")
         val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
         val line = lifecycle.get().findViewById<TextView>(R.id.task_result)
         assertEquals(View.VISIBLE, line.visibility)
-        assertTrue(line.text.toString().contains("238 * 8 = 1904"))
-        assertTrue(line.text.toString().contains("CALCULATE"))
+        assertEquals("Result: 238 times 8 is 1904.", line.text.toString())
+        assertFalse(line.text.toString().contains("CALCULATE"))
         lifecycle.pause().stop().destroy()
     }
 
-    @Test fun voiceResultsReadOnceTypedAndFailedResultsNeverReadAsAnswers() {
+    @Test fun aRunStillInProgressHasNoResultLineYet() {
+        clearSession()
+        TaskRunSession.runSteps = steps().take(1)
+        TaskRunSession.progress[answer.stepId] = answer
+        val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
+        val line = lifecycle.get().findViewById<TextView>(R.id.task_result)
+        assertEquals(View.GONE, line.visibility)
+        lifecycle.pause().stop().destroy()
+    }
+
+    @Test fun aHandoffRunEndsAsNeedsYouWithThePlainInstructionAndNeverAsFailed() {
+        clearSession()
+        val steps = steps()
+        val sms =
+            StepProgress("task-2", "SEND_SMS", StepProgressState.NEEDS_YOU, detail = "SMS draft opened; user sends it")
+        TaskRunSession.runSteps = steps
+        TaskRunSession.status = ai.eqo.data.models.PlanStatus.FAILED
+        TaskRunSession.progress[answer.stepId] = answer
+        TaskRunSession.progress[sms.stepId] = sms
+        TaskRunSession.receipt = RunReceipt(listOf(answer, sms), "FAILED")
+        val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
+        val activity = lifecycle.get()
+        val state = activity.findViewById<TextView>(R.id.task_state).text.toString()
+        assertEquals(activity.getString(R.string.task_needs_you), state)
+        assertEquals(
+            "Result: 238 times 8 is 1904. Text message ready; press Send.",
+            activity.findViewById<TextView>(R.id.task_result).text.toString(),
+        )
+        lifecycle.pause().stop().destroy()
+        TaskRunSession.status = ai.eqo.data.models.PlanStatus.PENDING
+    }
+
+    @Test fun theSummaryIsSpokenOncePerRunOnlyForVoiceRequests() {
         val spoken = mutableListOf<String>()
         val ids = mutableSetOf<String>()
         val readout = TaskResultReadout(ids, spoken::add)
-        readout.update(listOf(answer), voiceRequest = false)
+        val sentence = "238 times 8 is 1904."
+        readout.update(sentence, voiceRequest = false)
         assertTrue(spoken.isEmpty())
-        readout.update(listOf(answer.copy(state = StepProgressState.FAILED)), voiceRequest = true)
+        readout.update(null, voiceRequest = true)
+        readout.update(" ", voiceRequest = true)
         assertTrue(spoken.isEmpty())
-        readout.update(listOf(answer), voiceRequest = true)
-        readout.update(listOf(answer), voiceRequest = true)
-        assertEquals(listOf("238 * 8 = 1904"), spoken)
-        TaskResultReadout(ids, spoken::add).update(listOf(answer), voiceRequest = true)
+        readout.update(sentence, voiceRequest = true)
+        readout.update(sentence, voiceRequest = true)
+        assertEquals(listOf(sentence), spoken)
+        TaskResultReadout(ids, spoken::add).update(sentence, voiceRequest = true)
         assertEquals(1, spoken.size) // UI recreation does not repeat a process-local delivered result.
         ids.clear()
-        readout.update(listOf(answer), voiceRequest = true)
+        readout.update(sentence, voiceRequest = true)
         assertEquals(2, spoken.size)
     }
 
@@ -110,11 +148,11 @@ class TaskResultsTest {
             assertTrue(executor.execute(steps[0]) is ExecuteResult.Failure)
             assertTrue(executor.execute(steps[1]) is ExecuteResult.Failure)
             assertEquals(1, effects)
-            assertFalse(
-                TaskResultPresentation
-                    .lines(listOf(answer.copy(state = StepProgressState.UNKNOWN)))
-                    .contains("1904"),
-            )
+            val unknown = RunSummary.steps(steps, listOf(answer.copy(state = StepProgressState.UNKNOWN)))
+            val sentences = RunSummary.sentences(unknown, "FAILED")
+            assertEquals(listOf(RunSentence(R.string.run_say_unknown)), sentences)
+            val ordinary = executor.execute(steps[1]) as ExecuteResult.Failure
+            assertFalse(ordinary.handoff) // A plain failure is not a hand-off.
         }
 
     private fun steps(): List<LoopStep> =

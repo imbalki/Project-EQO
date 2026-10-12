@@ -73,6 +73,41 @@ class TakeoverDetectorTest {
     }
 
     @Test
+    fun theOwnersAnswerToAQuestionEQOAskedIsNeverATakeover() {
+        detector.onAgentActionStarted()
+        detector.beginOwnerChoice()
+        assertFalse(detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 10L))
+        assertFalse(detector.isPaused)
+        assertEquals(0, detector.takeoverCount)
+
+        // The window is bounded: once the question is answered, touches pause the run again.
+        detector.endOwnerChoice()
+        assertTrue(detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 20L))
+        assertEquals(1, detector.takeoverCount)
+    }
+
+    @Test
+    fun ownerChoiceWindowsNestAndCannotGoNegative() {
+        detector.onAgentActionStarted()
+        detector.endOwnerChoice()
+        detector.beginOwnerChoice()
+        detector.beginOwnerChoice()
+        detector.endOwnerChoice()
+        assertFalse(detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 10L))
+        detector.endOwnerChoice()
+        assertTrue(detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 20L))
+    }
+
+    @Test
+    fun anOwnerChoiceWindowNeverClearsATakeoverThatAlreadyLatched() {
+        detector.onAgentActionStarted()
+        assertTrue(detector.onTouch(TakeoverDetector.TouchSource.USER, nowMs = 10L))
+        detector.beginOwnerChoice()
+        detector.endOwnerChoice()
+        assertTrue(detector.isPaused)
+    }
+
+    @Test
     fun finishedActionBookkeepingCannotGoNegative() {
         detector.onAgentActionFinished()
         detector.onAgentActionFinished()

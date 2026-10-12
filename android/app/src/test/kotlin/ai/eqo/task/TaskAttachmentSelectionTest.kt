@@ -2,6 +2,7 @@
 package ai.eqo.task
 
 import ai.eqo.R
+import ai.eqo.accessibility.TakeoverDetector
 import ai.eqo.actions.impl.AttachmentChoice
 import ai.eqo.actions.impl.AttachmentDecision
 import android.app.Activity
@@ -223,31 +224,133 @@ class TaskAttachmentSelectionTest {
         ): Int = 0
     }
 
-    @Test fun backgroundAndCancellationNeverAuthorizeASend() =
+    @Test fun cancellationAndNoForegroundNeverAuthorizeASend() =
         runTest {
             Dispatchers.setMain(StandardTestDispatcher(testScheduler))
             val ui = TaskAttachmentSelection(activity(), ::protectConfirmationDialog)
             assertNull(ui.choose("bill", files))
             assertFalse(ui.showResolved(files))
             ui.foreground()
-            val result = async { ui.choose("bill", files) }
+            val result = async { ui.confirm(files.take(1)) }
             runCurrent()
-            ui.background()
+            ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
             runCurrent()
-            assertNull(result.await())
+            assertEquals(AttachmentDecision.CANCEL, result.await())
             assertFalse(ShadowAlertDialog.getLatestAlertDialog().isShowing)
         }
 
-    @Test fun timeoutDismissesChooserAndReturnsNoChoice() =
+    @Test fun leavingTheScreenKeepsTheQuestionOpenUntilTheOwnerAnswers() =
+        runTest {
+            Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+            val ui = TaskAttachmentSelection(activity(), ::protectConfirmationDialog)
+            ui.foreground()
+            val result = async { ui.confirm(files.take(1)) }
+            runCurrent()
+            // Screen off, another app, a notification: the pop-up must not close by itself.
+            ui.background()
+            advanceTimeBy(5 * 60_000L)
+            runCurrent()
+            assertFalse(result.isCompleted)
+            assertTrue(ShadowAlertDialog.getLatestAlertDialog().isShowing)
+            assertTrue(ui.isWaiting())
+            ui.foreground()
+            ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            runCurrent()
+            assertEquals(AttachmentDecision.SEND, result.await())
+            assertFalse(ui.isWaiting())
+        }
+
+    @Test fun noPopUpClosesOnItsOwnShortlyAndOnlyTheLongSafetyLimitEndsIt() =
         runTest {
             Dispatchers.setMain(StandardTestDispatcher(testScheduler))
             val ui = TaskAttachmentSelection(activity(), ::protectConfirmationDialog)
             ui.foreground()
             val result = async { ui.choose("bill", files) }
             runCurrent()
-            advanceTimeBy(60_001)
+            advanceTimeBy(9 * 60_000L)
+            runCurrent()
+            assertFalse("a short timer must not end the owner choice", result.isCompleted)
+            assertTrue(ShadowAlertDialog.getLatestAlertDialog().isShowing)
+            advanceTimeBy(60_001L)
             runCurrent()
             assertNull(result.await())
             assertFalse(ShadowAlertDialog.getLatestAlertDialog().isShowing)
+            assertFalse(ui.isWaiting())
+        }
+
+    @Test fun aTapBesideThePopUpDoesNotAnswerForTheOwner() =
+        runTest {
+            Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+            val ui = TaskAttachmentSelection(activity(), ::protectConfirmationDialog)
+            ui.foreground()
+            val result = async { ui.confirm(files.take(1)) }
+            runCurrent()
+            val dialog = ShadowAlertDialog.getLatestAlertDialog()
+            assertFalse(shadowOf(dialog).isCancelableOnTouchOutside)
+            assertFalse(result.isCompleted)
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            runCurrent()
+            assertEquals(AttachmentDecision.SEND, result.await())
+        }
+
+    @Test fun stopDismissesTheOpenQuestionAsCancelled() =
+        runTest {
+            Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+            val ui = TaskAttachmentSelection(activity(), ::protectConfirmationDialog)
+            ui.foreground()
+            val result = async { ui.choose("bill", files) }
+            runCurrent()
+            assertTrue(ui.isWaiting())
+            ui.cancelWaiting()
+            shadowOf(Looper.getMainLooper()).idle()
+            runCurrent()
+            assertNull(result.await())
+            assertFalse(ShadowAlertDialog.getLatestAlertDialog().isShowing)
+            assertFalse(ui.isWaiting())
+        }
+
+    @Test fun stopWhileTheSystemPickerIsOpenEndsThePickAsNothingChosen() =
+        runTest {
+            Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+            val ui = TaskAttachmentSelection(activity(), ::protectConfirmationDialog)
+            ui.foreground()
+            val result = async { ui.pick("Download") }
+            runCurrent()
+            assertTrue(ui.isWaiting())
+            ui.cancelWaiting()
+            shadowOf(Looper.getMainLooper()).idle()
+            runCurrent()
+            assertNull(result.await())
+            assertFalse(ui.isWaiting())
+        }
+
+    @Test fun theOwnersTouchesWhileEQOWaitsForAFileChoiceAreNotATakeover() =
+        runTest {
+            Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+            val detector = TakeoverDetector()
+            val ui = TaskAttachmentSelection(activity(), ::protectConfirmationDialog, detector)
+            ui.foreground()
+            detector.onAgentActionStarted() // The whole run is an agent action window.
+            val touch = TakeoverDetector.TouchSource.USER
+            val picking = async { ui.pick("Download") }
+            runCurrent()
+            assertFalse("choosing in the system picker is the answer", detector.onTouch(touch, nowMs = 10L))
+            ui.cancelWaiting()
+            shadowOf(Looper.getMainLooper()).idle()
+            runCurrent()
+            assertNull(picking.await())
+            assertFalse(detector.isPaused)
+            val asking = async { ui.confirm(files.take(1)) }
+            runCurrent()
+            assertFalse(detector.onTouch(touch, nowMs = 20L))
+            ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            runCurrent()
+            assertEquals(AttachmentDecision.SEND, asking.await())
+            // Once the question is answered the normal rule applies again.
+            assertTrue(detector.onTouch(touch, nowMs = 30L))
         }
 }

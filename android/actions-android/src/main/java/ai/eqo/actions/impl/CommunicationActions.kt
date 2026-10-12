@@ -111,6 +111,10 @@ private class AndroidAttachmentEmailComposer(
     }
 }
 
+/** The gate's own fixed, user-readable reason; never the generic "could not open the attachment". */
+private fun gatedReason(failure: GatedLaunchException): String =
+    failure.message?.takeIf { it.isNotBlank() } ?: AttachmentFailure.reason("send_route_failed")
+
 /** Gives the receiving app a read grant for exactly these files; the share also carries the grant flag. */
 private fun grantRead(
     context: Context,
@@ -589,6 +593,10 @@ internal class CommunicationActions constructor(
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             share.discard(ready.files)
             throw cancelled
+        } catch (gated: GatedLaunchException) {
+            // The gate refused the launch (the owner took over, accessibility is off): say exactly that.
+            share.discard(ready.files)
+            ActionResult.Failure(gatedReason(gated))
         } catch (e: Exception) {
             share.discard(ready.files)
             Log.e("SendWhatsApp", "WhatsApp file share failed")
@@ -641,6 +649,10 @@ internal class CommunicationActions constructor(
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             share.discard(ready.files)
             throw cancelled
+        } catch (gated: GatedLaunchException) {
+            // The gate refused the launch (the owner took over, accessibility is off): say exactly that.
+            share.discard(ready.files)
+            ActionResult.Failure(gatedReason(gated))
         } catch (e: Exception) {
             share.discard(ready.files)
             ActionResult.Failure(AttachmentFailure.reason("send_route_failed"))
@@ -725,6 +737,9 @@ internal class CommunicationActions constructor(
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 if (shared != null) attachments?.discard(shared.files)
                 throw cancelled
+            } catch (gated: GatedLaunchException) {
+                if (shared != null) attachments?.discard(shared.files)
+                ActionResult.Failure(gatedReason(gated))
             } catch (e: Exception) {
                 if (shared != null) attachments?.discard(shared.files)
                 Log.e("SendEmail", "Email compose launch failed")

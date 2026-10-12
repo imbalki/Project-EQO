@@ -66,7 +66,7 @@ class TaskActivity : Activity() {
     private var controller: StudyTaskController? = null
     private var voiceInput: TaskVoiceInput? = null
     private val attachmentSelection by lazy {
-        TaskAttachmentSelection(this) { prepareTaskDialog(it, fileChoices = true) }
+        TaskAttachmentSelection(this, prepareDialog = { prepareTaskDialog(it, fileChoices = true) })
     }
     private var waitingPermission: String? = null
     private var displayedStatus = PlanStatus.PENDING
@@ -162,6 +162,7 @@ class TaskActivity : Activity() {
             TaskRunSession.readAloud = false
             resultSpeaker?.stop()
             actionPermissions.cancelWaiting()
+            attachmentSelection.cancelWaiting()
             control { it.stop() }
         }
         findViewById<Button>(R.id.task_takeover_button).setOnClickListener { control { it.takeover() } }
@@ -171,8 +172,8 @@ class TaskActivity : Activity() {
         TaskRunSession.permissionRequester = actionPermissions
         TaskRunSession.observer = {
             mainHandler.post {
-                renderPlanStatus(TaskRunSession.status)
                 renderSteps(TaskRunSession.progress.values.toList())
+                renderPlanStatus(TaskRunSession.status)
                 TaskRunSession.receipt?.let(::renderReceipt)
                 updateRetry()
             }
@@ -210,7 +211,10 @@ class TaskActivity : Activity() {
         if (understandingRequest) preparationGeneration++
         intentChoices.cancel()
         attachmentSelection.background()
-        if (TaskRunSession.attachmentSelection === attachmentSelection) TaskRunSession.attachmentSelection = null
+        // A question still waiting for the owner keeps its registration, so the run knows it is waiting.
+        if (TaskRunSession.attachmentSelection === attachmentSelection && !attachmentSelection.isWaiting()) {
+            TaskRunSession.attachmentSelection = null
+        }
         voiceInput?.pause()
         actionPermissions.onPause()
         TakeoverDetector.shared.setControlTouchExclusion(null)
@@ -357,7 +361,7 @@ class TaskActivity : Activity() {
     }
 
     private fun startRun(approved: ApprovedTaskPlan) {
-        prepareResultReadout()
+        prepareResultReadout(approved)
         TakeoverDetector.shared.startNewRun()
         if (approved.steps().all { it.action.name == it.action.name.uppercase() }) {
             TaskRunSession.requestDraft = findViewById<EditText>(R.id.task_request).text.toString()
@@ -416,7 +420,9 @@ class TaskActivity : Activity() {
         }
     }
 
-    private fun prepareResultReadout() {
+    private fun prepareResultReadout(approved: ApprovedTaskPlan) {
+        // The run summary reads the approved actions and parameters, never the executor text.
+        TaskRunSession.runSteps = approved.steps()
         TaskRunSession.readAloud = voiceInput?.hasVoiceDraft == true
         TaskRunSession.spokenResultIds.clear()
         resultSpeaker?.stop()
@@ -540,7 +546,9 @@ class TaskActivity : Activity() {
 
     private fun renderPlanStatus(status: PlanStatus) {
         displayedStatus = status
-        findViewById<TextView>(R.id.task_state).text = planLabel(status.name)
+        // FAILED is for runs where EQO itself failed; a draft the owner finishes reads as "Needs you".
+        val shown = RunStatusMapping.terminal(RunReceipt(displayedResults.values.toList(), status.name))
+        findViewById<TextView>(R.id.task_state).text = planLabel(shown)
         waitingPermission?.let {
             findViewById<TextView>(R.id.task_state).text =
                 RunStatusMapping.permissionInstruction(it)
@@ -580,12 +588,11 @@ class TaskActivity : Activity() {
         steps.forEach { step -> container.addView(stepView(step)) }
         displayedResults.clear()
         steps.forEach { displayedResults[it.stepId] = it }
-        renderResults()
+        findViewById<TextView>(R.id.task_result).visibility = View.GONE
     }
 
     private fun renderStep(step: StepProgress) {
         displayedResults[step.stepId] = step
-        renderResults()
         if (step.state == StepProgressState.RUNNING) {
             findViewById<TextView>(R.id.task_practice_countdown).text = ""
         }
@@ -599,14 +606,18 @@ class TaskActivity : Activity() {
         }
     }
 
-    private fun renderResults() {
-        val results = displayedResults.values.toList()
-        val lines = TaskResultPresentation.lines(results)
+    /** One plain sentence for the finished run, shown on the Result line and (voice requests only) spoken once. */
+    private fun renderRunSummary(receipt: RunReceipt) {
+        val plan = TaskRunSession.runSteps
+        val sentence =
+            TaskResultPresentation.sentence(
+                RunSummary.sentences(RunSummary.steps(plan, receipt.steps), RunStatusMapping.terminal(receipt)),
+            ) { it.text(this) }
         findViewById<TextView>(R.id.task_result).apply {
-            visibility = if (lines.isBlank()) View.GONE else View.VISIBLE
-            text = getString(R.string.task_result_format, lines)
+            visibility = if (sentence == null) View.GONE else View.VISIBLE
+            text = sentence?.let { getString(R.string.task_result_format, it) }.orEmpty()
         }
-        resultReadout.update(results, TaskRunSession.readAloud)
+        resultReadout.update(sentence, TaskRunSession.readAloud)
     }
 
     private fun stepView(step: StepProgress): TextView =
@@ -634,6 +645,7 @@ class TaskActivity : Activity() {
         val terminal = RunStatusMapping.terminal(receipt)
         findViewById<TextView>(R.id.task_state).text = planLabel(terminal)
         renderSteps(receipt.steps)
+        renderRunSummary(receipt)
 
         fun names(ids: List<String>): String =
             ids
@@ -1028,6 +1040,8 @@ class TaskActivity : Activity() {
         resultSpeaker?.close()
         intentChoices.cancel()
         attachmentSelection.picker.destroy()
+        attachmentSelection.close()
+        if (TaskRunSession.attachmentSelection === attachmentSelection) TaskRunSession.attachmentSelection = null
         voiceInput?.close()
         debugPlanReceiver?.let { unregisterReceiver(it) }
         TaskRunSession.observer = null

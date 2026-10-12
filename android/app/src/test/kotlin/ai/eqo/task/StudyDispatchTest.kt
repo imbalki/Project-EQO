@@ -223,6 +223,7 @@ class StudyDispatchTest {
             val result = executor.execute(step)
             assertTrue(result is ExecuteResult.Failure)
             assertEquals("Needs user input: Choose a recipient", (result as ExecuteResult.Failure).reason)
+            assertTrue(result.handoff)
             assertEquals("Choose a recipient", executor.handoffDetail("1"))
         }
 

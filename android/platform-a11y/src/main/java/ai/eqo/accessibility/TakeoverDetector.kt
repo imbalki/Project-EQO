@@ -75,6 +75,8 @@ class TakeoverDetector {
 
     private var lastResumeConfirmation: UserResumeConfirmation? = null
 
+    private var ownerChoiceDepth = 0
+
     @Volatile
     var isPaused: Boolean = false
         private set
@@ -88,6 +90,21 @@ class TakeoverDetector {
     @Volatile
     var lastTakeoverCause: TakeoverCause = TakeoverCause.USER
         private set
+
+    /**
+     * EQO asked the owner a question (a file chooser, the system picker, a confirmation) and does nothing until it
+     * is answered. Their touches are the answer, never a takeover. Always paired with [endOwnerChoice] in a
+     * `finally`; nests; never clears a takeover that already latched.
+     */
+    fun beginOwnerChoice() {
+        synchronized(lock) { ownerChoiceDepth++ }
+    }
+
+    fun endOwnerChoice() {
+        synchronized(lock) {
+            if (ownerChoiceDepth > 0) ownerChoiceDepth--
+        }
+    }
 
     fun onAgentActionStarted() {
         synchronized(lock) { actionDepth++ }
@@ -117,6 +134,7 @@ class TakeoverDetector {
         nowMs: Long = 0L,
     ): Boolean =
         synchronized(lock) {
+            if (ownerChoiceDepth > 0) return@synchronized false
             val withinAgentActionGrace =
                 source == TouchSource.USER &&
                     gracedTouches < MAX_GRACED_TOUCHES_PER_RUN &&
