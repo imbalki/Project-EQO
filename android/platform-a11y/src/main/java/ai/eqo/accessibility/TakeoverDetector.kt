@@ -5,6 +5,7 @@
 package ai.eqo.accessibility
 
 import ai.eqo.core.agent.UserResumeConfirmation
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Detects the user taking control while EQO is mid-action.
@@ -75,7 +76,12 @@ class TakeoverDetector {
 
     private var lastResumeConfirmation: UserResumeConfirmation? = null
 
-    private var ownerChoiceDepth = 0
+    /**
+     * EQO asked the owner a question (a file chooser, the system picker, a confirmation) and does nothing until it
+     * is answered. Their touches are the answer, never a takeover. It nests, is always closed in a `finally`, and
+     * never clears a takeover that already latched.
+     */
+    val ownerChoice = OwnerChoiceWindow()
 
     @Volatile
     var isPaused: Boolean = false
@@ -90,21 +96,6 @@ class TakeoverDetector {
     @Volatile
     var lastTakeoverCause: TakeoverCause = TakeoverCause.USER
         private set
-
-    /**
-     * EQO asked the owner a question (a file chooser, the system picker, a confirmation) and does nothing until it
-     * is answered. Their touches are the answer, never a takeover. Always paired with [endOwnerChoice] in a
-     * `finally`; nests; never clears a takeover that already latched.
-     */
-    fun beginOwnerChoice() {
-        synchronized(lock) { ownerChoiceDepth++ }
-    }
-
-    fun endOwnerChoice() {
-        synchronized(lock) {
-            if (ownerChoiceDepth > 0) ownerChoiceDepth--
-        }
-    }
 
     fun onAgentActionStarted() {
         synchronized(lock) { actionDepth++ }
@@ -134,7 +125,7 @@ class TakeoverDetector {
         nowMs: Long = 0L,
     ): Boolean =
         synchronized(lock) {
-            if (ownerChoiceDepth > 0) return@synchronized false
+            if (ownerChoice.isOpen) return@synchronized false
             val withinAgentActionGrace =
                 source == TouchSource.USER &&
                     gracedTouches < MAX_GRACED_TOUCHES_PER_RUN &&
@@ -228,5 +219,20 @@ class TakeoverDetector {
         const val MAX_GRACED_TOUCHES_PER_RUN: Int = 24
 
         private const val NO_TIME = Long.MIN_VALUE
+    }
+}
+
+/** Counts open owner questions; separate from the detector so the touch rules stay small. */
+class OwnerChoiceWindow {
+    private val depth = AtomicInteger()
+
+    val isOpen: Boolean get() = depth.get() > 0
+
+    fun begin() {
+        depth.incrementAndGet()
+    }
+
+    fun end() {
+        depth.updateAndGet { if (it > 0) it - 1 else 0 }
     }
 }

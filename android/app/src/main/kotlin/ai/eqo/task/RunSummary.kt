@@ -2,9 +2,9 @@
 package ai.eqo.task
 
 import ai.eqo.core.agent.LoopStep
-import android.content.Context
 import ai.eqo.study.StepProgress
 import ai.eqo.study.StepProgressState
+import android.content.Context
 
 /** Fixed wording is a string resource plus plain arguments, so the mapper stays pure and host-testable. */
 internal data class RunSentence(

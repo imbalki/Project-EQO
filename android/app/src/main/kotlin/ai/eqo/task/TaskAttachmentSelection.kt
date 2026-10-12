@@ -113,11 +113,11 @@ internal class TaskAttachmentSelection(
     /** The owner is answering a question EQO asked: their touches are the answer, not a takeover. */
     private suspend fun <T> ownerChoice(block: suspend () -> T): T {
         waiting.incrementAndGet()
-        takeover.beginOwnerChoice()
+        takeover.ownerChoice.begin()
         try {
             return block()
         } finally {
-            takeover.endOwnerChoice()
+            takeover.ownerChoice.end()
             if (waiting.decrementAndGet() == 0) dialog = null
         }
     }
