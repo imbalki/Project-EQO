@@ -105,7 +105,13 @@ internal class AppPlanResolution(
         step: LoopStep,
         app: LaunchableAppResolver.Candidate,
     ): LoopStep {
-        val parameter = if (step.action.name == "open_app") "app" else "appName"
+        val parameter =
+            when (step.action.name) {
+                "open_app" -> "app"
+                // A named browser of a web step is pinned like an app to open; the label is what the preview shows.
+                "OPEN_URL", "WEB_SEARCH" -> "browser"
+                else -> "appName"
+            }
         return step.copy(
             action =
                 step.action.copy(
@@ -123,6 +129,7 @@ internal class AppPlanResolution(
             when (step.action.name) {
                 "OPEN_APP" -> step.action.params["appName"]
                 "open_app" -> step.action.params["app"]
+                "OPEN_URL", "WEB_SEARCH" -> step.action.params["browser"]?.takeIf { it.isNotBlank() }
                 else -> null
             }
     }

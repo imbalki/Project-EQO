@@ -878,12 +878,20 @@ class TaskActivity : Activity() {
         val understood =
             understandRequest(request, planner, generation)
                 ?.takeIf { generation == preparationGeneration } ?: return null
+        // The guess line and any plain notes about parts of the request EQO cannot do (never a plan that only
+        // looks complete) sit under the understood goal in the preview.
+        val understoodNotes =
+            listOfNotNull(if (understood.bestGuess) getString(R.string.intent_best_guess) else null) +
+                understood.notes.map {
+                    ai.eqo.core.agent.TaskDisplayText
+                        .escape(it)
+                }
         understoodPreview =
             getString(
                 R.string.intent_understood_preview,
                 ai.eqo.core.agent.TaskDisplayText
                     .escape(understood.intent.goal),
-                if (understood.bestGuess) getString(R.string.intent_best_guess) else "",
+                understoodNotes.joinToString("\n"),
             )
         return withContext(Dispatchers.IO) {
             // Never capture EQO's key/setup/request UI; execution observations stay local.

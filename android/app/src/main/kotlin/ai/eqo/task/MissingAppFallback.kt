@@ -27,6 +27,10 @@ internal class MissingAppFallback(
         },
     )
 
+    private companion object {
+        val WEB_STEPS = setOf("OPEN_URL", "WEB_SEARCH")
+    }
+
     sealed interface Result {
         data class Ready(
             val steps: List<LoopStep>,
@@ -67,20 +71,22 @@ internal class MissingAppFallback(
             replan(
                 request + "\n\nEQO planning constraint: these apps are not installed: " +
                     absent.joinToString(", ") + ". Do this task in Chrome instead. " +
-                    "Use OPEN_URL with HTTPS web search URLs and browser=chrome. Do not use the missing apps.",
+                    "Use OPEN_URL or WEB_SEARCH with browser=chrome. Do not use the missing apps.",
             )
         if (missing(next).isNotEmpty()) {
             return Result.Stopped("The new plan still needs an app that is not installed. Nothing ran.")
         }
         if (!installed("Chrome")) return Result.Stopped("Chrome is not installed on this phone. Nothing ran.")
-        if (next.none { it.action.name == "OPEN_URL" }) {
+        if (next.none { it.action.name in WEB_STEPS }) {
             return Result.Stopped("EQO could not make a Chrome search plan. Nothing ran.")
         }
         // Pin URLs to Chrome BEFORE preview/approval; never redirect an approved plan.
         return Result.Ready(
             next.map { step ->
-                if (step.action.name == "OPEN_URL") {
-                    step.copy(action = step.action.copy(params = step.action.params + ("browser" to "chrome")))
+                if (step.action.name in WEB_STEPS) {
+                    // Any earlier pin of another browser is dropped: the preview names Chrome, so Chrome runs.
+                    val params = step.action.params - "packageName" + ("browser" to "chrome")
+                    step.copy(action = step.action.copy(params = params))
                 } else {
                     step
                 }
