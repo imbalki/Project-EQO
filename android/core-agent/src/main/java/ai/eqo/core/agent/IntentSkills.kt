@@ -3,7 +3,7 @@ package ai.eqo.core.agent
 
 /** Templates are still schema validated, previewed and approved; none executes during understanding. */
 object IntentSkills {
-    val names = listOf("keep_note", "calculate", "message", "call", "open_app", "search")
+    val names = listOf("keep_note", "calculate", "message", "call", "open_app", "search", "shopping_cart")
 
     fun plan(
         intent: TaskIntent,
@@ -30,6 +30,7 @@ object IntentSkills {
             "call" -> call(intent)
             "search" -> search(intent)
             "open_url" -> openUrl(intent)
+            "purchase" -> ShoppingPlans.plan(intent)
             else -> emptyList()
         }
 
@@ -130,6 +131,7 @@ object IntentPlanProtection {
         intent: TaskIntent,
         steps: List<LoopStep>,
     ): List<LoopStep> {
+        val protected = ShoppingPlans.validate(intent, steps)
         if (intent.send == "no") require(steps.none(::submits)) { "Intent send=no cannot include Send or submit steps" }
         if (intent.action == "send_message") {
             val channel = intent.channel ?: "sms"
@@ -137,7 +139,7 @@ object IntentPlanProtection {
             val forbidden = CHANNEL_ACTIONS.filterKeys { it != channel }.values.flatten()
             require(names.none { it in forbidden }) { "Plan must use the understood message channel" }
         }
-        return if (intent.action == "create_note") noteSteps(steps) else steps
+        return if (intent.action == "create_note") noteSteps(protected) else protected
     }
 
     /**

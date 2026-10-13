@@ -17,6 +17,63 @@ class EqoAutomationFakeTreeTest {
     private var serviceState = EqoAutomation.ServiceState.AVAILABLE
     private var rootProviderCalls = 0
 
+    @Test fun shoppingAlternativeLabelsKeepProductOrderAndRefusePaymentAncestors() {
+        val first = FakeNode(text = "Add to cart", isClickable = true)
+        val later = FakeNode(text = "Add", isClickable = true)
+        assertTrue(automation(FakeNode().child(first).child(later)).tap("exact:Add,exact:Add to cart").isSuccess)
+        assertEquals(listOf(1, 0), listOf(first, later).map { it.clickCount })
+        for (target in listOf("Pay", "COD", "Confirm address", "Place order")) {
+            val parent = FakeNode(contentDescription = target, isClickable = true).child(FakeNode(text = "Add"))
+            assertFalse(automation(FakeNode().child(parent)).tap("exact:Add").isSuccess)
+            assertEquals(0, parent.clickCount)
+        }
+    }
+
+    @Test fun shoppingExactControlsNeverFallBackToPaymentLabelsAndSearchNeverTypesInCardField() {
+        val payment = FakeNode(text = "Add card", isClickable = true)
+        val checkout = FakeNode(contentDescription = "Cart checkout confirm", isClickable = true)
+        val field = FakeNode(text = "Card number", isEditable = true)
+        val pincode = FakeNode(hintText = "Search or type your pincode", isEditable = true)
+        val runner =
+            automation(
+                FakeNode()
+                    .child(payment)
+                    .child(checkout)
+                    .child(field)
+                    .child(pincode),
+            )
+        assertFalse(runner.tap("exact:Add,exact:Add to cart").isSuccess)
+        assertFalse(runner.tap("exact:Cart,exact:View cart").isSuccess)
+        assertFalse(runner.type("search:Search", "milk").isSuccess)
+        assertEquals(0, payment.clickCount)
+        assertEquals(0, checkout.clickCount)
+        assertNull(field.typedValue)
+        assertNull(pincode.typedValue)
+    }
+
+    @Test fun shoppingControlsChooseFirstAddAndSupportContentDescriptions() {
+        val first = FakeNode(text = "Add", isClickable = true)
+        val second = FakeNode(text = "Add", isClickable = true)
+        val increase = FakeNode(contentDescription = "Increase quantity", isClickable = true)
+        val cart = FakeNode(contentDescription = "View cart", isClickable = true)
+        val search = FakeNode(hintText = "Search for products", isEditable = true)
+        val runner =
+            automation(
+                FakeNode()
+                    .child(first)
+                    .child(second)
+                    .child(increase)
+                    .child(cart)
+                    .child(search),
+            )
+        assertTrue(runner.type("search:Search", "milk").isSuccess)
+        assertTrue(runner.tap("exact:Add,exact:Add to cart").isSuccess)
+        assertTrue(runner.tap("exact:+,exact:Increase quantity").isSuccess)
+        assertTrue(runner.tap("exact:Cart,exact:View cart").isSuccess)
+        assertEquals(listOf(1, 0, 1, 1), listOf(first, second, increase, cart).map { it.clickCount })
+        assertEquals("milk", search.typedValue)
+    }
+
     private fun automation(root: FakeNode?): EqoAutomation =
         EqoAutomation(
             rootProvider = {

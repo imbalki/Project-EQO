@@ -212,6 +212,7 @@ class EqoAutomation(
             null
         }
 
+    @Suppress("ReturnCount") // Strict cart controls use a separate first-product path; ordinary matching is unchanged.
     private fun bestTappable(
         root: A11yNode,
         target: String,
@@ -219,9 +220,13 @@ class EqoAutomation(
     ): A11yNode? {
         val alternatives =
             if (byViewId) listOf(target) else target.split(',').map(String::trim).filter(String::isNotEmpty)
+        if (!byViewId && alternatives.isNotEmpty() && alternatives.all { it.startsWith("exact:") }) {
+            return firstExactTappable(root, alternatives.map { it.removePrefix("exact:") })
+        }
         val exactPasses = if (byViewId) listOf(true) else listOf(true, false)
         for (exact in exactPasses) {
             for (label in alternatives) {
+                if (!exact && label.startsWith("exact:")) continue
                 val hit = findTappable(root, label, byViewId, exact)
                 if (hit != null) return hit
             }
@@ -229,6 +234,22 @@ class EqoAutomation(
         return null
     }
 
+    /** Strict shopping alternatives preserve product tree order, not label preference. */
+    private fun firstExactTappable(
+        root: A11yNode,
+        labels: List<String>,
+    ): A11yNode? {
+        val hit =
+            NodeTreeSearch.findFirst(root) { node ->
+                !node.isPassword &&
+                    safeSearchInput(node) &&
+                    labels.any { NodeTreeSearch.matchesExactly(node, it) } &&
+                    NodeTreeSearch.clickableSelfOrAncestor(node)?.let(::safeSearchInput) == true
+            }
+        return hit?.let(NodeTreeSearch::clickableSelfOrAncestor)
+    }
+
+    @Suppress("CyclomaticComplexMethod") // Ordered exact/ID/partial passes plus payment-safe clickable ancestors.
     private fun findTappable(
         root: A11yNode,
         label: String,
@@ -241,6 +262,8 @@ class EqoAutomation(
                     val matches =
                         when {
                             byViewId || label.startsWith("id:") -> NodeTreeSearch.matches(node, label, true)
+                            label.startsWith("exact:") ->
+                                NodeTreeSearch.matchesExactly(node, label.removePrefix("exact:"))
                             exact ->
                                 NodeTreeSearch.matchesExactly(node, label) || NodeTreeSearch.matches(node, label, true)
                             else -> NodeTreeSearch.matches(node, label, false)
@@ -248,7 +271,9 @@ class EqoAutomation(
                     !node.isPassword &&
                         matches &&
                         (allowInput || !NodeTreeSearch.isTextInput(node)) &&
-                        NodeTreeSearch.clickableSelfOrAncestor(node) != null
+                        NodeTreeSearch.clickableSelfOrAncestor(node)?.let {
+                            !label.startsWith("exact:") || safeSearchInput(it)
+                        } == true
                 }
             if (hit != null) return NodeTreeSearch.clickableSelfOrAncestor(hit)
         }
@@ -264,6 +289,12 @@ class EqoAutomation(
 
     private companion object {
         private val VIEW_ID_LOG_SAFE = Regex("[A-Za-z0-9_.:/]{1,100}")
+        private val PAYMENT_INPUT =
+            Regex(
+                "pay|upi|card|address|pincode|postcode|postal|confirm|checkout|subscribe|buy[ _-]*now|" +
+                    "place[ _-]*order|order[ _-]*now|\\bcod\\b",
+                RegexOption.IGNORE_CASE,
+            )
     }
 
     private fun typingResult(
@@ -300,19 +331,27 @@ class EqoAutomation(
         return result
     }
 
-    /** The input matching [target]; with an unmatched text hint, the only input on screen, never a guess. */
+    private fun safeSearchInput(node: A11yNode): Boolean =
+        listOf(node.text, node.contentDescription, node.hintText, node.viewIdResourceName)
+            .none { PAYMENT_INPUT.containsMatchIn(it?.toString().orEmpty()) }
+
+    /** The input matching [target]; strict search targets never fall back to another input. */
     private fun resolveTypeTarget(
         target: String,
         byViewId: Boolean,
     ): A11yNode? {
         val root = rootProvider() ?: return null
         val focusedOnly = !byViewId && target.lowercase() in setOf("focused", "current")
+        val searchOnly = target.startsWith("search:")
+        val label = target.removePrefix("search:")
+        val strict = listOf(byViewId, focusedOnly, searchOnly, target.startsWith("id:")).any { it }
         val matched =
             NodeTreeSearch.findFirst(root) { node ->
                 NodeTreeSearch.isTextInput(node) &&
-                    if (focusedOnly) node.isFocused else NodeTreeSearch.matches(node, target, byViewId)
+                    (!searchOnly || safeSearchInput(node)) &&
+                    if (focusedOnly) node.isFocused else NodeTreeSearch.matches(node, label, byViewId)
             }
-        return matched ?: if (byViewId || focusedOnly || target.startsWith("id:")) {
+        return matched ?: if (strict) {
             null
         } else {
             NodeTreeSearch.soleTextInput(root)

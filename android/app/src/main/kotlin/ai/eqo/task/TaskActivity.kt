@@ -897,6 +897,9 @@ class TaskActivity : Activity() {
             // Never capture EQO's key/setup/request UI; execution observations stay local.
             val apps = TaskAppPlanning(this@TaskActivity, appResolver)
             apps.prepare(request, understood.steps) { constrained ->
+                require(understood.intent.action != "purchase") {
+                    "Shopping needs an installed shopping app; no browser or payment fallback will run."
+                }
                 planWithOneNetworkRetry {
                     planner.plan(
                         constrained,

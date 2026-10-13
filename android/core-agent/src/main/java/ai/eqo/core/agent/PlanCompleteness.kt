@@ -39,6 +39,15 @@ object PlanCompleteness {
         enabled: Set<String>,
     ): List<Gap> {
         val first = request.lines().first()
+        if (intent.action == "purchase") {
+            return if (ShoppingIntents.supported(intent.app) &&
+                steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF
+            ) {
+                emptyList()
+            } else {
+                listOf(Gap("Shopping must end at the cart", "$SHOPPING: this plan does not add the item to the cart."))
+            }
+        }
         val values = Carriage.carried(steps)
         return listOfNotNull(
             searchGap(first, intent, steps, values),

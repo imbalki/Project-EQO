@@ -1,5 +1,11 @@
 # TASK-005 per-file provenance map
 
+## Cart-only shopping (t_3745d313)
+
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/ShoppingIntents.kt` | EQO-NEW | `ai.eqo.core.agent` | Local shopping slots and bounded quantities |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/ShoppingPlans.kt` | EQO-NEW | `ai.eqo.core.agent` | Cart-only templates and payment denial |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ShoppingTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Shopping slots, templates, model guard and preview regressions |
+
 ## Two-stage intent planning (t_661803d1)
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/PlainArithmetic.kt` | EQO-NEW | `ai.eqo.core.agent` | Shared bounded decimal arithmetic for preview and run |
