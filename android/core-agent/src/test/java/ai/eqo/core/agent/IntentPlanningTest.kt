@@ -314,7 +314,7 @@ class IntentPlanningTest {
         runTest {
             val bad = """{"steps":[{"action":"PRESS_ENTER","params":{}}]}"""
             val good = """{"steps":[{"action":"PRESS_BACK","params":{}}]}"""
-            for (app in listOf("Keep", "Gmail", "Chrome", "Other")) {
+            for (app in listOf("Keep", "Gmail", "Other")) {
                 val intent =
                     TaskIntent("Search", app, "search", mapOf("query" to "Synthetic query"), send = "no")
                 assertNull(IntentSkills.plan(intent, enabled))
@@ -330,6 +330,14 @@ class IntentPlanningTest {
                 )
             }
         }
+
+    @Test fun searchInANamedBrowserIsADirectWebSearchStepNotTapsOnItsAddressBar() {
+        val intent =
+            TaskIntent("Search", "Chrome", "search", mapOf("query" to "Synthetic query"), send = "no")
+        val steps = IntentSkills.plan(intent, enabled)!!
+        assertEquals(listOf("WEB_SEARCH"), steps.map { it.action.name })
+        assertEquals(mapOf("query" to "Synthetic query", "browser" to "Chrome"), steps.single().action.params)
+    }
 
     @Test fun providerFailureDoesNotTriggerPlanRepair() =
         runTest {

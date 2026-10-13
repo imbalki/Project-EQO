@@ -382,7 +382,12 @@ object ActionSchema {
                 params =
                     listOf(
                         ParamDefinition("url", ParamType.STRING, true, "HTTP(S) URL to open"),
-                        ParamDefinition("browser", ParamType.ENUM, false, "Open in Chrome", listOf("chrome")),
+                        ParamDefinition(
+                            "browser",
+                            ParamType.STRING,
+                            false,
+                            "Optional installed browser app (label such as Chrome or Brave); omit for the default",
+                        ),
                     ),
                 examples =
                     listOf(
@@ -884,7 +889,16 @@ object ActionSchema {
             ActionDefinition(
                 name = "WEB_SEARCH",
                 description = "Searches the web for information",
-                params = listOf(ParamDefinition("query", ParamType.STRING, true, "Search query")),
+                params =
+                    listOf(
+                        ParamDefinition("query", ParamType.STRING, true, "Search query"),
+                        ParamDefinition(
+                            "browser",
+                            ParamType.STRING,
+                            false,
+                            "Optional installed browser app (label such as Chrome or Brave); omit for the default",
+                        ),
+                    ),
                 examples = listOf("search best restaurants", "google latest iphone"),
                 category = ActionCategory.INFORMATION,
             ),

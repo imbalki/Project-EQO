@@ -160,7 +160,7 @@ class AppRolesTest {
             val fake = IntentFixtureProvider(listOf(Json.encodeToString(search)))
             val intent =
                 IntentUnderstanding(fake, phone, roleMemory = { "Firefox" })
-                    .understand("search the web in the browser for cats")
+                    .understand("please look for cats on the web in the browser")
             assertEquals("Firefox", intent.app)
             assertTrue(request(fake).contains("Chosen browser: Firefox"))
         }
