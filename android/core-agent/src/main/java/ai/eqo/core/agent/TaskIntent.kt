@@ -27,12 +27,23 @@ data class TaskIntent(
     fun missingParameter(): String? =
         when (action) {
             "open_app" -> if (app.isNullOrBlank()) "app" else null
+            "purchase" -> missingShoppingParameter()
             "create_note" -> missingNoteParameter()
-            "calculate" -> if (params["expression"].isNullOrBlank()) "expression" else null
-            "call" -> if (params["contact"].isNullOrBlank()) "contact" else null
+            "calculate" -> missingSlot("expression")
+            "call" -> missingSlot("contact")
             "send_message" -> missingMessageParameter()
-            "search" -> if (params["query"].isNullOrBlank()) "query" else null
-            "open_url" -> if (params["url"].isNullOrBlank()) "url" else null
+            "search" -> missingSlot("query")
+            "open_url" -> missingSlot("url")
+            else -> null
+        }
+
+    private fun missingSlot(name: String): String? = if (params[name].isNullOrBlank()) name else null
+
+    private fun missingShoppingParameter(): String? =
+        when {
+            app.isNullOrBlank() -> "app"
+            params["item"].isNullOrBlank() -> "item"
+            params["quantity"]?.toIntOrNull() !in 1..ShoppingIntents.MAX_QUANTITY -> "quantity"
             else -> null
         }
 
@@ -62,7 +73,7 @@ data class TaskIntent(
         const val CONFIDENT = 0.7
         val ACTIONS =
             setOf("open_app", "create_note", "calculate", "send_message") +
-                setOf("call", "search", "open_url", "read_screen", "other")
+                setOf("call", "search", "open_url", "read_screen", "purchase", "other")
     }
 }
 
@@ -86,7 +97,9 @@ class IntentUnderstanding(
         require(request.isNotBlank() && request.length <= MAX_REQUEST) { "Request is too long or empty" }
         // A generic role ("the browser") is decided locally before any model or label guess can pick an app.
         val role = AppRoles.decide(request, installedApps, roleMemory)
-        val intent = localIntent(request, role) ?: query(request, role as? RoleDecision.Use)
+        val intent =
+            ShoppingIntents.from(request, installedApps) ?: localIntent(request, role)
+                ?: query(request, role as? RoleDecision.Use)
         val bucket = if (intent.confidence >= TaskIntent.CONFIDENT) "high" else "low"
         diagnostic("intent kind=${intent.action} confidence=$bucket")
         return intent
@@ -192,7 +205,9 @@ class IntentUnderstanding(
             Understand EQO's user's request; do NOT plan or execute. Return only JSON:
             {"goal":"short sentence","app":null,"action":"other","params":{},"channel":null,
             "send":"unknown","confidence":0.0,"question":null,"options":[]}.
-            action: open_app|create_note|calculate|send_message|call|search|open_url|read_screen|other.
+            action: open_app|create_note|calculate|send_message|call|search|open_url|read_screen|purchase|other.
+            Buying, ordering or adding to a shopping cart is purchase, with params.item and params.quantity
+            (integer units, default 1). Never downgrade it to open_app or search. EQO stops at the cart, never pays.
             params are string values: title,body,contact,message,expression,query,subject,attachment,video,url
             as needed. A website or address to open is open_url with params.url; app is then the browser named, if any.
             A web search in a named browser is search with params.query and app=that browser.

@@ -1,5 +1,10 @@
 # TASK-005 per-file provenance map
 
+## Cart-only shopping (t_3745d313)
+
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/ShoppingIntents.kt` | EQO-NEW | `ai.eqo.core.agent` | Local shopping slots and bounded quantities |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/ShoppingPlans.kt` | EQO-NEW | `ai.eqo.core.agent` | Cart-only templates and payment denial |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/ShoppingTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Shopping slots, templates, model guard and preview regressions |
 ## Handle dictation (t_e1fe42ac)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/task/HandleDictationSession.kt` | EQO-NEW | `ai.eqo.task` | Fake-testable bounded recording and transcription lifecycle |
