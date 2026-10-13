@@ -3,6 +3,7 @@ package ai.eqo.task
 import ai.eqo.R
 import ai.eqo.core.agent.AttachmentFailure
 import ai.eqo.core.agent.LoopStep
+import ai.eqo.core.agent.ShoppingPlans
 import ai.eqo.core.agent.TaskDisplayText
 import ai.eqo.core.llm.error.LLMError
 import ai.eqo.study.FailureClass
@@ -17,6 +18,7 @@ internal object RunStatusMapping {
         val argument: String = "",
     )
 
+    @Suppress("CyclomaticComplexMethod") // Explicit terminal presentation reasons; never changes execution or retries.
     fun progress(
         step: LoopStep?,
         progress: StepProgress,
@@ -26,17 +28,34 @@ internal object RunStatusMapping {
             progress.state == StepProgressState.DONE &&
                 progress.name.lowercase() in setOf("compose_sms", "compose_email")
         val missingControl = progress.state == StepProgressState.FAILED && progress.detail == "control_not_found"
+        val cart = step?.action?.plannerClaim == ShoppingPlans.HANDOFF && progress.state == StepProgressState.DONE
+        val shoppingMissing =
+            step?.action?.plannerClaim?.startsWith("shopping:") == true && missingControl
+        val control = targetLabel(step).substringBefore(',').removePrefix("exact:")
         val fileNeedsYou =
             AttachmentFailure.kind(progress.detail) in
                 setOf("attachment_cancelled", "attachment_selection_required")
         val needsYou =
             draft ||
+                cart ||
                 missingControl ||
                 fileNeedsYou ||
                 (handoff != null && progress.state == StepProgressState.FAILED)
         return progress.copy(
             state = if (needsYou) StepProgressState.NEEDS_YOU else progress.state,
-            detail = if (needsYou) handoff ?: progress.detail else progress.detail,
+            detail =
+                when {
+                    cart -> ShoppingPlans.HANDOFF
+                    shoppingMissing ->
+                        "I could not find the $control button for " +
+                            step
+                                ?.action
+                                ?.plannerClaim
+                                .orEmpty()
+                                .removePrefix("shopping:")
+                    needsYou -> handoff ?: progress.detail
+                    else -> progress.detail
+                },
             targetLabel = targetLabel(step),
         )
     }

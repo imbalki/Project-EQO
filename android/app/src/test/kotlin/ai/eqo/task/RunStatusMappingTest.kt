@@ -19,6 +19,38 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 
 class RunStatusMappingTest {
+    @Test fun shoppingCartCompletionIsNeedsYouNotAnOrderCompleted() {
+        val step =
+            LoopStep(
+                "task-1",
+                ExecutedAction(
+                    "CLICK_TEXT",
+                    mapOf("text" to "exact:Cart"),
+                    plannerClaim = ai.eqo.core.agent.ShoppingPlans.HANDOFF,
+                ),
+            )
+        val progress =
+            RunStatusMapping.progress(
+                step,
+                failed("").copy(state = StepProgressState.DONE, name = "CLICK_TEXT"),
+                null,
+            )
+        assertEquals(StepProgressState.NEEDS_YOU, progress.state)
+        assertEquals(ai.eqo.core.agent.ShoppingPlans.HANDOFF, RunStatusMapping.detail(progress)?.argument)
+        assertEquals("NEEDS_YOU", RunStatusMapping.terminal(RunReceipt(listOf(progress), "COMPLETED")))
+    }
+
+    @Test fun shoppingMissingAddNamesTheItemAndApp() {
+        val step =
+            LoopStep(
+                "task-1",
+                ExecutedAction("CLICK_TEXT", mapOf("text" to "exact:Add"), plannerClaim = "shopping:milk in Zepto"),
+            )
+        val progress = RunStatusMapping.progress(step, failed("control_not_found"), null)
+        assertEquals("I could not find the Add button for milk in Zepto", RunStatusMapping.detail(progress)?.argument)
+        assertEquals(StepProgressState.NEEDS_YOU, progress.state)
+    }
+
     @Test fun permissionInstructionsAndFailureKindsContainNoPrivateDetail() {
         assertEquals(
             "Tap Allow for Contacts.",

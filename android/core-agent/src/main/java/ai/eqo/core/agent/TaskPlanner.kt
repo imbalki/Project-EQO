@@ -49,6 +49,22 @@ class TaskPlanner(
         intent: TaskIntent = TaskIntent("Plan the requested task", confidence = 1.0),
     ): Planned {
         require(request.isNotBlank() && request.length <= MAX_TEXT)
+        if (intent.action == "purchase") {
+            val actions = ShoppingPlans.plan(intent)
+            val steps = actions.mapIndexed { index, action -> LoopStep("task-${index + 1}", action) }
+            require(RegistryPlanVocabulary.errors(steps, enabledActions.orEmpty()).isEmpty())
+            ShoppingPlans.validate(intent, steps)
+            return Planned(
+                steps,
+                listOf(
+                    if (ShoppingIntents.supported(intent.app)) {
+                        ShoppingPlans.HANDOFF
+                    } else {
+                        "${PlanCompleteness.SHOPPING}: it will only open ${intent.app}."
+                    },
+                ),
+            )
+        }
         val template = template(request, intent)
         val arithmetic =
             intent.params["expression"]?.let(PlainArithmetic::evaluate) ?: PlainArithmetic.fromRequest(request)
@@ -334,18 +350,38 @@ object TaskPlanPreview {
         steps: List<LoopStep>,
         recipientNames: Map<String, String> = emptyMap(),
     ): String =
-        "EQO will:\n" +
+        if (steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF) {
+            shoppingPreview(steps)
+        } else {
+            "EQO will:\n" +
+                steps
+                    .mapIndexed { index, step ->
+                        val description =
+                            if (step.action.name == "WHATSAPP_CALL") {
+                                whatsappCallPreview(step.action.params)
+                            } else {
+                                describe(step)
+                            }
+                        "${index + 1}. $description" +
+                            recipientNames[step.stepId]?.let { " (contact: ${TaskDisplayText.escape(it)})" }.orEmpty()
+                    }.joinToString("\n")
+        }
+
+    private fun shoppingPreview(steps: List<LoopStep>): String {
+        val app =
             steps
-                .mapIndexed { index, step ->
-                    val description =
-                        if (step.action.name == "WHATSAPP_CALL") {
-                            whatsappCallPreview(step.action.params)
-                        } else {
-                            describe(step)
-                        }
-                    "${index + 1}. $description" +
-                        recipientNames[step.stepId]?.let { " (contact: ${TaskDisplayText.escape(it)})" }.orEmpty()
-                }.joinToString("\n")
+                .first()
+                .action.params["appName"]
+                .orEmpty()
+        val item =
+            steps
+                .first { it.action.name == "TYPE_TEXT" }
+                .action.params["content"]
+                .orEmpty()
+        val quantity = steps.count { it.action.params["text"] == "exact:+,exact:Increase quantity" } + 1
+        return "EQO will:\n1. open ${webText(app)}\n2. search ${webText(item)}\n" +
+            "3. add $quantity x ${webText(item)} to the cart\n4. open the cart and stop so you can pay"
+    }
 
     private fun shareRoute(via: String?): String =
         when (via?.trim()?.lowercase()) {

@@ -17,6 +17,62 @@ class EqoAutomationFakeTreeTest {
     private var serviceState = EqoAutomation.ServiceState.AVAILABLE
     private var rootProviderCalls = 0
 
+    @Test fun shoppingAlternativeLabelsKeepProductOrderAndRefusePaymentAncestors() {
+        val first = FakeNode(text = "Add to cart", isClickable = true)
+        val later = FakeNode(text = "Add", isClickable = true)
+        assertTrue(automation(FakeNode().child(first).child(later)).tap("exact:Add,exact:Add to cart").isSuccess)
+        assertEquals(listOf(1, 0), listOf(first, later).map { it.clickCount })
+        for (target in listOf("Pay", "COD", "Confirm address", "Place order")) {
+            val parent = FakeNode(contentDescription = target, isClickable = true).child(FakeNode(text = "Add"))
+            assertFalse(automation(FakeNode().child(parent)).tap("exact:Add").isSuccess)
+            assertEquals(0, parent.clickCount)
+        }
+    }
+
+    @Test fun shoppingExactControlsNeverFallBackToPaymentLabelsAndSearchNeverTypesInCardField() {
+        val payment = FakeNode(text = "Add card", isClickable = true)
+        val checkout = FakeNode(contentDescription = "Cart checkout confirm", isClickable = true)
+        val field = FakeNode(text = "Card number", isEditable = true)
+        val pincode = FakeNode(hintText = "Search or type your pincode", isEditable = true)
+        val runner =
+            automation(
+                FakeNode()
+                    .child(payment)
+                    .child(checkout)
+                    .child(field)
+                    .child(pincode),
+            )
+        assertFalse(runner.tap("exact:Add,exact:Add to cart").isSuccess)
+        assertFalse(runner.tap("exact:Cart,exact:View cart").isSuccess)
+        assertFalse(runner.type("search:Search", "milk").isSuccess)
+        assertEquals(0, payment.clickCount)
+        assertEquals(0, checkout.clickCount)
+        assertNull(field.typedValue)
+        assertNull(pincode.typedValue)
+    }
+
+    @Test fun shoppingControlsChooseFirstAddAndSupportContentDescriptions() {
+        val first = FakeNode(text = "Add", isClickable = true)
+        val second = FakeNode(text = "Add", isClickable = true)
+        val increase = FakeNode(contentDescription = "Increase quantity", isClickable = true)
+        val cart = FakeNode(contentDescription = "View cart", isClickable = true)
+        val search = FakeNode(hintText = "Search for products", isEditable = true)
+        val runner =
+            automation(
+                FakeNode()
+                    .child(FakeNode().child(FakeNode(text = "Milk")).child(first).child(increase))
+                    .child(FakeNode().child(FakeNode(text = "Bread")).child(second))
+                    .child(cart)
+                    .child(search),
+            )
+        assertTrue(runner.type("search:Search", "milk").isSuccess)
+        assertTrue(runner.tap("exact:Add,exact:Add to cart").isSuccess)
+        assertTrue(runner.tap("exact:+,exact:Increase quantity").isSuccess)
+        assertTrue(runner.tap("exact:Cart,exact:View cart").isSuccess)
+        assertEquals(listOf(1, 0, 1, 1), listOf(first, second, increase, cart).map { it.clickCount })
+        assertEquals("milk", search.typedValue)
+    }
+
     private fun automation(root: FakeNode?): EqoAutomation =
         EqoAutomation(
             rootProvider = {
@@ -26,6 +82,71 @@ class EqoAutomationFakeTreeTest {
             serviceState = { serviceState },
             takeover = takeover,
         )
+
+    @Test fun shoppingCodIdsOnControlsAndNonClickableAncestorsAreRefused() {
+        for (id in listOf("shop:id/cod_button", "shop:id/select_cod")) {
+            for (label in listOf("Add", "Cart")) {
+                val button = FakeNode(text = label, isClickable = true)
+                val parent = FakeNode(viewIdResourceName = id).child(button)
+                assertFalse(automation(FakeNode().child(parent)).tap("exact:$label").isSuccess)
+                assertEquals(0, button.clickCount)
+                val direct = FakeNode(text = label, viewIdResourceName = id, isClickable = true)
+                assertFalse(automation(FakeNode().child(direct)).tap("exact:$label").isSuccess)
+                assertEquals(0, direct.clickCount)
+            }
+        }
+    }
+
+    @Test fun shoppingIncreasesStayWithAddedProductAcrossFreshTreesAndMultipleRows() {
+        val breadIncrease = FakeNode(text = "+", isClickable = true)
+        val add = FakeNode(text = "Add", isClickable = true)
+        val laterAdd = FakeNode(text = "Add", isClickable = true)
+        val bread = FakeNode().child(FakeNode(text = "Bread")).child(breadIncrease)
+        var root =
+            FakeNode(packageName = "shop")
+                .child(bread)
+                .child(FakeNode().child(FakeNode(text = "Milk")).child(add))
+                .child(FakeNode().child(FakeNode(text = "Apples")).child(laterAdd))
+        val runner = EqoAutomation({ root }, { serviceState }, takeover)
+        assertTrue(runner.tap("exact:Add,exact:ADD,exact:Add to cart").isSuccess)
+        val milkIncrease = FakeNode(contentDescription = "Increase quantity", isClickable = true)
+        root =
+            FakeNode(packageName = "shop")
+                .child(bread)
+                .child(FakeNode().child(FakeNode(text = "Milk")).child(milkIncrease))
+                .child(FakeNode().child(FakeNode(text = "Apples")).child(laterAdd))
+        repeat(2) { assertTrue(runner.tap("exact:+,exact:Increase quantity").isSuccess) }
+        assertEquals(listOf(1, 0, 0, 2), listOf(add, laterAdd, breadIncrease, milkIncrease).map { it.clickCount })
+    }
+
+    @Test fun shoppingMissingAmbiguousReorderedOrDuplicateProductIncreaseStopsBeforeCart() {
+        for (problem in listOf("missing", "ambiguous", "reordered", "duplicate", "unbound")) {
+            val add = FakeNode(text = "Add", isClickable = true)
+            val breadIncrease = FakeNode(text = "+", isClickable = true)
+            val milkIncrease = FakeNode(text = "+", isClickable = true)
+            val cart = FakeNode(text = "Cart", isClickable = true)
+            val bread = FakeNode().child(FakeNode(text = "Bread")).child(breadIncrease)
+            val milk = FakeNode().child(FakeNode(text = "Milk")).child(add)
+            var root = FakeNode().child(bread).child(milk).child(cart)
+            val runner = EqoAutomation({ root }, { serviceState }, takeover)
+            if (problem != "unbound") assertTrue(runner.tap("exact:Add,exact:Add to cart").isSuccess)
+            val changedMilk = FakeNode().child(FakeNode(text = "Milk"))
+            if (problem != "missing") changedMilk.child(milkIncrease)
+            if (problem == "ambiguous") changedMilk.child(FakeNode(text = "+", isClickable = true))
+            root =
+                if (problem == "reordered") {
+                    FakeNode().child(changedMilk).child(bread).child(cart)
+                } else {
+                    FakeNode().child(bread).child(changedMilk).child(cart)
+                }
+            if (problem == "duplicate") root.child(FakeNode().child(FakeNode(text = "Milk")))
+            val actions = listOf("exact:+,exact:Increase quantity", "exact:Cart")
+            for (target in actions) {
+                if (!runner.tap(target).isSuccess) break
+            }
+            assertEquals(problem, listOf(0, 0, 0), listOf(breadIncrease, milkIncrease, cart).map { it.clickCount })
+        }
+    }
 
     @Test
     fun keepSpeedDialAndEditorUseIdsWithoutLabelsOrSearchFallback() {

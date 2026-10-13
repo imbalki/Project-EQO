@@ -92,5 +92,15 @@ internal fun createHandleRegistry(
             it.startActivity(Intent(it, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         },
     )
+    registry.register(
+        BuiltInHandleShortcut(
+            ai.eqo.accessibility.handle.EdgeHandleFeatures.DICTATION_ID,
+            R.string.dictation_switch,
+            android.R.drawable.ic_btn_speak_now,
+        ) {
+            ai.eqo.task.HandleDictation
+                .tap(it)
+        },
+    )
     return registry
 }
