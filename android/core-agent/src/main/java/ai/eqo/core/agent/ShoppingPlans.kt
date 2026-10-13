@@ -6,7 +6,8 @@ object ShoppingPlans {
     private const val CART = "exact:Cart,exact:View cart,exact:Go to cart"
     private val forbidden =
         Regex(
-            "pay|place[ _-]*order|confirm|buy[ _-]*now|checkout|upi|card|\\bcod\\b|order[ _-]*now|subscribe|address",
+            "pay|place[ _-]*order|confirm|buy[ _-]*now|checkout|upi|card|" +
+                "(?<![a-z0-9])cod(?![a-z0-9])|order[ _-]*now|subscribe|address",
             RegexOption.IGNORE_CASE,
         )
     private val taps = setOf("CLICK_TEXT", "CLICK_ID", "TAP_TEXT", "TAP_ID", "TYPE_TEXT", "TYPE_ID", "PASTE")

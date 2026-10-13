@@ -11,6 +11,38 @@ import org.junit.Test
 class ShoppingTest {
     private val enabled = setOf("OPEN_APP", "WAIT", "CLICK_TEXT", "TYPE_TEXT", "PRESS_ENTER")
 
+    @Test fun codResourceIdsAreDeniedInGenericModelAndRepairWithRegistryParameters() =
+        runTest {
+            for (id in listOf("shop:id/cod_button", "shop:id/select_cod", "shop:id/COD", "shop:id/cod-option")) {
+                for (verb in listOf("CLICK_ID", "TYPE_ID")) {
+                    val params =
+                        if (verb == "TYPE_ID") {
+                            mapOf("viewId" to id, "content" to "synthetic")
+                        } else {
+                            mapOf("viewId" to id)
+                        }
+                    val step = LoopStep("task-1", ExecutedAction(verb, params))
+                    assertTrue(RegistryPlanVocabulary.errors(listOf(step), enabled + verb).isEmpty())
+                    assertThrows(IllegalArgumentException::class.java) {
+                        IntentPlanProtection.validate(TaskIntent("Generic model task"), listOf(step))
+                    }
+                    val jsonParams =
+                        if (verb == "TYPE_ID") {
+                            """{"viewId":"$id","content":"synthetic"}"""
+                        } else {
+                            """{"viewId":"$id"}"""
+                        }
+                    val output = """{"steps":[{"action":"$verb","params":$jsonParams}]}"""
+                    val fake = IntentFixtureProvider(listOf(output, output))
+                    val result = runCatching { TaskPlanner(fake, enabled + verb).planWithNotes("finish a task") }
+                    assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+                    assertEquals(2, fake.requests.size)
+                }
+            }
+            val safe = LoopStep("task-1", ExecutedAction("CLICK_ID", mapOf("viewId" to "shop:id/barcode_button")))
+            assertEquals(listOf(safe), IntentPlanProtection.validate(TaskIntent("Scan a barcode"), listOf(safe)))
+        }
+
     @Test fun aiPlannerAndItsRepairBothPassPaymentProtection() =
         runTest {
             val targets = listOf("Pay", "Place order", "Confirm order", "Buy now", "UPI", "card", "cod", "subscribe")

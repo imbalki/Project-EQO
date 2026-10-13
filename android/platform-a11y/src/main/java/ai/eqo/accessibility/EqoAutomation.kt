@@ -35,6 +35,9 @@ class EqoAutomation(
     /** EQO's own package: its own windows (consent dialogs, approvals) are never automation targets. */
     private val ownPackage: String? = null,
 ) {
+    // Structural path and product labels only: never retain native nodes between actions.
+    private var shoppingSelection: ShoppingSelection? = null
+
     enum class ServiceState {
         AVAILABLE,
 
@@ -185,11 +188,25 @@ class EqoAutomation(
         ownWindowBlocked(target)?.let { return it }
         // Best tappable match: an exact label beats a partial one ("Voice call" beats "Call" appearing in
         // "Video call"), and a button or result row beats a text field that merely contains the text.
-        val clickable = rootProvider()?.let { root -> bestTappable(root, target, byViewId) }
+        val root = rootProvider()
+        val increase = !byViewId && target == "exact:+,exact:Increase quantity"
+        val selection = shoppingSelection
+        if (!increase) shoppingSelection = null
+        val clickable =
+            root?.let {
+                if (increase) selection?.increase(it, ::safeSearchInput) else bestTappable(it, target, byViewId)
+            }
+        val addedProduct =
+            root
+                ?.takeIf { !byViewId && target.startsWith("exact:Add") }
+                ?.let { ShoppingSelection.capture(it, target, ::safeSearchInput) }
         val result =
             when {
                 clickable == null -> A11yResult.failure(A11yError.NodeNotFound(target))
-                clickable.click() -> A11yResult.success("clicked $target")
+                clickable.click() -> {
+                    if (addedProduct != null) shoppingSelection = addedProduct
+                    A11yResult.success("clicked $target")
+                }
                 else -> A11yResult.failure(A11yError.ActionRejected(target))
             }
         return typingResult(clickable, result, if (byViewId) "CLICK_ID" else "CLICK_TEXT")
@@ -292,7 +309,7 @@ class EqoAutomation(
         private val PAYMENT_INPUT =
             Regex(
                 "pay|upi|card|address|pincode|postcode|postal|confirm|checkout|subscribe|buy[ _-]*now|" +
-                    "place[ _-]*order|order[ _-]*now|\\bcod\\b",
+                    "place[ _-]*order|order[ _-]*now|(?<![a-z0-9])cod(?![a-z0-9])",
                 RegexOption.IGNORE_CASE,
             )
     }
@@ -331,7 +348,9 @@ class EqoAutomation(
         return result
     }
 
-    private fun safeSearchInput(node: A11yNode): Boolean =
+    private fun safeSearchInput(node: A11yNode): Boolean = generateSequence(node) { it.parent }.all(::safeNode)
+
+    private fun safeNode(node: A11yNode): Boolean =
         listOf(node.text, node.contentDescription, node.hintText, node.viewIdResourceName)
             .none { PAYMENT_INPUT.containsMatchIn(it?.toString().orEmpty()) }
 
@@ -365,6 +384,7 @@ class EqoAutomation(
         byViewId: Boolean,
     ): A11yResult {
         ownWindowBlocked(target)?.let { return typingResult(null, it) }
+        shoppingSelection = null
         val editable = resolveTypeTarget(target, byViewId)
         if (editable == null) return typingResult(null, A11yResult.failure(A11yError.NodeNotFound(target)))
         // A rejected focus/click does not imply SET_TEXT is unsupported. Try both
@@ -383,5 +403,130 @@ class EqoAutomation(
                 currentGateFailure() ?: A11yResult.failure(A11yError.ActionRejected(target))
             }
         return typingResult(editable, result)
+    }
+}
+
+/** Conservative product binding: ambiguous grouping, renamed/reordered rows and missing controls stop the run. */
+private data class ShoppingSelection(
+    val path: List<Int>,
+    val label: String,
+    val packageName: String?,
+) {
+    fun increase(
+        root: A11yNode,
+        safe: (A11yNode) -> Boolean,
+    ): A11yNode? {
+        val row = path.fold(root as A11yNode?) { node, index -> node?.childAt(index) }
+        val entries = row?.let(::nodes).orEmpty()
+        val matches = entries.map { it.second }
+        val controls = entries.filter { isControl(it.second, INCREASE) }
+        val sameProduct =
+            root.packageName?.toString() == packageName &&
+                productLabels(matches) == listOf(label) &&
+                uniqueLabel(root, label)
+        return controls
+            .singleOrNull()
+            ?.takeIf { sameProduct && safe(it.second) }
+            ?.let { (controlPath, _) -> row?.let { scopedClickable(it, controlPath) } }
+            ?.takeIf(safe)
+    }
+
+    companion object {
+        private val ADD = listOf("Add", "Add to cart")
+        private val INCREASE = listOf("+", "Increase quantity")
+        private val CONTROLS = ADD + INCREASE + listOf("-", "Decrease quantity", "Cart", "View cart", "Go to cart")
+
+        fun capture(
+            root: A11yNode,
+            target: String,
+            safe: (A11yNode) -> Boolean,
+        ): ShoppingSelection? {
+            val labels = target.split(',').map { it.removePrefix("exact:") }
+            val hit =
+                nodes(root).firstOrNull { (_, node) ->
+                    isControl(node, labels) &&
+                        safe(node) &&
+                        NodeTreeSearch.clickableSelfOrAncestor(node)?.let(safe) == true
+                }
+            // Never bind to the whole window: a sibling product's + is not an acceptable fallback.
+            val ancestors =
+                hit
+                    ?.first
+                    .orEmpty()
+                    .indices
+                    .reversed()
+                    .filter { it > 0 }
+            return ancestors.firstNotNullOfOrNull { depth ->
+                val path = requireNotNull(hit).first.take(depth)
+                val row = path.fold(root as A11yNode?) { node, index -> node?.childAt(index) }
+                val entries = row?.let(::nodes).orEmpty().map { it.second }
+                val name = productLabels(entries).singleOrNull()
+                val addPath = entriesForControl(row, ADD).singleOrNull()?.first
+                val boundAdd = addPath?.let { controlPath -> row?.let { scopedClickable(it, controlPath) } }
+                val unambiguous =
+                    listOf(
+                        name?.let { uniqueLabel(root, it) } == true,
+                        entries.count { isControl(it, ADD) } == 1,
+                        entries.count { isControl(it, INCREASE) } <= 1,
+                        boundAdd != null,
+                    ).all { it }
+                if (unambiguous) {
+                    ShoppingSelection(path, requireNotNull(name), root.packageName?.toString())
+                } else {
+                    null
+                }
+            }
+        }
+
+        private fun isControl(
+            node: A11yNode,
+            labels: List<String>,
+        ): Boolean = !node.isPassword && labels.any { NodeTreeSearch.matchesExactly(node, it) }
+
+        private fun entriesForControl(
+            row: A11yNode?,
+            labels: List<String>,
+        ): List<Pair<List<Int>, A11yNode>> = row?.let(::nodes).orEmpty().filter { isControl(it.second, labels) }
+
+        private fun scopedClickable(
+            row: A11yNode,
+            path: List<Int>,
+        ): A11yNode? =
+            (path.size downTo 0).firstNotNullOfOrNull { depth ->
+                path
+                    .take(depth)
+                    .fold(row as A11yNode?) { node, index -> node?.childAt(index) }
+                    ?.takeIf { it.isClickable }
+            }
+
+        private fun productLabels(entries: List<A11yNode>): List<String> =
+            entries
+                .flatMap { node ->
+                    if (node.isEditable || node.isPassword || isControl(node, CONTROLS)) {
+                        emptyList()
+                    } else {
+                        listOfNotNull(node.text?.toString(), node.contentDescription?.toString())
+                            .map(String::trim)
+                            .filter { it.any(Char::isLetter) }
+                    }
+                }.distinct()
+
+        private fun uniqueLabel(
+            root: A11yNode,
+            label: String,
+        ): Boolean = nodes(root).count { (_, node) -> NodeTreeSearch.matchesExactly(node, label) } == 1
+
+        private fun nodes(
+            root: A11yNode,
+            path: List<Int> = emptyList(),
+        ): List<Pair<List<Int>, A11yNode>> =
+            if (root.isPassword) {
+                emptyList()
+            } else {
+                listOf(path to root) +
+                    (0 until root.childCount).flatMap { index ->
+                        root.childAt(index)?.let { nodes(it, path + index) }.orEmpty()
+                    }
+            }
     }
 }
