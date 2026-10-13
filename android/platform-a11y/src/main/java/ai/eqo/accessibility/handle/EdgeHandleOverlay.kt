@@ -19,6 +19,7 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.TextView
 import kotlin.math.abs
 
 /** No screen-text reads, broadcasts, permission grants or resume entry points. */
@@ -34,12 +35,30 @@ class EdgeHandleOverlay(
     private var foregroundPackage = context.packageName
     private var probeAvailable = false
     private var pendingLongPress: Runnable? = null
-    private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> refresh() }
+    private val listener =
+        SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+            handler.post {
+                val micEnabled = EdgeHandleFeatures.registry?.enabled(EdgeHandleFeatures.DICTATION_ID) == true
+                if (!preferences.enabled || !micEnabled) {
+                    EdgeHandleFeatures.dictationCancel()
+                }
+                removeWindow()
+                refresh()
+            }
+        }
     private val refreshTask = Runnable { render() }
     private val openPanelTask = Runnable { showPanel(requestPause = false) }
 
     init {
         preferences.preferences.registerOnSharedPreferenceChangeListener(listener)
+        EdgeHandleFeatures.dictationChanged = {
+            handler.post {
+                if (!guard.panelOpen) {
+                    removeWindow()
+                    refresh()
+                }
+            }
+        }
     }
 
     fun updateForeground(packageName: String) {
@@ -73,6 +92,8 @@ class EdgeHandleOverlay(
     }
 
     fun destroy() {
+        EdgeHandleFeatures.dictationChanged = {}
+        EdgeHandleFeatures.dictationCancel()
         preferences.preferences.unregisterOnSharedPreferenceChangeListener(listener)
         handler.removeCallbacksAndMessages(null)
         removeWindow()
@@ -107,9 +128,16 @@ class EdgeHandleOverlay(
     private fun showHandle() {
         val (width, height) = dimensions()
         val size = dp(TOUCH_WIDTH_DP)
-        val params = params(size, dp(TOUCH_HEIGHT_DP), false)
-        params.x = if (preferences.rightEdge) width - size else 0
-        params.y = ((height - params.height) * preferences.verticalFraction).toInt()
+        val micEnabled = EdgeHandleFeatures.registry?.enabled(EdgeHandleFeatures.DICTATION_ID) == true
+        val hasStatus = micEnabled && EdgeHandleFeatures.dictationStatus != 0
+        val params =
+            params(
+                if (hasStatus) dp(PANEL_WIDTH_DP) else size,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                false,
+            )
+        params.x = if (preferences.rightEdge) width - params.width else 0
+        params.y = ((height - dp(TOUCH_HEIGHT_DP)) * preferences.verticalFraction).toInt()
         val handle = FrameLayout(context)
         handle.contentDescription = context.getString(R.string.edge_handle_open)
         handle.isClickable = true
@@ -120,7 +148,12 @@ class EdgeHandleOverlay(
                 setColor(HANDLE_COLOR)
                 cornerRadius = dp(BAR_RADIUS_DP).toFloat()
             }
-        handle.addView(bar, FrameLayout.LayoutParams(dp(BAR_WIDTH_DP), dp(BAR_HEIGHT_DP), Gravity.CENTER))
+        val column = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        val grip = FrameLayout(context)
+        grip.addView(bar, FrameLayout.LayoutParams(dp(BAR_WIDTH_DP), dp(BAR_HEIGHT_DP), Gravity.CENTER))
+        column.addView(grip, LinearLayout.LayoutParams(size, dp(TOUCH_HEIGHT_DP)))
+        if (micEnabled) addDictationControls(column)
+        handle.addView(column)
         handle.setOnClickListener { showPanel() }
         handle.setOnLongClickListener {
             showPanel()
@@ -133,6 +166,30 @@ class EdgeHandleOverlay(
                 .makeText(context, R.string.edge_handle_hint, android.widget.Toast.LENGTH_LONG)
                 .show()
             preferences.hintShown = true
+        }
+    }
+
+    private fun addDictationControls(column: LinearLayout) {
+        addButton(column, R.string.edge_dictation_mic, android.R.drawable.ic_btn_speak_now) {
+            EdgeHandleFeatures.dictationTap(context)
+        }
+        val status = EdgeHandleFeatures.dictationStatus
+        if (status != 0) {
+            column.addView(
+                TextView(context).apply {
+                    setText(status)
+                    setBackgroundColor(Color.WHITE)
+                    setTextColor(Color.BLACK)
+                    accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+                },
+            )
+            if (EdgeHandleFeatures.dictationBusy) {
+                if (!EdgeHandleFeatures.dictationCommitting) {
+                    addButton(column, android.R.string.cancel) { EdgeHandleFeatures.dictationCancel() }
+                }
+            } else {
+                addButton(column, R.string.edge_dictation_settings) { EdgeHandleFeatures.dictationSettings(context) }
+            }
         }
     }
 
@@ -170,7 +227,7 @@ class EdgeHandleOverlay(
                     }
                     if (moving && view === handle) {
                         val (width, height) = dimensions()
-                        params.y = (startY + event.rawY - downY).toInt().coerceIn(0, height - params.height)
+                        params.y = (startY + event.rawY - downY).toInt().coerceIn(0, maxOf(0, height - handle.height))
                         params.x = if (event.rawX > width / 2f) width - params.width else 0
                         manager.updateViewLayout(handle, params)
                         updateBounds(handle)
@@ -186,7 +243,8 @@ class EdgeHandleOverlay(
                         target.performClick()
                     } else if (moving && view === handle) {
                         preferences.rightEdge = params.x > 0
-                        preferences.verticalFraction = params.y.toFloat() / (dimensions().second - params.height)
+                        preferences.verticalFraction =
+                            params.y.toFloat() / maxOf(1, dimensions().second - handle.height)
                     }
                 }
                 MotionEvent.ACTION_CANCEL -> handler.removeCallbacks(longPress)
@@ -274,7 +332,16 @@ class EdgeHandleOverlay(
         target: View,
         params: WindowManager.LayoutParams,
     ) {
-        target.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateBounds(target) }
+        target.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            if (!guard.panelOpen && target.isAttachedToWindow) {
+                val fitted = params.y.coerceIn(0, maxOf(0, dimensions().second - target.height))
+                if (fitted != params.y) {
+                    params.y = fitted
+                    manager.updateViewLayout(target, params)
+                }
+            }
+            updateBounds(target)
+        }
         try {
             manager.addView(target, params)
             view = target
