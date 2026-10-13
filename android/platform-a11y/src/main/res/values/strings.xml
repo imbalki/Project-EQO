@@ -7,4 +7,6 @@
     <string name="edge_handle_hide_app">Hide for this app</string>
     <string name="edge_handle_close">Close</string>
     <string name="edge_handle_hint">Drag me up or down. Tap to open.</string>
+    <string name="edge_dictation_mic">Mic</string>
+    <string name="edge_dictation_settings">Voice settings</string>
 </resources>

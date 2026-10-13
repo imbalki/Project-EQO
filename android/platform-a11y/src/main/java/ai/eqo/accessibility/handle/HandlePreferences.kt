@@ -70,6 +70,16 @@ class HandlePreferences(
 
 /** Application installs feature registrations; service and settings render the same registry. */
 object EdgeHandleFeatures {
+    const val DICTATION_ID = "dictation"
+    var dictationTap: (Context) -> Unit = {}
+    var dictationCancel: () -> Unit = {}
+    var dictationSettings: (Context) -> Unit = {}
+    var dictationChanged: () -> Unit = {}
+    var dictationStatus: Int = 0
+    var dictationBusy: Boolean = false
+    var dictationCommitting: Boolean = false
+    var dictationListening: Boolean = false
+
     // App callbacks keep this library independent of app notification/Explain classes.
     var refreshEntries: (Context) -> Unit = {}
     var configurationChanged: () -> Unit = {}
