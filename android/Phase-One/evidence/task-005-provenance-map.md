@@ -100,10 +100,12 @@
 
 ## Voice-input additions (t_e9ef0f95)
 
-| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceInputPresenter.kt` | EQO-NEW | `ai.eqo.task` | Draft-only speech presentation, no submission capability |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/VoiceInputPresenter.kt` | EQO-NEW | `ai.eqo.task` | Speech presentation: fills the draft and reports a final transcript; no planner or run capability |
 | :app | `android/app/src/main/kotlin/ai/eqo/task/TaskVoiceInput.kt` | EQO-NEW | `ai.eqo.task` | Just-in-time microphone permission and Android speech adapter |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceInputPresenterTest.kt` | EQO-NEW | `ai.eqo.task` | Fake voice result, permission, error and stale callback regressions |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/TaskVoiceInputTest.kt` | EQO-NEW | `ai.eqo.task` | Android speech intent and error mapping regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceAutoPlanTest.kt` | EQO-NEW | `ai.eqo.task` | Voice transcript hand-off: one plan on success, none on empty, failed, cancelled or edited, once on retry |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/VoiceAutoPlanActivityTest.kt` | EQO-NEW | `ai.eqo.task` | Voice-started planning follows the Plan guards and never clears a takeover |
 ## One-step pairing additions (t_681e8ea6)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/onboarding/WirelessDiscoveryState.kt` | EQO-NEW | `ai.eqo.onboarding` | Local Wi-Fi endpoint eligibility and strict notification code parsing |
