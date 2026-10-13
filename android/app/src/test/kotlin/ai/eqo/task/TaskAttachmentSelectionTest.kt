@@ -47,6 +47,23 @@ class TaskAttachmentSelectionTest {
             it.setContentView(R.layout.task_screen)
         }
 
+    @Test fun sessionUsesAWeakChooserReferenceAndCanDetachIt() {
+        val ui = TaskAttachmentSelection(activity(), ::protectConfirmationDialog)
+        try {
+            TaskRunSession.attachmentSelection = ui
+            assertTrue(TaskRunSession.attachmentSelection === ui)
+            val field = TaskRunSession::class.java.getDeclaredField("attachmentSelectionReference")
+            field.isAccessible = true
+            val reference = field.get(TaskRunSession) as java.lang.ref.WeakReference<*>
+            assertTrue(reference.get() === ui)
+            reference.clear()
+            assertNull(TaskRunSession.attachmentSelection)
+        } finally {
+            TaskRunSession.attachmentSelection = null
+        }
+        assertNull(TaskRunSession.attachmentSelection)
+    }
+
     @Test fun attachmentEndStateIsPlainAndDoesNotAppendAdviceToSendAgain() {
         val reason =
             ai.eqo.core.agent.AttachmentFailure

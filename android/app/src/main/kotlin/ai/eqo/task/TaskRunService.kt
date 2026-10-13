@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 /** Process-only snapshot: activity detach never ends a run. Process death never silently repeats sends. */
 internal object TaskRunSession {
@@ -42,7 +43,15 @@ internal object TaskRunSession {
     val progress = linkedMapOf<String, StepProgress>()
     var observer: (() -> Unit)? = null
     var permissionRequester: PermissionRequester? = null
-    var attachmentSelection: TaskAttachmentSelection? = null
+
+    // The activity owns this UI; the process session must not keep a closed activity alive.
+    private var attachmentSelectionReference: WeakReference<TaskAttachmentSelection>? = null
+
+    var attachmentSelection: TaskAttachmentSelection?
+        get() = attachmentSelectionReference?.get()
+        set(value) {
+            attachmentSelectionReference = value?.let { WeakReference(it) }
+        }
 
     fun changed() {
         observer?.invoke()
