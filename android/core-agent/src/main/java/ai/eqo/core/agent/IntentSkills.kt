@@ -29,6 +29,7 @@ object IntentSkills {
             "send_message" -> message(intent)
             "call" -> call(intent)
             "search" -> search(intent)
+            "open_url" -> openUrl(intent)
             else -> emptyList()
         }
 
@@ -86,9 +87,25 @@ object IntentSkills {
         return listOf(ExecutedAction(name, params, irreversible = true))
     }
 
+    // A website or search goes straight to the browser as an intent, never through taps on an address bar.
+    private fun openUrl(intent: TaskIntent): List<ExecutedAction> {
+        val site = WebTargets.resolve(intent.params.getValue("url")) as? WebTargets.Target.Site
+        val browser = intent.app?.takeIf { it.isNotBlank() }
+        return when {
+            site == null -> emptyList()
+            browser == null -> listOf(action("OPEN_URL", "url" to site.url))
+            isBrowser(browser) -> listOf(action("OPEN_URL", "url" to site.url, "browser" to browser))
+            else -> emptyList()
+        }
+    }
+
+    private fun isBrowser(app: String) = AppRoles.membersOf(AppRoles.BROWSER, listOf(app)).isNotEmpty()
+
     private fun search(intent: TaskIntent): List<ExecutedAction> =
         if (intent.app == null) {
             listOf(action("WEB_SEARCH", "query" to intent.params.getValue("query")))
+        } else if (isBrowser(intent.app)) {
+            listOf(action("WEB_SEARCH", "query" to intent.params.getValue("query"), "browser" to intent.app))
         } else if (intent.app.equals("whatsapp", ignoreCase = true)) {
             // Fail closed on restored chats/version differences. Search is live-filtered: never press Enter.
             // Explicit IDs cannot fall back to the sole message composer when search is absent.

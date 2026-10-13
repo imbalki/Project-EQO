@@ -27,7 +27,10 @@ internal class InformationActions(
 ) {
     fun getActions(): List<Action> =
         listOf(
-            RegisteredExecutor("WEB_SEARCH") { params, _ -> web(params.getValue("query")) },
+            RegisteredExecutor("WEB_SEARCH") { params, context ->
+                val resolver = LaunchableAppResolver(context.packageManager)
+                BrowserTarget.search(launcher, params, resolver, http.online()) ?: web(params.getValue("query"))
+            },
             RegisteredExecutor("GET_NEWS") { params, _ ->
                 search("https://news.google.com/search", "news ${params["topic"] ?: "latest news"}")
             },
