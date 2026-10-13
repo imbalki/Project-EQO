@@ -9,6 +9,9 @@ import android.app.Application
 class EqoApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        EdgeHandleFeatures.dictationTap = ai.eqo.task.HandleDictation::tap
+        EdgeHandleFeatures.dictationCancel = ai.eqo.task.HandleDictation::cancel
+        EdgeHandleFeatures.dictationSettings = ai.eqo.task.HandleDictation::openSettings
         EdgeHandleFeatures.refreshEntries = ExplainNotificationService::refresh
         EdgeHandleFeatures.configurationChanged = ai.eqo.explain.ExplainOverlay::refreshLayout
         ai.eqo.accessibility.handle.EdgeHandleFeatures.explain = { context, source ->

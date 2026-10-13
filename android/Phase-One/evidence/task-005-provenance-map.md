@@ -1,5 +1,13 @@
 # TASK-005 per-file provenance map
 
+## Handle dictation (t_e1fe42ac)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/HandleDictationSession.kt` | EQO-NEW | `ai.eqo.task` | Fake-testable bounded recording and transcription lifecycle |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/HandleDictation.kt` | EQO-NEW | `ai.eqo.task` | Existing AI voice provider and user-only handle adapter |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/HandleDictationSessionTest.kt` | EQO-NEW | `ai.eqo.task` | Fake recorder/provider/inserter privacy and cancellation regressions |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/DictationTarget.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Ephemeral focused-node paste and verification with sensitive clipboard |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/handle/DictationTargetTest.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Fake field/clipboard safety and fallback policy regressions |
+
 ## Two-stage intent planning (t_661803d1)
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/PlainArithmetic.kt` | EQO-NEW | `ai.eqo.core.agent` | Shared bounded decimal arithmetic for preview and run |

@@ -11,7 +11,9 @@ import ai.eqo.core.agent.ExecutedAction
 import ai.eqo.core.agent.LoopState
 import ai.eqo.core.agent.LoopStep
 import ai.eqo.study.ApprovalOutcome
+import ai.eqo.task.DictationFailure
 import ai.eqo.task.EqoAutomationPort
+import ai.eqo.task.HandleDictation
 import ai.eqo.task.StudyActionExecutor
 import ai.eqo.task.StudyApprovalGate
 import ai.eqo.task.StudyApprovalSurface
@@ -63,7 +65,10 @@ class HandleFeaturesTest {
         val preferences = HandlePreferences(context)
         assertFalse(preferences.enabled)
         val registry = createHandleRegistry(context)
-        assertEquals(listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo"), registry.ordered().map { it.id })
+        assertEquals(
+            listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo", "dictation"),
+            registry.ordered().map { it.id },
+        )
         assertTrue(registry.ordered().all { registry.enabled(it.id) })
         registry.setEnabled("ask_eqo", false)
         registry.move("open_eqo", -4)
@@ -100,7 +105,10 @@ class HandleFeaturesTest {
                     takeoverDetector = detector,
                 )
             val registry = createHandleRegistry(context)
-            assertEquals(listOf("explain_screen", "ask_eqo", "open_eqo"), registry.visible(context).map { it.id })
+            assertEquals(
+                listOf("explain_screen", "ask_eqo", "open_eqo", "dictation"),
+                registry.visible(context).map { it.id },
+            )
             TaskRunSession.controller = controller
             val run = async { controller.run() }
             runCurrent()
@@ -300,6 +308,10 @@ class HandleFeaturesTest {
             assertEquals(labels.map(context::getString), switches.map { it.text.toString() })
             switches.first().isChecked = true
             switches.first { it.text == context.getString(R.string.handle_ask) }.isChecked = false
+            val dictation = switches.first { it.text == context.getString(R.string.dictation_switch) }
+            assertTrue(dictation.isChecked)
+            dictation.isChecked = false
+            assertFalse(createHandleRegistry(context).enabled("dictation"))
             assertTrue(HandlePreferences(context).enabled)
             assertFalse(registry.enabled("ask_eqo"))
             val move =
@@ -312,7 +324,7 @@ class HandleFeaturesTest {
                 }
             move.performClick()
             assertEquals(
-                listOf("explain_screen", "ask_eqo", "pause", "open_eqo", "stop"),
+                listOf("explain_screen", "ask_eqo", "pause", "open_eqo", "stop", "dictation"),
                 registry.ordered().map { it.id },
             )
             descendants(activity.window.decorView)
@@ -321,11 +333,12 @@ class HandleFeaturesTest {
                     it.text == context.getString(R.string.handle_reset)
                 }.performClick()
             assertEquals(
-                listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo"),
+                listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo", "dictation"),
                 registry.ordered().map { it.id },
             )
             assertTrue(registry.enabled("ask_eqo"))
             assertTrue(HandlePreferences(context).enabled)
+            assertTrue(registry.enabled("dictation"))
         } finally {
             lifecycle.pause().stop().destroy()
         }
@@ -446,6 +459,86 @@ class HandleFeaturesTest {
         } finally {
             overlay.destroy()
         }
+    }
+
+    @Test
+    fun `direct handle mic keeps app focus and updates recording transcribing cancel and disabled states`() {
+        val registry = createHandleRegistry(context)
+        EdgeHandleFeatures.install(registry)
+        HandlePreferences(context).enabled = true
+        val tap = EdgeHandleFeatures.dictationTap
+        val cancel = EdgeHandleFeatures.dictationCancel
+        var taps = 0
+        var cancels = 0
+        EdgeHandleFeatures.dictationTap = { taps++ }
+        EdgeHandleFeatures.dictationCancel = { cancels++ }
+        val overlay = createOverlay()
+        try {
+            overlay.setProbeAvailable(true)
+            val main = shadowOf(android.os.Looper.getMainLooper())
+            main.idle()
+            val micLabel = ai.eqo.platform.R.string.edge_dictation_mic
+            panelButton(overlay, micLabel).performClick()
+            val params = overlayView(overlay)!!.layoutParams as android.view.WindowManager.LayoutParams
+            assertTrue(params.flags and android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE != 0)
+            assertEquals(1, taps)
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+            EdgeHandleFeatures.dictationBusy = true
+            EdgeHandleFeatures.dictationStatus = R.string.dictation_listening
+            EdgeHandleFeatures.dictationChanged()
+            main.idle()
+            panelButton(overlay, micLabel).performClick()
+            assertEquals(2, taps)
+            panelButton(overlay, android.R.string.cancel).performClick()
+            assertEquals(1, cancels)
+            EdgeHandleFeatures.dictationStatus = R.string.dictation_transcribing
+            EdgeHandleFeatures.dictationChanged()
+            main.idle()
+            assertTrue(
+                descendants(overlayView(overlay)!!).filterIsInstance<android.widget.TextView>().any {
+                    it.text == context.getString(R.string.dictation_transcribing)
+                },
+            )
+            registry.setEnabled("dictation", false)
+            main.idle()
+            assertFalse(
+                descendants(overlayView(overlay)!!).filterIsInstance<android.widget.Button>().any {
+                    it.text == context.getString(micLabel)
+                },
+            )
+        } finally {
+            overlay.destroy()
+            EdgeHandleFeatures.dictationTap = tap
+            EdgeHandleFeatures.dictationCancel = cancel
+            EdgeHandleFeatures.dictationBusy = false
+            EdgeHandleFeatures.dictationStatus = 0
+        }
+    }
+
+    @Test
+    fun `dictation setup failures give specific Voice settings guidance and route to real settings`() {
+        val messages =
+            mapOf(
+                DictationFailure.KEY to R.string.dictation_key,
+                DictationFailure.MODEL to R.string.dictation_model,
+                DictationFailure.CONSENT to R.string.dictation_consent,
+                DictationFailure.PERMISSION to R.string.dictation_permission,
+            )
+        messages.forEach { (failure, resource) ->
+            assertEquals(resource, HandleDictation.failureMessage(failure))
+            assertTrue(context.getString(resource).contains("Voice settings"))
+        }
+        HandleDictation.openSettings(context)
+        val intent = shadowOf(context as android.app.Application).nextStartedActivity
+        assertEquals(ai.eqo.onboarding.SetupHubActivity::class.java.name, intent.component!!.className)
+        assertEquals(
+            "This app did not accept the text. It is on your clipboard; paste it yourself.",
+            context.getString(HandleDictation.failureMessage(DictationFailure.COPIED)),
+        )
+        assertEquals(
+            "Dictation inserted. It is also on your clipboard.",
+            context.getString(R.string.dictation_inserted),
+        )
     }
 
     private fun drag(
