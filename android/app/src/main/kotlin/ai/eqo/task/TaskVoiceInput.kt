@@ -1,4 +1,4 @@
-// Origin: EQO-authored voice UI and permission adapter. Only fills the draft; never submits.
+// Origin: EQO-authored voice UI and permission adapter. Fills the draft; a final transcript may start planning.
 package ai.eqo.task
 
 import ai.eqo.R
@@ -35,6 +35,9 @@ internal class TaskVoiceInput(
         )
     },
     firstUseFactory: (Activity, VoiceSettings) -> VoiceFirstUse = { host, prefs -> VoiceFirstUse(host, prefs) },
+    // Called on the main thread with a final transcript after the draft is filled. Returns true when planning
+    // started (the plan is still shown for approval first); false leaves the words in the box for the user.
+    private val onTranscribed: (String) -> Boolean = { false },
 ) {
     private val mic = activity.findViewById<Button>(R.id.task_voice_button)
     private val status = activity.findViewById<TextView>(R.id.task_voice_state)
@@ -68,6 +71,7 @@ internal class TaskVoiceInput(
             stopListening = {
                 if (settings.engine == VoiceEngine.OPENROUTER) audio.stop() else phone.stop()
             },
+            onTranscribed = { if (onTranscribed(it)) status.setText(R.string.task_planning) },
         )
     private val phone: PhoneVoiceInput by lazy { PhoneVoiceInput(activity, presenter) { settings.language } }
     private val audio: AiVoiceInput by lazy {
