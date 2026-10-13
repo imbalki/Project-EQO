@@ -1,4 +1,4 @@
-// Origin: EQO-authored voice input; draft text only, no planner or run capability.
+// Origin: EQO-authored voice input; fills the draft and reports a final transcript, no planner or run capability.
 package ai.eqo.task
 
 internal enum class VoiceInputState {
@@ -19,7 +19,12 @@ internal enum class VoiceInputState {
     }
 }
 
-/** The only result side effect is filling the editable draft. No submit callback exists. */
+/**
+ * A result fills the editable draft and then reports the final transcript to [onTranscribed], which lets the host
+ * start planning (owner decision 2026-10-12). The presenter itself holds no planner, run or approval capability, and
+ * a partial kept after a recognizer timeout is never reported, only left in the draft for the user to review.
+ */
+@Suppress("LongParameterList") // Each parameter is one independent UI callback; grouping adds only indirection.
 internal class VoiceInputPresenter(
     private val render: (VoiceInputState) -> Unit,
     private val fillDraft: (String) -> Unit,
@@ -27,6 +32,7 @@ internal class VoiceInputPresenter(
     private val startListening: () -> Unit,
     private val readDraft: () -> String = { "" },
     private val stopListening: () -> Unit = {},
+    private val onTranscribed: (String) -> Unit = {},
 ) {
     private var state = VoiceInputState.READY
     private var prefix = ""
@@ -62,12 +68,14 @@ internal class VoiceInputPresenter(
 
     fun result(text: String?) {
         if (state !in VoiceInputState.ACTIVE) return
-        val heard = text?.takeIf { it.isNotBlank() } ?: partial
+        val finalText = text?.takeIf { it.isNotBlank() }
+        val heard = finalText ?: partial
         if (heard.isBlank()) {
             update(VoiceInputState.NOT_CAUGHT)
         } else {
             partial(heard)
             update(VoiceInputState.REVIEW)
+            finalText?.let { onTranscribed(it.trim()) }
         }
     }
 
