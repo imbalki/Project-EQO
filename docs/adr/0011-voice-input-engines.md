@@ -3,6 +3,14 @@
 Status: Implemented locally; phone validation pending.
 Default/limit/model selection superseded by ADR 0012 (Voice v3); this document records the v2 decision.
 
+Amended 2026-10-12 (owner decision): a final transcript no longer stops at the editable draft. After a successful
+transcription, or a successful Try again, EQO starts planning exactly as a Plan tap would, so the plan is still
+shown for approval first and nothing runs without it. It never clears a latched takeover (only a Plan tap or the
+Resume dialog does), does not start while a run is active, paused or being prepared or while a dialog is open,
+and does not start for an empty, failed, cancelled or edited transcript. A partial kept after a phone-recognizer
+timeout is left in the box for review and is not planned. Spoken readout after a voice-started task is unchanged.
+The "no submit callback" wording below describes the original v2 behaviour.
+
 ## Decision
 
 Phone speech recognition remains the default. Request partial results and silence budgets of
