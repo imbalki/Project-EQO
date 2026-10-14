@@ -307,6 +307,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="run_email_draft">The email draft is open. Press Send, or tell EQO to retry. Nothing was verified as sent.</string>
     <string name="run_chat_draft">The %1$s draft is open. Press Send, or tell EQO to retry. Nothing was verified as sent.</string>
     <string name="run_user_action">%1$s Finish this step yourself, or tell EQO to retry.</string>
+    <string name="run_attachment_status">%1$s</string>
     <string name="run_accessibility_off">Accessibility is off or disconnected. Turn on EQO in Android Accessibility settings, then try again.</string>
     <string name="run_permission_missing">EQO needs %1$s permission. Allow it in Android Settings > Apps > EQO > Permissions, then try again. This step did not run.</string>
     <string name="run_permission_explanation">%1$s Android access was not allowed. Allow it, then try again. This step did not run.</string>

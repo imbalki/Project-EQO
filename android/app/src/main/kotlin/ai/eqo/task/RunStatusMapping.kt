@@ -82,7 +82,7 @@ internal object RunStatusMapping {
         val step = original.copy(detail = original.detail.removePrefix("permission denied: "))
         return when {
             AttachmentFailure.message(step.detail) != null ->
-                Text(R.string.run_user_action, requireNotNull(AttachmentFailure.message(step.detail)))
+                Text(R.string.run_attachment_status, requireNotNull(AttachmentFailure.message(step.detail)))
             step.state == StepProgressState.NEEDS_YOU -> handoff(step)
             step.detail == FailureClass.A11Y_LOST.repair ||
                 step.detail in

@@ -71,7 +71,7 @@ class TaskActivity : Activity() {
     // The latest plan/choice/permission dialog; a voice transcript must not plan underneath an open one.
     private var taskDialog: AlertDialog? = null
     private val attachmentSelection by lazy {
-        TaskAttachmentSelection(this) { prepareTaskDialog(it, fileChoices = true) }
+        TaskAttachmentSelection(this, prepareDialog = { prepareTaskDialog(it, fileChoices = true) })
     }
     private var waitingPermission: String? = null
     private var displayedStatus = PlanStatus.PENDING
@@ -167,6 +167,7 @@ class TaskActivity : Activity() {
             TaskRunSession.readAloud = false
             resultSpeaker?.stop()
             actionPermissions.cancelWaiting()
+            attachmentSelection.cancelWaiting()
             control { it.stop() }
         }
         findViewById<Button>(R.id.task_takeover_button).setOnClickListener { control { it.takeover() } }
@@ -215,7 +216,10 @@ class TaskActivity : Activity() {
         if (understandingRequest) preparationGeneration++
         intentChoices.cancel()
         attachmentSelection.background()
-        if (TaskRunSession.attachmentSelection === attachmentSelection) TaskRunSession.attachmentSelection = null
+        // Keep the wait registered while the picker or a question is still waiting for the owner.
+        if (TaskRunSession.attachmentSelection === attachmentSelection && !attachmentSelection.isWaiting()) {
+            TaskRunSession.attachmentSelection = null
+        }
         voiceInput?.pause()
         actionPermissions.onPause()
         TakeoverDetector.shared.setControlTouchExclusion(null)
@@ -1073,6 +1077,8 @@ class TaskActivity : Activity() {
         resultSpeaker?.close()
         intentChoices.cancel()
         attachmentSelection.picker.destroy()
+        attachmentSelection.close()
+        if (TaskRunSession.attachmentSelection === attachmentSelection) TaskRunSession.attachmentSelection = null
         voiceInput?.close()
         debugPlanReceiver?.let { unregisterReceiver(it) }
         TaskRunSession.observer = null

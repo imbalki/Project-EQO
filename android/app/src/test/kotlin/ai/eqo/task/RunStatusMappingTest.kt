@@ -121,6 +121,7 @@ class RunStatusMappingTest {
                 "provider_failed",
                 "send_route_failed",
                 "send_requires_user",
+                "send_result_unknown",
             )
         for (kind in kinds) {
             val reason = AttachmentFailure.reason(kind)
@@ -129,7 +130,7 @@ class RunStatusMappingTest {
             assertEquals(kind, RunDiagnostics.failureKind(failure))
             val progress = RunStatusMapping.progress(null, failed(reason).copy(name = "SEND_EMAIL"), null)
             val detail = requireNotNull(RunStatusMapping.detail(progress))
-            assertEquals(R.string.run_user_action, detail.resource)
+            assertEquals(R.string.run_attachment_status, detail.resource)
             assertEquals(AttachmentFailure.message(reason), detail.argument)
             assertFalse(detail.argument.contains("/sdcard"))
             if (kind == "attachment_cancelled") assertEquals(StepProgressState.NEEDS_YOU, progress.state)
