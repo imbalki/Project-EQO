@@ -1,5 +1,12 @@
 # TASK-005 per-file provenance map
 
+## Plan preview and clarification polish (t_e080f2ff)
+
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/RegistryPreviewText.kt` | EQO-NEW | `ai.eqo.core.agent` | Display-only English catalog templates |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/RegistryPreviewTextTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Catalog template coverage and escaping |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/PlanPreviewPolishTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Planner clarification, truthful preview and unchanged approval regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/PlanPreviewPolishTest.kt` | EQO-NEW | `ai.eqo.task` | Pre-preview clarification and plan-scoped permissions |
+
 ## Cart-only shopping (t_3745d313)
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/ShoppingIntents.kt` | EQO-NEW | `ai.eqo.core.agent` | Local shopping slots and bounded quantities |

@@ -77,7 +77,7 @@ class TaskPlanner(
         val content = if (template == null) propose(input, prompt) else null
         val ask = Completion(request, intent, input, prompt)
         val (steps, repaired) = firstPlan(ask, template, content)
-        return if (template != null || enabledActions == null) {
+        return if (template != null || enabledActions == null || RegistryPlanVocabulary.clarification(steps) != null) {
             Planned(steps)
         } else {
             complete(ask, steps, repaired)
@@ -134,6 +134,7 @@ class TaskPlanner(
         var gaps = PlanCompleteness.gaps(ask.request, ask.intent, best, enabled)
         if (gaps.isNotEmpty() && !repaired) {
             val retry = completenessRetry(ask, gaps)
+            if (retry != null && RegistryPlanVocabulary.clarification(retry) != null) return Planned(retry)
             val retryGaps = retry?.let { PlanCompleteness.gaps(ask.request, ask.intent, it, enabled) }
             if (retry != null && retryGaps != null && retryGaps.size < gaps.size) {
                 best = retry
@@ -345,16 +346,19 @@ class ApprovedTaskPlan(
     fun steps(): List<LoopStep> = approved.map { it.copy(action = it.action.copy(params = it.action.params.toMap())) }
 }
 
+@Suppress("TooManyFunctions") // Display-only summary and step wording share escaping and specialized templates.
 object TaskPlanPreview {
     fun describe(
         steps: List<LoopStep>,
         recipientNames: Map<String, String> = emptyMap(),
-    ): String =
-        if (steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF) {
+    ): String {
+        require(RegistryPlanVocabulary.clarification(steps) == null) { "Clarify the task before approval" }
+        return if (steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF) {
             shoppingPreview(steps)
         } else {
             "EQO will:\n" +
                 steps
+                    .filterNot { it.action.name == "WAIT" }
                     .mapIndexed { index, step ->
                         val description =
                             if (step.action.name == "WHATSAPP_CALL") {
@@ -366,6 +370,27 @@ object TaskPlanPreview {
                             recipientNames[step.stepId]?.let { " (contact: ${TaskDisplayText.escape(it)})" }.orEmpty()
                     }.joinToString("\n")
         }
+    }
+
+    /** Derived from the actual final steps, never the model's goal or the original request. */
+    fun summary(
+        steps: List<LoopStep>,
+        noPayment: Boolean = false,
+    ): String {
+        require(RegistryPlanVocabulary.clarification(steps) == null) { "Clarify the task before approval" }
+        val visible = steps.filterNot { it.action.name == "WAIT" }
+        val openOnly = visible.isNotEmpty() && visible.all { it.action.name in setOf("OPEN_APP", "open_app") }
+        val actions =
+            if (steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF) {
+                shoppingPreview(steps)
+                    .lineSequence()
+                    .drop(1)
+                    .joinToString("; then ") { it.substringAfter(". ") }
+            } else {
+                visible.joinToString("; then ") { describe(it) }
+            }
+        return (if (noPayment) "EQO will not pay; it will " else "") + actions + if (openOnly) " only" else ""
+    }
 
     private fun shoppingPreview(steps: List<LoopStep>): String {
         val app =
@@ -445,7 +470,7 @@ object TaskPlanPreview {
                     (if (p["draftOnly"] == "true") "; you press Send" else "; EQO presses Send") +
                     attachmentSuffix(p[AttachmentSpec.PARAM])
             "FIND_FILES", "LIST_FILES" ->
-                "${step.action.name}: " + p.entries.joinToString(", ") { "${it.key}=${quote(it.value)}" } +
+                RegistryPreviewText.describe(step.action.name, p) +
                     "; shared folders need All files access; turn it on when Android asks"
             "TAKE_SCREENSHOT" ->
                 "save a screenshot of the current app; open that app first, not EQO; " +
@@ -473,11 +498,7 @@ object TaskPlanPreview {
                     "to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
             "SHARE_LOCATION" ->
                 "send your current location (a Google Maps link) to ${quote(p["to"].orEmpty())} ${shareRoute(p["via"])}"
-            else -> {
-                val definition = requireNotNull(ActionSchema.getAction(step.action.name))
-                "${definition.name}: " + p.entries.joinToString(", ") { "${it.key}=${quote(it.value)}" } +
-                    attachmentSuffix(p[AttachmentSpec.PARAM])
-            }
+            else -> RegistryPreviewText.describe(step.action.name, p) + attachmentSuffix(p[AttachmentSpec.PARAM])
         }
     }
 }

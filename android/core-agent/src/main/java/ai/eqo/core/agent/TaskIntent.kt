@@ -298,6 +298,7 @@ class IntentPlanningSession(
         val notes: List<String> = emptyList(),
     )
 
+    @Suppress("ReturnCount") // Cancellation and exhausted missing-data questions must return no executable plan.
     suspend fun prepare(
         request: String,
         ask: suspend (TaskIntent) -> String?,
@@ -305,14 +306,25 @@ class IntentPlanningSession(
         var enriched = request
         var intent = understanding.understand(enriched)
         var rounds = 0
-        while (intent.needsClarification() && rounds < MAX_ROUNDS) {
-            val answer = ask(intent)?.takeIf { it.isNotBlank() } ?: return null
+        while (true) {
+            val question =
+                if (intent.needsClarification() && rounds < MAX_ROUNDS) {
+                    intent
+                } else {
+                    if (intent.missingParameter() != null) return null
+                    val planned = planner.planWithNotes(enriched, intent = intent)
+                    val clarification = RegistryPlanVocabulary.clarification(planned.steps)
+                    if (clarification == null) {
+                        return Result(intent, planned.steps, intent.needsClarification(), planned.notes)
+                    }
+                    clarification
+                }
+            if (rounds >= MAX_ROUNDS) return null
+            val answer = ask(question)?.takeIf { it.isNotBlank() } ?: return null
             enriched += "\nUser clarification ${rounds + 1}: $answer"
             intent = understanding.understand(enriched)
             rounds++
         }
-        val planned = planner.planWithNotes(enriched, intent = intent)
-        return Result(intent, planned.steps, intent.needsClarification(), planned.notes)
     }
 
     companion object {
