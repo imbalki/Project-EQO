@@ -4,6 +4,7 @@
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/EmailIntents.kt` | EQO-NEW | `ai.eqo.core.agent` | Local single-email attachment and draft slots |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/EmailPlanningTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Native email, attachment, clarification and draft regressions |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/EmailCorrectionHistoryTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Two-round channel and task correction history regressions |
 
 ## Cart-only shopping (t_3745d313)
 

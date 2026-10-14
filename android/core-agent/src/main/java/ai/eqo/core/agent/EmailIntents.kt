@@ -37,7 +37,9 @@ internal object EmailIntents {
         val first = request.lineSequence().first().trim()
         val controls = first.replace(quoted, "")
         val command = start.find(first)
-        val clarification = request.substringAfterLast("User clarification ", "").replace(quoted, "")
+        // Once the owner corrects the original task/channel, trust model understanding of the whole history.
+        // A later slot-only answer must not revive the first-line email; a later email correction is still allowed.
+        val clarification = request.substringAfter("\nUser clarification ", "").replace(quoted, "")
         val singleEmail =
             command != null &&
                 !multiple.containsMatchIn(controls) &&
