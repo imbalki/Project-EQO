@@ -1,9 +1,11 @@
 package ai.eqo.task
 
 import ai.eqo.R
+import ai.eqo.actions.impl.LaunchableAppResolver
 import ai.eqo.core.agent.ExecutedAction
 import ai.eqo.core.agent.LoopStep
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Looper
 import android.widget.TextView
 import kotlinx.coroutines.CoroutineScope
@@ -84,6 +86,131 @@ class PlanPreviewPolishTest {
         assertFalse(access.contains("phone setting", ignoreCase = true))
         assertFalse(access.contains("camera", ignoreCase = true))
         lifecycle.pause().stop().destroy()
+    }
+
+    @Test fun questionOnlyFallbackUsesIntentSheetThenReplans() = fallbackQuestion(mixed = false, cancel = false)
+
+    @Test fun mixedFallbackDiscardsAppChoicesAndPermissionStepsBeforeQuestion() = fallbackQuestion(true, false)
+
+    @Test fun cancellingFallbackQuestionDoesNotBecomeBrowserFailureOrStoreChoice() = fallbackQuestion(true, true)
+
+    @Test fun fallbackQuestionsRespectRemainingSharedBudget(): Unit =
+        runBlocking {
+            val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
+            val inventory = listOf("com.android.chrome" to "Chrome")
+            val resolver =
+                LaunchableAppResolver(
+                    { pkg -> if (pkg == "com.android.chrome") Intent().setPackage(pkg) else null },
+                    { inventory },
+                )
+            for (remaining in 0..ai.eqo.core.agent.IntentPlanningSession.MAX_ROUNDS) {
+                var asks = 0
+                var plans = 0
+                var stopped = false
+                try {
+                    TaskAppPlanning(lifecycle.get(), resolver).prepare(
+                        "search shoes\nUser clarification 1: Previous answer",
+                        listOf(LoopStep("missing", ExecutedAction("OPEN_APP", mapOf("appName" to "Absent store")))),
+                        clarificationBudget = remaining,
+                        ask = {
+                            asks++
+                            "Running shoes"
+                        },
+                    ) { request ->
+                        plans++
+                        assertTrue(request.contains("Previous answer"))
+                        listOf(LoopStep("ask", ExecutedAction("ASK_USER", mapOf("question" to "Which shoes?"))))
+                    }
+                } catch (_: FallbackClarificationStopped) {
+                    stopped = true
+                }
+                assertTrue(stopped)
+                assertEquals(remaining, asks)
+                assertEquals(remaining + 1, plans)
+                assertNull(TaskRunSession.pending)
+            }
+            lifecycle.pause().stop().destroy()
+        }
+
+    private fun fallbackQuestion(
+        mixed: Boolean,
+        cancel: Boolean,
+    ): Unit =
+        runBlocking {
+            val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
+            val activity = lifecycle.get()
+            val inventory =
+                listOf("com.android.chrome" to "Chrome", "example.one" to "Notes One") +
+                    ("example.two" to "Notes Two")
+            val resolver =
+                LaunchableAppResolver(
+                    { pkg -> if (inventory.any { it.first == pkg }) Intent().setPackage(pkg) else null },
+                    { inventory },
+                )
+            var calls = 0
+            val pending =
+                CoroutineScope(Dispatchers.Unconfined).async {
+                    try {
+                        TaskAppPlanning(activity, resolver).prepare(
+                            "search shoes",
+                            listOf(LoopStep("missing", ExecutedAction("OPEN_APP", mapOf("appName" to "Absent store")))),
+                            ask = { activity.askFallbackQuestion(it, 0) },
+                        ) { request ->
+                            calls++
+                            fallbackProposal(calls, request, mixed)
+                        }
+                    } catch (_: FallbackClarificationStopped) {
+                        null
+                    }
+                }
+            val dialog = ShadowAlertDialog.getLatestAlertDialog()
+            assertEquals("Which shoes?", shadowOf(dialog).title.toString())
+            assertTrue(activity.findViewById<TextView>(R.id.task_preview).text.isEmpty())
+            assertNull(shadowOf(activity).lastRequestedPermission)
+            assertNull(TaskRunSession.pending)
+            assertNull(TaskRunSession.controller)
+            if (cancel) {
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
+            } else {
+                dialog.listView.performItemClick(null, 0, 0)
+            }
+            shadowOf(Looper.getMainLooper()).idle()
+            assertTrue(pending.isCompleted)
+            val result = pending.await()
+            if (cancel) {
+                assertNull(result)
+            } else {
+                val steps = (result as MissingAppFallback.Result.Ready).steps
+                assertEquals("WEB_SEARCH", steps.single().action.name)
+                assertEquals("chrome", steps.single().action.params["browser"])
+            }
+            assertEquals(if (cancel) 1 else 2, calls)
+            assertNull(TaskRunSession.pending)
+            lifecycle.pause().stop().destroy()
+        }
+
+    private fun fallbackProposal(
+        calls: Int,
+        request: String,
+        mixed: Boolean,
+    ): List<LoopStep> {
+        val question =
+            LoopStep(
+                "ask",
+                ExecutedAction("ASK_USER", mapOf("question" to "Which shoes?", "options" to "Running shoes")),
+            )
+        val mixedSteps =
+            listOf(
+                LoopStep("open", ExecutedAction("OPEN_APP", mapOf("appName" to "Notes"))),
+                LoopStep("call", ExecutedAction("MAKE_CALL", mapOf("contact" to "Synthetic person"))),
+            )
+        return if (calls == 1) {
+            (if (mixed) mixedSteps else emptyList()) + question
+        } else {
+            assertTrue(request.contains("User clarification 1: Running shoes"))
+            assertTrue(request.contains("Use OPEN_URL or WEB_SEARCH with browser=chrome"))
+            listOf(LoopStep("web", ExecutedAction("WEB_SEARCH", mapOf("query" to "Running shoes"))))
+        }
     }
 
     @Test fun understoodLineUsesFinalPlanNotAnUnfulfilledPaymentGoal() {

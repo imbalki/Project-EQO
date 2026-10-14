@@ -30,6 +30,8 @@ class PlanPreviewPolishTest {
                     "Buy bananas in Keep"
                 }!!
             assertEquals(1, asked)
+            assertEquals(1, result.clarificationRounds)
+            assertEquals("make a note\nUser clarification 1: Buy bananas in Keep", result.clarifiedRequest)
             val action =
                 result.steps
                     .single()

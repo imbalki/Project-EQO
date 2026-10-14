@@ -868,6 +868,8 @@ class TaskActivity : Activity() {
                         showStoppedAppPlan(result)
                 }
             }
+        } catch (_: FallbackClarificationStopped) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.intent_planning_stopped)
         } catch (_: AppChoiceCancelled) {
             findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
@@ -933,7 +935,12 @@ class TaskActivity : Activity() {
         return withContext(Dispatchers.IO) {
             // Never capture EQO's key/setup/request UI; execution observations stay local.
             val apps = TaskAppPlanning(this@TaskActivity, appResolver)
-            apps.prepare(request, understood.steps) { constrained ->
+            apps.prepare(
+                understood.clarifiedRequest,
+                understood.steps,
+                ai.eqo.core.agent.IntentPlanningSession.MAX_ROUNDS - understood.clarificationRounds,
+                ask = { question -> askFallbackQuestion(question, generation) },
+            ) { constrained ->
                 require(understood.intent.action != "purchase") {
                     "Shopping needs an installed shopping app; no browser or payment fallback will run."
                 }
@@ -947,6 +954,24 @@ class TaskActivity : Activity() {
             }
         }
     }
+
+    internal suspend fun askFallbackQuestion(
+        question: ai.eqo.core.agent.TaskIntent,
+        generation: Int,
+    ): String? =
+        withContext(Dispatchers.Main) {
+            if (generation != preparationGeneration || isFinishing || isDestroyed) {
+                null
+            } else {
+                findViewById<TextView>(R.id.task_preview).text = ""
+                understandingRequest = true
+                try {
+                    intentChoices.ask(question)
+                } finally {
+                    understandingRequest = false
+                }
+            }
+        }
 
     private suspend fun understandRequest(
         request: String,

@@ -296,6 +296,9 @@ class IntentPlanningSession(
         val bestGuess: Boolean,
         // Plain notes for the plan preview: parts of the request the plan cannot carry out (may be empty).
         val notes: List<String> = emptyList(),
+        // Pre-approval fallbacks retain answers and share this session's bounded question budget.
+        val clarifiedRequest: String = "",
+        val clarificationRounds: Int = 0,
     )
 
     @Suppress("ReturnCount") // Cancellation and exhausted missing-data questions must return no executable plan.
@@ -315,7 +318,14 @@ class IntentPlanningSession(
                     val planned = planner.planWithNotes(enriched, intent = intent)
                     val clarification = RegistryPlanVocabulary.clarification(planned.steps)
                     if (clarification == null) {
-                        return Result(intent, planned.steps, intent.needsClarification(), planned.notes)
+                        return Result(
+                            intent,
+                            planned.steps,
+                            intent.needsClarification(),
+                            planned.notes,
+                            enriched,
+                            rounds,
+                        )
                     }
                     clarification
                 }
