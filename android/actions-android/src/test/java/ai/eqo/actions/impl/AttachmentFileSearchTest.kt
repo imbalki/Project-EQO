@@ -276,7 +276,7 @@ class AttachmentFileSearchTest {
             val refused = share(ui).prepareOnIo("find:type=screenshot,latest") as PreparedShare.Refused
             assertEquals(listOf("DCIM/Screenshots"), ui.folders)
             assertEquals("attachment_cancelled", AttachmentFailure.kind(refused.message))
-            assertTrue(refused.message.contains("Needs you"))
+            assertTrue(refused.message.contains("No file was attached. Nothing was sent."))
             assertTrue(staging.listFiles().orEmpty().isEmpty())
         }
 
