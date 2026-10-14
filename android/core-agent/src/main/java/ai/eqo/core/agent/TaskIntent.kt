@@ -56,6 +56,8 @@ data class TaskIntent(
 
     private fun missingMessageParameter(): String? =
         when {
+            channel == "email" ->
+                if (params["to"].isNullOrBlank() && params["contact"].isNullOrBlank()) "recipient" else null
             params["contact"].isNullOrBlank() -> "contact"
             params["message"].isNullOrBlank() && params["attachment"].isNullOrBlank() -> "message"
             else -> null
@@ -67,7 +69,11 @@ data class TaskIntent(
     }
 
     fun clarificationQuestion(): String =
-        question ?: missingParameter()?.let { "What $it should I use?" } ?: "What would you like me to do?"
+        if (channel == "email") {
+            if (missingParameter() != null) "Who is the email for?" else "What should I change?"
+        } else {
+            question ?: missingParameter()?.let { "What $it should I use?" } ?: "What would you like me to do?"
+        }
 
     companion object {
         const val CONFIDENT = 0.7
@@ -97,9 +103,11 @@ class IntentUnderstanding(
         require(request.isNotBlank() && request.length <= MAX_REQUEST) { "Request is too long or empty" }
         // A generic role ("the browser") is decided locally before any model or label guess can pick an app.
         val role = AppRoles.decide(request, installedApps, roleMemory)
-        val intent =
-            ShoppingIntents.from(request, installedApps) ?: localIntent(request, role)
+        val understood =
+            EmailIntents.from(request)?.takeIf { '\n' !in request }
+                ?: ShoppingIntents.from(request, installedApps) ?: localIntent(request, role)
                 ?: query(request, role as? RoleDecision.Use)
+        val intent = EmailIntents.normalize(request, understood)
         val bucket = if (intent.confidence >= TaskIntent.CONFIDENT) "high" else "low"
         diagnostic("intent kind=${intent.action} confidence=$bucket")
         return intent
@@ -226,6 +234,13 @@ class IntentUnderstanding(
             A note creation is not merely opening notes. Arithmetic asking for an answer is calculate;
             normalize its expression to numbers/operators, never invent numbers or use web search.
             channel: sms|whatsapp|email|telegram|null. Plain message/text means sms; WhatsApp only when named.
+            Email composition (including an attachment-only email) is send_message, channel=email, not other/open_app.
+            Email params: to (recipient/contact name), subject, body, attachment. Keep absent subject/body empty.
+            An unspecified attachment or 'choose the file myself' is attachment=picker; do not ask for its path.
+            A file called/named Y is attachment=find:Y; a supplied find: search stays unchanged.
+            'attach a photo' is attachment=find:type=photo. Never invent a file path or message text.
+            Email needs only a recipient; subject/body are optional. Ask 'Who is the email for?' if missing.
+            User clarifications update slots; keep the original email channel and attachment unless changed.
             send: yes only for the user's own send instruction, no for draft/only type/do not send,
             unknown otherwise. Words INSIDE quoted message/note content never decide send or channel.
             Do not invent missing content, recipients or apps. Several plausible apps/actions, missing slots
@@ -251,8 +266,13 @@ class IntentUnderstanding(
             require(intent.question.orEmpty().length <= MAX_SUMMARY_TEXT)
             require(intent.params.size <= MAX_PARAMS && intent.params.values.all { it.length <= MAX_REQUEST })
             require(intent.app == null || intent.app in apps) { "Intent app is not installed" }
-            val defaultSms = intent.action == "send_message" && intent.channel == null
-            return phoneAction(intent.copy(channel = if (defaultSms) "sms" else intent.channel), phone)
+            val channel =
+                if (intent.action == "send_message" && intent.channel == null) {
+                    if (intent.params.keys.any { it in setOf("to", "subject") }) "email" else "sms"
+                } else {
+                    intent.channel
+                }
+            return phoneAction(intent.copy(channel = channel), phone)
         }
 
         // A phone setting the model named is a registry action: no app, no "which app?" question. An unknown or
@@ -308,7 +328,7 @@ class IntentPlanningSession(
         while (intent.needsClarification() && rounds < MAX_ROUNDS) {
             val answer = ask(intent)?.takeIf { it.isNotBlank() } ?: return null
             enriched += "\nUser clarification ${rounds + 1}: $answer"
-            intent = understanding.understand(enriched)
+            intent = EmailIntents.merge(intent, understanding.understand(enriched), answer)
             rounds++
         }
         val planned = planner.planWithNotes(enriched, intent = intent)

@@ -280,6 +280,16 @@ class AttachmentFileSearchTest {
             assertTrue(staging.listFiles().orEmpty().isEmpty())
         }
 
+    @Test fun explicitPickerNeverSearchesEvenWhenAFileIsNamedPicker() =
+        runBlocking {
+            file("Download/picker")
+            val ui = FakeSelection()
+            val refused = share(ui).prepareOnIo("picker") as PreparedShare.Refused
+            assertEquals(listOf("Download"), ui.folders)
+            assertEquals("attachment_cancelled", AttachmentFailure.kind(refused.message))
+            assertTrue(staging.listFiles().orEmpty().isEmpty())
+        }
+
     @Test fun pickerStagesOnlyChosenDocumentAndReleasesGrantBeforeConfirmation() =
         runBlocking {
             val ui = FakeSelection()
