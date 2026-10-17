@@ -269,12 +269,16 @@ internal class AttachmentShare(
     }
 
     private fun locate(reference: String): Located =
-        try {
-            locateSafe(reference)
-        } catch (_: SecurityException) {
-            Located.Missing(AttachmentFailure.reason("folder_not_readable"))
-        } catch (_: RuntimeException) {
-            Located.Missing(AttachmentFailure.reason("search_incomplete"))
+        if (reference == AttachmentSpec.PICKER) {
+            Located.Missing(AttachmentFailure.reason("no_matching_file"))
+        } else {
+            try {
+                locateSafe(reference)
+            } catch (_: SecurityException) {
+                Located.Missing(AttachmentFailure.reason("folder_not_readable"))
+            } catch (_: RuntimeException) {
+                Located.Missing(AttachmentFailure.reason("search_incomplete"))
+            }
         }
 
     private fun locateSafe(reference: String): Located {

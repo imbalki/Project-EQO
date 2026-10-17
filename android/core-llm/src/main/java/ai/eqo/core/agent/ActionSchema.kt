@@ -51,7 +51,7 @@ object ActionSchema {
             ParamType.STRING,
             false,
             "Optional file: a user-given path, find:words with name/type/folder/date filters resolved at run time, " +
-                "or last_screenshot for the latest EQO screenshot. " +
+                "picker for the owner's file choice, or last_screenshot for the latest EQO screenshot. " +
                 "Several: separate with |",
         )
 
@@ -515,13 +515,15 @@ object ActionSchema {
             ),
             ActionDefinition(
                 name = "SEND_EMAIL",
-                description = "Opens a pre-filled email draft; the user must review and send it. Sending is not verified.",
+                description =
+                    "Composes email natively; may press Gmail Send unless draftOnly=true. Delivery is not verified.",
                 params =
                     listOf(
                         ParamDefinition("to", ParamType.STRING, true, "Recipient email or contact name"),
                         ParamDefinition("subject", ParamType.STRING, true, "Email subject"),
                         ParamDefinition("body", ParamType.STRING, true, "Email body"),
                         ParamDefinition("cc", ParamType.STRING, false, "CC recipients"),
+                        ParamDefinition("draftOnly", ParamType.BOOLEAN, false, "Only compose; never press Send"),
                         ATTACHMENT_PARAM,
                     ),
                 examples = listOf("send email to boss", "email John"),

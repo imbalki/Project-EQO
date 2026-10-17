@@ -52,7 +52,7 @@ object RegistryPlanVocabulary {
             appendLine("To pass a contact's number to someone use SHARE_CONTACT.")
             appendLine("To send where the user is use SHARE_LOCATION.")
             appendLine("Both need via=whatsapp|sms|email and a recipient in to. Never put coordinates in params.")
-            appendLine("Use native field hints such as To, Subject, Compose email for Gmail compose.")
+            appendLine("For email use SEND_EMAIL, never To/Subject/Compose/Attach UI controls.")
             appendLine("To open a website or search the web in a browser, use ONE OPEN_URL or WEB_SEARCH step;")
             appendLine("never tap or type into an address bar. A named browser goes in the browser parameter.")
             appendLine("OPEN_URL url is a plain web address (wikipedia.org) or a bare word, which is searched.")
@@ -77,6 +77,9 @@ object RegistryPlanVocabulary {
             }
             appendLine("To send a file, set the optional attachment parameter of SEND_EMAIL,")
             appendLine("SEND_WHATSAPP or SEND_SMS.")
+            appendLine("Email always uses one SEND_EMAIL with to/subject/body, never a Gmail UI chain.")
+            appendLine("For draft/no send/unknown send use draftOnly=true; only an explicit send uses false.")
+            appendLine("An unspecified attachment or 'choose the file myself' uses attachment=picker.")
             appendLine("For a file-only send, keep message/body/subject empty; never invent message text.")
             appendLine("Its value is a file path the user gave (several separated by |),")
             appendLine("or last_screenshot only after an explicit request to TAKE_SCREENSHOT now.")
