@@ -982,3 +982,115 @@ Method: driven over adb from the lead's machine (typed requests, approve, read t
 | Text message / WhatsApp / calculate-then-send | Not re-run this round (they would send real messages). |
 
 Owner decision: SMS stays draft-and-you-press-Send for the POC (see PRODUCT-DECISIONS 10).
+
+## Round 6 (lead-orchestrated, Hermes-run)
+
+Run: 2026-10-14, approximately 00:00–00:57 IST, Realme / Android 11, adb-driven.
+Checkout: `test/r6-phone-round`, `c8140d0`; installed EQO reports versionName
+`0.1.0`, versionCode `1`, lastUpdateTime `2026-10-13 23:53:48`.
+The installed APK's source commit was not independently identifiable; checkout HEAD
+is not an attestation of the installed binary. No installation or product-code change.
+
+Privacy/safety: external UI dumps were parsed in memory and filtered, with Keep
+content checked only by an exact synthetic-text match count. No private note text,
+account identifiers, addresses, payment details or file names were recorded.
+The one task-screen screenshot was outside the repository and deleted. No send,
+call, order, payment, calendar save, contact mutation, permission grant, force-stop
+or system-setting change was performed. Each item returned to EQO main, with a
+15-second settling wait; later targeted retries are distinguished below.
+
+| # | Test | Result | Screen evidence / boundary |
+|---|---|---|---|
+| 1 | Open Zepto | PASS | Approval opened Zepto (`com.zeptoconsumerapp` foreground). |
+| 2 | Open Whatsap (typo) | PASS | Preview said Open WhatsApp without a question; a targeted retry confirmed `com.whatsapp` foreground at both 3 and 23 seconds after approval (the initial late observation was EQO). |
+| 3 | What is 238 times 8 | PASS | Preview showed local 1904 and the completed Result line showed `CALCULATE: 238*8 = 1904`. |
+| 4 | Make a note | PASS | The approval preview contained `ASK_USER: question="What would you like the note to say?"`; rejected without running, but it was not a pre-plan clarification sheet and had an unrelated phone-setting warning. |
+| 5 | Save a note in Keep: round six test note | PASS | Preview contained the exact text, EQO reported Note saved, and a separately opened Keep home had exactly one exact-text match (count only). |
+| 6 | Open the browser, This time | PASS | Which browser? listed Chrome, Brave, Firefox and Opera; Use Chrome? offered Always / This time / Cancel, and This time → preview → approval opened Chrome. |
+| 7 | Browser Always, repeat, forget | PASS | Always → approval opened Chrome, the repeated request went straight to Open Chrome preview, and the second Forget this app choice control removed the row, showing No app choices saved. |
+| 8 | Open wikipedia.org in Chrome | PASS | Preview read `open wikipedia.org in Chrome`; Chrome showed Wikipedia The Free Encyclopedia and `wikipedia.org` in its URL bar. |
+| 9 | Search cats in Chrome | PASS | Approval opened Chrome with cats and `google.com/search?q=cats` on screen. |
+| 10 | Search banana in Zepto | PASS | Approval produced banana in the search field and multiple banana product results. |
+| 11 | Turn on the flashlight | PASS | Preview contained `TOGGLE_FLASHLIGHT: state="on"` and the camera-access prerequisite, with no app question; rejected and actual flashlight operation not tested. |
+| 12 | Reminder for the puja on October 19th | PASS | Calendar's unsaved editor showed Puja, Mon 19 Oct 2026 for both dates and a checked all-day switch; backed out without Save, although EQO logged FAILED for the manual handoff. |
+| 13 | Buy two milk on Zepto | FAIL | Preview promised open → search milk → add 2 → cart/stop, but execution reached milk results and failed on the first post-search CLICK_TEXT, before a verified Add or cart; pre-existing cart contents were not established and no order/payment occurred. |
+| 14 | Buy two milk on Zepto and pay with UPI | PASS | After a Zepto app-choice question, the preview said stop before paying and contained only `open "Zepto"`; rejected, with misleading prose saying it would "only open Zepto and pay with UPI" (no payment action). |
+| 15 | Email to synthetic recipient with attachment; chooser-only | FAIL | Initial clarification answers stayed Making a plan with a validation repair; a retry plus explicit picker/no-send answer produced an attachment plan, but Gmail foreground execution failed at To typing before a chooser, so the 60-second in-app chooser persistence check is BLOCKED and nothing was sent. |
+| 16 | Dictation from handle in Keep editor | BLOCKED | Dictation from the handle existed and was checked, but Enable edge handle was unchecked and no EQO handle appeared over Keep's empty new-note editor; no setting was changed, no mic could be tapped, and the editor was backed out without typing. |
+| 17 | Voice first-tap state only | PASS | The task mic used a saved choice and went directly to Stop recording, with no AI / Phone / Later sheet; recording was stopped and the screen left, while real speech, transcription accuracy and voice-to-plan remain NOT TESTED. |
+
+### Bugs and exact reproductions
+
+1. Shopping fails before Add/cart. From EQO main, enter `buy two milk on Zepto`,
+   Plan, inspect the 2-item/cart-stop preview, Approve. Zepto shows milk results,
+   not a verified cart handoff. Search and its wait complete; step 7 CLICK_TEXT
+   exhausts its four missing-control probes. No successful Add was observed;
+   cart baseline/quantity are unverified, not inferred as empty or unchanged.
+   EqoRun evidence (device IST, 10-14):
+   - `00:30:41.468 action=WAIT result=Success`
+   - `00:30:41.770 step=7 phase=start`
+   - `00:30:42.405 action=CLICK_TEXT node_found=false node_class=none result=NodeNotFound`
+   - Same NodeNotFound at `00:30:43.434`, `00:30:44.541`, `00:30:45.580`.
+   - `00:30:45.594 action=CLICK_TEXT result=Failure`
+   - `00:30:45.594 step=7 code=control_not_found reason=control_not_found`
+   - `00:30:45.595 step=7 execute=Failure code=execution_failed`
+   - `00:30:45.595 step=7 outcome=Failed`; `status=FAILED`.
+
+2. Email attachment plan fails before the chooser. Enter the checklist's email
+   attachment request to the synthetic recipient. First attempt: choose device
+   file, then Open the file picker so I can pick the file; no preview after two
+   further 40-second waits. Retry: choose Attach a file from Files, then answer
+   `Open the file picker so I can pick the file. Do not send.`. After a 120-second
+   wait, preview contained OPEN_APP Gmail, WAIT, CLICK_TEXT Compose, WAIT,
+   TYPE_TEXT To, CLICK_TEXT Attach file / Attach, and no Send. Approve only that
+   no-send plan. Gmail was foreground, but no chooser or editable To field was
+   observed; Back out, return EQO main. No file selected and no Send tapped.
+   EqoRun evidence:
+   - First attempt `00:35:09.848 intent kind=send_message confidence=low`.
+   - `00:36:31.948 intent kind=other confidence=high`.
+   - `00:37:14.801 planner validation failed; repair=1`.
+   - Retry `00:48:22.099 intent kind=other confidence=high`.
+   - `00:50:25.325 action=TYPE_TEXT node_found=false node_class=none result=NodeNotFound`.
+   - Same NodeNotFound at `00:50:25.630`, `.937`, `00:50:26.243`, `.549`, `.859`, `00:50:27.166`.
+   - `00:50:27.279 step=5 execute=Interrupted code=apply_interrupted_effect_unknown`.
+   - `00:50:27.284 step=5 verification=interrupted_effect_unknown`.
+   - `00:50:27.285 step=5 outcome=PartialApply`; `status=FAILED`.
+   The original plan-only/no-send restriction was preserved. The requested
+   in-app picker and its 60-second lifetime were never reached or verified.
+
+3. Calendar manual handoff is logged as failure. Enter the reminder request,
+   Plan, Approve; the correct unsaved all-day dated editor opens, but EqoRun says:
+   - `00:28:11.912 action=SET_REMINDER result=UserActionRequired`
+   - `00:28:11.912 step=1 code=execution_failed reason=execution_failed`
+   - `00:28:11.912 step=1 execute=Failure code=execution_failed`
+   - `00:28:11.913 step=1 verification=failed`
+   - `00:28:11.913 step=1 outcome=Failed`; `status=FAILED`.
+   This is a presentation/result classification issue, not evidence of a saved event.
+
+4. Preview-only wording issues (no run log because rejected):
+   - `make a note` → Plan: missing-content question appears as an ASK_USER action
+     in approval, alongside `EQO did not plan the phone setting you asked for.`
+     No phone setting was requested. Reject.
+   - UPI shopping variant → Plan → choose Zepto → This time: summary says stop
+     before paying, then `EQO cannot do the shopping part yet: it will only open
+     Zepto and pay with UPI.`; sole action is OPEN_APP. Reject. Payment safety
+     passes at this boundary, but the contradictory prose is a bug.
+
+### Blocked / not tested
+
+- Item 15: actual in-app attachment chooser and untouched 60-second persistence
+  blocked by the pre-chooser execution failure; no selected file or delivery test.
+- Item 16: owner must enable the currently disabled handle before Listening /
+  Transcribing / plain-error states can be exercised. Dictation switch itself is
+  already on. No preference or system setting was changed by this worker.
+- Item 17: real speech and successful voice-to-plan need the owner; saved-choice
+  first-tap behavior only was verified. No transcription/plan success claimed.
+- Item 11: flashlight/camera permission grant deliberately not tested.
+- Item 13: cart contents, two-item quantity and cart handoff were not reached;
+  pre-existing cart items are unknown. No cleanup mutation of the owner's cart.
+- No APK build/install, Gradle suite, remote CI, push, PR or gh was performed.
+- Report verification: all 17 numbered rows counted in order (14 PASS at their
+  stated safe boundaries, 2 FAIL, 1 BLOCKED); `git diff --check` and
+  `bash scripts/check.sh` passed (549 Kotlin files/provenance rows). Calendar
+  targeted repeats independently confirmed the checked Switch alongside All-day
+  and both Mon 19 Oct 2026 dates; none was saved.
