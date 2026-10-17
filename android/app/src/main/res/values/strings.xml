@@ -3,7 +3,8 @@
     <string name="task_result_format">Result: %1$s</string>
     <string name="intent_clarification_hint">Type what you meant</string>
     <string name="intent_clarification_answer">Use this answer</string>
-    <string name="intent_understood_preview">I understood: %1$s\n%2$s\n</string>
+    <string name="intent_understood_preview">This plan: %1$s\n%2$s\n</string>
+    <string name="intent_planning_stopped">Planning stopped. Add the missing details and try again. No run started.</string>
     <string name="intent_best_guess">I am using my best guess after two clarifications. Check the steps before approval.</string>
     <string name="voice_button">Mic</string>
     <string name="voice_first_use_title">How should EQO listen?</string>

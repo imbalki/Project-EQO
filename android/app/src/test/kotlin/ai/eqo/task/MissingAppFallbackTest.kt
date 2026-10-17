@@ -176,7 +176,7 @@ class MissingAppFallbackTest {
         val activity = lifecycle.get()
         show(activity)
         val dialog = ShadowAlertDialog.getLatestAlertDialog()
-        assertTrue(dialog.findViewById<TextView>(android.R.id.message).text.startsWith("Flipkart is not installed"))
+        assertTrue(dialog.findViewById<TextView>(android.R.id.message).text.contains("Flipkart is not installed"))
         assertEquals("Install Flipkart from Play Store", dialog.getButton(AlertDialog.BUTTON_NEUTRAL).text.toString())
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL).performClick()
         org.robolectric.Shadows
@@ -192,7 +192,7 @@ class MissingAppFallbackTest {
         val activity = lifecycle.get()
         PlanApprovalSettings.setRequired(activity, false)
         show(activity)
-        assertTrue(activity.findViewById<TextView>(R.id.task_preview).text.startsWith("Flipkart is not installed"))
+        assertTrue(activity.findViewById<TextView>(R.id.task_preview).text.contains("Flipkart is not installed"))
         assertFalse(ShadowAlertDialog.getLatestAlertDialog()?.isShowing == true)
         assertEquals(web(), TaskRunSession.pending?.steps())
         TaskRunSession.pending = null

@@ -32,6 +32,7 @@ object PlanCompleteness {
         )
 
     /** Parts the plan leaves out. Empty when the plan carries out everything that was understood. */
+    @Suppress("ReturnCount") // Questions and cart-only shopping have distinct non-executable/complete boundaries.
     fun gaps(
         request: String,
         intent: TaskIntent,
@@ -39,6 +40,8 @@ object PlanCompleteness {
         enabled: Set<String>,
     ): List<Gap> {
         val first = request.lines().first()
+        // Questions are routed back to intent clarification, not repaired as a partial executable plan.
+        if (RegistryPlanVocabulary.clarification(steps) != null) return emptyList()
         if (intent.action == "purchase") {
             return if (ShoppingIntents.supported(intent.app) &&
                 steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF
