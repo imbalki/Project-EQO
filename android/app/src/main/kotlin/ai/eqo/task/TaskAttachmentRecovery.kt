@@ -4,6 +4,7 @@ package ai.eqo.task
 import ai.eqo.R
 import ai.eqo.actions.impl.RecipientPreparationException
 import ai.eqo.core.agent.AttachmentSpec
+import ai.eqo.core.agent.IntentPlanningSession
 import ai.eqo.core.agent.LoopStep
 import ai.eqo.core.agent.TaskIntent
 import android.content.Context
@@ -19,9 +20,13 @@ internal class TaskAttachmentRecovery(
     ): List<LoopStep> =
         steps.map { step ->
             val references = AttachmentSpec.parse(step.action.params[AttachmentSpec.PARAM])
-            val requestedKeep = step.action.name == "SEND_EMAIL" && KEEP_ATTACHMENT.containsMatchIn(request)
-            val keep = references.any { KEEP.containsMatchIn(it) } || requestedKeep
-            val unresolved = references.filter { it in missing || KEEP.containsMatchIn(it) }
+            // Availability wins over names: an exported Keep note is an ordinary file.
+            val requestedKeep =
+                step.action.name == "SEND_EMAIL" &&
+                    references.all { it == AttachmentSpec.PICKER || it in missing } &&
+                    KEEP_ATTACHMENT.containsMatchIn(QUOTED.replace(request, ""))
+            val unresolved = references.filter { it in missing }
+            val keep = unresolved.any { KEEP.matches(it.removePrefix("find:")) } || requestedKeep
             if ((!keep && unresolved.isEmpty()) || step.action.name !in AttachmentSpec.ACTIONS) {
                 step
             } else {
@@ -73,9 +78,26 @@ internal class TaskAttachmentRecovery(
         throw RecipientPreparationException(message)
     }
 
-    private companion object {
-        val KEEP = Regex("\\b(?:google\\s+)?keep\\s+notes?\\b", RegexOption.IGNORE_CASE)
-        val KEEP_ATTACHMENT =
+    companion object {
+        // After clarification, only the final attachment slot may infer an omitted attachment.
+        // Goals can paraphrase message content, and the original request may have been superseded.
+        fun requestFor(
+            request: String,
+            understood: IntentPlanningSession.Result,
+        ): String =
+            if (understood.clarificationRounds == 0 && !request.contains("\nUser clarification")) {
+                request
+            } else {
+                val attachment =
+                    understood.intent.params[AttachmentSpec.PARAM]
+                        .orEmpty()
+                        .removePrefix("find:")
+                if (KEEP.matches(attachment)) "attach $attachment" else ""
+            }
+
+        private val QUOTED = Regex("\"(?:\\\\.|[^\"\\\\])*\"|“[^”]*”|'[^'\\n]*'")
+        private val KEEP = Regex("\\b(?:google\\s+)?keep\\s+notes?\\b", RegexOption.IGNORE_CASE)
+        private val KEEP_ATTACHMENT =
             Regex("\\battach\\w*\\s+(?:(?:my|the|a|an)\\s+)?(?:google\\s+)?keep\\s+notes?\\b", RegexOption.IGNORE_CASE)
     }
 }

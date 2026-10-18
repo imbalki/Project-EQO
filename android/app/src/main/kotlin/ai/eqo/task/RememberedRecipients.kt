@@ -21,7 +21,10 @@ internal class RememberedRecipients(
     fun destination(
         name: String,
         email: Boolean,
-    ): String? = preferences.getString(key(name, email), null)
+    ): String? =
+        preferences.getString(key(name, email), null)?.takeIf {
+            if (email) isLiteralEmail(it) else isLiteralPhone(it)
+        }
 
     fun remember(
         name: String,

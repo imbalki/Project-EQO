@@ -77,6 +77,7 @@ class TaskActivity : Activity() {
     private var displayedStatus = PlanStatus.PENDING
     private var preparationGeneration = 0
     private var understoodPreview = ""
+    private var attachmentRequest = ""
     private var purchasePreview = false
     private var understandingRequest = false
     private var resultSpeaker: TaskResultSpeaker? = null
@@ -766,6 +767,7 @@ class TaskActivity : Activity() {
                                 .parse(json, portedActions.enabledActionNames)
                         understoodPreview = ""
                         purchasePreview = false
+                        attachmentRequest = ""
                         if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
                     } catch (_: AppChoiceCancelled) {
                         findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
@@ -914,6 +916,7 @@ class TaskActivity : Activity() {
         generation: Int,
     ): MissingAppFallback.Result? {
         understoodPreview = ""
+        attachmentRequest = ""
         val planner =
             withContext(Dispatchers.IO) {
                 TaskPlanningRuntime.planner(applicationContext, portedActions.enabledActionNames)
@@ -922,6 +925,8 @@ class TaskActivity : Activity() {
         val understood =
             understandRequest(request, planner, generation)
                 ?.takeIf { generation == preparationGeneration } ?: return null
+        // The editable request omits clarification answers. Never revive a superseded attachment instruction.
+        attachmentRequest = TaskAttachmentRecovery.requestFor(request, understood)
         purchasePreview =
             understood.intent.action == "purchase" ||
             ai.eqo.core.agent.PlanCompleteness
@@ -1043,7 +1048,7 @@ class TaskActivity : Activity() {
             attachments.prepare(
                 appPreparation.steps,
                 emptySet(),
-                findViewById<EditText>(R.id.task_request).text.toString(),
+                if (retry) "" else attachmentRequest,
             )
         if (generation != preparationGeneration || isFinishing || isDestroyed) return
         if (!portedActions.prepareFileAccess(fileSteps)) {

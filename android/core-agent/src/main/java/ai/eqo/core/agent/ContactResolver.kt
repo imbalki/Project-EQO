@@ -353,7 +353,11 @@ open class ContactResolver
 /** Same literal classification at the permission and lookup boundaries. */
 fun isLiteralPhone(input: String): Boolean = input.replace(Regex("[\\s\\-()]"), "").matches(Regex("\\+?[0-9]{7,}"))
 
-fun isLiteralEmail(input: String): Boolean = input.trim().matches(Regex("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"))
+// Exactly one destination: delimiters/display-name syntax must never escape pre-approval resolution.
+fun isLiteralEmail(input: String): Boolean =
+    input
+        .trim()
+        .matches(Regex("[^\\s<>(),;@\"]+@[^\\s<>(),;@\"]+\\.[^\\s<>(),;@\"]+"))
 
 fun ContactResolution.failureMessage(): String =
     when (this) {

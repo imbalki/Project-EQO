@@ -71,6 +71,25 @@ class ContactRecipientsTest {
             assertNull(shadowOf(context).nextStartedActivity)
         }
 
+    @Test fun compoundResolvedEmailCannotEscapePreApproval() =
+        runTest {
+            val address = "synthetic" + '@' + "example.invalid"
+            for (suffix in listOf(";Other", ",Other", "<Other>", "(Other)")) {
+                val resolver =
+                    object : ContactResolver(context) {
+                        override suspend fun resolveEmailWithDisambiguation(input: String): ContactResolution =
+                            ContactResolution.Found(Contact(input, address + suffix, source = "owner_choice"))
+                    }
+                try {
+                    registry().prepareRecipients(listOf(emailStep("Unknown")), resolver)
+                    error("Must not freeze a compound destination for later lookup")
+                } catch (expected: RecipientPreparationException) {
+                    assertTrue(expected.message!!.contains("no valid email address"))
+                }
+                assertNull(shadowOf(context).nextStartedActivity)
+            }
+        }
+
     @Test
     @Config(sdk = [33])
     fun locationInventoryIncludesAndroidTwelveCompanionGrant() {

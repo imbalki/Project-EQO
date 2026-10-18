@@ -130,5 +130,45 @@ class RecipientRecoveryTest {
 
     private fun once() = context.getString(R.string.app_chooser_this_time)
 
+    @Test fun compoundAnswersAreRequestionedBeforeDestinationIsFrozenOrRemembered(): Unit =
+        runBlocking {
+            for (separator in listOf(";", ",")) {
+                for (scope in listOf(once(), context.getString(R.string.app_chooser_always))) {
+                    val answers = ArrayDeque(listOf(address + separator + "Other", address, scope))
+                    val result = recovery { answers.removeFirst() }.resolveEmailWithDisambiguation("Unknown")
+                    assertEquals(address, (result as ContactResolution.Found).contact.phoneNumber)
+                    assertTrue(answers.isEmpty())
+                    assertEquals(if (scope == once()) null else address, memory.destination("Unknown", true))
+                    memory.entries().keys.forEach(memory::delete)
+                }
+            }
+        }
+
+    @Test fun compoundAnswersCannotBeRememberedOrRestoredFromOldPreferences() {
+        for (suffix in listOf(";Other", ",Other", "<Other>", "(Other)", "\"Other\"")) {
+            try {
+                memory.remember("Unknown", true, address + suffix)
+                error("Must reject a compound destination")
+            } catch (_: IllegalArgumentException) {
+                assertTrue(memory.entries().isEmpty())
+            }
+        }
+        val preferences = context.getSharedPreferences("eqo_remembered_recipients", Application.MODE_PRIVATE)
+        preferences.edit().putString("Email: unknown", address + ";Other").commit()
+        assertNull(memory.destination("Unknown", true))
+    }
+
+    @Test fun repeatedlyCompoundAnswersNeverResolveOrPersist(): Unit =
+        runBlocking {
+            val answers = ArrayDeque(listOf("Type", address + ";Other", address + ",Other"))
+            try {
+                recovery { answers.removeFirst() }.resolveEmailWithDisambiguation("Unknown")
+                error("Must not approve unresolved recipients")
+            } catch (expected: RecipientPreparationException) {
+                assertTrue(expected.message!!.contains("Nothing ran"))
+            }
+            assertTrue(memory.entries().isEmpty())
+        }
+
     private fun recovery(ask: suspend (TaskIntent) -> String?) = TaskRecipientRecovery(context, ask, memory, contacts)
 }
