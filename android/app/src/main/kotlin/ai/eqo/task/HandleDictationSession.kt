@@ -37,6 +37,8 @@ internal class HandleDictationSession(
 ) {
     var state = DictationState.IDLE
         private set
+    var transcript: String? = null
+        private set
     private var recording: VoiceRecording? = null
     private var work: Job? = null
     private var cap: Job? = null
@@ -48,6 +50,7 @@ internal class HandleDictationSession(
         inserter: (suspend (String) -> Boolean)?,
     ) {
         cancel()
+        transcript = null
         val failure = setup.failure() ?: if (inserter == null) DictationFailure.TARGET else null
         if (failure != null) {
             publish(DictationState.FAILED, failure)
@@ -104,6 +107,7 @@ internal class HandleDictationSession(
                 if (inserter(text)) {
                     publish(DictationState.INSERTED)
                 } else {
+                    transcript = text
                     publish(DictationState.FAILED, DictationFailure.COPIED)
                 }
             }
