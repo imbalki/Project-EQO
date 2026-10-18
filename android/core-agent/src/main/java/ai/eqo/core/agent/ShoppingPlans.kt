@@ -2,10 +2,11 @@
 package ai.eqo.core.agent
 
 object ShoppingPlans {
-    const val FIRST_RESULT = "adds the first search result; check the cart before paying"
+    const val FIRST_RESULT =
+        "adds the first search result; this may be an advertised item; check the cart before paying"
     const val HANDOFF = "Needs you: EQO $FIRST_RESULT; pay yourself"
     const val INCREASE = "exact:+,exact:increase quantity"
-    private const val CART = "exact:Cart,exact:View cart,exact:Go to cart"
+    const val CART = "exact:Cart,exact:View cart,exact:Go to cart"
     private val forbidden =
         Regex(
             "pay|place[ _-]*order|confirm|buy[ _-]*now|checkout|upi|card|" +
