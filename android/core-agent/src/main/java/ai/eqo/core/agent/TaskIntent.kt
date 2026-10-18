@@ -334,7 +334,9 @@ class IntentPlanningSession(
                 if (intent.needsClarification() && rounds < MAX_ROUNDS) {
                     intent
                 } else {
-                    if (intent.missingParameter() != null) return null
+                    // An email with no recipient is answered with a note (nothing planned), never a silent cancel.
+                    val emailWithoutRecipient = intent.action == "send_message" && intent.channel == "email"
+                    if (intent.missingParameter() != null && !emailWithoutRecipient) return null
                     val planned = planner.planWithNotes(enriched, intent = intent)
                     val clarification = RegistryPlanVocabulary.clarification(planned.steps)
                     if (clarification == null) {
