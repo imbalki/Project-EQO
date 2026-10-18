@@ -108,6 +108,7 @@
 | :app | `android/app/src/main/kotlin/ai/eqo/handle/BuiltInHandleShortcuts.kt` | EQO-NEW | `ai.eqo.handle` | Existing controller Pause/Stop and app/task entries |
 | :app | `android/app/src/main/kotlin/ai/eqo/handle/EdgeHandleSettingsActivity.kt` | EQO-NEW | `ai.eqo.handle` | Opt-in, shortcut choice, Up/Down, reset and restore |
 | :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleFeaturesTest.kt` | EQO-NEW | `ai.eqo.handle` | Preference, focus and real public controller regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/HandlePlacementDeliveryTest.kt` | EQO-NEW | `ai.eqo.handle` | Service event delivery and real drag input-exclusion regressions |
 ## Explain screen additions (t_699c0abc)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSession.kt` | EQO-NEW | `ai.eqo.explain` | Read-only explanation session, privacy bounds and protected-screen policy seam |

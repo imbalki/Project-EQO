@@ -320,8 +320,7 @@ class EdgeHandleOverlay(
                         val (width, height) = dimensions()
                         params.y = (startY + event.rawY - downY).toInt().coerceIn(0, maxOf(0, height - handle.height))
                         params.x = if (event.rawX > width / 2f) width - params.width else 0
-                        manager.updateViewLayout(handle, params)
-                        updateBounds(handle)
+                        fitWindow(handle, params, forceLayout = true)
                     }
                 }
                 MotionEvent.ACTION_UP -> {
@@ -491,6 +490,7 @@ class EdgeHandleOverlay(
     private fun fitWindow(
         target: View,
         params: WindowManager.LayoutParams,
+        forceLayout: Boolean = false,
     ) {
         val ime = target.rootWindowInsets?.getInsets(WindowInsets.Type.ime())?.bottom ?: 0
         val metrics = manager.currentWindowMetrics
@@ -499,7 +499,7 @@ class EdgeHandleOverlay(
         val input = focusedBounds()
         val fitted = fitHandleY(params.y, target.height, height, input?.top?.minus(top), input?.bottom?.minus(top))
         target.visibility = if (fitted == null) View.INVISIBLE else View.VISIBLE
-        if (fitted != null && params.y != fitted) {
+        if (fitted != null && (params.y != fitted || forceLayout)) {
             params.y = fitted
             manager.updateViewLayout(target, params)
         }
