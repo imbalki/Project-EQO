@@ -98,6 +98,7 @@ class IntentUnderstanding(
 ) {
     private val phoneNames = phoneActions.map { it.name }.toSet()
     private val web = WebIntents(installedApps, roleMemory)
+    internal val noteClarifications = NoteClarifications(installedApps)
 
     suspend fun understand(request: String): TaskIntent {
         require(request.isNotBlank() && request.length <= MAX_REQUEST) { "Request is too long or empty" }
@@ -332,7 +333,7 @@ class IntentPlanningSession(
         ask: suspend (TaskIntent) -> String?,
     ): Result? {
         var enriched = request
-        var intent = understanding.understand(enriched)
+        var intent = understanding.noteClarifications.defaultApp(understanding.understand(enriched))
         var rounds = 0
         while (true) {
             val question =
@@ -359,7 +360,8 @@ class IntentPlanningSession(
             if (rounds >= MAX_ROUNDS) return null
             val answer = ask(question)?.takeIf { it.isNotBlank() } ?: return null
             enriched += "\nUser clarification ${rounds + 1}: $answer"
-            intent = EmailIntents.merge(intent, understanding.understand(enriched), answer)
+            val updated = EmailIntents.merge(intent, understanding.understand(enriched), answer)
+            intent = understanding.noteClarifications.merge(request, intent, updated, question, answer)
             rounds++
         }
     }
