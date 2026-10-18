@@ -35,7 +35,7 @@ object IntentSkills {
         }
 
     private fun keep(intent: TaskIntent): List<ExecutedAction> {
-        if (intent.app?.lowercase() !in setOf("keep", "google keep", "keep notes", "google keep notes")) {
+        if (!AppPlanHygiene.isKeep(intent.app)) {
             return emptyList()
         }
         // Keep ignores text set inside its editor; its share screen saves reliably (see NoteActions).
@@ -136,7 +136,7 @@ object IntentPlanProtection {
         intent: TaskIntent,
         steps: List<LoopStep>,
     ): List<LoopStep> {
-        val protected = ShoppingPlans.validate(intent, steps)
+        val protected = AppPlanHygiene.validate(intent, ShoppingPlans.validate(intent, steps))
         if (intent.send == "no") require(steps.none(::submits)) { "Intent send=no cannot include Send or submit steps" }
         if (intent.action == "send_message") {
             val channel = intent.channel ?: "sms"
@@ -154,7 +154,7 @@ object IntentPlanProtection {
     }
 
     /**
-     * A note plan may use any ordinary step the AI chooses. Pure Save/Done taps are dropped (notes apps save by
+     * Non-Keep note plans may use ordinary steps the AI chooses. Pure Save/Done taps are dropped (notes apps save by
      * themselves, so tapping them only fails); anything that communicates or shares outward is refused.
      */
     private fun noteSteps(steps: List<LoopStep>): List<LoopStep> {

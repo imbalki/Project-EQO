@@ -72,17 +72,18 @@ class TaskPlanner(
                 ),
             )
         }
-        val template = template(request, intent)
+        val task = AppPlanHygiene.normalize(request, intent, listOfNotNull(intent.app))
+        val template = template(request, task)
         val arithmetic =
-            intent.params["expression"]?.let(PlainArithmetic::evaluate) ?: PlainArithmetic.fromRequest(request)
+            task.params["expression"]?.let(PlainArithmetic::evaluate) ?: PlainArithmetic.fromRequest(request)
         val localResult = arithmetic?.let { mapOf("expression" to it.expression, "result" to it.result) }.orEmpty()
-        val input = Json.encodeToString(PlannerInput(request, screenData.take(MAX_TEXT), intent, localResult))
+        val input = Json.encodeToString(PlannerInput(request, screenData.take(MAX_TEXT), task, localResult))
         val prompt =
             (enabledActions?.let(RegistryPlanVocabulary::prompt) ?: PROMPT) +
                 "\nLocal calendar date: ${java.time.LocalDate.now()}; timezone: ${java.time.ZoneId.systemDefault()}."
         // Provider/network failures are not invalid plans and must not consume a repair request.
         val content = if (template == null) propose(input, prompt) else null
-        val ask = Completion(request, intent, input, prompt)
+        val ask = Completion(request, task, input, prompt)
         val (steps, repaired) = firstPlan(ask, template, content)
         return if (template != null || enabledActions == null || RegistryPlanVocabulary.clarification(steps) != null) {
             Planned(steps)
@@ -362,7 +363,10 @@ object TaskPlanPreview {
         recipientNames: Map<String, String> = emptyMap(),
     ): String {
         require(RegistryPlanVocabulary.clarification(steps) == null) { "Clarify the task before approval" }
-        return if (steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF) {
+        val search = searchPreview(steps)
+        return if (search != null) {
+            "EQO will:\n1. $search"
+        } else if (steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF) {
             shoppingPreview(steps)
         } else {
             "EQO will:\n" +
@@ -390,7 +394,9 @@ object TaskPlanPreview {
         val visible = steps.filterNot { it.action.name == "WAIT" }
         val openOnly = visible.isNotEmpty() && visible.all { it.action.name in setOf("OPEN_APP", "open_app") }
         val actions =
-            if (steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF) {
+            if (searchPreview(steps) != null) {
+                requireNotNull(searchPreview(steps))
+            } else if (steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF) {
                 shoppingPreview(steps)
                     .lineSequence()
                     .drop(1)
@@ -399,6 +405,25 @@ object TaskPlanPreview {
                 visible.joinToString("; then ") { describe(it) }
             }
         return (if (noPayment) "EQO will not pay; it will " else "") + actions + if (openOnly) " only" else ""
+    }
+
+    private fun searchPreview(steps: List<LoopStep>): String? {
+        val visible = steps.filterNot { it.action.name == "WAIT" }
+        val names = visible.map { it.action.name }
+        val typed = visible.singleOrNull { it.action.name == "TYPE_TEXT" }?.action?.params
+        return if (names == listOf("OPEN_APP", "CLICK_TEXT", "TYPE_TEXT", "PRESS_ENTER") &&
+            typed?.get("searchText").orEmpty().contains("search", ignoreCase = true)
+        ) {
+            "search ${quote(typed?.get("content").orEmpty())} in " +
+                quote(
+                    visible
+                        .first()
+                        .action.params["appName"]
+                        .orEmpty(),
+                )
+        } else {
+            null
+        }
     }
 
     private fun shoppingPreview(steps: List<LoopStep>): String {
