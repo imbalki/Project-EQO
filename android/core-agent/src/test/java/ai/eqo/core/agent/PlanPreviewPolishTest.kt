@@ -47,7 +47,7 @@ class PlanPreviewPolishTest {
             assertTrue(input.contains("User clarification 1"))
         }
 
-    @Test fun cancellingOrExhaustingPlannerQuestionsReturnsNoPlan() =
+    @Test fun cancellationStopsAndExhaustionDisclosesNonExecutableBestGuess() =
         runTest {
             val cancelled = IntentFixtureProvider(listOf(json(uncertainNote), question))
             assertNull(
@@ -56,13 +56,15 @@ class PlanPreviewPolishTest {
             )
             val repeated = IntentFixtureProvider(List(3) { listOf(json(uncertainNote), question) }.flatten())
             var asked = 0
-            assertNull(
+            val exhausted =
                 IntentPlanningSession(IntentUnderstanding(repeated, emptyList()), TaskPlanner(repeated, enabled))
                     .prepare("make a note") {
                         asked++
                         "More details"
-                    },
-            )
+                    }!!
+            assertTrue(exhausted.steps.isEmpty())
+            assertTrue(exhausted.bestGuess)
+            assertTrue(exhausted.notes.single().contains("nothing will run"))
             assertEquals(IntentPlanningSession.MAX_ROUNDS, asked)
         }
 

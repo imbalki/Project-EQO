@@ -4,6 +4,8 @@ package ai.eqo.core.agent
 /** Narrow self-contained email grammar. Other tasks still use model understanding. */
 internal object EmailIntents {
     private val options = setOf(RegexOption.IGNORE_CASE)
+    private val literal = Regex("[^\\s<>(),;@]+@[^\\s<>(),;@]+\\.[^\\s<>(),;@]+")
+    private val namedLiteral = Regex("[^<>@]+<([^<>]+)>")
     private val start = Regex("^(?:please\\s+)?(send|draft|compose|write)\\s+(?:an?\\s+)?e-?mail\\b", options)
     private val recipient =
         Regex("^to\\s+(.+?)(?=\\s+(?:with|subject|body|attach|and|but|do not|don't)\\b|$)", options)
@@ -55,7 +57,14 @@ internal object EmailIntents {
                 } else {
                     emptyMap()
                 }
-            intent.copy(action = "send_message", channel = "email", send = send, params = intent.params + attachment)
+            val supplied = command?.let { recipient.find(first.removePrefix(it.value).trim())?.groupValues?.get(1) }
+            val address = if (clarification.isEmpty()) supplied?.let(::literalRecipient) else null
+            intent.copy(
+                action = "send_message",
+                channel = "email",
+                send = send,
+                params = intent.params + attachment + (address?.let { mapOf("to" to it) }.orEmpty()),
+            )
         } else {
             intent
         }
@@ -131,7 +140,7 @@ internal object EmailIntents {
                     ?.groupValues
                     ?.get(1)
                     ?.trim()
-                    ?.let { put("to", it) }
+                    ?.let { put("to", literalRecipient(it) ?: it) }
                 fields.findAll(first).forEach { put(it.groupValues[1].lowercase(), it.groupValues[2]) }
                 file?.let { put(AttachmentSpec.PARAM, it) }
             }
@@ -144,6 +153,17 @@ internal object EmailIntents {
             send = if (draft) "no" else "yes",
             confidence = 1.0,
         )
+    }
+
+    private fun literalRecipient(value: String): String? {
+        val supplied = value.trim()
+        val address =
+            namedLiteral
+                .matchEntire(supplied)
+                ?.groupValues
+                ?.get(1)
+                ?.trim() ?: supplied
+        return address.takeIf { literal.matches(it) && ',' !in supplied && ';' !in supplied }
     }
 
     private fun fileSpec(suffix: String): String? =

@@ -48,6 +48,11 @@ internal class AttachmentShare(
         val mime: String? = null,
     )
 
+    /** Read-only pre-approval probe. No file is staged, shared or selected here. */
+    internal fun needsOwnerHelp(reference: String): Boolean =
+        reference != AttachmentSpec.PICKER &&
+            locate(reference) is Located.Missing
+
     /** Picker copies are temporary; every exit, including Stop, removes them and releases the grant. */
     suspend fun prepareOnIo(raw: String?): PreparedShare {
         val outgoing = mutableListOf<File>()

@@ -31,6 +31,46 @@ import org.robolectric.shadows.ShadowLog
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
 class ContactRecipientsTest {
+    @Test fun preApprovalRecoveryFreezesDestinationEvenWithoutContactsPermission() =
+        runTest {
+            allowed = false
+            val address = "synthetic" + '@' + "example.invalid"
+            val recovery =
+                object : ContactResolver(context) {
+                    override suspend fun resolveEmailWithDisambiguation(input: String): ContactResolution =
+                        ContactResolution.Found(Contact(input, address, source = "owner_choice"))
+                }
+            val prepared = registry().prepareRecipients(listOf(emailStep("Unknown")), recovery)
+            assertEquals(
+                address,
+                prepared.steps
+                    .single()
+                    .action.params["to"],
+            )
+            assertEquals("Unknown", prepared.names.values.single())
+            assertEquals(prepared.steps, ApprovedTaskPlan(prepared.steps).steps())
+            assertNull(shadowOf(context).nextStartedActivity)
+        }
+
+    @Test fun missingAttachmentProbeDoesNotOpenPickerOrComposer() =
+        runTest {
+            val reference = "find:synthetic-file-that-does-not-exist"
+            val steps =
+                listOf(
+                    emailStep("Unknown").let {
+                        it.copy(
+                            action =
+                                it.action.copy(
+                                    params =
+                                        it.action.params + ("attachment" to reference),
+                                ),
+                        )
+                    },
+                )
+            assertEquals(setOf(reference), registry().unresolvedAttachments(steps))
+            assertNull(shadowOf(context).nextStartedActivity)
+        }
+
     @Test
     @Config(sdk = [33])
     fun locationInventoryIncludesAndroidTwelveCompanionGrant() {
