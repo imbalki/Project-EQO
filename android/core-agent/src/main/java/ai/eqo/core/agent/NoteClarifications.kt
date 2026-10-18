@@ -7,7 +7,12 @@ internal class NoteClarifications(
 ) {
     private val noteRequest =
         Regex("^(?:please\\s+)?(?:make|create|write|add|take|save)\\b.*\\bnote\\b", RegexOption.IGNORE_CASE)
-    private val appQuestion = Regex("\\b(?:app|application)\\b", RegexOption.IGNORE_CASE)
+    private val appQuestion =
+        Regex(
+            "\\b(?:which|what)\\s+(?:notes?\\s+)?(?:app|application)\\b|" +
+                "\\b(?:app|application)\\b.*\\b(?:use|choose|prefer|select)\\b",
+            RegexOption.IGNORE_CASE,
+        )
     private val contentQuestion = Regex("\\b(?:say|saying|contain|content|body|text|write)\\b", RegexOption.IGNORE_CASE)
     private val correction = Regex("^(?:actually\\b|instead\\b|cancel\\b|forget\\b)", RegexOption.IGNORE_CASE)
     private val appChoice =
@@ -44,7 +49,9 @@ internal class NoteClarifications(
         val chosen = chosenApp(answer, isApp)
         if (chosen == null && correction.containsMatchIn(answer.trim())) return updated
         if (updated.action !in setOf("create_note", "other", "open_app")) return updated
-        val slots = noteSlots(previous) + noteSlots(updated)
+        // App selection cannot edit content: the model may misassign the app answer to title/body.
+        // Explicit user corrections above still use the corrected intent without inheriting old slots.
+        val slots = retainedSlots(previous, updated, isApp, chosen)
         val params = if (isContent && chosen == null) slots + ("body" to answer) else slots
         val app = chosen ?: if (isApp) null else previous.app ?: updated.app
         // An unrecognized app answer must not silently select the default or revive the old app.
@@ -69,6 +76,13 @@ internal class NoteClarifications(
 
     private fun noteSlots(intent: TaskIntent): Map<String, String> =
         intent.params.filter { (key, value) -> key in setOf("title", "body") && value.isNotBlank() }
+
+    private fun retainedSlots(
+        prior: TaskIntent,
+        next: TaskIntent,
+        isApp: Boolean,
+        chosen: String?,
+    ): Map<String, String> = if (isApp || chosen != null) noteSlots(prior) else noteSlots(prior) + noteSlots(next)
 
     private fun finish(intent: TaskIntent): TaskIntent =
         intent.copy(

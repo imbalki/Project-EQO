@@ -16,8 +16,14 @@ class NoteClarificationsTest {
 
     @Test fun contentAnswerSurvivesOtherAndSlotLosingResponsesWithInstalledKeepDefault() =
         runTest {
-            for (updated in listOf(lost, empty)) {
-                val fake = provider(empty.copy(question = "What would you like the note to say?"), updated)
+            val cases =
+                listOf(
+                    "What would you like the note to say?" to lost,
+                    "What would you like the note to say?" to empty,
+                    "What should I write in the notes app?" to lost,
+                )
+            for ((question, updated) in cases) {
+                val fake = provider(empty.copy(question = question), updated)
                 var asked = 0
                 val result =
                     session(fake, listOf("Keep")).prepare("make a note") {
@@ -41,7 +47,8 @@ class NoteClarificationsTest {
     @Test fun plannerContentQuestionAlsoRetainsNoteContextWhenModelDowngrades() =
         runTest {
             val other = TaskIntent("Make a note", action = "other", confidence = 1.0)
-            val question = """{"steps":[{"action":"ASK_USER","params":{"question":"What should the note say?"}}]}"""
+            val question =
+                """{"steps":[{"action":"ASK_USER","params":{"question":"What should I write in the notes app?"}}]}"""
             val fake = IntentFixtureProvider(listOf(json(other), question, json(lost)))
             val result = session(fake, listOf("Keep")).prepare("make a note") { "Bring a notebook" }!!
             assertEquals(1, result.clarificationRounds)
@@ -105,7 +112,8 @@ class NoteClarificationsTest {
         runTest {
             val slots = mapOf("title" to "Packing", "body" to "Bring a notebook")
             val first = empty.copy(params = slots, question = "Which notes app?", app = "Notebook")
-            val fake = provider(first, lost)
+            val misassigned = lost.copy(params = mapOf("title" to "Keep", "body" to "Keep"))
+            val fake = provider(first, misassigned)
             val result = session(fake, listOf("Keep", "Notebook")).prepare("make a note") { "Keep" }!!
             assertEquals(slots, result.intent.params)
             assertEquals(
@@ -192,6 +200,34 @@ class NoteClarificationsTest {
                 result.steps
                     .single()
                     .action.params["appName"],
+            )
+            val corrected =
+                empty.copy(
+                    app = "Keep",
+                    params = mapOf("title" to "Packing", "body" to "Bring a pencil"),
+                    confidence = 1.0,
+                )
+            val appQuestion =
+                empty.copy(
+                    app = "Notebook",
+                    params = mapOf("title" to "Packing", "body" to "Bring a notebook"),
+                    question = "Which notes app?",
+                )
+            val correction =
+                session(provider(appQuestion, corrected), listOf("Keep", "Notebook")).prepare("make a note") {
+                    "Actually change the body to Bring a pencil and use Keep"
+                }!!
+            assertEquals(
+                mapOf("appName" to "Keep", "title" to "Packing", "body" to "Bring a pencil"),
+                correction.steps
+                    .single()
+                    .action.params,
+            )
+            assertEquals(
+                "CREATE_NOTE",
+                correction.steps
+                    .single()
+                    .action.name,
             )
         }
 
