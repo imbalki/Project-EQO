@@ -1,5 +1,12 @@
 # TASK-005 per-file provenance map
 
+## Keep note routing and search plan hygiene (t_b4152024)
+
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AppPlanHygiene.kt` | EQO-NEW | `ai.eqo.core.agent` | Keep intent normalization, editor refusal and submitted-search cleanup |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/NoteClarifications.kt` | EQO-NEW | `ai.eqo.core.agent` | Ephemeral note-content and app-choice clarification retention |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/NoteClarificationsTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Session-level note clarification and native action regressions |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/KeepPlanningTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Keep note slots, unsafe model editor repair and search-tail regressions |
+
 ## Plan preview and clarification polish (t_e080f2ff)
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/RegistryPreviewText.kt` | EQO-NEW | `ai.eqo.core.agent` | Display-only English catalog templates |
