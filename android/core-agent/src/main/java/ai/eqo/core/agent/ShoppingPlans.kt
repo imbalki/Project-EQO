@@ -2,7 +2,9 @@
 package ai.eqo.core.agent
 
 object ShoppingPlans {
-    const val HANDOFF = "Needs you: review the cart and pay yourself"
+    const val FIRST_RESULT = "adds the first search result; check the cart before paying"
+    const val HANDOFF = "Needs you: EQO $FIRST_RESULT; pay yourself"
+    const val INCREASE = "exact:+,exact:increase quantity"
     private const val CART = "exact:Cart,exact:View cart,exact:Go to cart"
     private val forbidden =
         Regex(
@@ -19,16 +21,20 @@ object ShoppingPlans {
         val quantity = requireNotNull(intent.params["quantity"]?.toIntOrNull())
         require(quantity in 1..ShoppingIntents.MAX_QUANTITY) { "Shopping quantity needs clarification" }
         val item = intent.params.getValue("item")
+        val zepto = InstalledAppResolver.normalize(app) == "zepto"
+        val search =
+            if (zepto) "id:com.zeptoconsumerapp:id/homepage-search-box" else "exact:Search,exact:Search for products"
+        val input = if (zepto) "search:id:com.zeptoconsumerapp:id/search-query-input" else "search:Search"
         return buildList {
             add(action("OPEN_APP", "appName" to app))
             add(action("WAIT", "durationMs" to "3000"))
-            add(action("CLICK_TEXT", "text" to "exact:Search,exact:Search for products"))
-            add(action("TYPE_TEXT", "searchText" to "search:Search", "content" to item))
+            add(action("CLICK_TEXT", "text" to search))
+            add(action("TYPE_TEXT", "searchText" to input, "content" to item))
             add(action("PRESS_ENTER"))
             add(action("WAIT", "durationMs" to "3000"))
             add(action("CLICK_TEXT", "text" to "exact:Add,exact:ADD,exact:Add to cart"))
             repeat(quantity - 1) {
-                add(action("CLICK_TEXT", "text" to "exact:+,exact:Increase quantity"))
+                add(action("CLICK_TEXT", "text" to INCREASE))
             }
             add(action("CLICK_TEXT", "text" to CART).copy(plannerClaim = HANDOFF))
         }.map { action ->

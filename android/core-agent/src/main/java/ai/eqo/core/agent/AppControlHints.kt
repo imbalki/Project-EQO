@@ -37,7 +37,11 @@ internal object AppControlHints {
                 "Tap one key per step; CALCULATE gives an answer without driving this app.",
             "com.google.android.deskclock" to
                 "Clock: Alarm tab; Add alarm content-description; choose time; OK confirms.",
-            "com.zeptoconsumerapp" to SHOPPING_HINT,
+            "com.zeptoconsumerapp" to
+                "Zepto: search with id:com.zeptoconsumerapp:id/homepage-search-box, then " +
+                "TYPE_TEXT searchText=search:id:com.zeptoconsumerapp:id/search-query-input. " +
+                "Results expose exact Add to Cart content-descriptions (trailing space) on buttons inside " +
+                "product-card containers; product-card IDs describe products, not payment cards. " + SHOPPING_HINT,
             "com.grofers.customerapp" to SHOPPING_HINT,
             "in.swiggy.android" to SHOPPING_HINT,
             "com.bigbasket.mobileapp" to SHOPPING_HINT,

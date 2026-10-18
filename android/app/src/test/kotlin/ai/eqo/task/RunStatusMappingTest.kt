@@ -37,6 +37,12 @@ class RunStatusMappingTest {
             )
         assertEquals(StepProgressState.NEEDS_YOU, progress.state)
         assertEquals(ai.eqo.core.agent.ShoppingPlans.HANDOFF, RunStatusMapping.detail(progress)?.argument)
+        assertTrue(
+            RunStatusMapping
+                .detail(progress)
+                ?.argument
+                ?.contains("adds the first search result; check the cart before paying") == true,
+        )
         assertEquals("NEEDS_YOU", RunStatusMapping.terminal(RunReceipt(listOf(progress), "COMPLETED")))
     }
 
