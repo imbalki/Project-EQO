@@ -129,7 +129,16 @@ class ShoppingTest {
                 assertEquals(9, planned.steps.size)
                 assertEquals(listOf(ShoppingPlans.HANDOFF), planned.notes)
                 assertEquals("milk", planned.steps[3].action.params["content"])
-                assertEquals("search:Search", planned.steps[3].action.params["searchText"])
+                val search =
+                    if (app == "Zepto") "search:id:com.zeptoconsumerapp:id/search-query-input" else "search:Search"
+                assertEquals(search, planned.steps[3].action.params["searchText"])
+                val navigation =
+                    if (app == "Zepto") {
+                        "id:com.zeptoconsumerapp:id/homepage-search-box"
+                    } else {
+                        "exact:Search,exact:Search for products"
+                    }
+                assertEquals(navigation, planned.steps[2].action.params["text"])
                 assertEquals(
                     ShoppingPlans.HANDOFF,
                     planned.steps
@@ -140,6 +149,11 @@ class ShoppingTest {
                 val preview = TaskPlanPreview.describe(planned.steps)
                 assertTrue(preview.contains("add 2 x milk to the cart"))
                 assertTrue(preview.contains("open the cart and stop so you can pay"))
+                assertTrue(preview.contains("adds the first search result; check the cart before paying"))
+                assertTrue(
+                    planned.notes.single().contains("adds the first search result; check the cart before paying"),
+                )
+                assertEquals("exact:+,exact:increase quantity", planned.steps[7].action.params["text"])
                 assertTrue(fake.requests.isEmpty())
             }
         }
@@ -182,7 +196,7 @@ class ShoppingTest {
             steps.drop(1),
             steps + steps.first(),
             steps.filterNot {
-                it.action.params["text"] == "exact:+,exact:Increase quantity"
+                it.action.params["text"] == "exact:+,exact:increase quantity"
             },
         )) {
             assertThrows(IllegalArgumentException::class.java) { IntentPlanProtection.validate(intent, bad) }
