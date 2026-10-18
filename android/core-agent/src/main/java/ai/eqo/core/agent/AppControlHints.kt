@@ -6,12 +6,12 @@ internal object AppControlHints {
     val byPackage: Map<String, String> =
         linkedMapOf(
             "com.google.android.keep" to
-                "Google Keep: OPEN_APP appName=Google Keep, WAIT durationMs=3000; " +
-                "CLICK_TEXT text=Create a note (content-description, speed_dial_create_close_button); " +
-                "CLICK_TEXT text=id:new_note_button (unlabelled speed-dial text-note item); " +
-                "TYPE_TEXT searchText=id:editable_title for the title, " +
-                "searchText=id:edit_note_text for the supplied body; PRESS_BACK to autosave. " +
-                "There is no Take a note bar. Never type into toolbar (Search Keep).",
+                "Google Keep: every new note must use CREATE_NOTE appName=Google Keep, body=<supplied text>, " +
+                "optional title=<supplied title>. For title-only requests use that text as body. " +
+                "Never TYPE_TEXT into editable_title or edit_note_text: Keep saves those notes empty. " +
+                "Search only: OPEN_APP, WAIT, CLICK_TEXT text=id:toolbar, " +
+                "TYPE_TEXT searchText=id:search_actionbar_query_text content=<query>, PRESS_ENTER once. " +
+                "Never type into toolbar or repeat query-field clicks/typing after PRESS_ENTER.",
             "com.google.android.gm" to
                 "Gmail: Compose; fields To, Subject, Compose email; Send sends real mail. " +
                 "Prefer SEND_EMAIL for a self-contained email request.",
@@ -61,10 +61,9 @@ internal object AppControlHints {
             appendLine("All exact text/content-description/view-id suffix matches precede partial label matches.")
             appendLine("CLICK_TEXT text and TYPE_TEXT searchText accept id:<view-id suffix> references.")
             appendLine("App search: navigate to search first and use a search-only id: target, never a generic input.")
-            appendLine("For add/write/create a note in Keep, follow the exact Keep flow above.")
-            appendLine("If Create a note is missing, stop with Needs you; Keep is not on its home screen.")
+            appendLine("For make/add/write/create a note in Keep, use CREATE_NOTE, never an editor UI chain.")
             appendLine("Use the requested title/body, never invent content.")
-            appendLine("For title-only Keep requests, omit body typing rather than inventing a body.")
+            appendLine("For title-only Keep requests, use the supplied title as CREATE_NOTE body; invent nothing.")
             appendLine("Missing controls stop with Needs you; do not plan repeated taps or bypass approvals.")
         }
 }
