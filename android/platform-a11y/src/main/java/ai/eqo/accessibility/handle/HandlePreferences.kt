@@ -71,6 +71,14 @@ class HandlePreferences(
 /** Application installs feature registrations; service and settings render the same registry. */
 object EdgeHandleFeatures {
     const val DICTATION_ID = "dictation"
+    const val SCREENSHOT_ID = "screenshot"
+    var screenshotChanged: () -> Unit = {}
+    var screenshotShare: (Context) -> Unit = {}
+    var screenshotDismiss: () -> Unit = {}
+    var screenshotHidden: Boolean = false
+    var screenshotOverlayRemoved: Boolean = false
+    var screenshotStatus: Int = 0
+    var screenshotShareAvailable: Boolean = false
     var dictationTap: (Context) -> Unit = {}
     var dictationCancel: () -> Unit = {}
     var dictationSettings: (Context) -> Unit = {}

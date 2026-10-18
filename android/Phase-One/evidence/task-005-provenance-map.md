@@ -1,5 +1,10 @@
 # TASK-005 per-file provenance map
 
+## Handle screenshot (t_0c715719)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/HandleScreenshot.kt` | EQO-NEW | `ai.eqo.handle` | User-only gated capture, local MediaStore publish and explicit share |
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleScreenshotTest.kt` | EQO-NEW | `ai.eqo.handle` | Fake capture gates, publication rollback, compact card and settings tests |
+
 ## Plan preview and clarification polish (t_e080f2ff)
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/RegistryPreviewText.kt` | EQO-NEW | `ai.eqo.core.agent` | Display-only English catalog templates |

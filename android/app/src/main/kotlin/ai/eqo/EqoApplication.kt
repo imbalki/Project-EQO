@@ -12,6 +12,8 @@ class EqoApplication : Application() {
         EdgeHandleFeatures.dictationTap = ai.eqo.task.HandleDictation::tap
         EdgeHandleFeatures.dictationCancel = ai.eqo.task.HandleDictation::cancel
         EdgeHandleFeatures.dictationSettings = ai.eqo.task.HandleDictation::openSettings
+        EdgeHandleFeatures.screenshotShare = ai.eqo.handle.HandleScreenshot::share
+        EdgeHandleFeatures.screenshotDismiss = ai.eqo.handle.HandleScreenshot::dismiss
         EdgeHandleFeatures.refreshEntries = ExplainNotificationService::refresh
         EdgeHandleFeatures.configurationChanged = ai.eqo.explain.ExplainOverlay::refreshLayout
         ai.eqo.accessibility.handle.EdgeHandleFeatures.explain = { context, source ->

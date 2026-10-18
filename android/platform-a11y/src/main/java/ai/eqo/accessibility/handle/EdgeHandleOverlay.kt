@@ -66,6 +66,12 @@ class EdgeHandleOverlay(
 
     init {
         preferences.preferences.registerOnSharedPreferenceChangeListener(listener)
+        EdgeHandleFeatures.screenshotChanged = {
+            handler.post {
+                removeWindow()
+                refresh()
+            }
+        }
         EdgeHandleFeatures.dictationChanged = {
             // A previous success must never expire a newer recording or recovery card.
             handler.removeCallbacks(resultTask)
@@ -84,6 +90,7 @@ class EdgeHandleOverlay(
     fun updateForeground(packageName: String) {
         if (packageName == foregroundPackage) return
         foregroundPackage = packageName
+        EdgeHandleFeatures.screenshotDismiss()
         presentation.foregroundChanged()
         dismissResult()
         closePanel()
@@ -106,7 +113,9 @@ class EdgeHandleOverlay(
     }
 
     private fun render() {
-        if (!preferences.enabled || !probeAvailable || hidden()) {
+        if (EdgeHandleFeatures.screenshotHidden) {
+            EdgeHandleFeatures.screenshotOverlayRemoved = removeWindow()
+        } else if (!preferences.enabled || !probeAvailable || hidden()) {
             removeWindow()
         } else if (view == null) {
             showHandle()
@@ -116,6 +125,8 @@ class EdgeHandleOverlay(
     }
 
     fun destroy() {
+        EdgeHandleFeatures.screenshotDismiss()
+        EdgeHandleFeatures.screenshotChanged = {}
         EdgeHandleFeatures.dictationChanged = {}
         EdgeHandleFeatures.dictationCancel()
         preferences.preferences.unregisterOnSharedPreferenceChangeListener(listener)
@@ -156,8 +167,10 @@ class EdgeHandleOverlay(
         val size = dp(TOUCH_WIDTH_DP)
         val micEnabled = EdgeHandleFeatures.registry?.enabled(EdgeHandleFeatures.DICTATION_ID) == true
         val hasStatus = micEnabled && EdgeHandleFeatures.dictationStatus != 0
+        val hasScreenshot = EdgeHandleFeatures.screenshotStatus != 0
         val handleWidth =
             when {
+                hasScreenshot -> dp(PANEL_WIDTH_DP)
                 !hasStatus -> size
                 EdgeHandleFeatures.dictationInserted -> dp(PILL_WIDTH_DP)
                 else -> dp(PANEL_WIDTH_DP)
@@ -183,7 +196,11 @@ class EdgeHandleOverlay(
         val grip = FrameLayout(context)
         grip.addView(bar, FrameLayout.LayoutParams(dp(BAR_WIDTH_DP), dp(BAR_HEIGHT_DP), Gravity.CENTER))
         column.addView(grip, LinearLayout.LayoutParams(size, dp(TOUCH_HEIGHT_DP)))
-        if (hasStatus) addDictationControls(column)
+        if (hasScreenshot) {
+            addScreenshotControls(column)
+        } else if (hasStatus) {
+            addDictationControls(column)
+        }
         handle.addView(column)
         handle.setOnClickListener { showPanel() }
         handle.setOnLongClickListener {
@@ -198,6 +215,24 @@ class EdgeHandleOverlay(
                 .show()
             preferences.hintShown = true
         }
+    }
+
+    private fun addScreenshotControls(column: LinearLayout) {
+        column.addView(
+            TextView(context).apply {
+                setText(EdgeHandleFeatures.screenshotStatus)
+                textSize = RESULT_TEXT_SP
+                setBackgroundColor(Color.WHITE)
+                setTextColor(Color.BLACK)
+                accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            },
+        )
+        val actions = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+        if (EdgeHandleFeatures.screenshotShareAvailable) {
+            addButton(actions, R.string.edge_screenshot_share) { EdgeHandleFeatures.screenshotShare(context) }
+        }
+        addButton(actions, R.string.edge_screenshot_done) { EdgeHandleFeatures.screenshotDismiss() }
+        column.addView(actions)
     }
 
     private fun addDictationControls(column: LinearLayout) {
@@ -356,7 +391,8 @@ class EdgeHandleOverlay(
 
     @android.annotation.SuppressLint("RtlHardcoded") // Keep the panel at the user's physical dock edge in RTL too.
     private fun showPanel(requestPause: Boolean = true) {
-        if (!preferences.enabled || !probeAvailable || hidden()) return
+        val unavailable = !preferences.enabled || !probeAvailable || hidden()
+        if (unavailable || EdgeHandleFeatures.screenshotHidden) return
         if (!panelReady(requestPause)) return
         guard.panelOpen = true
         presentation.open()
