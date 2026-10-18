@@ -1,19 +1,26 @@
 // Origin: EQO edge-handle task; user-only accessibility overlay, independent of the touch probe.
 package ai.eqo.accessibility.handle
 
+import ai.eqo.accessibility.EQOAccessibilityService
 import ai.eqo.platform.R
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
+import android.os.PersistableBundle
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
@@ -31,6 +38,7 @@ class EdgeHandleOverlay(
     private val preferences = HandlePreferences(context)
     private val guard = HandleWindowGuard.shared
     private val handler = Handler(Looper.getMainLooper())
+    private val presentation = HandlePresentation(SystemClock::uptimeMillis)
     private var view: View? = null
     private var foregroundPackage = context.packageName
     private var probeAvailable = false
@@ -48,15 +56,27 @@ class EdgeHandleOverlay(
         }
     private val refreshTask = Runnable { render() }
     private val openPanelTask = Runnable { showPanel(requestPause = false) }
+    private val collapseTask = Runnable { if (presentation.tick()) closePanel() }
+    private val resultTask =
+        Runnable {
+            if (EdgeHandleFeatures.dictationInserted && !presentation.resultVisible()) {
+                dismissResult(preservePanel = true)
+            }
+        }
 
     init {
         preferences.preferences.registerOnSharedPreferenceChangeListener(listener)
         EdgeHandleFeatures.dictationChanged = {
+            // A previous success must never expire a newer recording or recovery card.
+            handler.removeCallbacks(resultTask)
             handler.post {
-                if (!guard.panelOpen) {
-                    removeWindow()
-                    refresh()
+                if (EdgeHandleFeatures.dictationInserted) {
+                    presentation.inserted()
+                    handler.removeCallbacks(resultTask)
+                    handler.postDelayed(resultTask, HandlePresentation.RESULT_MS)
                 }
+                removeWindow()
+                refresh()
             }
         }
     }
@@ -64,6 +84,8 @@ class EdgeHandleOverlay(
     fun updateForeground(packageName: String) {
         if (packageName == foregroundPackage) return
         foregroundPackage = packageName
+        presentation.foregroundChanged()
+        dismissResult()
         closePanel()
         refresh()
     }
@@ -84,10 +106,12 @@ class EdgeHandleOverlay(
     }
 
     private fun render() {
-        if (!preferences.enabled || !probeAvailable || preferences.isHidden(foregroundPackage)) {
+        if (!preferences.enabled || !probeAvailable || hidden()) {
             removeWindow()
         } else if (view == null) {
             showHandle()
+        } else {
+            view?.let { fitWindow(it, it.layoutParams as WindowManager.LayoutParams) }
         }
     }
 
@@ -100,8 +124,9 @@ class EdgeHandleOverlay(
     }
 
     private fun dimensions(): Pair<Int, Int> {
-        val bounds = manager.currentWindowMetrics.bounds
-        return bounds.width() to bounds.height()
+        val metrics = manager.currentWindowMetrics
+        val insets = metrics.windowInsets.getInsets(WindowInsets.Type.ime() or WindowInsets.Type.systemBars())
+        return metrics.bounds.width() to (metrics.bounds.height() - insets.top - insets.bottom)
     }
 
     private fun dp(value: Int): Int = (value * context.resources.displayMetrics.density).toInt()
@@ -110,19 +135,20 @@ class EdgeHandleOverlay(
     private fun params(
         width: Int,
         height: Int,
-        focusable: Boolean,
     ): WindowManager.LayoutParams =
         WindowManager
             .LayoutParams(
                 width,
                 height,
                 WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                    if (focusable) 0 else WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                    WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                 PixelFormat.TRANSLUCENT,
             ).apply {
                 gravity = Gravity.TOP or Gravity.LEFT
                 title = context.getString(R.string.edge_handle_title)
+                softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
             }
 
     private fun showHandle() {
@@ -130,18 +156,23 @@ class EdgeHandleOverlay(
         val size = dp(TOUCH_WIDTH_DP)
         val micEnabled = EdgeHandleFeatures.registry?.enabled(EdgeHandleFeatures.DICTATION_ID) == true
         val hasStatus = micEnabled && EdgeHandleFeatures.dictationStatus != 0
+        val handleWidth =
+            when {
+                !hasStatus -> size
+                EdgeHandleFeatures.dictationInserted -> dp(PILL_WIDTH_DP)
+                else -> dp(PANEL_WIDTH_DP)
+            }
         val params =
             params(
-                if (hasStatus) dp(PANEL_WIDTH_DP) else size,
+                handleWidth,
                 WindowManager.LayoutParams.WRAP_CONTENT,
-                false,
             )
         params.x = if (preferences.rightEdge) width - params.width else 0
         params.y = ((height - dp(TOUCH_HEIGHT_DP)) * preferences.verticalFraction).toInt()
         val handle = FrameLayout(context)
         handle.contentDescription = context.getString(R.string.edge_handle_open)
         handle.isClickable = true
-        handle.isFocusable = true
+
         val bar = View(context)
         bar.background =
             GradientDrawable().apply {
@@ -152,7 +183,7 @@ class EdgeHandleOverlay(
         val grip = FrameLayout(context)
         grip.addView(bar, FrameLayout.LayoutParams(dp(BAR_WIDTH_DP), dp(BAR_HEIGHT_DP), Gravity.CENTER))
         column.addView(grip, LinearLayout.LayoutParams(size, dp(TOUCH_HEIGHT_DP)))
-        if (micEnabled) addDictationControls(column)
+        if (hasStatus) addDictationControls(column)
         handle.addView(column)
         handle.setOnClickListener { showPanel() }
         handle.setOnLongClickListener {
@@ -170,28 +201,88 @@ class EdgeHandleOverlay(
     }
 
     private fun addDictationControls(column: LinearLayout) {
-        addButton(column, R.string.edge_dictation_mic, android.R.drawable.ic_btn_speak_now) {
-            EdgeHandleFeatures.dictationTap(context)
+        if (EdgeHandleFeatures.dictationBusy) {
+            addButton(column, R.string.edge_dictation_mic, android.R.drawable.ic_btn_speak_now) {
+                EdgeHandleFeatures.dictationTap(context)
+            }
         }
         val status = EdgeHandleFeatures.dictationStatus
         if (status != 0) {
-            column.addView(
-                TextView(context).apply {
-                    setText(status)
-                    setBackgroundColor(Color.WHITE)
-                    setTextColor(Color.BLACK)
-                    accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
-                },
-            )
+            addResultText(column, status)
             if (EdgeHandleFeatures.dictationBusy) {
                 if (!EdgeHandleFeatures.dictationCommitting) {
                     addButton(column, android.R.string.cancel) { EdgeHandleFeatures.dictationCancel() }
                 }
             } else {
-                addButton(column, R.string.edge_dictation_settings) { EdgeHandleFeatures.dictationSettings(context) }
+                addResultActions(column)
             }
         }
     }
+
+    private fun addResultText(
+        column: LinearLayout,
+        status: Int,
+    ) {
+        val transcript = EdgeHandleFeatures.dictationTranscript
+        val text =
+            TextView(context).apply {
+                if (transcript != null) {
+                    this.text = transcript
+                    setTextIsSelectable(true)
+                } else {
+                    setText(if (EdgeHandleFeatures.dictationInserted) R.string.edge_dictation_inserted else status)
+                    maxLines = STATUS_LINES
+                }
+                textSize = RESULT_TEXT_SP
+                setPadding(dp(RESULT_PADDING_DP), dp(RESULT_PADDING_DP), dp(RESULT_PADDING_DP), dp(RESULT_PADDING_DP))
+                setBackgroundColor(Color.WHITE)
+                setTextColor(Color.BLACK)
+                accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            }
+        column.addView(
+            ScrollView(context).apply { addView(text) },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(if (EdgeHandleFeatures.dictationInserted) PILL_HEIGHT_DP else RESULT_HEIGHT_DP),
+            ),
+        )
+    }
+
+    private fun addResultActions(column: LinearLayout) {
+        if (EdgeHandleFeatures.dictationInserted) return
+        val actions = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+        if (EdgeHandleFeatures.dictationTranscript != null) {
+            addButton(actions, R.string.edge_dictation_copy) { copyResult() }
+        } else {
+            addButton(actions, R.string.edge_dictation_settings) { EdgeHandleFeatures.dictationSettings(context) }
+        }
+        addButton(actions, R.string.edge_dictation_dismiss) { dismissResult() }
+        column.addView(actions)
+    }
+
+    private fun copyResult() {
+        EdgeHandleFeatures.dictationTranscript?.let { transcript ->
+            val clip = ClipData.newPlainText("EqoDictation", transcript)
+            clip.description.extras =
+                PersistableBundle().apply {
+                    putBoolean("android.content.extra.IS_SENSITIVE", true)
+                }
+            context.getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
+        }
+    }
+
+    private fun dismissResult(preservePanel: Boolean = false) {
+        handler.removeCallbacks(resultTask)
+        EdgeHandleFeatures.dictationTranscript = null
+        EdgeHandleFeatures.dictationInserted = false
+        if (!EdgeHandleFeatures.dictationBusy) EdgeHandleFeatures.dictationStatus = 0
+        if (!preservePanel || !guard.panelOpen) {
+            removeWindow()
+            refresh()
+        }
+    }
+
+    private fun hidden(): Boolean = preferences.isHidden(foregroundPackage) || presentation.hidden(foregroundPackage)
 
     @Suppress("CyclomaticComplexMethod") // One DOWN/MOVE/UP/CANCEL state machine with tap and long-press attribution.
     private fun bindDrag(
@@ -266,13 +357,23 @@ class EdgeHandleOverlay(
 
     @android.annotation.SuppressLint("RtlHardcoded") // Keep the panel at the user's physical dock edge in RTL too.
     private fun showPanel(requestPause: Boolean = true) {
-        if (!preferences.enabled || !probeAvailable || preferences.isHidden(foregroundPackage)) return
+        if (!preferences.enabled || !probeAvailable || hidden()) return
         if (!panelReady(requestPause)) return
         guard.panelOpen = true
+        presentation.open()
+        scheduleCollapse()
         val root = PanelView()
-        root.setBackgroundColor(BACKDROP_COLOR)
-        root.isFocusableInTouchMode = true
         root.setOnClickListener { closePanel() }
+        val content = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        content.setBackgroundColor(Color.WHITE)
+        val header = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+        addButton(header, R.string.edge_handle_close) { closePanel() }
+        addButton(header, R.string.edge_handle_hide_now) {
+            EdgeHandleFeatures.dictationCancel()
+            presentation.hide(foregroundPackage)
+            dismissResult()
+        }
+        content.addView(header)
         val column = LinearLayout(context)
         column.orientation = LinearLayout.VERTICAL
         column.setPadding(dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP))
@@ -291,17 +392,26 @@ class EdgeHandleOverlay(
                 removeWindow()
             }
         }
-        addButton(column, R.string.edge_handle_close) { closePanel() }
         val scroll = ScrollView(context)
         scroll.addView(column)
-        root.addView(
+        content.addView(
             scroll,
-            FrameLayout.LayoutParams(dp(PANEL_WIDTH_DP), WindowManager.LayoutParams.WRAP_CONTENT).apply {
-                gravity = Gravity.CENTER_VERTICAL or if (preferences.rightEdge) Gravity.RIGHT else Gravity.LEFT
-            },
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f),
         )
-        attach(root, params(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT, true))
-        root.requestFocus()
+        root.addView(
+            content,
+            FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT),
+        )
+        val (width, height) = dimensions()
+        val panelParams = params(dp(PANEL_WIDTH_DP), dp(PANEL_MAX_HEIGHT_DP).coerceAtMost(height / 2))
+        panelParams.x = if (preferences.rightEdge) width - panelParams.width else 0
+        panelParams.y = ((height - panelParams.height) * preferences.verticalFraction).toInt()
+        attach(root, panelParams)
+    }
+
+    private fun scheduleCollapse() {
+        handler.removeCallbacks(collapseTask)
+        handler.postDelayed(collapseTask, HandlePresentation.COLLAPSE_MS)
     }
 
     private fun addButton(
@@ -310,6 +420,15 @@ class EdgeHandleOverlay(
         icon: Int = 0,
         action: () -> Unit,
     ) {
+        val layout =
+            if (parent.orientation == LinearLayout.HORIZONTAL) {
+                LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            } else {
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                )
+            }
         parent.addView(
             Button(context).apply {
                 setText(label)
@@ -317,12 +436,14 @@ class EdgeHandleOverlay(
                 if (icon != 0) setCompoundDrawablesWithIntrinsicBounds(icon, 0, 0, 0)
                 setOnClickListener { action() }
             },
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT),
+            layout,
         )
     }
 
     private fun closePanel() {
         handler.removeCallbacks(openPanelTask)
+        handler.removeCallbacks(collapseTask)
+        presentation.collapse()
         if (!guard.panelOpen) return
         removeWindow()
         render()
@@ -333,14 +454,14 @@ class EdgeHandleOverlay(
         params: WindowManager.LayoutParams,
     ) {
         target.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            if (!guard.panelOpen && target.isAttachedToWindow) {
-                val fitted = params.y.coerceIn(0, maxOf(0, dimensions().second - target.height))
-                if (fitted != params.y) {
-                    params.y = fitted
-                    manager.updateViewLayout(target, params)
-                }
+            if (target.isAttachedToWindow) {
+                fitWindow(target, params)
             }
             updateBounds(target)
+        }
+        target.setOnApplyWindowInsetsListener { _, insets ->
+            if (target.isAttachedToWindow) fitWindow(target, params)
+            insets
         }
         try {
             manager.addView(target, params)
@@ -352,24 +473,58 @@ class EdgeHandleOverlay(
     }
 
     private fun updateBounds(target: View) {
-        if (guard.panelOpen) {
-            val (width, height) = dimensions()
-            guard.bounds = HandleWindowGuard.Bounds(0, 0, width, height)
-        } else {
-            val location = IntArray(2)
-            target.getLocationOnScreen(location)
-            guard.bounds =
-                HandleWindowGuard.Bounds(
-                    location[0],
-                    location[1],
-                    location[0] + target.width,
-                    location[1] + target.height,
-                )
+        if (target.visibility != View.VISIBLE) {
+            guard.bounds = null
+            return
+        }
+        val location = IntArray(2)
+        target.getLocationOnScreen(location)
+        guard.bounds =
+            HandleWindowGuard.Bounds(
+                location[0],
+                location[1],
+                location[0] + target.width,
+                location[1] + target.height,
+            )
+    }
+
+    private fun fitWindow(
+        target: View,
+        params: WindowManager.LayoutParams,
+    ) {
+        val ime = target.rootWindowInsets?.getInsets(WindowInsets.Type.ime())?.bottom ?: 0
+        val metrics = manager.currentWindowMetrics
+        val top = metrics.windowInsets.getInsets(WindowInsets.Type.systemBars()).top
+        val height = minOf(dimensions().second, metrics.bounds.height() - top - ime)
+        val input = focusedBounds()
+        val fitted = fitHandleY(params.y, target.height, height, input?.top?.minus(top), input?.bottom?.minus(top))
+        target.visibility = if (fitted == null) View.INVISIBLE else View.VISIBLE
+        if (fitted != null && params.y != fitted) {
+            params.y = fitted
+            manager.updateViewLayout(target, params)
+        }
+        updateBounds(target)
+    }
+
+    private fun focusedBounds(): Rect? {
+        val root = (context as? EQOAccessibilityService)?.rootInActiveWindow ?: return null
+        val focused =
+            try {
+                root.findFocus(android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT)
+            } finally {
+                root.recycle()
+            }
+        return try {
+            focused?.let { Rect().apply { it.getBoundsInScreen(this) } }
+        } finally {
+            focused?.recycle()
         }
     }
 
     private fun removeWindow(): Boolean {
         handler.removeCallbacks(openPanelTask)
+        handler.removeCallbacks(collapseTask)
+        presentation.collapse()
         pendingLongPress?.let(handler::removeCallbacks)
         pendingLongPress = null
         view?.let { target ->
@@ -386,6 +541,16 @@ class EdgeHandleOverlay(
     }
 
     private inner class PanelView : FrameLayout(context) {
+        override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+            if (event.actionMasked == MotionEvent.ACTION_OUTSIDE) {
+                closePanel()
+                return true
+            }
+            presentation.interact()
+            scheduleCollapse()
+            return super.dispatchTouchEvent(event)
+        }
+
         override fun dispatchKeyEvent(event: KeyEvent): Boolean =
             if (event.keyCode == KeyEvent.KEYCODE_BACK) {
                 if (event.action == KeyEvent.ACTION_UP) closePanel()
@@ -404,8 +569,14 @@ class EdgeHandleOverlay(
         const val BAR_RADIUS_DP = 4
         const val SWIPE_IN_DP = 32
         const val PANEL_WIDTH_DP = 260
+        const val PANEL_MAX_HEIGHT_DP = 320
         const val PANEL_PADDING_DP = 12
+        const val PILL_WIDTH_DP = 120
+        const val PILL_HEIGHT_DP = 32
+        const val RESULT_HEIGHT_DP = 64
+        const val RESULT_PADDING_DP = 6
+        const val RESULT_TEXT_SP = 13f
+        const val STATUS_LINES = 3
         const val HANDLE_COLOR = -1773116276 // ARGB 150,80,100,140
-        const val BACKDROP_COLOR = 0x37000000
     }
 }

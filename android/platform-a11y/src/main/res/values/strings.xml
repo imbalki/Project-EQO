@@ -9,4 +9,8 @@
     <string name="edge_handle_hint">Drag me up or down. Tap to open.</string>
     <string name="edge_dictation_mic">Mic</string>
     <string name="edge_dictation_settings">Voice settings</string>
+    <string name="edge_handle_hide_now">Hide for now</string>
+    <string name="edge_dictation_inserted">Inserted</string>
+    <string name="edge_dictation_copy">Copy</string>
+    <string name="edge_dictation_dismiss">Dismiss</string>
 </resources>

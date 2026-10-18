@@ -17,6 +17,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -114,15 +115,17 @@ class EQOAccessibilityService :
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
+        // Refit the compact handle when the IME or focused input moves; never inspect field text here.
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED ||
+            event.eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED
+        ) {
+            refreshHandleForeground()
+            edgeHandle?.refresh()
+        }
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             EdgeHandleFeatures.refreshEntries(this)
+            refreshHandleForeground()
             edgeHandle?.refresh()
-            val targetPackage = event.packageName?.toString()
-            val windowClass = event.className?.toString().orEmpty()
-            val appWindow = targetPackage != packageName || windowClass.endsWith("Activity")
-            if (targetPackage != null && appWindow && !windowClass.contains("InputMethod")) {
-                edgeHandle?.updateForeground(targetPackage)
-            }
         }
         // TASK-009: TYPE_TOUCH_INTERACTION_START fires when a finger (or an
         // injected touch) starts on the screen. Combined with the overlay touch
@@ -132,6 +135,17 @@ class EQOAccessibilityService :
         // retain the conservative accessibility-event fallback (no touch is dropped).
         if (event.eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START && touchProbeView == null) {
             reportTouchToTakeoverDetector()
+        }
+    }
+
+    private fun refreshHandleForeground() {
+        // Clipboard, IME and our own overlays are not app switches; their events must not erase a result card.
+        val application = windows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && it.isFocused }
+        val root = application?.root ?: return
+        try {
+            root.packageName?.toString()?.let { edgeHandle?.updateForeground(it) }
+        } finally {
+            root.recycle()
         }
     }
 

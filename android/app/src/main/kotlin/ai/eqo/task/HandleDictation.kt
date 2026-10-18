@@ -95,6 +95,8 @@ internal object HandleDictation {
         state: DictationState,
         failure: DictationFailure?,
     ) {
+        EdgeHandleFeatures.dictationTranscript = if (failure == DictationFailure.COPIED) session?.transcript else null
+        EdgeHandleFeatures.dictationInserted = state == DictationState.INSERTED
         EdgeHandleFeatures.dictationBusy =
             state in setOf(DictationState.RECORDING, DictationState.TRANSCRIBING, DictationState.INSERTING)
         EdgeHandleFeatures.dictationCommitting = state == DictationState.INSERTING

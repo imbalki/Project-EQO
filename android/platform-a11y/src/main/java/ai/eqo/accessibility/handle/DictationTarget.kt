@@ -1,9 +1,10 @@
-// Origin: EQO-authored ephemeral focused-field capture; paste-only, sensitive clipboard, no logging.
+// Origin: EQO-authored ephemeral focused-field capture; verified insertion, sensitive clipboard, no logging.
 package ai.eqo.accessibility.handle
 
 import ai.eqo.accessibility.EQOAccessibilityService
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.os.Bundle
 import android.os.PersistableBundle
 import android.view.accessibility.AccessibilityNodeInfo
 import kotlinx.coroutines.delay
@@ -13,6 +14,8 @@ interface DictationField {
     fun safe(): Boolean
 
     fun paste(text: String): Boolean
+
+    fun append(text: String): Boolean
 
     fun verified(text: String): Boolean
 }
@@ -27,9 +30,15 @@ suspend fun insertDictation(
     copy(text)
     var accepted = false
     try {
-        if (field.safe() && field.paste(text)) {
+        if (field.safe()) {
+            field.paste(text)
             delay(VERIFY_DELAY_MILLIS)
             accepted = field.safe() && field.verified(text)
+            if (!accepted && field.safe()) {
+                field.append(text)
+                delay(VERIFY_DELAY_MILLIS)
+                accepted = field.safe() && field.verified(text)
+            }
         }
     } catch (cancelled: kotlinx.coroutines.CancellationException) {
         throw cancelled
@@ -42,6 +51,23 @@ suspend fun insertDictation(
 
 private const val VERIFY_DELAY_MILLIS = 250L
 
+/** A pre-existing occurrence is not proof of insertion; the new suffix must contain the transcript. */
+fun dictationVerified(
+    original: String,
+    current: String,
+    transcript: String,
+): Boolean =
+    transcript.isNotBlank() &&
+        current.startsWith(original) &&
+        current.drop(original.length).contains(transcript)
+
+/** Refuse stale/partially changed text rather than replace anything the owner typed. */
+fun dictationAppend(
+    original: String,
+    current: String,
+    transcript: String,
+): String? = if (current == original) current + transcript else null
+
 fun dictationAllowed(
     editable: Boolean,
     password: Boolean,
@@ -50,13 +76,11 @@ fun dictationAllowed(
     blocked: Boolean,
 ): Boolean = editable && !password && owner != null && owner.toString() != ownPackage && !blocked
 
-/** The native node identity, window, contents and cursor are pinned before recording starts. */
+/** Pin identity and contents before recording; resolve the same focused field again before each action. */
 class DictationTarget private constructor(
     private val service: EQOAccessibilityService,
-    private val node: AccessibilityNodeInfo,
+    private var node: AccessibilityNodeInfo,
     private val original: String,
-    private val start: Int,
-    private val end: Int,
 ) : DictationField {
     private val window = node.windowId
     private val owner = node.packageName.toString()
@@ -64,7 +88,7 @@ class DictationTarget private constructor(
     private val clipboard = service.getSystemService(ClipboardManager::class.java)
 
     override fun safe(): Boolean =
-        node.refresh() &&
+        resolveFocused() &&
             node.isEditable &&
             !node.isPassword &&
             node.isFocused &&
@@ -74,6 +98,24 @@ class DictationTarget private constructor(
             !HandleWindowGuard.shared.panelOpen &&
             !service.isSecureWindowActive() &&
             activeWindow()
+
+    private fun resolveFocused(): Boolean {
+        val root = service.rootInActiveWindow
+        val focused =
+            try {
+                root?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+            } finally {
+                root?.recycle()
+            } ?: return false
+        val same = focused == node && focused.windowId == window && focused.packageName?.toString() == owner
+        if (same) {
+            node.recycle()
+            node = focused
+        } else {
+            focused.recycle()
+        }
+        return same
+    }
 
     private fun activeWindow(): Boolean {
         val root = service.rootInActiveWindow ?: return false
@@ -86,19 +128,33 @@ class DictationTarget private constructor(
 
     @Suppress("ReturnCount") // Fail closed before changing selection or pasting into a changed/stale field.
     override fun paste(text: String): Boolean {
-        if (node.text?.toString().orEmpty() != original) return false
+        if (!safe() || node.text?.toString().orEmpty() != original) return false
         val selection =
             android.os.Bundle().apply {
-                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start)
-                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, end)
+                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, original.length)
+                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, original.length)
             }
         val selected = node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, selection)
         if (!selected && original.isNotEmpty()) return false
-        expected = original.substring(0, start) + text + original.substring(end)
+        expected = original + text
         return safe() && node.performAction(AccessibilityNodeInfo.ACTION_PASTE)
     }
 
-    override fun verified(text: String): Boolean = expected != null && node.text?.toString() == expected
+    override fun append(text: String): Boolean {
+        // Never overwrite text edited during recording, or a partially accepted paste.
+        val appended = if (safe()) dictationAppend(original, node.text?.toString().orEmpty(), text) else null
+        if (appended == null) return false
+        expected = appended
+        val arguments =
+            Bundle().apply {
+                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, expected)
+            }
+        return node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+    }
+
+    override fun verified(text: String): Boolean =
+        expected != null &&
+            dictationVerified(original, node.text?.toString().orEmpty(), text)
 
     private fun copy(text: String) {
         val clip = ClipData.newPlainText("EqoDictation", text)
@@ -145,9 +201,7 @@ class DictationTarget private constructor(
                 return null
             }
             val text = node.text?.toString().orEmpty()
-            val start = node.textSelectionStart.takeIf { it in 0..text.length } ?: text.length
-            val end = node.textSelectionEnd.takeIf { it in start..text.length } ?: start
-            return DictationTarget(service, node, text, start, end)
+            return DictationTarget(service, node, text)
         }
     }
 }

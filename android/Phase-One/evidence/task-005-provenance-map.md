@@ -96,6 +96,9 @@
 
 ## Edge-handle additions (t_a3fa16d0)
 
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandlePresentation.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Ephemeral collapse/result deadlines and input-safe placement |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/handle/HandlePresentationTest.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Fake-clock collapse/result/hide and input-safe placement regressions |
+
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleShortcutRegistry.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Internal shortcut API and fake-store-testable choice/order |
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandlePreferences.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | App-private choices, placement and hidden apps |
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleWindowGuard.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Overlay coordinate and own-window guard |
