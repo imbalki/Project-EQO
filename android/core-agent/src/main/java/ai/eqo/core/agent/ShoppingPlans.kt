@@ -19,11 +19,15 @@ object ShoppingPlans {
         val quantity = requireNotNull(intent.params["quantity"]?.toIntOrNull())
         require(quantity in 1..ShoppingIntents.MAX_QUANTITY) { "Shopping quantity needs clarification" }
         val item = intent.params.getValue("item")
+        val zepto = InstalledAppResolver.normalize(app) == "zepto"
+        val search =
+            if (zepto) "id:com.zeptoconsumerapp:id/homepage-search-box" else "exact:Search,exact:Search for products"
+        val input = if (zepto) "search:id:com.zeptoconsumerapp:id/search-query-input" else "search:Search"
         return buildList {
             add(action("OPEN_APP", "appName" to app))
             add(action("WAIT", "durationMs" to "3000"))
-            add(action("CLICK_TEXT", "text" to "exact:Search,exact:Search for products"))
-            add(action("TYPE_TEXT", "searchText" to "search:Search", "content" to item))
+            add(action("CLICK_TEXT", "text" to search))
+            add(action("TYPE_TEXT", "searchText" to input, "content" to item))
             add(action("PRESS_ENTER"))
             add(action("WAIT", "durationMs" to "3000"))
             add(action("CLICK_TEXT", "text" to "exact:Add,exact:ADD,exact:Add to cart"))

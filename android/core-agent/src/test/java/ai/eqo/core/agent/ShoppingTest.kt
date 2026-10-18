@@ -129,7 +129,16 @@ class ShoppingTest {
                 assertEquals(9, planned.steps.size)
                 assertEquals(listOf(ShoppingPlans.HANDOFF), planned.notes)
                 assertEquals("milk", planned.steps[3].action.params["content"])
-                assertEquals("search:Search", planned.steps[3].action.params["searchText"])
+                val search =
+                    if (app == "Zepto") "search:id:com.zeptoconsumerapp:id/search-query-input" else "search:Search"
+                assertEquals(search, planned.steps[3].action.params["searchText"])
+                val navigation =
+                    if (app == "Zepto") {
+                        "id:com.zeptoconsumerapp:id/homepage-search-box"
+                    } else {
+                        "exact:Search,exact:Search for products"
+                    }
+                assertEquals(navigation, planned.steps[2].action.params["text"])
                 assertEquals(
                     ShoppingPlans.HANDOFF,
                     planned.steps

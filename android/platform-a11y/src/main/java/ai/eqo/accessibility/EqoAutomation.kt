@@ -306,6 +306,13 @@ class EqoAutomation(
 
     private companion object {
         private val VIEW_ID_LOG_SAFE = Regex("[A-Za-z0-9_.:/]{1,100}")
+
+        // Observed Zepto structural IDs, not payment cards. Only these two UUID-suffixed IDs are exempt.
+        private val ZEPTO_PRODUCT_ID =
+            Regex(
+                "com\\.zeptoconsumerapp:id/product-card-(?:container|add-button)" +
+                    "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+            )
         private val PAYMENT_INPUT =
             Regex(
                 "pay|upi|card|address|pincode|postcode|postal|confirm|checkout|subscribe|buy[ _-]*now|" +
@@ -350,9 +357,13 @@ class EqoAutomation(
 
     private fun safeSearchInput(node: A11yNode): Boolean = generateSequence(node) { it.parent }.all(::safeNode)
 
-    private fun safeNode(node: A11yNode): Boolean =
-        listOf(node.text, node.contentDescription, node.hintText, node.viewIdResourceName)
-            .none { PAYMENT_INPUT.containsMatchIn(it?.toString().orEmpty()) }
+    private fun safeNode(node: A11yNode): Boolean {
+        val id = node.viewIdResourceName.orEmpty()
+        val productId = node.packageName?.toString() == "com.zeptoconsumerapp" && ZEPTO_PRODUCT_ID.matches(id)
+        return listOf(node.text, node.contentDescription, node.hintText)
+            .none { PAYMENT_INPUT.containsMatchIn(it?.toString().orEmpty()) } &&
+            (productId || !PAYMENT_INPUT.containsMatchIn(id))
+    }
 
     /** The input matching [target]; strict search targets never fall back to another input. */
     private fun resolveTypeTarget(
