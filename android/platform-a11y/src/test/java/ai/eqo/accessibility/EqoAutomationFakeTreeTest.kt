@@ -17,6 +17,81 @@ class EqoAutomationFakeTreeTest {
     private var serviceState = EqoAutomation.ServiceState.AVAILABLE
     private var rootProviderCalls = 0
 
+    @Test fun zeptoObservedProductCardIdsAndTrimmedAddDescriptionAreNotPaymentCards() {
+        val packageName = "com.zeptoconsumerapp"
+        val suffix = "00000000-0000-0000-0000-000000000001"
+        val add =
+            FakeNode(
+                contentDescription = "Add to Cart ",
+                viewIdResourceName = "$packageName:id/product-card-add-button$suffix",
+                packageName = packageName,
+                className = "android.widget.Button",
+                isClickable = true,
+            ).child(FakeNode(text = "ADD", packageName = packageName))
+        val row =
+            FakeNode(
+                viewIdResourceName = "$packageName:id/product-card-container$suffix",
+                packageName = packageName,
+                className = "android.view.ViewGroup",
+                isClickable = true,
+            ).child(FakeNode(text = "Synthetic milk", packageName = packageName))
+                .child(add)
+        val later = FakeNode(text = "Add", isClickable = true)
+        val runner = automation(FakeNode(packageName = packageName).child(row).child(later))
+        assertTrue(runner.tap("exact:Add,exact:ADD,exact:Add to cart").isSuccess)
+        assertEquals(listOf(1, 0, 0), listOf(add, row, later).map { it.clickCount })
+    }
+
+    @Test fun zeptoProductIdExceptionNeverExemptsPaymentLabelsAncestorsOrOtherCardIds() {
+        val packageName = "com.zeptoconsumerapp"
+        val productId = "$packageName:id/product-card-add-button00000000-0000-0000-0000-000000000001"
+        for (label in listOf("Add card", "Pay", "COD", "Confirm address", "Place order")) {
+            val add =
+                FakeNode(text = "Add", viewIdResourceName = productId, packageName = packageName, isClickable = true)
+            val parent = FakeNode(contentDescription = label).child(add)
+            assertFalse(automation(FakeNode().child(parent)).tap("exact:Add").isSuccess)
+            assertEquals(0, add.clickCount)
+            val payment =
+                FakeNode(
+                    text = "Add",
+                    contentDescription = label,
+                    viewIdResourceName = productId,
+                    isClickable = true,
+                    packageName = packageName,
+                )
+            assertFalse(automation(FakeNode().child(payment)).tap("exact:Add").isSuccess)
+            assertEquals(0, payment.clickCount)
+        }
+        for (id in listOf(productId + "_pay", productId + "_card", "$packageName:id/payment_card", productId)) {
+            val add =
+                FakeNode(
+                    text = "Add",
+                    viewIdResourceName = id,
+                    isClickable = true,
+                    packageName = if (id == productId) "other.shop" else packageName,
+                )
+            assertFalse(automation(FakeNode().child(add)).tap("exact:Add").isSuccess)
+            assertEquals(0, add.clickCount)
+        }
+    }
+
+    @Test fun zeptoObservedSearchIdsAvoidRotatingPromptsAndNeverFallBackToOtherFields() {
+        val packageName = "com.zeptoconsumerapp"
+        val search = FakeNode(viewIdResourceName = "$packageName:id/homepage-search-box", isClickable = true)
+        val input =
+            FakeNode(viewIdResourceName = "$packageName:id/search-query-input", className = "android.widget.EditText")
+        val payment = FakeNode(text = "Card number", isEditable = true)
+        val runner = automation(FakeNode(packageName = packageName).child(search).child(input).child(payment))
+        assertTrue(runner.tap("id:$packageName:id/homepage-search-box").isSuccess)
+        assertTrue(runner.type("search:id:$packageName:id/search-query-input", "milk").isSuccess)
+        assertEquals("milk", input.typedValue)
+        assertNull(payment.typedValue)
+        val missing = automation(FakeNode(packageName = packageName).child(payment))
+        assertFalse(missing.tap("id:$packageName:id/homepage-search-box").isSuccess)
+        assertFalse(missing.type("search:id:$packageName:id/search-query-input", "milk").isSuccess)
+        assertNull(payment.typedValue)
+    }
+
     @Test fun shoppingAlternativeLabelsKeepProductOrderAndRefusePaymentAncestors() {
         val first = FakeNode(text = "Add to cart", isClickable = true)
         val later = FakeNode(text = "Add", isClickable = true)

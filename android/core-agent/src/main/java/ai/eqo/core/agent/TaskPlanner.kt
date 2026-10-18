@@ -437,9 +437,10 @@ object TaskPlanPreview {
                 .first { it.action.name == "TYPE_TEXT" }
                 .action.params["content"]
                 .orEmpty()
-        val quantity = steps.count { it.action.params["text"] == "exact:+,exact:Increase quantity" } + 1
+        val quantity = steps.count { it.action.params["text"] == ShoppingPlans.INCREASE } + 1
         return "EQO will:\n1. open ${webText(app)}\n2. search ${webText(item)}\n" +
-            "3. add $quantity x ${webText(item)} to the cart\n4. open the cart and stop so you can pay"
+            "3. add $quantity x ${webText(item)} to the cart (EQO ${ShoppingPlans.FIRST_RESULT})\n" +
+            "4. open the cart and stop so you can pay"
     }
 
     private fun shareRoute(via: String?): String =
