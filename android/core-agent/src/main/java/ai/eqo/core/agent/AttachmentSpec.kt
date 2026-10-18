@@ -5,12 +5,13 @@ package ai.eqo.core.agent
  * The optional `attachment` parameter of SEND_EMAIL, SEND_WHATSAPP and SEND_SMS.
  *
  * One value holds one or more references separated by `|` or a new line. A reference is either a
- * file path, a validated `find:` search, or the word `last_screenshot`. The planner and the Android
+ * file path, a validated `find:` search, `picker` for owner selection, or `last_screenshot`. The planner and Android
  * executors all read it through here so the owner approves exactly what is later attached.
  */
 object AttachmentSpec {
     const val PARAM = "attachment"
     const val LAST_SCREENSHOT = "last_screenshot"
+    const val PICKER = "picker"
     const val MAX_ATTACHMENTS = 10
 
     private const val MAX_REFERENCE = 1024
@@ -19,14 +20,15 @@ object AttachmentSpec {
     /** Actions that accept [PARAM]. */
     val ACTIONS: Set<String> = setOf("SEND_EMAIL", "SEND_WHATSAPP", "SEND_SMS")
 
-    /** File-only communication must not invent a caption; recipient constraints are never waived. */
+    /** Email text is optional; file-only messages must not invent captions. Recipients are never waived. */
     fun allowsEmptyText(
         action: String,
         field: String,
         params: Map<String, String>,
     ): Boolean {
         val attachment = params[PARAM]
-        if (attachment.isNullOrBlank() || errors(attachment).isNotEmpty()) return false
+        val emailText = action == "SEND_EMAIL" && field in setOf("subject", "body")
+        if (!emailText && (attachment.isNullOrBlank() || errors(attachment).isNotEmpty())) return false
         return when (action) {
             "SEND_EMAIL" -> field in setOf("subject", "body")
             "SEND_SMS", "SEND_WHATSAPP" -> field == "message"
@@ -69,7 +71,9 @@ object AttachmentSpec {
 
     /** What the owner sees in the plan preview for one reference: the file name, never the content. */
     fun displayName(reference: String): String =
-        if (isLastScreenshot(reference)) {
+        if (reference == PICKER) {
+            "a file you choose in the phone picker"
+        } else if (isLastScreenshot(reference)) {
             "your recent EQO screenshot, or newest gallery screenshot (name confirmed before sending)"
         } else if (AttachmentSearch.isSearch(reference)) {
             "a file matching \"${TaskDisplayText.escape(reference.substringAfter(':'))}\""

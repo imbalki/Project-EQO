@@ -722,6 +722,9 @@ internal class CommunicationActions constructor(
                     EmailComposeOutcome.VERIFIED_SENT ->
                         ActionResult(true, "Email sent successfully.", null)
                     EmailComposeOutcome.COMPOSED -> {
+                        if (params["draftOnly"] == "true") {
+                            return ActionResult.UserActionRequired("Email draft opened; you review and press Send.")
+                        }
                         kotlinx.coroutines.delay(2000)
                         val service =
                             ai.eqo.accessibility.EQOAccessibilityService
