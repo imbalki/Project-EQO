@@ -296,6 +296,21 @@ class FileFeaturesRegistryTest {
 
     // ── attachments ─────────────────────────────────────────
 
+    @Test fun draftEmailWithAttachmentSkipsTheSendDelayAndHandsControlToOwner() =
+        runTest {
+            file("Download/draft.pdf")
+            canResolve(Intent(Intent.ACTION_SEND).setType("application/pdf").setPackage("com.google.android.gm"))
+            val result =
+                registry.execute(
+                    "SEND_EMAIL",
+                    emailParams + mapOf("attachment" to "Download/draft.pdf", "draftOnly" to "true"),
+                )
+            assertTrue(result is ActionResult.UserActionRequired)
+            assertTrue(result.error.orEmpty().contains("you review and press Send"))
+            assertEquals(0L, testScheduler.currentTime)
+            assertEquals("draft.pdf", started().getParcelableExtra<Uri>(Intent.EXTRA_STREAM)!!.lastPathSegment)
+        }
+
     @Test fun runtimeSearchAndGalleryFallbackReachAllThreeShareIntentsOnlyAfterDisclosure() =
         runTest {
             file("Pictures/Screenshots/gallery.png")

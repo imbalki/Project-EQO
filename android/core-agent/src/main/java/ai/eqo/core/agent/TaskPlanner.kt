@@ -43,12 +43,19 @@ class TaskPlanner(
      * for once more with the reason; whatever is still missing comes back as a note, never as a plan that merely
      * looks complete. Templates carry every slot by construction and are not re-checked.
      */
+    @Suppress("ReturnCount") // Incomplete email and shopping exit locally before free-form planning.
     suspend fun planWithNotes(
         request: String,
         screenData: String = "",
         intent: TaskIntent = TaskIntent("Plan the requested task", confidence = 1.0),
     ): Planned {
         require(request.isNotBlank() && request.length <= MAX_TEXT)
+        if (intent.action == "send_message" && intent.channel == "email" && intent.missingParameter() != null) {
+            return Planned(
+                emptyList(),
+                listOf("No email planned: the recipient is still missing. Nothing will be sent."),
+            )
+        }
         if (intent.action == "purchase") {
             val actions = ShoppingPlans.plan(intent)
             val steps = actions.mapIndexed { index, action -> LoopStep("task-${index + 1}", action) }
@@ -348,6 +355,8 @@ class ApprovedTaskPlan(
 
 @Suppress("TooManyFunctions") // Display-only summary and step wording share escaping and specialized templates.
 object TaskPlanPreview {
+    private const val EMAIL_SEND_HANDOFF = "; may press Gmail Send; delivery not verified"
+
     fun describe(
         steps: List<LoopStep>,
         recipientNames: Map<String, String> = emptyMap(),
@@ -468,6 +477,11 @@ object TaskPlanPreview {
                 "${if (p["draftOnly"] == "true") "draft" else "send"} a WhatsApp message to " +
                     quote(p["contact"].orEmpty()) + " saying " + quote(p["message"].orEmpty()) +
                     (if (p["draftOnly"] == "true") "; you press Send" else "; EQO presses Send") +
+                    attachmentSuffix(p[AttachmentSpec.PARAM])
+            "SEND_EMAIL" ->
+                "${if (p["draftOnly"] == "true") "draft" else "send"} an email to $recipient, " +
+                    "subject ${quote(p["subject"].orEmpty())}, body ${quote(p["body"].orEmpty())}" +
+                    (if (p["draftOnly"] == "true") "; you press Send" else EMAIL_SEND_HANDOFF) +
                     attachmentSuffix(p[AttachmentSpec.PARAM])
             "FIND_FILES", "LIST_FILES" ->
                 RegistryPreviewText.describe(step.action.name, p) +

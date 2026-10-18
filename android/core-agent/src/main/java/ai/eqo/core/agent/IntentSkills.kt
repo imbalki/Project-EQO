@@ -56,8 +56,8 @@ object IntentSkills {
 
     private fun message(intent: TaskIntent): List<ExecutedAction> {
         val p = intent.params
-        val contact = p["contact"].orEmpty()
-        val text = p["message"].orEmpty()
+        val contact = (if (intent.channel == "email") p["to"] ?: p["contact"] else p["contact"]).orEmpty()
+        val text = (if (intent.channel == "email") p["body"] ?: p["message"] else p["message"]).orEmpty()
         val name =
             when (intent.channel) {
                 null, "sms" -> "SEND_SMS"
@@ -71,7 +71,12 @@ object IntentSkills {
             } else {
                 mapOf("contact" to contact, "message" to text)
             } + p.filterKeys { it == "attachment" }
-        val draft = if (name == "SEND_WHATSAPP") mapOf("draftOnly" to (intent.send != "yes").toString()) else emptyMap()
+        val draft =
+            if (name in setOf("SEND_WHATSAPP", "SEND_EMAIL")) {
+                mapOf("draftOnly" to (intent.send != "yes").toString())
+            } else {
+                emptyMap()
+            }
         // Telegram has no draft executor. Unknown/no send falls back to free planning of a local draft.
         return if (name == "SEND_TELEGRAM" && intent.send != "yes") {
             emptyList()
@@ -138,6 +143,12 @@ object IntentPlanProtection {
             val names = steps.map { it.action.name }
             val forbidden = CHANNEL_ACTIONS.filterKeys { it != channel }.values.flatten()
             require(names.none { it in forbidden }) { "Plan must use the understood message channel" }
+            if (channel == "email") {
+                require(names == listOf("SEND_EMAIL")) { "Email must use one SEND_EMAIL, never a UI chain" }
+                require(intent.send == "yes" || steps.single().action.params["draftOnly"] == "true") {
+                    "Email without send permission must be draftOnly"
+                }
+            }
         }
         return if (intent.action == "create_note") noteSteps(protected) else protected
     }
@@ -190,9 +201,9 @@ object IntentPlanProtection {
 
     private fun submits(step: LoopStep): Boolean =
         when (step.action.name) {
-            "SEND_WHATSAPP" -> step.action.params["draftOnly"] != "true"
+            "SEND_WHATSAPP", "SEND_EMAIL" -> step.action.params["draftOnly"] != "true"
             "SHARE_CONTACT", "SHARE_LOCATION" -> step.action.params["via"] == "whatsapp"
-            "SEND_SMS", "SEND_EMAIL", "compose_sms", "compose_email" -> false // Native draft-only executors.
+            "SEND_SMS", "compose_sms", "compose_email" -> false // Native draft-only executors.
             "PRESS_ENTER", "press_enter", "send_whatsapp", "send_telegram", "SEND_TELEGRAM" -> true
             "CLICK_TEXT", "CLICK_ID", "tap_text", "tap_id" ->
                 step.action.params.values

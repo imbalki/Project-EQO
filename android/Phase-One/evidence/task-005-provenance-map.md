@@ -6,6 +6,11 @@
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/RegistryPreviewTextTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Catalog template coverage and escaping |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/PlanPreviewPolishTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Planner clarification, truthful preview and unchanged approval regressions |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/PlanPreviewPolishTest.kt` | EQO-NEW | `ai.eqo.task` | Pre-preview clarification and plan-scoped permissions |
+## Native email planning (t_778f1fdb)
+
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/EmailIntents.kt` | EQO-NEW | `ai.eqo.core.agent` | Local single-email attachment and draft slots |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/EmailPlanningTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Native email, attachment, clarification and draft regressions |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/EmailCorrectionHistoryTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Two-round channel and task correction history regressions |
 
 ## Cart-only shopping (t_3745d313)
 
