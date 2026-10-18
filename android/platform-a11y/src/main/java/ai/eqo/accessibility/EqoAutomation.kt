@@ -6,6 +6,8 @@
  */
 package ai.eqo.accessibility
 
+import ai.eqo.core.agent.ShoppingPlans
+
 /**
  * Observe, tap, scroll and type over one accessibility node tree.
  *
@@ -189,7 +191,7 @@ class EqoAutomation(
         // Best tappable match: an exact label beats a partial one ("Voice call" beats "Call" appearing in
         // "Video call"), and a button or result row beats a text field that merely contains the text.
         val root = rootProvider()
-        val increase = !byViewId && target == "exact:+,exact:Increase quantity"
+        val increase = !byViewId && target.equals(ShoppingPlans.INCREASE, ignoreCase = true)
         val selection = shoppingSelection
         if (!increase) shoppingSelection = null
         val clickable =
@@ -307,11 +309,12 @@ class EqoAutomation(
     private companion object {
         private val VIEW_ID_LOG_SAFE = Regex("[A-Za-z0-9_.:/]{1,100}")
 
-        // Observed Zepto structural IDs, not payment cards. Only these two UUID-suffixed IDs are exempt.
+        // Observed Zepto structural IDs, not payment cards. Only these UUID IDs and stepper suffixes are exempt.
+        private const val PRODUCT_UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
         private val ZEPTO_PRODUCT_ID =
             Regex(
-                "com\\.zeptoconsumerapp:id/product-card-(?:container|add-button)" +
-                    "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+                "com\\.zeptoconsumerapp:id/product-card-" +
+                    "(?:container$PRODUCT_UUID|add-button$PRODUCT_UUID(?:-plus|-minus)?)",
             )
         private val PAYMENT_INPUT =
             Regex(
@@ -430,7 +433,7 @@ private data class ShoppingSelection(
         val row = path.fold(root as A11yNode?) { node, index -> node?.childAt(index) }
         val entries = row?.let(::nodes).orEmpty()
         val matches = entries.map { it.second }
-        val controls = entries.filter { isControl(it.second, INCREASE) }
+        val controls = entriesForControl(row, INCREASE)
         val sameProduct =
             root.packageName?.toString() == packageName &&
                 productLabels(matches) == listOf(label) &&
@@ -477,8 +480,8 @@ private data class ShoppingSelection(
                 val unambiguous =
                     listOf(
                         name?.let { uniqueLabel(root, it) } == true,
-                        entries.count { isControl(it, ADD) } == 1,
-                        entries.count { isControl(it, INCREASE) } <= 1,
+                        entriesForControl(row, ADD).size == 1,
+                        entriesForControl(row, INCREASE).size <= 1,
                         boundAdd != null,
                     ).all { it }
                 if (unambiguous) {
@@ -497,7 +500,18 @@ private data class ShoppingSelection(
         private fun entriesForControl(
             row: A11yNode?,
             labels: List<String>,
-        ): List<Pair<List<Int>, A11yNode>> = row?.let(::nodes).orEmpty().filter { isControl(it.second, labels) }
+        ): List<Pair<List<Int>, A11yNode>> =
+            row
+                ?.let(::nodes)
+                .orEmpty()
+                .filter { (_, node) ->
+                    // A Button's description and its child ADD label identify one control, not two.
+                    isControl(node, labels) &&
+                        (
+                            node.isClickable ||
+                                NodeTreeSearch.clickableSelfOrAncestor(node)?.let { !isControl(it, labels) } == true
+                        )
+                }
 
         private fun scopedClickable(
             row: A11yNode,

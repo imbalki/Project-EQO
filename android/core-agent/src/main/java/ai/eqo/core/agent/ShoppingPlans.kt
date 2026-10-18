@@ -2,7 +2,9 @@
 package ai.eqo.core.agent
 
 object ShoppingPlans {
-    const val HANDOFF = "Needs you: review the cart and pay yourself"
+    const val FIRST_RESULT = "adds the first search result; check the cart before paying"
+    const val HANDOFF = "Needs you: EQO $FIRST_RESULT; pay yourself"
+    const val INCREASE = "exact:+,exact:increase quantity"
     private const val CART = "exact:Cart,exact:View cart,exact:Go to cart"
     private val forbidden =
         Regex(
@@ -32,7 +34,7 @@ object ShoppingPlans {
             add(action("WAIT", "durationMs" to "3000"))
             add(action("CLICK_TEXT", "text" to "exact:Add,exact:ADD,exact:Add to cart"))
             repeat(quantity - 1) {
-                add(action("CLICK_TEXT", "text" to "exact:+,exact:Increase quantity"))
+                add(action("CLICK_TEXT", "text" to INCREASE))
             }
             add(action("CLICK_TEXT", "text" to CART).copy(plannerClaim = HANDOFF))
         }.map { action ->

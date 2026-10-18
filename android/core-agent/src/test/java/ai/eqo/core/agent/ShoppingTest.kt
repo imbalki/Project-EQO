@@ -149,6 +149,11 @@ class ShoppingTest {
                 val preview = TaskPlanPreview.describe(planned.steps)
                 assertTrue(preview.contains("add 2 x milk to the cart"))
                 assertTrue(preview.contains("open the cart and stop so you can pay"))
+                assertTrue(preview.contains("adds the first search result; check the cart before paying"))
+                assertTrue(
+                    planned.notes.single().contains("adds the first search result; check the cart before paying"),
+                )
+                assertEquals("exact:+,exact:increase quantity", planned.steps[7].action.params["text"])
                 assertTrue(fake.requests.isEmpty())
             }
         }
@@ -191,7 +196,7 @@ class ShoppingTest {
             steps.drop(1),
             steps + steps.first(),
             steps.filterNot {
-                it.action.params["text"] == "exact:+,exact:Increase quantity"
+                it.action.params["text"] == "exact:+,exact:increase quantity"
             },
         )) {
             assertThrows(IllegalArgumentException::class.java) { IntentPlanProtection.validate(intent, bad) }
