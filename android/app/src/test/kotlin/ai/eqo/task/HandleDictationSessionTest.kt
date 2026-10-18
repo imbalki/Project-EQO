@@ -59,6 +59,7 @@ class HandleDictationSessionTest {
             advanceUntilIdle()
             assertEquals(DictationState.FAILED, session.state)
             assertEquals(DictationFailure.COPIED, failures.last())
+            assertEquals("synthetic words", session.transcript)
             assertFalse(recording.file.exists())
         }
 

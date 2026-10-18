@@ -103,6 +103,9 @@
 
 ## Edge-handle additions (t_a3fa16d0)
 
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandlePresentation.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Ephemeral collapse/result deadlines and input-safe placement |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/handle/HandlePresentationTest.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Fake-clock collapse/result/hide and input-safe placement regressions |
+
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleShortcutRegistry.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Internal shortcut API and fake-store-testable choice/order |
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandlePreferences.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | App-private choices, placement and hidden apps |
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleWindowGuard.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Overlay coordinate and own-window guard |
@@ -112,6 +115,7 @@
 | :app | `android/app/src/main/kotlin/ai/eqo/handle/BuiltInHandleShortcuts.kt` | EQO-NEW | `ai.eqo.handle` | Existing controller Pause/Stop and app/task entries |
 | :app | `android/app/src/main/kotlin/ai/eqo/handle/EdgeHandleSettingsActivity.kt` | EQO-NEW | `ai.eqo.handle` | Opt-in, shortcut choice, Up/Down, reset and restore |
 | :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleFeaturesTest.kt` | EQO-NEW | `ai.eqo.handle` | Preference, focus and real public controller regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/HandlePlacementDeliveryTest.kt` | EQO-NEW | `ai.eqo.handle` | Service event delivery and real drag input-exclusion regressions |
 ## Explain screen additions (t_699c0abc)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSession.kt` | EQO-NEW | `ai.eqo.explain` | Read-only explanation session, privacy bounds and protected-screen policy seam |

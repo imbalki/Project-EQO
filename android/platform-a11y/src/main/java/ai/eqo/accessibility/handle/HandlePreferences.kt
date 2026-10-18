@@ -80,6 +80,10 @@ object EdgeHandleFeatures {
     var dictationCommitting: Boolean = false
     var dictationListening: Boolean = false
 
+    // Ephemeral result only: never persisted or logged.
+    var dictationTranscript: String? = null
+    var dictationInserted: Boolean = false
+
     // App callbacks keep this library independent of app notification/Explain classes.
     var refreshEntries: (Context) -> Unit = {}
     var configurationChanged: () -> Unit = {}

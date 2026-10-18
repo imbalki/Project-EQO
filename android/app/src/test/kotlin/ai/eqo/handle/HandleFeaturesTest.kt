@@ -44,6 +44,7 @@ import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("LargeClass") // Shared overlay fixture keeps run-control, focus and result lifecycle regressions together.
 class HandleFeaturesTest {
     private lateinit var context: Context
 
@@ -58,6 +59,10 @@ class HandleFeaturesTest {
     fun cleanup() {
         TaskRunSession.controller = null
         HandleWindowGuard.shared.clear()
+        EdgeHandleFeatures.dictationTranscript = null
+        EdgeHandleFeatures.dictationInserted = false
+        EdgeHandleFeatures.dictationStatus = 0
+        EdgeHandleFeatures.dictationBusy = false
     }
 
     @Test
@@ -450,10 +455,7 @@ class HandleFeaturesTest {
             shadowOf(android.os.Looper.getMainLooper()).idle()
             assertTrue(overlayView(overlay) != null)
             overlayView(overlay)!!.performLongClick()
-            val panel = overlayView(overlay) as android.view.ViewGroup
-            val scroll = panel.getChildAt(0) as android.view.ViewGroup
-            val column = scroll.getChildAt(0) as android.view.ViewGroup
-            column.getChildAt(column.childCount - 2).performClick()
+            panelButton(overlay, ai.eqo.platform.R.string.edge_handle_hide_app).performClick()
             assertTrue(HandlePreferences(context).isHidden("other.app"))
             assertEquals(null, overlayView(overlay))
         } finally {
@@ -462,6 +464,7 @@ class HandleFeaturesTest {
     }
 
     @Test
+    @Suppress("LongMethod") // One lifecycle scenario verifies focus, start/stop/cancel, updates and opt-out cleanup.
     fun `direct handle mic keeps app focus and updates recording transcribing cancel and disabled states`() {
         val registry = createHandleRegistry(context)
         EdgeHandleFeatures.install(registry)
@@ -472,13 +475,23 @@ class HandleFeaturesTest {
         var cancels = 0
         EdgeHandleFeatures.dictationTap = { taps++ }
         EdgeHandleFeatures.dictationCancel = { cancels++ }
+        registry.remove(EdgeHandleFeatures.DICTATION_ID)
+        registry.register(
+            BuiltInHandleShortcut(EdgeHandleFeatures.DICTATION_ID, R.string.dictation_switch, 0) {
+                EdgeHandleFeatures.dictationTap(it)
+            },
+        )
         val overlay = createOverlay()
         try {
             overlay.setProbeAvailable(true)
             val main = shadowOf(android.os.Looper.getMainLooper())
             main.idle()
             val micLabel = ai.eqo.platform.R.string.edge_dictation_mic
-            panelButton(overlay, micLabel).performClick()
+            // Idle is a slim grip; dictation starts from the non-focusable shortcuts panel.
+            assertFalse(descendants(overlayView(overlay)!!).any { it is android.widget.Button })
+            overlayView(overlay)!!.performClick()
+            panelButton(overlay, R.string.dictation_switch).performClick()
+
             val params = overlayView(overlay)!!.layoutParams as android.view.WindowManager.LayoutParams
             assertTrue(params.flags and android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE != 0)
             assertEquals(1, taps)
@@ -539,6 +552,111 @@ class HandleFeaturesTest {
             "Dictation inserted. It is also on your clipboard.",
             context.getString(R.string.dictation_inserted),
         )
+    }
+
+    @Test
+    fun `compact panel never focuses and collapses on idle outside and app switch with session hide`() {
+        EdgeHandleFeatures.install(createHandleRegistry(context))
+        HandlePreferences(context).enabled = true
+        val overlay = createOverlay()
+        val main = shadowOf(android.os.Looper.getMainLooper())
+        try {
+            overlay.setProbeAvailable(true)
+            main.idle()
+            overlayView(overlay)!!.performClick()
+            val params = overlayView(overlay)!!.layoutParams as android.view.WindowManager.LayoutParams
+            assertTrue(params.flags and android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE != 0)
+            assertTrue(params.width > 0 && params.height > 0)
+            main.idleFor(java.time.Duration.ofSeconds(3))
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+            overlayView(overlay)!!.performClick()
+            val outside = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_OUTSIDE, 0f, 0f, 0)
+            overlayView(overlay)!!.dispatchTouchEvent(outside)
+            outside.recycle()
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+            overlayView(overlay)!!.performClick()
+            overlay.updateForeground("synthetic.app")
+            main.idle()
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+            overlayView(overlay)!!.performClick()
+            panelButton(overlay, ai.eqo.platform.R.string.edge_handle_hide_now).performClick()
+            main.idle()
+            assertEquals(null, overlayView(overlay))
+            assertFalse(HandlePreferences(context).isHidden("synthetic.app"))
+            overlay.updateForeground("other.app")
+            main.idle()
+            assertTrue(overlayView(overlay) != null)
+        } finally {
+            overlay.destroy()
+        }
+    }
+
+    @Test
+    fun `failure card has selectable transcript copy dismiss and success disappears after two seconds`() {
+        EdgeHandleFeatures.install(createHandleRegistry(context))
+        HandlePreferences(context).enabled = true
+        val overlay = createOverlay()
+        val main = shadowOf(android.os.Looper.getMainLooper())
+        try {
+            overlay.setProbeAvailable(true)
+            main.idle()
+            EdgeHandleFeatures.dictationTranscript = "synthetic transcript"
+            EdgeHandleFeatures.dictationStatus = R.string.dictation_copied
+            EdgeHandleFeatures.dictationChanged()
+            main.idle()
+            val result =
+                descendants(overlayView(overlay)!!)
+                    .filterIsInstance<android.widget.TextView>()
+                    .first { it.text.toString() == "synthetic transcript" }
+            assertTrue(result.isTextSelectable)
+            panelButton(overlay, ai.eqo.platform.R.string.edge_dictation_copy).performClick()
+            val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+            assertEquals("synthetic transcript", clipboard.primaryClip!!.getItemAt(0).text)
+            panelButton(overlay, ai.eqo.platform.R.string.edge_dictation_dismiss).performClick()
+            main.idle()
+            assertEquals(null, EdgeHandleFeatures.dictationTranscript)
+            assertFalse(descendants(overlayView(overlay)!!).any { it is android.widget.Button })
+            EdgeHandleFeatures.dictationStatus = R.string.dictation_inserted
+            EdgeHandleFeatures.dictationInserted = true
+            EdgeHandleFeatures.dictationChanged()
+            main.idle()
+            assertTrue(
+                descendants(overlayView(overlay)!!).filterIsInstance<android.widget.TextView>().any {
+                    it.text == context.getString(ai.eqo.platform.R.string.edge_dictation_inserted)
+                },
+            )
+            main.idleFor(java.time.Duration.ofSeconds(2))
+            assertEquals(0, EdgeHandleFeatures.dictationStatus)
+            assertFalse(descendants(overlayView(overlay)!!).any { it is android.widget.Button })
+        } finally {
+            overlay.destroy()
+        }
+    }
+
+    @Test
+    fun `previous success expiry cannot dismiss a newer failed transcript`() {
+        EdgeHandleFeatures.install(createHandleRegistry(context))
+        HandlePreferences(context).enabled = true
+        val overlay = createOverlay()
+        val main = shadowOf(android.os.Looper.getMainLooper())
+        try {
+            overlay.setProbeAvailable(true)
+            main.idle()
+            EdgeHandleFeatures.dictationInserted = true
+            EdgeHandleFeatures.dictationStatus = R.string.dictation_inserted
+            EdgeHandleFeatures.dictationChanged()
+            main.idle()
+            main.idleFor(java.time.Duration.ofSeconds(1))
+            EdgeHandleFeatures.dictationInserted = false
+            EdgeHandleFeatures.dictationTranscript = "new synthetic transcript"
+            EdgeHandleFeatures.dictationStatus = R.string.dictation_copied
+            EdgeHandleFeatures.dictationChanged()
+            main.idleFor(java.time.Duration.ofSeconds(2))
+            assertEquals("new synthetic transcript", EdgeHandleFeatures.dictationTranscript)
+            assertTrue(panelButton(overlay, ai.eqo.platform.R.string.edge_dictation_copy).isShown)
+        } finally {
+            overlay.destroy()
+        }
     }
 
     private fun drag(
