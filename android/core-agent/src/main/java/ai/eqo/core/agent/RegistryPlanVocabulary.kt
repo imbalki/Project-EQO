@@ -33,7 +33,8 @@ object RegistryPlanVocabulary {
             appendLine("Never change it after approval.")
             appendLine("intent is the understood task: use goal, app and params, not request-keyword guesses.")
             appendLine("Respect intent.channel and intent.send. send=no must never gain Send/submit steps.")
-            appendLine("Missing slots after clarification: ASK_USER, never invent a recipient or content.")
+            appendLine("Missing slots: return ASK_USER alone; EQO asks before approval and replans after the answer.")
+            appendLine("Never invent a recipient or content; ASK_USER is not an executable approval step.")
             appendLine("local_arithmetic is a local literal answer; use it for calculate-then-send messages.")
             appendLine("Later payloads may use {{step:1:result}} or {{step:1:message}} from a successful earlier step.")
             appendLine("No result placeholders in recipients, apps or control targets; no forward references.")
@@ -157,6 +158,21 @@ object RegistryPlanVocabulary {
                 )
                 appendLine("Without an own email supplied in trusted request context, ASK_USER; do not invent one.")
             }
+        }
+
+    /** A planner question invalidates the whole proposal, including any steps before the question. */
+    fun clarification(steps: List<LoopStep>): TaskIntent? =
+        steps.firstOrNull { it.action.name == "ASK_USER" }?.action?.params?.let { params ->
+            TaskIntent(
+                goal = "Clarify the requested task",
+                question = params["question"],
+                options =
+                    params["options"]
+                        .orEmpty()
+                        .split(',')
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() },
+            )
         }
 
     // Each branch enforces a separate advertised schema constraint.

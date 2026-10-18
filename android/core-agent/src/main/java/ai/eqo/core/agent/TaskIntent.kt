@@ -316,8 +316,12 @@ class IntentPlanningSession(
         val bestGuess: Boolean,
         // Plain notes for the plan preview: parts of the request the plan cannot carry out (may be empty).
         val notes: List<String> = emptyList(),
+        // Pre-approval fallbacks retain answers and share this session's bounded question budget.
+        val clarifiedRequest: String = "",
+        val clarificationRounds: Int = 0,
     )
 
+    @Suppress("ReturnCount") // Cancellation and exhausted missing-data questions must return no executable plan.
     suspend fun prepare(
         request: String,
         ask: suspend (TaskIntent) -> String?,
@@ -325,14 +329,34 @@ class IntentPlanningSession(
         var enriched = request
         var intent = understanding.understand(enriched)
         var rounds = 0
-        while (intent.needsClarification() && rounds < MAX_ROUNDS) {
-            val answer = ask(intent)?.takeIf { it.isNotBlank() } ?: return null
+        while (true) {
+            val question =
+                if (intent.needsClarification() && rounds < MAX_ROUNDS) {
+                    intent
+                } else {
+                    // An email with no recipient is answered with a note (nothing planned), never a silent cancel.
+                    val emailWithoutRecipient = intent.action == "send_message" && intent.channel == "email"
+                    if (intent.missingParameter() != null && !emailWithoutRecipient) return null
+                    val planned = planner.planWithNotes(enriched, intent = intent)
+                    val clarification = RegistryPlanVocabulary.clarification(planned.steps)
+                    if (clarification == null) {
+                        return Result(
+                            intent,
+                            planned.steps,
+                            intent.needsClarification(),
+                            planned.notes,
+                            enriched,
+                            rounds,
+                        )
+                    }
+                    clarification
+                }
+            if (rounds >= MAX_ROUNDS) return null
+            val answer = ask(question)?.takeIf { it.isNotBlank() } ?: return null
             enriched += "\nUser clarification ${rounds + 1}: $answer"
             intent = EmailIntents.merge(intent, understanding.understand(enriched), answer)
             rounds++
         }
-        val planned = planner.planWithNotes(enriched, intent = intent)
-        return Result(intent, planned.steps, intent.needsClarification(), planned.notes)
     }
 
     companion object {

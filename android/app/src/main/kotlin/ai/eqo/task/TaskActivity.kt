@@ -77,6 +77,7 @@ class TaskActivity : Activity() {
     private var displayedStatus = PlanStatus.PENDING
     private var preparationGeneration = 0
     private var understoodPreview = ""
+    private var purchasePreview = false
     private var understandingRequest = false
     private var resultSpeaker: TaskResultSpeaker? = null
     private val displayedResults = linkedMapOf<String, StepProgress>()
@@ -764,6 +765,7 @@ class TaskActivity : Activity() {
                             ai.eqo.core.agent.RegistryPlanVocabulary
                                 .parse(json, portedActions.enabledActionNames)
                         understoodPreview = ""
+                        purchasePreview = false
                         if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
                     } catch (_: AppChoiceCancelled) {
                         findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
@@ -866,6 +868,8 @@ class TaskActivity : Activity() {
                         showStoppedAppPlan(result)
                 }
             }
+        } catch (_: FallbackClarificationStopped) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.intent_planning_stopped)
         } catch (_: AppChoiceCancelled) {
             findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
@@ -916,25 +920,27 @@ class TaskActivity : Activity() {
         val understood =
             understandRequest(request, planner, generation)
                 ?.takeIf { generation == preparationGeneration } ?: return null
-        // The guess line and any plain notes about parts of the request EQO cannot do (never a plan that only
-        // looks complete) sit under the understood goal in the preview.
+        purchasePreview =
+            understood.intent.action == "purchase" ||
+            ai.eqo.core.agent.PlanCompleteness
+                .isPurchase(request)
+        // Keep limitations, but derive the understood line from the final resolved steps, never the wished-for goal.
         val understoodNotes =
             listOfNotNull(if (understood.bestGuess) getString(R.string.intent_best_guess) else null) +
                 understood.notes.map {
                     ai.eqo.core.agent.TaskDisplayText
                         .escape(it)
                 }
-        understoodPreview =
-            getString(
-                R.string.intent_understood_preview,
-                ai.eqo.core.agent.TaskDisplayText
-                    .escape(understood.intent.goal),
-                understoodNotes.joinToString("\n"),
-            )
+        understoodPreview = understoodNotes.joinToString("\n")
         return withContext(Dispatchers.IO) {
             // Never capture EQO's key/setup/request UI; execution observations stay local.
             val apps = TaskAppPlanning(this@TaskActivity, appResolver)
-            apps.prepare(request, understood.steps) { constrained ->
+            apps.prepare(
+                understood.clarifiedRequest,
+                understood.steps,
+                ai.eqo.core.agent.IntentPlanningSession.MAX_ROUNDS - understood.clarificationRounds,
+                ask = { question -> askFallbackQuestion(question, generation) },
+            ) { constrained ->
                 require(understood.intent.action != "purchase") {
                     "Shopping needs an installed shopping app; no browser or payment fallback will run."
                 }
@@ -948,6 +954,24 @@ class TaskActivity : Activity() {
             }
         }
     }
+
+    internal suspend fun askFallbackQuestion(
+        question: ai.eqo.core.agent.TaskIntent,
+        generation: Int,
+    ): String? =
+        withContext(Dispatchers.Main) {
+            if (generation != preparationGeneration || isFinishing || isDestroyed) {
+                null
+            } else {
+                findViewById<TextView>(R.id.task_preview).text = ""
+                understandingRequest = true
+                try {
+                    intentChoices.ask(question)
+                } finally {
+                    understandingRequest = false
+                }
+            }
+        }
 
     private suspend fun understandRequest(
         request: String,
@@ -982,6 +1006,9 @@ class TaskActivity : Activity() {
                 }
             }
         understandingRequest = false
+        if (result == null && generation == preparationGeneration) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.intent_planning_stopped)
+        }
         return result
     }
 
@@ -992,6 +1019,7 @@ class TaskActivity : Activity() {
         retry: Boolean = false,
     ) {
         val generation = preparationGeneration
+        if (clarifyProposedPlan(steps)) return
         val appPreparation =
             try {
                 TaskAppPlanning(this).resolve(steps)
@@ -1007,7 +1035,7 @@ class TaskActivity : Activity() {
         findViewById<TextView>(R.id.task_preview).text =
             getString(
                 R.string.task_preview_with_permissions,
-                understoodPreview,
+                understoodFor(resolved),
                 TaskPlanPreview.describe(resolved),
                 permissionPreview(resolved),
             )
@@ -1025,6 +1053,31 @@ class TaskActivity : Activity() {
         }
     }
 
+    /** Defense for debug/fallback proposals too: discard the proposal, ask, then plan from the owner's answer. */
+    private suspend fun clarifyProposedPlan(steps: List<ai.eqo.core.agent.LoopStep>): Boolean {
+        val question =
+            ai.eqo.core.agent.RegistryPlanVocabulary
+                .clarification(steps) ?: return false
+        val generation = preparationGeneration
+        findViewById<TextView>(R.id.task_preview).text = ""
+        understandingRequest = true
+        val answer = intentChoices.ask(question)
+        understandingRequest = false
+        val current = generation == preparationGeneration && !isFinishing && !isDestroyed
+        if (answer != null && current) {
+            val request = findViewById<EditText>(R.id.task_request).text.toString()
+            makePlan("$request\nUser clarification: $answer")
+        }
+        return true
+    }
+
+    private fun understoodFor(steps: List<ai.eqo.core.agent.LoopStep>): String =
+        getString(
+            R.string.intent_understood_preview,
+            TaskPlanPreview.summary(steps, purchasePreview),
+            understoodPreview,
+        )
+
     private fun showPlan(
         plan: ApprovedTaskPlan,
         recipientNames: Map<String, String> = emptyMap(),
@@ -1032,6 +1085,12 @@ class TaskActivity : Activity() {
         retry: Boolean = false,
     ) {
         val steps = plan.steps()
+        val question =
+            ai.eqo.core.agent.RegistryPlanVocabulary
+                .clarification(steps)
+        require(question == null) {
+            "Clarify the task before approval"
+        }
         renderSteps(steps.map { StepProgress(it.stepId, it.action.name, StepProgressState.PENDING) })
         val notice =
             if (missing.isEmpty()) {
@@ -1043,7 +1102,7 @@ class TaskActivity : Activity() {
             }
         val retryNotice = if (retry) getString(R.string.task_retry_notice) + "\n\n" else ""
         val preview =
-            understoodPreview + retryNotice + notice +
+            understoodFor(steps) + retryNotice + notice +
                 TaskPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
