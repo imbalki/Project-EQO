@@ -18,6 +18,7 @@ class FakeNode(
     override val packageName: CharSequence? = null,
     override val className: CharSequence = "android.widget.FrameLayout",
     override val hintText: CharSequence? = null,
+    override val isVisibleToUser: Boolean = true,
 ) : A11yNode {
     private val children = mutableListOf<A11yNode>()
 
