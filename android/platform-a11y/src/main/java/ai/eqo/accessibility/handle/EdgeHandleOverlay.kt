@@ -43,6 +43,9 @@ class EdgeHandleOverlay(
     private var foregroundPackage = context.packageName
     private var probeAvailable = false
     private var pendingLongPress: Runnable? = null
+    private var recordingExpanded = false
+    private var renderedRecording = false
+    private var recordingStatusView: TextView? = null
     private val listener =
         SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
             handler.post {
@@ -65,7 +68,25 @@ class EdgeHandleOverlay(
         }
 
     init {
+        EdgeHandleFeatures.recordingChanged = {
+            handler.post {
+                if (renderedRecording && EdgeHandleFeatures.recordingActive && view != null) {
+                    recordingStatusView?.text = EdgeHandleFeatures.recordingMessage
+                } else {
+                    renderedRecording = EdgeHandleFeatures.recordingActive
+                    if (!renderedRecording) recordingExpanded = false
+                    removeWindow()
+                    refresh()
+                }
+            }
+        }
         preferences.preferences.registerOnSharedPreferenceChangeListener(listener)
+        EdgeHandleFeatures.screenshotChanged = {
+            handler.post {
+                removeWindow()
+                refresh()
+            }
+        }
         EdgeHandleFeatures.dictationChanged = {
             // A previous success must never expire a newer recording or recovery card.
             handler.removeCallbacks(resultTask)
@@ -84,6 +105,7 @@ class EdgeHandleOverlay(
     fun updateForeground(packageName: String) {
         if (packageName == foregroundPackage) return
         foregroundPackage = packageName
+        EdgeHandleFeatures.screenshotDismiss()
         presentation.foregroundChanged()
         dismissResult()
         closePanel()
@@ -106,7 +128,9 @@ class EdgeHandleOverlay(
     }
 
     private fun render() {
-        if (!preferences.enabled || !probeAvailable || hidden()) {
+        if (EdgeHandleFeatures.screenshotHidden) {
+            EdgeHandleFeatures.screenshotOverlayRemoved = removeWindow()
+        } else if (!preferences.enabled || !probeAvailable || hidden()) {
             removeWindow()
         } else if (view == null) {
             showHandle()
@@ -116,6 +140,10 @@ class EdgeHandleOverlay(
     }
 
     fun destroy() {
+        if (EdgeHandleFeatures.recordingActive) EdgeHandleFeatures.recordingStop(context)
+        EdgeHandleFeatures.recordingChanged = {}
+        EdgeHandleFeatures.screenshotDismiss()
+        EdgeHandleFeatures.screenshotChanged = {}
         EdgeHandleFeatures.dictationChanged = {}
         EdgeHandleFeatures.dictationCancel()
         preferences.preferences.unregisterOnSharedPreferenceChangeListener(listener)
@@ -151,13 +179,20 @@ class EdgeHandleOverlay(
                 softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
             }
 
+    // Mutually exclusive tiny marker and compact result presentations.
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun showHandle() {
         val (width, height) = dimensions()
         val size = dp(TOUCH_WIDTH_DP)
         val micEnabled = EdgeHandleFeatures.registry?.enabled(EdgeHandleFeatures.DICTATION_ID) == true
         val hasStatus = micEnabled && EdgeHandleFeatures.dictationStatus != 0
+        val hasScreenshot = EdgeHandleFeatures.screenshotStatus != 0
+        val hasRecording = EdgeHandleFeatures.recordingMessage.isNotEmpty()
         val handleWidth =
             when {
+                EdgeHandleFeatures.recordingActive && !recordingExpanded -> size
+                hasRecording -> dp(PANEL_WIDTH_DP)
+                hasScreenshot -> dp(PANEL_WIDTH_DP)
                 !hasStatus -> size
                 EdgeHandleFeatures.dictationInserted -> dp(PILL_WIDTH_DP)
                 else -> dp(PANEL_WIDTH_DP)
@@ -182,8 +217,16 @@ class EdgeHandleOverlay(
         val column = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         val grip = FrameLayout(context)
         grip.addView(bar, FrameLayout.LayoutParams(dp(BAR_WIDTH_DP), dp(BAR_HEIGHT_DP), Gravity.CENTER))
-        column.addView(grip, LinearLayout.LayoutParams(size, dp(TOUCH_HEIGHT_DP)))
-        if (hasStatus) addDictationControls(column)
+        if (!EdgeHandleFeatures.recordingActive) {
+            column.addView(grip, LinearLayout.LayoutParams(size, dp(TOUCH_HEIGHT_DP)))
+        }
+        if (hasRecording) {
+            addRecordingControls(column)
+        } else if (hasScreenshot) {
+            addScreenshotControls(column)
+        } else if (hasStatus) {
+            addDictationControls(column)
+        }
         handle.addView(column)
         handle.setOnClickListener { showPanel() }
         handle.setOnLongClickListener {
@@ -198,6 +241,24 @@ class EdgeHandleOverlay(
                 .show()
             preferences.hintShown = true
         }
+    }
+
+    private fun addScreenshotControls(column: LinearLayout) {
+        column.addView(
+            TextView(context).apply {
+                setText(EdgeHandleFeatures.screenshotStatus)
+                textSize = RESULT_TEXT_SP
+                setBackgroundColor(Color.WHITE)
+                setTextColor(Color.BLACK)
+                accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            },
+        )
+        val actions = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+        if (EdgeHandleFeatures.screenshotShareAvailable) {
+            addButton(actions, R.string.edge_screenshot_share) { EdgeHandleFeatures.screenshotShare(context) }
+        }
+        addButton(actions, R.string.edge_screenshot_done) { EdgeHandleFeatures.screenshotDismiss() }
+        column.addView(actions)
     }
 
     private fun addDictationControls(column: LinearLayout) {
@@ -217,6 +278,23 @@ class EdgeHandleOverlay(
                 addResultActions(column)
             }
         }
+    }
+
+    private fun addRecordingControls(column: LinearLayout) {
+        recordingStatusView = addRecordingHandleCard(column, recordingExpanded, ::expandRecording)
+    }
+
+    private fun expandRecording() {
+        recordingExpanded = true
+        removeWindow()
+        refresh()
+        handler.postDelayed({
+            if (EdgeHandleFeatures.recordingActive) {
+                recordingExpanded = false
+                removeWindow()
+                refresh()
+            }
+        }, HandlePresentation.COLLAPSE_MS)
     }
 
     private fun addResultText(
@@ -355,8 +433,10 @@ class EdgeHandleOverlay(
     }
 
     @android.annotation.SuppressLint("RtlHardcoded") // Keep the panel at the user's physical dock edge in RTL too.
+    @Suppress("CyclomaticComplexMethod") // Shortcut rows share one guarded panel lifecycle.
     private fun showPanel(requestPause: Boolean = true) {
-        if (!preferences.enabled || !probeAvailable || hidden()) return
+        val unavailable = !preferences.enabled || !probeAvailable || hidden()
+        if (unavailable || EdgeHandleFeatures.screenshotHidden) return
         if (!panelReady(requestPause)) return
         guard.panelOpen = true
         presentation.open()
@@ -598,6 +678,7 @@ class EdgeHandleOverlay(
         const val RESULT_PADDING_DP = 6
         const val RESULT_TEXT_SP = 13f
         const val STATUS_LINES = 3
+
         const val HANDLE_COLOR = -1773116276 // ARGB 150,80,100,140
     }
 }

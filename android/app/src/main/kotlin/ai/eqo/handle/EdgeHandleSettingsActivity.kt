@@ -6,10 +6,16 @@ import ai.eqo.accessibility.handle.EdgeHandleFeatures
 import ai.eqo.accessibility.handle.HandlePreferences
 import ai.eqo.accessibility.handle.HandleShortcut
 import ai.eqo.accessibility.handle.HandleShortcutRegistry
+import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.InputType
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Switch
@@ -21,6 +27,84 @@ class EdgeHandleSettingsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         render()
+        if (intent.getBooleanExtra(HandleRecording.START_RECORDING, false)) {
+            intent.removeExtra(HandleRecording.START_RECORDING)
+            confirmRecording()
+        }
+    }
+
+    private fun confirmRecording() {
+        AlertDialog
+            .Builder(this)
+            .setTitle(ai.eqo.platform.R.string.edge_recording_button)
+            .setMessage(R.string.recording_start_explanation)
+            .setNegativeButton(android.R.string.cancel) { _, _ -> finish() }
+            .setPositiveButton(R.string.recording_start) { _, _ ->
+                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_PERMISSION)
+                } else if (!isFinishing && window.decorView.isShown) {
+                    RecordingService.visibleStartApproved = true
+                    RecordingService.startFinished = {
+                        moveTaskToBack(true)
+                        finish()
+                    }
+                    runCatching { startForegroundService(Intent(this, RecordingService::class.java)) }
+                        .onFailure {
+                            RecordingService.visibleStartApproved = false
+                            RecordingService.startFinished = null
+                            HandleRecording.message(getString(R.string.recording_refused))
+                        }
+                }
+            }.show()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        results: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, results)
+        if (requestCode == RECORD_PERMISSION && results.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+            confirmRecording()
+        }
+    }
+
+    override fun onPause() {
+        RecordingService.visibleStartApproved = false
+        RecordingService.startFinished = null
+        super.onPause()
+    }
+
+    private fun addRecordingLimit(column: LinearLayout) {
+        column.addView(TextView(this).apply { setText(R.string.recording_limit) })
+        val input =
+            EditText(this).apply {
+                inputType = InputType.TYPE_CLASS_NUMBER
+                setHint(R.string.recording_limit_hint)
+                setText(preferences.recordingLimit)
+            }
+        column.addView(input)
+        column.addView(
+            Button(this).apply {
+                setText(R.string.recording_limit_save)
+                setOnClickListener {
+                    if (RecordingLimit.parse(input.text.toString()) == null) {
+                        input.error = getString(R.string.recording_limit_invalid)
+                    } else {
+                        preferences.recordingLimit = input.text.toString().trim()
+                    }
+                }
+            },
+        )
+        column.addView(
+            Button(this).apply {
+                setText(R.string.recording_no_limit)
+                setOnClickListener {
+                    preferences.recordingLimit = ""
+                    input.setText("")
+                }
+            },
+        )
     }
 
     private fun render() {
@@ -41,6 +125,7 @@ class EdgeHandleSettingsActivity : Activity() {
         registry.ordered().forEachIndexed { index, shortcut ->
             addShortcut(column, registry, shortcut, index)
         }
+        addRecordingLimit(column)
         column.addView(
             Button(this).apply {
                 setText(R.string.handle_reset)
@@ -122,5 +207,6 @@ class EdgeHandleSettingsActivity : Activity() {
 
     private companion object {
         const val PAGE_PADDING_DP = 16
+        const val RECORD_PERMISSION = 704
     }
 }

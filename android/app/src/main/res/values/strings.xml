@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="recording_start_explanation">Save an audio note locally. EQO returns to your other app after starting. Tap the red dot to show Stop, or use Stop in the quiet recording notification. No audio uploads unless you choose Transcribe. Transcription supports notes up to 90 seconds only.</string>
+    <string name="recording_start">Start recording</string>
+    <string name="recording_stop">Stop</string>
+    <string name="recording_notification">EQO recording</string>
+    <string name="recording_notification_required">Enable EQO notifications and its Audio notes channel in Android Settings before recording. A visible recording indicator is required.</string>
+    <string name="recording_channel">Audio notes</string>
+    <string name="recording_limit">Recording limit</string>
+    <string name="recording_limit_hint">Minutes (0 means No limit)</string>
+    <string name="recording_limit_save">Save recording limit</string>
+    <string name="recording_limit_invalid">Type a positive whole number of minutes or choose No limit.</string>
+    <string name="recording_no_limit">No limit</string>
+    <string name="recording_minutes">%1$d min</string>
+    <string name="recording_status">Recording – tap to stop. %1$d s elapsed · %2$s</string>
+    <string name="recording_saved">Saved %1$s, %2$d s.</string>
+    <string name="recording_refused">Cannot record. Check microphone permission, end calls or other recordings, and stop paused EQO tasks first.</string>
+    <string name="recording_low_storage">Storage is low. Free some space before recording.</string>
+    <string name="recording_saved_low_storage">Saved %1$s, %2$d s. Stopped because storage is low.</string>
+    <string name="recording_save_failed">Recording could not be finalized. Check storage. Any existing local audio was not deleted.</string>
+    <string name="recording_transcription_limit">Transcription supports recordings up to 90 seconds only. This longer note remains saved locally; you can share the full audio.</string>
+    <string name="recording_transcription_failed">Could not transcribe. Check AI voice settings and connection. Your audio remains saved locally.</string>
+    <string name="recording_share_failed">Cannot open a share app. Your audio remains saved locally.</string>
+    <string name="recording_keep_busy">Stop the current EQO task before saving a Keep note. Your transcript is still here.</string>
     <string name="task_result_format">Result: %1$s</string>
     <string name="intent_clarification_hint">Type what you meant</string>
     <string name="intent_clarification_answer">Use this answer</string>

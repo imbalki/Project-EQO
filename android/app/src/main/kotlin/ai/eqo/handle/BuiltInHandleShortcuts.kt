@@ -102,5 +102,19 @@ internal fun createHandleRegistry(
                 .tap(it)
         },
     )
+    registry.register(
+        BuiltInHandleShortcut(
+            ai.eqo.accessibility.handle.EdgeHandleFeatures.RECORDING_ID,
+            ai.eqo.platform.R.string.edge_recording_button,
+            R.drawable.ic_record_note,
+        ) { HandleRecording.tap(it) },
+    )
+    registry.register(
+        BuiltInHandleShortcut(
+            ai.eqo.accessibility.handle.EdgeHandleFeatures.SCREENSHOT_ID,
+            ai.eqo.platform.R.string.edge_screenshot_button,
+            android.R.drawable.ic_menu_camera,
+        ) { HandleScreenshot.tap(it) },
+    )
     return registry
 }

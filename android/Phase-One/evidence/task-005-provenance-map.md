@@ -1,5 +1,21 @@
 # TASK-005 per-file provenance map
 
+## Handle screenshot (t_0c715719)
+
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/RecordingHandleCard.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Tiny recording marker and compact audio/transcript card rendering |
+
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/RecordingStateTest.kt` | EQO-NEW | `ai.eqo.handle` | Pure recording lifecycle, typed limits and bounded transcription tests |
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleRecordingTest.kt` | EQO-NEW | `ai.eqo.handle` | MediaStore, card, consent, visible start and quiet notification tests |
+
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/RecordingState.kt` | EQO-NEW | `ai.eqo.handle` | Pure audio-note limit and lifecycle policy |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/RecordingStore.kt` | EQO-NEW | `ai.eqo.handle` | Durable AAC MediaStore transaction |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/RecordingWav.kt` | EQO-NEW | `ai.eqo.handle` | Bounded local AAC to WAV conversion for existing voice provider |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/RecordingService.kt` | EQO-NEW | `ai.eqo.handle` | Visible-user-started microphone FGS and local note lifetime |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/HandleRecording.kt` | EQO-NEW | `ai.eqo.handle` | Explicit audio-note card actions and consent-checked transcription |
+
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/HandleScreenshot.kt` | EQO-NEW | `ai.eqo.handle` | User-only gated capture, local MediaStore publish and explicit share |
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleScreenshotTest.kt` | EQO-NEW | `ai.eqo.handle` | Fake capture gates, publication rollback, compact card and settings tests |
+
 ## Close-only shopping popup recovery (t_025d5eb1)
 
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/ShoppingPopupGuard.kt` | EQO-NEW | `ai.eqo.actions.impl` | Run-scoped bounded popup recovery with existing gated actions |
@@ -11,6 +27,7 @@
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/NoteClarifications.kt` | EQO-NEW | `ai.eqo.core.agent` | Ephemeral note-content and app-choice clarification retention |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/NoteClarificationsTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Session-level note clarification and native action regressions |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/KeepPlanningTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Keep note slots, unsafe model editor repair and search-tail regressions |
+
 
 ## Plan preview and clarification polish (t_e080f2ff)
 

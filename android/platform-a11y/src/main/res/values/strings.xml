@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="edge_recording_button">Record</string>
+    <string name="edge_recording_dot">●</string>
+    <string name="edge_recording_stop">Recording – tap to stop</string>
+    <string name="edge_recording_keep">Save as Keep note</string>
+    <string name="edge_recording_transcribe">Transcribe</string>
     <string name="eqo_accessibility_service_label">EQO</string>
     <string name="eqo_accessibility_service_description">EQO observes the screen, taps, scrolls and types only to carry out tasks you ask for. The moment you touch the screen during a task, EQO pauses and hands control back to you. EQO never grants itself this permission: you turn it on in Android\'s Accessibility settings.</string>
     <string name="edge_handle_title">EQO edge handle</string>
@@ -13,4 +18,11 @@
     <string name="edge_dictation_inserted">Inserted</string>
     <string name="edge_dictation_copy">Copy</string>
     <string name="edge_dictation_dismiss">Dismiss</string>
+    <string name="edge_screenshot_button">Screenshot</string>
+    <string name="edge_screenshot_saved">Screenshot saved</string>
+    <string name="edge_screenshot_refused">Cannot capture this screen. Protected, password, EQO or changed screens and paused tasks are refused.</string>
+    <string name="edge_screenshot_failed">Screenshot could not be saved. Check free storage and try again.</string>
+    <string name="edge_screenshot_share_failed">Cannot open a share app. Your screenshot is still saved in Pictures/EQO.</string>
+    <string name="edge_screenshot_share">Share</string>
+    <string name="edge_screenshot_done">Done</string>
 </resources>

@@ -19,6 +19,10 @@ class HandlePreferences(
         get() = preferences.getBoolean("hint_shown", false)
         set(value) = preferences.edit { putBoolean("hint_shown", value) }
 
+    var recordingLimit: String
+        get() = preferences.getString("recording_limit", "").orEmpty()
+        set(value) = preferences.edit { putString("recording_limit", value) }
+
     var rightEdge: Boolean
         get() = preferences.getBoolean("right_edge", true)
         set(value) = preferences.edit { putBoolean("right_edge", value) }
@@ -71,6 +75,27 @@ class HandlePreferences(
 /** Application installs feature registrations; service and settings render the same registry. */
 object EdgeHandleFeatures {
     const val DICTATION_ID = "dictation"
+    const val SCREENSHOT_ID = "screenshot"
+    const val RECORDING_ID = "recording"
+    var recordingActive = false
+    var recordingMessage = ""
+    var recordingHasAudio = false
+    var recordingHasTranscript = false
+    var recordingChanged: () -> Unit = {}
+    var recordingTap: (Context) -> Unit = {}
+    var recordingStop: (Context) -> Unit = {}
+    var recordingShare: (Context) -> Unit = {}
+    var recordingTranscribe: (Context) -> Unit = {}
+    var recordingCopy: (Context) -> Unit = {}
+    var recordingKeep: (Context) -> Unit = {}
+    var recordingDismiss: () -> Unit = {}
+    var screenshotChanged: () -> Unit = {}
+    var screenshotShare: (Context) -> Unit = {}
+    var screenshotDismiss: () -> Unit = {}
+    var screenshotHidden: Boolean = false
+    var screenshotOverlayRemoved: Boolean = false
+    var screenshotStatus: Int = 0
+    var screenshotShareAvailable: Boolean = false
     var dictationTap: (Context) -> Unit = {}
     var dictationCancel: () -> Unit = {}
     var dictationSettings: (Context) -> Unit = {}
