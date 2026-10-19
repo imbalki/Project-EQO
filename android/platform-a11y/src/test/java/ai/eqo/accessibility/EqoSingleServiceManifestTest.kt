@@ -101,6 +101,23 @@ class EqoSingleServiceManifestTest {
     }
 
     @Test
+    fun bothServiceConfigsSubscribeToFocusAndWindowPlacementChanges() {
+        listOf("xml", "xml-v31").forEach { variant ->
+            val config = File(androidRoot(), "platform-a11y/src/main/res/$variant/accessibility_service_config.xml")
+            val element =
+                DocumentBuilderFactory
+                    .newInstance()
+                    .newDocumentBuilder()
+                    .parse(config)
+                    .documentElement
+            val events = element.getAttribute("android:accessibilityEventTypes").split('|')
+            listOf("typeViewFocused", "typeWindowsChanged").forEach { event ->
+                assertTrue("$variant must subscribe to $event", event in events)
+            }
+        }
+    }
+
+    @Test
     fun theServiceConfigTakesOverRelevantEventsAndCanGesture() {
         val root = androidRoot()
         val config = File(root, "platform-a11y/src/main/res/xml/accessibility_service_config.xml")

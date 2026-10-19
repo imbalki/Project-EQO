@@ -5,6 +5,12 @@
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/ShoppingPopupGuard.kt` | EQO-NEW | `ai.eqo.actions.impl` | Run-scoped bounded popup recovery with existing gated actions |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/ShoppingPopupGuardTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | Fake recovery, retry, handoff and dismissal budget regressions |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/ShoppingPopupCloseTest.kt` | EQO-NEW | `ai.eqo.accessibility` | Fake-tree close allowlist, payment denial, gates and product binding |
+## Keep note routing and search plan hygiene (t_b4152024)
+
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AppPlanHygiene.kt` | EQO-NEW | `ai.eqo.core.agent` | Keep intent normalization, editor refusal and submitted-search cleanup |
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/NoteClarifications.kt` | EQO-NEW | `ai.eqo.core.agent` | Ephemeral note-content and app-choice clarification retention |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/NoteClarificationsTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Session-level note clarification and native action regressions |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/KeepPlanningTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Keep note slots, unsafe model editor repair and search-tail regressions |
 
 ## Plan preview and clarification polish (t_e080f2ff)
 
@@ -102,6 +108,9 @@
 
 ## Edge-handle additions (t_a3fa16d0)
 
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandlePresentation.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Ephemeral collapse/result deadlines and input-safe placement |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/handle/HandlePresentationTest.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Fake-clock collapse/result/hide and input-safe placement regressions |
+
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleShortcutRegistry.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Internal shortcut API and fake-store-testable choice/order |
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandlePreferences.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | App-private choices, placement and hidden apps |
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/HandleWindowGuard.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Overlay coordinate and own-window guard |
@@ -111,6 +120,7 @@
 | :app | `android/app/src/main/kotlin/ai/eqo/handle/BuiltInHandleShortcuts.kt` | EQO-NEW | `ai.eqo.handle` | Existing controller Pause/Stop and app/task entries |
 | :app | `android/app/src/main/kotlin/ai/eqo/handle/EdgeHandleSettingsActivity.kt` | EQO-NEW | `ai.eqo.handle` | Opt-in, shortcut choice, Up/Down, reset and restore |
 | :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleFeaturesTest.kt` | EQO-NEW | `ai.eqo.handle` | Preference, focus and real public controller regressions |
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/HandlePlacementDeliveryTest.kt` | EQO-NEW | `ai.eqo.handle` | Service event delivery and real drag input-exclusion regressions |
 ## Explain screen additions (t_699c0abc)
 
 | :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSession.kt` | EQO-NEW | `ai.eqo.explain` | Read-only explanation session, privacy bounds and protected-screen policy seam |

@@ -78,6 +78,8 @@ class IntentPlanningTest {
         runTest {
             val uncertain =
                 note.copy(
+                    action = "open_app",
+                    params = emptyMap(),
                     confidence = 0.2,
                     question = "Which notes app?",
                     options = listOf("Keep", "Other"),
@@ -85,7 +87,7 @@ class IntentPlanningTest {
             val fake = IntentFixtureProvider(List(3) { json(uncertain) })
             var questions = 0
             val result =
-                session(fake).prepare("save a note") {
+                session(fake).prepare("open a tool") {
                     questions++
                     "Keep"
                 }!!
