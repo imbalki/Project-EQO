@@ -76,26 +76,30 @@ internal object BrowserTarget {
             }
         }
 
-    /**
-     * WEB_SEARCH in a named browser: the search page opens directly in that browser's package. Null when no browser
-     * was named, so the caller keeps the system default.
-     */
+    /** WEB_SEARCH opens the exact query URL, never the omnibox or a history/autocomplete suggestion. */
     fun search(
         launcher: GatedIntentLauncher,
         params: Map<String, String>,
         resolver: LaunchableAppResolver,
         online: Boolean,
-    ): ActionResult? {
+    ): ActionResult {
         val browser = choose(params, resolver)
+        val url =
+            WebTargets.SEARCH_BASE
+                .toUri()
+                .buildUpon()
+                .appendQueryParameter("q", params.getValue("query"))
+                .build()
+                .toString()
         return when {
-            browser is BrowserChoice.Default -> null
             browser is BrowserChoice.Unavailable -> ActionResult.Failure(browser.reason)
             !online -> ActionResult.Failure("No internet connection is available; no search was opened.")
             else ->
-                open(launcher, WebTargets.searchUrl(params.getValue("query")), browser)
+                open(launcher, url, browser)
                     ?.let { ActionResult.Failure(it) }
-                    ?: ActionResult.UserActionRequired(
-                        "Search opened. Review the results there; EQO has not retrieved or verified them.",
+                    // startActivity resolves and starts the intent or throws; this verifies opening, not page content.
+                    ?: ActionResult.Success(
+                        mapOf("message" to "Search opened. Results were not retrieved or verified by EQO."),
                     )
         }
     }
