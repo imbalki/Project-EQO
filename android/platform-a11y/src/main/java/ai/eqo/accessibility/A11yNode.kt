@@ -48,6 +48,8 @@ interface A11yNode {
 
     val isFocused: Boolean get() = false
 
+    val isVisibleToUser: Boolean get() = true
+
     val isScrollable: Boolean
 
     val childCount: Int
@@ -99,6 +101,8 @@ class AccessibilityNodeAdapter(
     override val isEditable: Boolean get() = node.isEditable
 
     override val isFocused: Boolean get() = node.isFocused
+
+    override val isVisibleToUser: Boolean get() = node.isVisibleToUser
 
     override val isScrollable: Boolean get() = node.isScrollable
 

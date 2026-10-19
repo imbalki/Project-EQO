@@ -99,16 +99,58 @@ class EqoAutomation(
         }
 
     /** Close-only recovery: retain the selected product and use the normal safety/takeover gate. */
-    fun dismissShoppingPopup(): A11yResult =
+    fun dismissShoppingPopup(target: String = ""): A11yResult =
         runAction {
-            ownWindowBlocked("shopping popup") ?: closeShoppingPopup()
+            ownWindowBlocked("shopping popup") ?: closeShoppingPopup(target)
         }
 
-    private fun closeShoppingPopup(): A11yResult {
+    private fun closeShoppingPopup(target: String): A11yResult {
         if (isSecureWindow()) return A11yResult.failure(A11yError.SecureWindow)
+        val root = rootProvider()
+        val modal = root?.takeUnless { shoppingTargetPresent(it, target) }?.let(::shoppingModal)
+        return if (modal == null) {
+            A11yResult.failure(A11yError.NodeNotFound(NO_SHOPPING_POPUP))
+        } else {
+            closeShoppingModal(modal)
+        }
+    }
+
+    /** Inline recommendations and their X are not modal evidence. Leave an uncertain screen alone. */
+    private fun shoppingModal(root: A11yNode): A11yNode? {
+        val observedClose =
+            NodeTreeSearch.findFirst(root) { node ->
+                node.isVisibleToUser && node.viewIdResourceName.orEmpty().substringAfterLast('/') == "bottomSheetClose"
+            }
+        return observedClose ?: NodeTreeSearch.findFirst(root) { node ->
+            val id = node.viewIdResourceName.orEmpty().substringAfterLast('/')
+            node.isVisibleToUser &&
+                (
+                    id in setOf("design_bottom_sheet", "bottomSheet") ||
+                        node.className?.toString()?.endsWith("Dialog") == true
+                )
+        }
+    }
+
+    private fun shoppingTargetPresent(
+        root: A11yNode,
+        target: String,
+    ): Boolean {
+        if (target.equals(ShoppingPlans.INCREASE, ignoreCase = true)) {
+            return shoppingSelection?.increase(root, ::safeSearchInput) != null
+        }
+        val labels = target.split(',').map { it.removePrefix("exact:") }.filter(String::isNotBlank)
+        return NodeTreeSearch.findFirst(root) { node ->
+            node.isVisibleToUser &&
+                !node.isPassword &&
+                labels.any { NodeTreeSearch.matchesExactly(node, it) } &&
+                NodeTreeSearch.clickableSelfOrAncestor(node) != null
+        } != null
+    }
+
+    private fun closeShoppingModal(modal: A11yNode): A11yResult {
         val closeLabels = setOf("close", "dismiss", "not now", "skip", "x")
         val close =
-            rootProvider()?.let { root ->
+            modal.let { root ->
                 NodeTreeSearch.findFirst(root) { node ->
                     val identified =
                         node.viewIdResourceName?.endsWith("bottomSheetClose") == true ||
@@ -116,6 +158,7 @@ class EqoAutomation(
                                 it?.toString()?.lowercase() in closeLabels
                             }
                     node.isClickable &&
+                        node.isVisibleToUser &&
                         !node.isPassword &&
                         !node.isEditable &&
                         identified &&
@@ -298,6 +341,7 @@ class EqoAutomation(
         val hit =
             NodeTreeSearch.findFirst(root) { node ->
                 !node.isPassword &&
+                    node.isVisibleToUser &&
                     safeSearchInput(node) &&
                     labels.any { NodeTreeSearch.matchesExactly(node, it) } &&
                     NodeTreeSearch.clickableSelfOrAncestor(node)?.let(::safeSearchInput) == true
@@ -343,7 +387,8 @@ class EqoAutomation(
             else -> null
         }
 
-    private companion object {
+    companion object {
+        const val NO_SHOPPING_POPUP = "no blocking shopping popup"
         private val POPUP_COMMERCE = Regex("\\b(?:buy|apply)\\b", RegexOption.IGNORE_CASE)
         private val VIEW_ID_LOG_SAFE = Regex("[A-Za-z0-9_.:/]{1,100}")
 
@@ -463,6 +508,7 @@ private data class ShoppingSelection(
     val path: List<Int>,
     val label: String,
     val packageName: String?,
+    val addPath: List<Int>,
 ) {
     fun increase(
         root: A11yNode,
@@ -472,9 +518,29 @@ private data class ShoppingSelection(
         val entries = row?.let(::nodes).orEmpty()
         val matches = entries.map { it.second }
         val controls = entriesForControl(row, INCREASE)
+        val slot = addPath.fold(row) { node, index -> node?.childAt(index) }
+        val slotLabels =
+            slot
+                ?.let(::nodes)
+                .orEmpty()
+                .map { it.second }
+                .let(::productLabels)
+        // Inline recommendations can add labels inside the same bound row. Retry only the exact
+        // description, never an arbitrary + elsewhere on the screen or another product's stepper.
+        val describedIncrease =
+            controls.singleOrNull()?.let { (controlPath, control) ->
+                controlPath.take(addPath.size) == addPath &&
+                    slot != null &&
+                    slotLabels.isEmpty() &&
+                    control.contentDescription
+                        ?.toString()
+                        ?.trim()
+                        .equals("increase quantity", ignoreCase = true)
+            } == true
+        val labels = productLabels(matches)
         val sameProduct =
             root.packageName?.toString() == packageName &&
-                productLabels(matches) == listOf(label) &&
+                (labels == listOf(label) || (describedIncrease && label in labels)) &&
                 uniqueLabel(root, label)
         return controls
             .singleOrNull()
@@ -523,7 +589,12 @@ private data class ShoppingSelection(
                         boundAdd != null,
                     ).all { it }
                 if (unambiguous) {
-                    ShoppingSelection(path, requireNotNull(name), root.packageName?.toString())
+                    ShoppingSelection(
+                        path,
+                        requireNotNull(name),
+                        root.packageName?.toString(),
+                        requireNotNull(addPath),
+                    )
                 } else {
                     null
                 }
@@ -533,7 +604,7 @@ private data class ShoppingSelection(
         private fun isControl(
             node: A11yNode,
             labels: List<String>,
-        ): Boolean = !node.isPassword && labels.any { NodeTreeSearch.matchesExactly(node, it) }
+        ): Boolean = !node.isPassword && node.isVisibleToUser && labels.any { NodeTreeSearch.matchesExactly(node, it) }
 
         private fun entriesForControl(
             row: A11yNode?,
