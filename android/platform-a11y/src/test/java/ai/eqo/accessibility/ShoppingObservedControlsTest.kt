@@ -5,8 +5,62 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.w3c.dom.Element
+import javax.xml.parsers.DocumentBuilderFactory
 
 class ShoppingObservedControlsTest {
+    @Test fun capturedZeptoAttributesMatchWithoutTextOrMinimumSize() {
+        val nodes = capturedNodes()
+        assertEquals(4, nodes.size)
+        assertTrue(NodeTreeSearch.matchesExactly(nodes[0], "decrease quantity"))
+        assertTrue(NodeTreeSearch.matchesExactly(nodes[1], "increase quantity"))
+        assertEquals("", nodes[1].text)
+        assertEquals("...-plus", nodes[1].viewIdResourceName)
+        for (add in nodes.drop(2)) {
+            assertTrue(NodeTreeSearch.matchesExactly(add, "Add to cart"))
+            val runner = EqoAutomation({ add }, { EqoAutomation.ServiceState.AVAILABLE }, TakeoverDetector())
+            assertTrue(runner.tap("exact:Add,exact:ADD,exact:Add to cart").isSuccess)
+            assertEquals(1, add.clickCount)
+        }
+    }
+
+    @Test fun capturedIncreaseWithoutProductBindingIsNotAnArbitraryFallback() {
+        // The capture omits ancestors. Matching attributes alone cannot establish which product was added.
+        val plus = capturedNodes()[1]
+        val runner = EqoAutomation({ plus }, { EqoAutomation.ServiceState.AVAILABLE }, TakeoverDetector())
+        assertTrue(NodeTreeSearch.matchesExactly(plus, "increase quantity"))
+        val result = runner.tap(ai.eqo.core.agent.ShoppingPlans.INCREASE)
+        assertTrue(result is A11yResult.Failure && result.error is A11yError.NodeNotFound)
+        assertEquals(0, plus.clickCount)
+    }
+
+    private fun capturedNodes(): List<FakeNode> {
+        // Preserve the provided opening tags and abbreviated IDs verbatim in the resource.
+        // Only close tags here to make a parseable document; do not invent missing parents or UUIDs.
+        val tags =
+            requireNotNull(javaClass.getResourceAsStream("/shopping/zepto-stepper-nodes.txt"))
+                .bufferedReader()
+                .useLines { lines -> lines.joinToString("") { it.removeSuffix(">") + "/>" } }
+        val document =
+            DocumentBuilderFactory
+                .newInstance()
+                .newDocumentBuilder()
+                .parse(("<nodes>" + tags + "</nodes>").byteInputStream())
+        val nodes = document.getElementsByTagName("node")
+        return (0 until nodes.length).map { index ->
+            val node = nodes.item(index) as Element
+            FakeNode(
+                text = node.getAttribute("text"),
+                contentDescription = node.getAttribute("content-desc"),
+                viewIdResourceName = node.getAttribute("resource-id"),
+                className = node.getAttribute("class"),
+                packageName = node.getAttribute("package"),
+                isClickable = node.getAttribute("clickable").toBoolean(),
+                isPassword = node.getAttribute("password").toBoolean(),
+            )
+        }
+    }
+
     @Test fun stepperIdsNeverExemptPaymentLabelsAncestorsOrUnobservedIds() {
         val packageName = "com.zeptoconsumerapp"
         val addId = "$packageName:id/product-card-add-button00000000-0000-0000-0000-000000000001"
