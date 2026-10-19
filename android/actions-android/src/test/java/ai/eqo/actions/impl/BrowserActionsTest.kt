@@ -134,13 +134,13 @@ class BrowserActionsTest {
     fun `a web search in a named browser is one direct intent`() =
         runTest(timeout = 15.seconds) {
             val result = search(mapOf("query" to "cats & dogs", "browser" to "Firefox"))
-            assertTrue(result is ActionResult.UserActionRequired)
+            assertTrue(result is ActionResult.Success)
             val intent = started()
             assertEquals("example.firefox", intent.`package`)
             assertEquals("cats & dogs", intent.data?.getQueryParameter("q"))
             assertEquals("www.google.com", intent.data?.host)
             // Without a browser the search keeps going to the system default.
-            assertTrue(search(mapOf("query" to "cats")) is ActionResult.UserActionRequired)
+            assertTrue(search(mapOf("query" to "cats")) is ActionResult.Success)
             assertNull(started().`package`)
             assertFalse(search(mapOf("query" to "cats", "browser" to "Vivaldi")).success)
             online.connected = false

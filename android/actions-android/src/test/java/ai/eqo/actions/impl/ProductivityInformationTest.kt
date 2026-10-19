@@ -191,7 +191,13 @@ class ProductivityInformationTest {
                     "SUMMARIZE_URL" to mapOf("url" to "https://example.com/page"),
                 )
             for ((action, params) in samples) {
-                assertTrue(action, registry.execute(action, params) is ActionResult.UserActionRequired)
+                val result = registry.execute(action, params)
+                if (action == "WEB_SEARCH") {
+                    assertTrue(action, result is ActionResult.Success)
+                    assertTrue(result.data.orEmpty().contains("not retrieved or verified"))
+                } else {
+                    assertTrue(action, result is ActionResult.UserActionRequired)
+                }
                 val intent = shadowOf(context as android.app.Application).nextStartedActivity
                 assertEquals("https", intent.data?.scheme)
                 if (action == "WEB_SEARCH") assertEquals("a&b", intent.data?.getQueryParameter("q"))
