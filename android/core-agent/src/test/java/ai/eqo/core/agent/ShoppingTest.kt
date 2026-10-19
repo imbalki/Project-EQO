@@ -149,9 +149,9 @@ class ShoppingTest {
                 val preview = TaskPlanPreview.describe(planned.steps)
                 assertTrue(preview.contains("add 2 x milk to the cart"))
                 assertTrue(preview.contains("open the cart and stop so you can pay"))
-                assertTrue(preview.contains("adds the first search result; check the cart before paying"))
+                assertTrue(preview.contains("adds the first search result; this may be an advertised item"))
                 assertTrue(
-                    planned.notes.single().contains("adds the first search result; check the cart before paying"),
+                    planned.notes.single().contains("this may be an advertised item; check the cart before paying"),
                 )
                 assertEquals("exact:+,exact:increase quantity", planned.steps[7].action.params["text"])
                 assertTrue(fake.requests.isEmpty())

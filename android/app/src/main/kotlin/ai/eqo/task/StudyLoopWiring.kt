@@ -255,6 +255,9 @@ class StudyActionExecutor(
         )
 
     private val handoffs = mutableMapOf<String, String>()
+    private val shoppingPopups =
+        ai.eqo.actions.impl
+            .ShoppingPopupGuard()
     private val outputs =
         ai.eqo.core.agent
             .ApprovedPlanOutputs(approvedPlan?.steps().orEmpty())
@@ -288,7 +291,7 @@ class StudyActionExecutor(
     private suspend fun dispatch(action: ExecutedAction, stepId: String): ExecuteResult {
         if (action.name == action.name.uppercase()) {
             val execute = registryExecute ?: return ExecuteResult.Failure("Registry executor unavailable")
-            val result = execute(action.name, action.params)
+            val result = shoppingPopups.execute(action) { execute(action.name, action.params) }
             when (result) {
                 is ai.eqo.actions.base.ActionResult.UserActionRequired -> handoffs[stepId] = result.message
                 is ai.eqo.actions.base.ActionResult.PendingUserAction -> handoffs[stepId] = result.message

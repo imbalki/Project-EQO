@@ -78,6 +78,10 @@ object GenericAppAutomator {
             automationOrNull()?.tapById(viewId) ?: A11yResult.failure(A11yError.AccessibilityDisabled)
         }
 
+    /** One close attempt only; the run-scoped shopping guard owns the dismissal budget. */
+    fun dismissShoppingPopup(): A11yResult =
+        automationOrNull()?.dismissShoppingPopup() ?: A11yResult.failure(A11yError.AccessibilityDisabled)
+
     /**
      * Types into the matched field and confirms the text landed. Many search bars are buttons or launcher
      * fields that open a separate search screen whose own field is then focused and empty, so:
