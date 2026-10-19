@@ -120,6 +120,16 @@ class ContactResolverTest {
         }
     }
 
+    @Test fun literalEmailMeansExactlyOneDestination() {
+        val address = "synthetic" + '@' + "example.invalid"
+        assertTrue(isLiteralEmail(address))
+        assertTrue(isLiteralEmail(" $address "))
+        for (suffix in listOf(";Other", ",Other", "<Other>", "(Other)", "\"Other\"", " Other")) {
+            assertFalse(isLiteralEmail(address + suffix))
+        }
+        assertFalse(isLiteralEmail("Other <$address>"))
+    }
+
     private class FakeContacts : ContentProvider() {
         var rows: List<Pair<String, String>> = emptyList()
         var denied = false

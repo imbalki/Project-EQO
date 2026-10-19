@@ -311,7 +311,7 @@ class IntentUnderstanding(
     }
 }
 
-/** Clarifications stay in this call only. Cancel produces no plan; after two answers the preview discloses a guess. */
+/** Cancel or incomplete note slots produce no plan; other exhausted clarifications disclose a safe guess. */
 class IntentPlanningSession(
     private val understanding: IntentUnderstanding,
     private val planner: TaskPlanner,
@@ -333,7 +333,7 @@ class IntentPlanningSession(
         ask: suspend (TaskIntent) -> String?,
     ): Result? {
         var enriched = request
-        var intent = understanding.noteClarifications.defaultApp(understanding.understand(enriched))
+        var intent = understanding.noteClarifications.defaultApp(understandOrQuestion(enriched))
         var rounds = 0
         while (true) {
             val question =
@@ -342,8 +342,10 @@ class IntentPlanningSession(
                 } else {
                     // An email with no recipient is answered with a note (nothing planned), never a silent cancel.
                     val emailWithoutRecipient = intent.action == "send_message" && intent.channel == "email"
-                    if (intent.missingParameter() != null && !emailWithoutRecipient) return null
-                    val planned = planner.planWithNotes(enriched, intent = intent)
+                    if (intent.missingParameter() != null && !emailWithoutRecipient) {
+                        return unresolved(intent, enriched, rounds)
+                    }
+                    val planned = planOrQuestion(enriched, intent)
                     val clarification = RegistryPlanVocabulary.clarification(planned.steps)
                     if (clarification == null) {
                         return Result(
@@ -357,14 +359,71 @@ class IntentPlanningSession(
                     }
                     clarification
                 }
-            if (rounds >= MAX_ROUNDS) return null
+            if (rounds >= MAX_ROUNDS) {
+                return unresolved(intent, enriched, rounds)
+            }
             val answer = ask(question)?.takeIf { it.isNotBlank() } ?: return null
             enriched += "\nUser clarification ${rounds + 1}: $answer"
-            val updated = EmailIntents.merge(intent, understanding.understand(enriched), answer)
+            val updated = EmailIntents.merge(intent, understandOrQuestion(enriched), answer)
             intent = understanding.noteClarifications.merge(request, intent, updated, question, answer)
             rounds++
         }
     }
+
+    private suspend fun understandOrQuestion(request: String): TaskIntent =
+        try {
+            understanding.understand(request)
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: IllegalArgumentException) {
+            TaskIntent("Clarify request", question = "What should I do, and what should I use?")
+        } catch (_: IllegalStateException) {
+            TaskIntent("Clarify request", question = "What should I do, and what should I use?")
+        }
+
+    private fun unresolved(
+        intent: TaskIntent,
+        request: String,
+        rounds: Int,
+    ): Result? {
+        // Note creation requires explicit app/content slots; generic recovery must not override that rule.
+        if (intent.action == "create_note" && intent.missingParameter() != null) return null
+        return Result(
+            intent,
+            emptyList(),
+            bestGuess = true,
+            notes =
+                listOf(
+                    "I could not resolve the remaining part. My best guess is to leave it undone; nothing will run.",
+                ),
+            clarifiedRequest = request,
+            clarificationRounds = rounds,
+        )
+    }
+
+    private suspend fun planOrQuestion(
+        request: String,
+        intent: TaskIntent,
+    ): TaskPlanner.Planned =
+        try {
+            planner.planWithNotes(request, intent = intent)
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: IllegalArgumentException) {
+            recoveryQuestion()
+        } catch (_: IllegalStateException) {
+            recoveryQuestion()
+        }
+
+    private fun recoveryQuestion(): TaskPlanner.Planned =
+        TaskPlanner.Planned(
+            listOf(
+                LoopStep(
+                    "clarify",
+                    ExecutedAction("ASK_USER", mapOf("question" to "Which part should I do, and what should I use?")),
+                ),
+            ),
+        )
 
     companion object {
         const val MAX_ROUNDS = 2

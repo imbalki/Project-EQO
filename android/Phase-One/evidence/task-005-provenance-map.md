@@ -822,3 +822,12 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/CalendarInsertIntent.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, calendar fix: insert intent with when, where and who plus plain result text) |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/CalendarWhenParserTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, calendar fix: pure parser phrasing, rollover and duration cases) |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/CalendarDraftIntentTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, calendar fix: intent extras and refusal regressions) |
+
+## Recipient and attachment recovery (t_7114b803)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/RememberedRecipients.kt` | EQO-NEW | `ai.eqo.task` | Owner-approved local recipient aliases and clearable settings |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskRecipientRecovery.kt` | EQO-NEW | `ai.eqo.task` | Foreground destination recovery before approval |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskAttachmentRecovery.kt` | EQO-NEW | `ai.eqo.task` | Attachment limitation choices before approval, no note extraction |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/RecipientRecoveryTest.kt` | EQO-NEW | `ai.eqo.task` | Synthetic recipient choices, persistence and cancellation |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/AttachmentRecoveryTest.kt` | EQO-NEW | `ai.eqo.task` | Missing attachment, picker, pasted body and cancellation |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/UnresolvedPlanningTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Email questions, literal recipient and bounded invalid-plan recovery |
