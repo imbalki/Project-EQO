@@ -3,7 +3,7 @@ package ai.eqo.core.agent
 
 /** Templates are still schema validated, previewed and approved; none executes during understanding. */
 object IntentSkills {
-    val names = listOf("keep_note", "calculate", "message", "call", "open_app", "search", "shopping_cart")
+    val names = listOf("keep_note", "calendar", "calculate", "message", "call", "open_app", "search", "shopping_cart")
 
     fun plan(
         intent: TaskIntent,
@@ -25,6 +25,7 @@ object IntentSkills {
         when (intent.action) {
             "open_app" -> listOf(action("OPEN_APP", "appName" to intent.app.orEmpty()))
             "create_note" -> keep(intent)
+            "create_calendar_event" -> CalendarIntents.plan(intent)
             "calculate" -> listOf(action("CALCULATE", "expression" to intent.params.getValue("expression")))
             "send_message" -> message(intent)
             "call" -> call(intent)

@@ -156,6 +156,46 @@ class CalendarDraftIntentTest {
         }
 
     @Test
+    fun `all day answers open a dated reminder editor rather than failing as an invalid time`() =
+        runTest {
+            val slots =
+                listOf(
+                    mapOf("date" to "October 19th"),
+                    mapOf("date" to "October 19th", "datetime" to "all day"),
+                    mapOf("date" to "October 19th", "time" to "all day", "datetime" to "October 19th"),
+                    mapOf("datetime" to "October 19th all-day"),
+                )
+            for (params in slots) {
+                val result =
+                    registry.execute(
+                        "SET_REMINDER",
+                        mapOf("text" to "Puja") + params,
+                    )
+                assertEquals(
+                    ActionResult.UserActionRequired(
+                        "Calendar is open with Puja on 19 Oct 2026, all day. Tap Save to keep it.",
+                    ),
+                    result,
+                )
+                val intent = started()
+                assertEquals(Intent.ACTION_INSERT, intent.action)
+                assertEquals(utcMidnight(2026, 10, 19), intent.begin())
+                assertEquals(utcMidnight(2026, 10, 19), intent.end())
+                assertTrue(intent.getBooleanExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false))
+            }
+            val today =
+                registry.execute(
+                    "CREATE_CALENDAR_EVENT",
+                    mapOf("title" to "Puja", "date" to "today", "time" to "all day"),
+                )
+            assertTrue(today is ActionResult.UserActionRequired)
+            val intent = started()
+            assertEquals(Intent.ACTION_INSERT, intent.action)
+            assertEquals(utcMidnight(2026, 10, 12), intent.begin())
+            assertTrue(intent.getBooleanExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false))
+        }
+
+    @Test
     fun `with no date or time the intent keeps its legacy now start and the message says to set the time`() {
         val intent =
             CalendarInsertIntent.build(

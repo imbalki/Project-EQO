@@ -357,7 +357,7 @@ class AndroidActionRegistry internal constructor(
         if (name == "READ_AND_REMEMBER_SCREEN" && "topic" !in result) result["query"]?.let { result["topic"] = it }
         if (name == "SET_REMINDER") {
             if ("text" !in result) result["title"]?.let { result["text"] = it }
-            if ("datetime" !in result) result["time"]?.let { result["datetime"] = it }
+            if ("datetime" !in result) (result["time"] ?: result["date"])?.let { result["datetime"] = it }
         }
         if (name == "ASK_USER" && "question" !in result) result["message"]?.let { result["question"] = it }
         if (name == "CHAT" &&
