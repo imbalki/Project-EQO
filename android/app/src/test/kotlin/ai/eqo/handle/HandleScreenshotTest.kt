@@ -34,6 +34,8 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowContentResolver
+import org.robolectric.shadows.ShadowLog
+import org.robolectric.shadows.ShadowToast
 import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
@@ -46,6 +48,23 @@ class HandleScreenshotTest {
         EdgeHandleFeatures.screenshotChanged = {}
         EdgeHandleFeatures.screenshotShare = HandleScreenshot::share
         EdgeHandleFeatures.screenshotDismiss = HandleScreenshot::dismiss
+    }
+
+    @Test
+    fun `missing service reports screenshot refusal even when another card is present`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        EdgeHandleFeatures.recordingMessage = "Synthetic older recording result"
+        HandleScreenshot.tap(context)
+        assertEquals(
+            context.getString(R.string.edge_screenshot_refused),
+            ShadowToast.getTextOfLatestToast(),
+        )
+        assertTrue(
+            ShadowLog.getLogsForTag("EqoRun").any {
+                it.msg.contains("screenshot result=refused")
+            },
+        )
+        EdgeHandleFeatures.recordingMessage = ""
     }
 
     @Test
@@ -273,7 +292,9 @@ class HandleScreenshotTest {
             EdgeHandleFeatures.screenshotChanged()
             shadowOf(Looper.getMainLooper()).idle()
             val root = view(overlay)!!
-            assertTrue(descendants(root).filterIsInstance<TextView>().any { it.text == "Screenshot saved" })
+            assertTrue(
+                descendants(root).filterIsInstance<TextView>().any { it.text == "Screenshot saved · Pictures/EQO" },
+            )
             descendants(root).filterIsInstance<Button>().first { it.text == "Share" }.performClick()
             assertEquals(1, shares)
             descendants(root).filterIsInstance<Button>().first { it.text == "Done" }.performClick()

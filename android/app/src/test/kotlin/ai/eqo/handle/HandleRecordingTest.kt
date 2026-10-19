@@ -36,7 +36,10 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowAlertDialog
 import org.robolectric.shadows.ShadowContentResolver
+import org.robolectric.shadows.ShadowLog
+import org.robolectric.shadows.ShadowToast
 import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
@@ -104,6 +107,86 @@ class HandleRecordingTest {
         assertEquals(EdgeHandleSettingsActivity::class.java.name, launched.component?.className)
         assertTrue(launched.getBooleanExtra(HandleRecording.START_RECORDING, false))
         assertNull(shadowOf(context as android.app.Application).nextStartedService)
+    }
+
+    @Test
+    fun `blocked activity launch gives a plain visible reason instead of throwing`() {
+        val blocked =
+            object : android.content.ContextWrapper(context) {
+                override fun startActivity(intent: Intent) = throw SecurityException("synthetic launch refusal")
+            }
+        HandleRecording.tap(blocked)
+        assertEquals(context.getString(R.string.recording_confirmation_blocked), EdgeHandleFeatures.recordingMessage)
+        assertEquals(
+            context.getString(R.string.recording_confirmation_blocked),
+            ShadowToast.getTextOfLatestToast(),
+        )
+    }
+
+    @Test
+    fun `silently blocked activity launch times out with visible reason and sanitized log`() {
+        HandleRecording.tap(context)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(4))
+        assertEquals(context.getString(R.string.recording_confirmation_blocked), EdgeHandleFeatures.recordingMessage)
+        assertTrue(
+            ShadowLog.getLogsForTag("EqoRun").any {
+                it.msg == "handle=record result=refused reason=confirmation_not_visible"
+            },
+        )
+    }
+
+    @Test
+    fun `record confirmation includes minutes input and explicit No limit choice`() {
+        HandleRecording.tap(context)
+        val lifecycle = Robolectric.buildActivity(EdgeHandleSettingsActivity::class.java, recordingIntent()).setup()
+        try {
+            val dialog = ShadowAlertDialog.getLatestAlertDialog()
+            assertTrue(dialog.isShowing)
+            assertTrue(descendants(dialog.window!!.decorView).any { it is android.widget.EditText })
+            assertEquals(context.getString(R.string.recording_no_limit), dialog.getButton(-3).text)
+            shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(4))
+            assertEquals("", EdgeHandleFeatures.recordingMessage)
+        } finally {
+            lifecycle.pause().stop().destroy()
+        }
+    }
+
+    @Test
+    fun `invalid minutes stay in confirmation and No limit explicitly clears the saved limit`() {
+        HandlePreferences(context).recordingLimit = "7"
+        val lifecycle = Robolectric.buildActivity(EdgeHandleSettingsActivity::class.java, recordingIntent()).setup()
+        try {
+            val dialog = ShadowAlertDialog.getLatestAlertDialog()
+            val input = descendants(dialog.window!!.decorView).filterIsInstance<android.widget.EditText>().single()
+            input.setText("-1")
+            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick()
+            assertTrue(dialog.isShowing)
+            assertNotNull(input.error)
+            assertEquals("7", HandlePreferences(context).recordingLimit)
+            assertNull(shadowOf(context as android.app.Application).nextStartedService)
+            dialog.getButton(android.app.AlertDialog.BUTTON_NEUTRAL).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals("", HandlePreferences(context).recordingLimit)
+        } finally {
+            lifecycle.pause().stop().destroy()
+        }
+    }
+
+    @Test
+    fun `recreation keeps limit confirmation draft without starting the microphone`() {
+        val lifecycle = Robolectric.buildActivity(EdgeHandleSettingsActivity::class.java, recordingIntent()).setup()
+        try {
+            val first = ShadowAlertDialog.getLatestAlertDialog()
+            descendants(first.window!!.decorView).filterIsInstance<android.widget.EditText>().single().setText("12")
+            lifecycle.recreate()
+            val restored = ShadowAlertDialog.getLatestAlertDialog()
+            assertTrue(restored.isShowing)
+            val input = descendants(restored.window!!.decorView).filterIsInstance<android.widget.EditText>().single()
+            assertEquals("12", input.text.toString())
+            assertNull(shadowOf(context as android.app.Application).nextStartedService)
+        } finally {
+            lifecycle.pause().stop().destroy()
+        }
     }
 
     @Test
@@ -286,6 +369,9 @@ class HandleRecordingTest {
             EdgeHandleFeatures.recordingDismiss = dismiss
         }
     }
+
+    private fun recordingIntent(): Intent =
+        Intent(context, EdgeHandleSettingsActivity::class.java).putExtra(HandleRecording.START_RECORDING, true)
 
     private fun view(overlay: EdgeHandleOverlay): View? =
         overlay.javaClass

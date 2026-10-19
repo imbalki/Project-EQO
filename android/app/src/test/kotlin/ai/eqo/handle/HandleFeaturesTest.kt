@@ -688,7 +688,8 @@ class HandleFeaturesTest {
             assertEquals((152 * density).toInt(), params.height)
             val buttons = descendants(panel).filterIsInstance<android.widget.Button>()
             assertEquals(6, buttons.size)
-            assertTrue(buttons.all { it.layoutParams.height == (48 * density).toInt() })
+            assertTrue(buttons.all { it.layoutParams.height == android.view.ViewGroup.LayoutParams.WRAP_CONTENT })
+            assertTrue(buttons.all { it.maxLines == 2 })
             val rows = buttons.groupBy { it.parent }
             assertEquals(listOf(2, 2, 2), rows.values.map { it.size })
             val outside = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_OUTSIDE, 0f, 0f, 0)
