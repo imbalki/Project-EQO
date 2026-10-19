@@ -53,6 +53,24 @@ class UnresolvedPlanningTest {
             assertTrue(result.notes.isNotEmpty())
         }
 
+    @Test fun unresolvedContactStillDisclosesSafeBestGuessAfterSharedBudget() =
+        runTest {
+            val missing = TaskIntent("Call a contact", action = "call", confidence = 1.0)
+            val fake = IntentFixtureProvider(List(3) { Json.encodeToString(missing) })
+            var questions = 0
+            val result =
+                IntentPlanningSession(IntentUnderstanding(fake, emptyList()), TaskPlanner(fake, enabled))
+                    .prepare("call a contact") {
+                        questions++
+                        "I do not know"
+                    }!!
+            assertEquals(IntentPlanningSession.MAX_ROUNDS, questions)
+            assertEquals(questions, result.clarificationRounds)
+            assertTrue(result.bestGuess)
+            assertTrue(result.steps.isEmpty())
+            assertTrue(result.notes.single().contains("nothing will run"))
+        }
+
     @Test fun repeatedInvalidPlansAskAtMostTwiceThenDiscloseSafeBestGuess() =
         runTest {
             val understood = Json.encodeToString(TaskIntent("Do a synthetic task", confidence = 1.0))

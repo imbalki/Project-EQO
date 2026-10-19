@@ -311,7 +311,7 @@ class IntentUnderstanding(
     }
 }
 
-/** Clarifications stay in this call only. Cancel produces no plan; after two answers the preview discloses a guess. */
+/** Cancel or incomplete note slots produce no plan; other exhausted clarifications disclose a safe guess. */
 class IntentPlanningSession(
     private val understanding: IntentUnderstanding,
     private val planner: TaskPlanner,
@@ -385,8 +385,10 @@ class IntentPlanningSession(
         intent: TaskIntent,
         request: String,
         rounds: Int,
-    ): Result =
-        Result(
+    ): Result? {
+        // Note creation requires explicit app/content slots; generic recovery must not override that rule.
+        if (intent.action == "create_note" && intent.missingParameter() != null) return null
+        return Result(
             intent,
             emptyList(),
             bestGuess = true,
@@ -397,6 +399,7 @@ class IntentPlanningSession(
             clarifiedRequest = request,
             clarificationRounds = rounds,
         )
+    }
 
     private suspend fun planOrQuestion(
         request: String,

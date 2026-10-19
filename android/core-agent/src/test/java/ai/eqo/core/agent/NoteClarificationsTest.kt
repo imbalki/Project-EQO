@@ -179,6 +179,45 @@ class NoteClarificationsTest {
             assertEquals(IntentPlanningSession.MAX_ROUNDS, asked)
         }
 
+    @Test fun unresolvedContentAlsoReturnsNoPlanAfterSharedBudget() =
+        runTest {
+            val missing = empty.copy(question = "What should the note say?")
+            val fake = provider(missing, missing, missing)
+            var asked = 0
+            assertNull(
+                session(fake, listOf("Keep")).prepare("make a note") {
+                    asked++
+                    "Use Keep instead"
+                },
+            )
+            assertEquals(IntentPlanningSession.MAX_ROUNDS, asked)
+            assertEquals(3, fake.requests.size)
+        }
+
+    @Test fun appResolvedOnFinalAnswerStillCreatesNote() =
+        runTest {
+            val first = empty.copy(question = "What should the note say?")
+            val plan =
+                """{"steps":[{"action":"CREATE_NOTE","params":{"appName":"Notebook","body":"Buy bananas"}}]}"""
+            val fake = IntentFixtureProvider(listOf(json(first), json(lost), json(lost), plan))
+            var asked = 0
+            val result =
+                session(fake, listOf("Notebook")).prepare("make a note") {
+                    asked++
+                    if (asked == 1) "Buy bananas" else "Notebook"
+                }!!
+            assertEquals(IntentPlanningSession.MAX_ROUNDS, asked)
+            assertFalse(result.bestGuess)
+            assertEquals(
+                ExecutedAction(
+                    "CREATE_NOTE",
+                    mapOf("appName" to "Notebook", "body" to "Buy bananas"),
+                    irreversible = true,
+                ),
+                result.steps.single().action,
+            )
+        }
+
     @Test fun explicitTaskCorrectionDoesNotReviveNoteContext() =
         runTest {
             val first = empty.copy(question = "What should the note say?")
