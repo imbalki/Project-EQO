@@ -53,6 +53,7 @@ class RecordingService : Service() {
 
     @Suppress("TooGenericExceptionCaught") // Native failures are plain messages, never exception payloads.
     private fun startRecording() {
+        android.util.Log.i("EqoRun", "handle=record start=foreground_service")
         try {
             check(visibleStartApproved)
             visibleStartApproved = false
@@ -89,6 +90,7 @@ class RecordingService : Service() {
             startedAt = SystemClock.elapsedRealtime()
             EdgeHandleFeatures.recordingActive = true
             HandleRecording.message(getString(R.string.recording_status, 0L, limitLabel()))
+            android.util.Log.i("EqoRun", "handle=record result=started reason=local_audio")
             handler.postDelayed(tick, POLL_MS)
             startFinished?.invoke()
             startFinished = null
@@ -102,7 +104,7 @@ class RecordingService : Service() {
                     !storageAvailable() -> R.string.recording_low_storage
                     else -> R.string.recording_refused
                 }
-            HandleRecording.message(getString(error))
+            HandleRecording.feedback(this, error, "refused", "capture_notification_or_storage_unavailable")
             stopSelf()
         }
     }
@@ -223,6 +225,7 @@ class RecordingService : Service() {
                 output.publish(elapsed)
                 state?.stop(saved = true)
                 HandleRecording.saved(this, checkNotNull(output.uri), output.name, elapsed)
+                android.util.Log.i("EqoRun", "handle=record result=saved reason=stopped_or_limit")
                 if (lowStorageStop) {
                     HandleRecording.message(
                         getString(R.string.recording_saved_low_storage, output.name, elapsed / SECOND_MS),
@@ -231,7 +234,7 @@ class RecordingService : Service() {
             }
         } catch (_: Exception) {
             state?.stop(saved = false)
-            HandleRecording.message(getString(R.string.recording_save_failed))
+            HandleRecording.feedback(this, R.string.recording_save_failed, "failed", "finalization_unavailable")
         } finally {
             release()
             stopSelf()

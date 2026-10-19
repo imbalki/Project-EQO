@@ -23,39 +23,93 @@ import android.widget.TextView
 
 class EdgeHandleSettingsActivity : Activity() {
     private val preferences by lazy { HandlePreferences(this) }
+    private var recordingDialog: AlertDialog? = null
+    private var recordingInput: EditText? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         render()
-        if (intent.getBooleanExtra(HandleRecording.START_RECORDING, false)) {
+        val requested =
+            savedInstanceState?.getBoolean(RECORDING_PROMPT)
+                ?: intent.getBooleanExtra(HandleRecording.START_RECORDING, false)
+        if (requested) {
             intent.removeExtra(HandleRecording.START_RECORDING)
-            confirmRecording()
+            confirmRecording(savedInstanceState?.getString(RECORDING_DRAFT) ?: preferences.recordingLimit)
         }
     }
 
-    private fun confirmRecording() {
-        AlertDialog
-            .Builder(this)
-            .setTitle(ai.eqo.platform.R.string.edge_recording_button)
-            .setMessage(R.string.recording_start_explanation)
-            .setNegativeButton(android.R.string.cancel) { _, _ -> finish() }
-            .setPositiveButton(R.string.recording_start) { _, _ ->
-                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_PERMISSION)
-                } else if (!isFinishing && window.decorView.isShown) {
-                    RecordingService.visibleStartApproved = true
-                    RecordingService.startFinished = {
-                        moveTaskToBack(true)
-                        finish()
-                    }
-                    runCatching { startForegroundService(Intent(this, RecordingService::class.java)) }
-                        .onFailure {
-                            RecordingService.visibleStartApproved = false
-                            RecordingService.startFinished = null
-                            HandleRecording.message(getString(R.string.recording_refused))
-                        }
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(RECORDING_PROMPT, recordingDialog?.isShowing == true)
+        outState.putString(RECORDING_DRAFT, recordingInput?.text?.toString())
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onDestroy() {
+        recordingDialog?.dismiss()
+        super.onDestroy()
+    }
+
+    private fun confirmRecording(initialLimit: String = preferences.recordingLimit) {
+        val input =
+            EditText(this).apply {
+                inputType = InputType.TYPE_CLASS_NUMBER
+                setHint(R.string.recording_limit_hint)
+                setText(initialLimit)
+            }
+        recordingInput = input
+        val dialog =
+            AlertDialog
+                .Builder(this)
+                .setTitle(ai.eqo.platform.R.string.edge_recording_button)
+                .setMessage(R.string.recording_start_explanation)
+                .setView(input)
+                .setNegativeButton(android.R.string.cancel) { _, _ ->
+                    android.util.Log.i("EqoRun", "handle=record result=cancelled reason=user_cancelled")
+                    finish()
+                }.setNeutralButton(R.string.recording_no_limit) { _, _ -> startWithLimit("") }
+                .setPositiveButton(R.string.recording_start, null)
+                .create()
+        dialog.setOnShowListener {
+            HandleRecording.confirmationShown()
+            android.util.Log.i("EqoRun", "handle=record result=prompt reason=visible_confirmation")
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                if (RecordingLimit.parse(input.text.toString()) == null) {
+                    input.error = getString(R.string.recording_limit_invalid)
+                } else {
+                    dialog.dismiss()
+                    startWithLimit(input.text.toString())
                 }
-            }.show()
+            }
+        }
+        dialog.setOnCancelListener { finish() }
+        recordingDialog = dialog
+        dialog.show()
+    }
+
+    private fun startWithLimit(limit: String) {
+        preferences.recordingLimit = limit.trim()
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_PERMISSION)
+        } else if (!isFinishing && window.decorView.isShown) {
+            RecordingService.visibleStartApproved = true
+            RecordingService.startFinished = {
+                moveTaskToBack(true)
+                finish()
+            }
+            runCatching { startForegroundService(Intent(this, RecordingService::class.java)) }
+                .onFailure {
+                    RecordingService.visibleStartApproved = false
+                    RecordingService.startFinished = null
+                    HandleRecording.feedback(this, R.string.recording_refused, "refused", "foreground_start_blocked")
+                }
+        } else {
+            HandleRecording.feedback(
+                this,
+                R.string.recording_confirmation_blocked,
+                "refused",
+                "confirmation_not_visible",
+            )
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -64,8 +118,12 @@ class EdgeHandleSettingsActivity : Activity() {
         results: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, results)
-        if (requestCode == RECORD_PERMISSION && results.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
-            confirmRecording()
+        if (requestCode == RECORD_PERMISSION) {
+            if (results.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+                confirmRecording()
+            } else {
+                HandleRecording.feedback(this, R.string.recording_permission_required, "refused", "microphone_denied")
+            }
         }
     }
 
@@ -206,6 +264,8 @@ class EdgeHandleSettingsActivity : Activity() {
     }
 
     private companion object {
+        const val RECORDING_PROMPT = "recording_prompt"
+        const val RECORDING_DRAFT = "recording_draft"
         const val PAGE_PADDING_DP = 16
         const val RECORD_PERMISSION = 704
     }

@@ -11,7 +11,9 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -45,6 +47,7 @@ internal suspend fun <T : Any> captureHandleScreenshot(
     return result
 }
 
+@Suppress("TooManyFunctions") // One capture UI boundary keeps publication, rollback and visible outcomes together.
 internal object HandleScreenshot {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var job: Job? = null
@@ -52,10 +55,14 @@ internal object HandleScreenshot {
     private var dismissed = false
 
     fun tap(context: Context) {
-        if (job?.isActive == true) return
+        Log.i("EqoRun", "handle=screenshot start=user_tap")
+        if (job?.isActive == true) {
+            report(context, R.string.edge_screenshot_busy, "busy", "capture_in_progress")
+            return
+        }
         val service = context as? EQOAccessibilityService
         if (service == null || !prepareHandlePanel(requestPause = true)) {
-            status(R.string.edge_screenshot_refused)
+            report(context, R.string.edge_screenshot_refused, "refused", "service_or_run_unavailable")
             return
         }
         saved = null
@@ -84,17 +91,25 @@ internal object HandleScreenshot {
                     publish = { publish(service, file) },
                     discard = { service.contentResolver.delete(it, null, null) },
                 )
-            if (!dismissed) {
-                status(if (saved == null) R.string.edge_screenshot_refused else R.string.edge_screenshot_saved)
-            }
+            reportCaptureResult(service)
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (_: Exception) {
-            if (!dismissed) status(R.string.edge_screenshot_failed)
+            report(service, R.string.edge_screenshot_failed, "failed", "capture_or_storage_unavailable", !dismissed)
         } finally {
             temporary?.delete()
             EdgeHandleFeatures.screenshotHidden = false
             EdgeHandleFeatures.screenshotChanged()
+        }
+    }
+
+    private fun reportCaptureResult(context: Context) {
+        when {
+            dismissed ->
+                report(context, R.string.edge_screenshot_refused, "cancelled", "foreground_changed_or_dismissed", false)
+            saved == null ->
+                report(context, R.string.edge_screenshot_refused, "refused", "capture_gate_or_screen_changed")
+            else -> report(context, R.string.edge_screenshot_saved, "saved", "local_picture")
         }
     }
 
@@ -191,7 +206,7 @@ internal object HandleScreenshot {
                     .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (_: Exception) {
-            status(R.string.edge_screenshot_share_failed)
+            report(context, R.string.edge_screenshot_share_failed, "failed", "share_unavailable")
         }
     }
 
@@ -206,6 +221,19 @@ internal object HandleScreenshot {
         EdgeHandleFeatures.screenshotStatus = message
         EdgeHandleFeatures.screenshotShareAvailable = saved != null
         EdgeHandleFeatures.screenshotChanged()
+    }
+
+    private fun report(
+        context: Context,
+        message: Int,
+        result: String,
+        reason: String,
+        showCard: Boolean = true,
+    ) {
+        Log.i("EqoRun", "handle=screenshot result=$result reason=$reason")
+        if (showCard) status(message)
+        // Independent of card priority, window removal, and foreground-change dismissal.
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 
     private const val HIDE_SETTLE_MS = 200L

@@ -19,7 +19,8 @@
     <string name="edge_dictation_copy">Copy</string>
     <string name="edge_dictation_dismiss">Dismiss</string>
     <string name="edge_screenshot_button">Screenshot</string>
-    <string name="edge_screenshot_saved">Screenshot saved</string>
+    <string name="edge_screenshot_busy">Screenshot already in progress.</string>
+    <string name="edge_screenshot_saved">Screenshot saved · Pictures/EQO</string>
     <string name="edge_screenshot_refused">Cannot capture this screen. Protected, password, EQO or changed screens and paused tasks are refused.</string>
     <string name="edge_screenshot_failed">Screenshot could not be saved. Check free storage and try again.</string>
     <string name="edge_screenshot_share_failed">Cannot open a share app. Your screenshot is still saved in Pictures/EQO.</string>

@@ -15,6 +15,8 @@
     <string name="recording_status">Recording – tap to stop. %1$d s elapsed · %2$s</string>
     <string name="recording_saved">Saved %1$s, %2$d s.</string>
     <string name="recording_refused">Cannot record. Check microphone permission, end calls or other recordings, and stop paused EQO tasks first.</string>
+    <string name="recording_confirmation_blocked">Cannot open recording confirmation. Open EQO and try Record again.</string>
+    <string name="recording_permission_required">Microphone permission is required to record.</string>
     <string name="recording_low_storage">Storage is low. Free some space before recording.</string>
     <string name="recording_saved_low_storage">Saved %1$s, %2$d s. Stopped because storage is low.</string>
     <string name="recording_save_failed">Recording could not be finalized. Check storage. Any existing local audio was not deleted.</string>

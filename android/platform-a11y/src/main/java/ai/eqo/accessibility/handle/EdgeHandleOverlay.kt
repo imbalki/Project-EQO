@@ -497,8 +497,10 @@ class EdgeHandleOverlay(
                     minWidth = 0
                     minimumWidth = 0
                     minimumHeight = dp(TOUCH_WIDTH_DP)
+                    maxLines = PANEL_LABEL_LINES
                     setPadding(dp(PANEL_PADDING_DP), 0, dp(PANEL_PADDING_DP), 0)
-                    layoutParams.height = dp(TOUCH_WIDTH_DP)
+                    // Theme insets and scaled fonts must not crop the second label line.
+                    layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT
                 }
             }
             if (entries.size < PANEL_COLUMNS) row.addView(View(context), LinearLayout.LayoutParams(0, 0, 1f))
@@ -671,6 +673,7 @@ class EdgeHandleOverlay(
         const val PANEL_MAX_HEIGHT_DP = 248
         const val PANEL_PADDING_DP = 4
         const val PANEL_COLUMNS = 2
+        const val PANEL_LABEL_LINES = 2
         const val PANEL_TEXT_SP = 12f
         const val PILL_WIDTH_DP = 120
         const val PILL_HEIGHT_DP = 32

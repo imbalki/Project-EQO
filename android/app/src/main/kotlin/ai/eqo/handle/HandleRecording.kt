@@ -19,8 +19,12 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.os.PersistableBundle
 import android.util.Base64
+import android.util.Log
+import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -35,24 +39,63 @@ internal object HandleRecording {
     private var transcript: String? = null
     private var pendingNote: String? = null
     private var transcribing = false
+    private val handler = Handler(Looper.getMainLooper())
+    private var confirmationTimeout: Runnable? = null
     val transcriptionActive: Boolean
         get() = transcribing
 
     fun tap(context: Context) {
-        if (transcribing) return
+        Log.i("EqoRun", "handle=record start=user_tap")
+        if (transcribing) {
+            feedback(context, R.string.dictation_transcribing, "busy", "transcription_active")
+            return
+        }
         if (EdgeHandleFeatures.recordingActive) {
             stop(context)
         } else {
+            openConfirmation(context)
+        }
+    }
+
+    private fun openConfirmation(context: Context) {
+        confirmationShown()
+        val app = context.applicationContext
+        val timeout =
+            Runnable { feedback(app, R.string.recording_confirmation_blocked, "refused", "confirmation_not_visible") }
+        confirmationTimeout = timeout
+        handler.postDelayed(timeout, CONFIRMATION_TIMEOUT_MS)
+        runCatching {
             context.startActivity(
                 Intent(context, EdgeHandleSettingsActivity::class.java)
                     .putExtra(START_RECORDING, true)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             )
+        }.onFailure {
+            confirmationShown()
+            feedback(context, R.string.recording_confirmation_blocked, "refused", "confirmation_launch_blocked")
         }
     }
 
+    fun confirmationShown() {
+        confirmationTimeout?.let(handler::removeCallbacks)
+        confirmationTimeout = null
+    }
+
+    fun feedback(
+        context: Context,
+        resource: Int,
+        result: String,
+        reason: String,
+    ) {
+        Log.i("EqoRun", "handle=record result=$result reason=$reason")
+        message(context.getString(resource))
+        Toast.makeText(context, resource, Toast.LENGTH_LONG).show()
+    }
+
     fun stop(context: Context) {
-        context.startService(Intent(context, RecordingService::class.java).setAction(RecordingService.STOP))
+        runCatching {
+            context.startService(Intent(context, RecordingService::class.java).setAction(RecordingService.STOP))
+        }.onFailure { feedback(context, R.string.recording_refused, "refused", "stop_service_blocked") }
     }
 
     fun saved(
@@ -177,4 +220,5 @@ internal object HandleRecording {
 
     const val START_RECORDING = "ai.eqo.handle.START_RECORDING"
     private const val SECOND_MS = 1000L
+    private const val CONFIRMATION_TIMEOUT_MS = 3000L
 }
