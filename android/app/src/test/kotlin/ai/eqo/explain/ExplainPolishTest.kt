@@ -107,6 +107,54 @@ class ExplainPolishTest {
         }
     }
 
+    @Test fun `answer view and read aloud receive plain text without clickable links or HTML`() {
+        val service = Robolectric.buildService(EQOAccessibilityService::class.java).create()
+        invoke(service.get(), "onServiceConnected")
+        val source =
+            object : ExplainSource {
+                override fun read() = ExplainScreen("test.app", "screen", 6)
+
+                override suspend fun screenshot(): String? = null
+            }
+        val model =
+            object : ExplainModel {
+                override suspend fun supportsImages() = false
+
+                override suspend fun answer(
+                    screen: ExplainScreen,
+                    image: String?,
+                    question: String,
+                ) = "## Title\n- **[label](https://example.invalid)**\n<b>literal</b>"
+            }
+        try {
+            ExplainOverlay.open(service.get())
+            val overlay = current()!!
+            ExplainSettings.set(context, "allow_provider", true)
+            overlay.javaClass
+                .getDeclaredField("session")
+                .apply { isAccessible = true }
+                .set(overlay, ExplainSession(source, model, { true }))
+            overlay.javaClass
+                .getDeclaredMethod("ask", String::class.java)
+                .apply { isAccessible = true }
+                .invoke(overlay, "Explain")
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(400))
+            val expected = "Title\n• label\n<b>literal</b>"
+            val output = field(overlay, "output") as android.widget.TextView
+            assertEquals(context.getString(R.string.explain_result, "", expected), output.text.toString())
+            assertEquals(expected, field(overlay, "answer"))
+            assertEquals(0, output.autoLinkMask)
+            assertNull(output.movementMethod)
+            val spans = output.text as? android.text.Spanned
+            assertTrue(
+                spans == null || spans.getSpans(0, spans.length, android.text.style.URLSpan::class.java).isEmpty(),
+            )
+        } finally {
+            current()?.let { invoke(it, "close") }
+            service.destroy()
+        }
+    }
+
     @Test fun `entry sources use transient activity and distinct pending intents`() {
         for (source in listOf("edge_handle", "tile", "notification", "accessibility_button")) {
             val intent = ExplainEntryActivity.entryIntent(context, source)
