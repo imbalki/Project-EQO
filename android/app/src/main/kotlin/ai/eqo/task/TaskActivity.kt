@@ -135,6 +135,21 @@ class TaskActivity : Activity() {
         actionPermissions.onResume()
         attachmentSelection.foreground()
         TaskRunSession.attachmentSelection = attachmentSelection
+        if (!planning && !actionPermissions.isWaiting() && TaskRunSession.controller == null) {
+            ai.eqo.handle.HandleRecording.takeNotePlan()?.let { steps ->
+                scope.launch {
+                    try {
+                        understoodPreview = ""
+                        purchasePreview = false
+                        prepareAndShowPlan(steps)
+                    } catch (_: AppChoiceCancelled) {
+                        findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
+                    } catch (failure: ai.eqo.actions.impl.RecipientPreparationException) {
+                        findViewById<TextView>(R.id.task_state).text = failure.message
+                    }
+                }
+            }
+        }
     }
 
     @Suppress("LongMethod")

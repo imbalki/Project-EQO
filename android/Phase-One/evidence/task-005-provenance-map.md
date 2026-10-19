@@ -2,6 +2,17 @@
 
 ## Handle screenshot (t_0c715719)
 
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/RecordingHandleCard.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Tiny recording marker and compact audio/transcript card rendering |
+
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/RecordingStateTest.kt` | EQO-NEW | `ai.eqo.handle` | Pure recording lifecycle, typed limits and bounded transcription tests |
+| :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleRecordingTest.kt` | EQO-NEW | `ai.eqo.handle` | MediaStore, card, consent, visible start and quiet notification tests |
+
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/RecordingState.kt` | EQO-NEW | `ai.eqo.handle` | Pure audio-note limit and lifecycle policy |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/RecordingStore.kt` | EQO-NEW | `ai.eqo.handle` | Durable AAC MediaStore transaction |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/RecordingWav.kt` | EQO-NEW | `ai.eqo.handle` | Bounded local AAC to WAV conversion for existing voice provider |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/RecordingService.kt` | EQO-NEW | `ai.eqo.handle` | Visible-user-started microphone FGS and local note lifetime |
+| :app | `android/app/src/main/kotlin/ai/eqo/handle/HandleRecording.kt` | EQO-NEW | `ai.eqo.handle` | Explicit audio-note card actions and consent-checked transcription |
+
 | :app | `android/app/src/main/kotlin/ai/eqo/handle/HandleScreenshot.kt` | EQO-NEW | `ai.eqo.handle` | User-only gated capture, local MediaStore publish and explicit share |
 | :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleScreenshotTest.kt` | EQO-NEW | `ai.eqo.handle` | Fake capture gates, publication rollback, compact card and settings tests |
 

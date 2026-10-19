@@ -41,6 +41,10 @@ internal object HandleDictation {
     }
 
     private fun start(context: Context) {
+        if (EdgeHandleFeatures.recordingActive) {
+            changed(DictationState.FAILED, DictationFailure.RECORDING)
+            return
+        }
         if (!ai.eqo.handle.prepareHandlePanel(requestPause = true)) {
             changed(DictationState.FAILED, DictationFailure.TARGET)
             return

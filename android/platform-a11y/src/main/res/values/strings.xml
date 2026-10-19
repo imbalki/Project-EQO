@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="edge_recording_button">Record</string>
+    <string name="edge_recording_dot">●</string>
+    <string name="edge_recording_stop">Recording – tap to stop</string>
+    <string name="edge_recording_keep">Save as Keep note</string>
+    <string name="edge_recording_transcribe">Transcribe</string>
     <string name="eqo_accessibility_service_label">EQO</string>
     <string name="eqo_accessibility_service_description">EQO observes the screen, taps, scrolls and types only to carry out tasks you ask for. The moment you touch the screen during a task, EQO pauses and hands control back to you. EQO never grants itself this permission: you turn it on in Android\'s Accessibility settings.</string>
     <string name="edge_handle_title">EQO edge handle</string>

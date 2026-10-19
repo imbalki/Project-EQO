@@ -43,6 +43,9 @@ class EdgeHandleOverlay(
     private var foregroundPackage = context.packageName
     private var probeAvailable = false
     private var pendingLongPress: Runnable? = null
+    private var recordingExpanded = false
+    private var renderedRecording = false
+    private var recordingStatusView: TextView? = null
     private val listener =
         SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
             handler.post {
@@ -65,6 +68,18 @@ class EdgeHandleOverlay(
         }
 
     init {
+        EdgeHandleFeatures.recordingChanged = {
+            handler.post {
+                if (renderedRecording && EdgeHandleFeatures.recordingActive && view != null) {
+                    recordingStatusView?.text = EdgeHandleFeatures.recordingMessage
+                } else {
+                    renderedRecording = EdgeHandleFeatures.recordingActive
+                    if (!renderedRecording) recordingExpanded = false
+                    removeWindow()
+                    refresh()
+                }
+            }
+        }
         preferences.preferences.registerOnSharedPreferenceChangeListener(listener)
         EdgeHandleFeatures.screenshotChanged = {
             handler.post {
@@ -125,6 +140,8 @@ class EdgeHandleOverlay(
     }
 
     fun destroy() {
+        if (EdgeHandleFeatures.recordingActive) EdgeHandleFeatures.recordingStop(context)
+        EdgeHandleFeatures.recordingChanged = {}
         EdgeHandleFeatures.screenshotDismiss()
         EdgeHandleFeatures.screenshotChanged = {}
         EdgeHandleFeatures.dictationChanged = {}
@@ -162,14 +179,19 @@ class EdgeHandleOverlay(
                 softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
             }
 
+    // Mutually exclusive tiny marker and compact result presentations.
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun showHandle() {
         val (width, height) = dimensions()
         val size = dp(TOUCH_WIDTH_DP)
         val micEnabled = EdgeHandleFeatures.registry?.enabled(EdgeHandleFeatures.DICTATION_ID) == true
         val hasStatus = micEnabled && EdgeHandleFeatures.dictationStatus != 0
         val hasScreenshot = EdgeHandleFeatures.screenshotStatus != 0
+        val hasRecording = EdgeHandleFeatures.recordingMessage.isNotEmpty()
         val handleWidth =
             when {
+                EdgeHandleFeatures.recordingActive && !recordingExpanded -> size
+                hasRecording -> dp(PANEL_WIDTH_DP)
                 hasScreenshot -> dp(PANEL_WIDTH_DP)
                 !hasStatus -> size
                 EdgeHandleFeatures.dictationInserted -> dp(PILL_WIDTH_DP)
@@ -195,8 +217,12 @@ class EdgeHandleOverlay(
         val column = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         val grip = FrameLayout(context)
         grip.addView(bar, FrameLayout.LayoutParams(dp(BAR_WIDTH_DP), dp(BAR_HEIGHT_DP), Gravity.CENTER))
-        column.addView(grip, LinearLayout.LayoutParams(size, dp(TOUCH_HEIGHT_DP)))
-        if (hasScreenshot) {
+        if (!EdgeHandleFeatures.recordingActive) {
+            column.addView(grip, LinearLayout.LayoutParams(size, dp(TOUCH_HEIGHT_DP)))
+        }
+        if (hasRecording) {
+            addRecordingControls(column)
+        } else if (hasScreenshot) {
             addScreenshotControls(column)
         } else if (hasStatus) {
             addDictationControls(column)
@@ -252,6 +278,23 @@ class EdgeHandleOverlay(
                 addResultActions(column)
             }
         }
+    }
+
+    private fun addRecordingControls(column: LinearLayout) {
+        recordingStatusView = addRecordingHandleCard(column, recordingExpanded, ::expandRecording)
+    }
+
+    private fun expandRecording() {
+        recordingExpanded = true
+        removeWindow()
+        refresh()
+        handler.postDelayed({
+            if (EdgeHandleFeatures.recordingActive) {
+                recordingExpanded = false
+                removeWindow()
+                refresh()
+            }
+        }, HandlePresentation.COLLAPSE_MS)
     }
 
     private fun addResultText(
@@ -390,6 +433,7 @@ class EdgeHandleOverlay(
     }
 
     @android.annotation.SuppressLint("RtlHardcoded") // Keep the panel at the user's physical dock edge in RTL too.
+    @Suppress("CyclomaticComplexMethod") // Shortcut rows share one guarded panel lifecycle.
     private fun showPanel(requestPause: Boolean = true) {
         val unavailable = !preferences.enabled || !probeAvailable || hidden()
         if (unavailable || EdgeHandleFeatures.screenshotHidden) return
@@ -414,13 +458,17 @@ class EdgeHandleOverlay(
         column.setPadding(dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP))
         column.setBackgroundColor(Color.WHITE)
         column.isClickable = true
-        EdgeHandleFeatures.registry?.visible(context)?.forEach { shortcut ->
-            addButton(column, shortcut.labelRes, shortcut.iconRes) {
+        val shortcuts = EdgeHandleFeatures.registry?.visible(context).orEmpty()
+        val audioRow = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+        shortcuts.forEach { shortcut ->
+            val audio = shortcut.id == EdgeHandleFeatures.DICTATION_ID || shortcut.id == EdgeHandleFeatures.RECORDING_ID
+            addButton(if (audio) audioRow else column, shortcut.labelRes, shortcut.iconRes) {
                 closePanel()
                 // Availability is checked again; a run may have ended while the panel was open.
                 if (shortcut.unavailableReason(context) == null) shortcut.run(context)
             }
         }
+        if (audioRow.childCount > 0) column.addView(audioRow)
         if (foregroundPackage != context.packageName) {
             addButton(column, R.string.edge_handle_hide_app) {
                 preferences.hide(foregroundPackage)
@@ -613,6 +661,7 @@ class EdgeHandleOverlay(
         const val RESULT_PADDING_DP = 6
         const val RESULT_TEXT_SP = 13f
         const val STATUS_LINES = 3
+
         const val HANDLE_COLOR = -1773116276 // ARGB 150,80,100,140
     }
 }

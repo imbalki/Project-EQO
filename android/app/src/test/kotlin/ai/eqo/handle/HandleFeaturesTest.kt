@@ -71,7 +71,7 @@ class HandleFeaturesTest {
         assertFalse(preferences.enabled)
         val registry = createHandleRegistry(context)
         assertEquals(
-            listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo", "dictation", "screenshot"),
+            listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo", "dictation", "recording", "screenshot"),
             registry.ordered().map { it.id },
         )
         assertTrue(registry.ordered().all { registry.enabled(it.id) })
@@ -111,7 +111,7 @@ class HandleFeaturesTest {
                 )
             val registry = createHandleRegistry(context)
             assertEquals(
-                listOf("explain_screen", "ask_eqo", "open_eqo", "dictation", "screenshot"),
+                listOf("explain_screen", "ask_eqo", "open_eqo", "dictation", "recording", "screenshot"),
                 registry.visible(context).map { it.id },
             )
             TaskRunSession.controller = controller
@@ -302,6 +302,11 @@ class HandleFeaturesTest {
     @Test
     fun `settings renders every registered entry without enabling the handle`() {
         val registry = createHandleRegistry(context)
+        val originalOrder = registry.ordered().map { it.id }
+        val movedOrder =
+            originalOrder.toMutableList().apply {
+                java.util.Collections.swap(this, indexOf("stop"), indexOf("open_eqo"))
+            }
         EdgeHandleFeatures.install(registry)
         val lifecycle = Robolectric.buildActivity(EdgeHandleSettingsActivity::class.java).setup()
         try {
@@ -329,7 +334,7 @@ class HandleFeaturesTest {
                 }
             move.performClick()
             assertEquals(
-                listOf("explain_screen", "ask_eqo", "pause", "open_eqo", "stop", "dictation", "screenshot"),
+                movedOrder,
                 registry.ordered().map { it.id },
             )
             descendants(activity.window.decorView)
@@ -338,7 +343,7 @@ class HandleFeaturesTest {
                     it.text == context.getString(R.string.handle_reset)
                 }.performClick()
             assertEquals(
-                listOf("explain_screen", "ask_eqo", "pause", "stop", "open_eqo", "dictation", "screenshot"),
+                originalOrder,
                 registry.ordered().map { it.id },
             )
             assertTrue(registry.enabled("ask_eqo"))
