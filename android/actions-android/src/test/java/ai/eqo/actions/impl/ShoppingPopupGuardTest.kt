@@ -3,6 +3,7 @@ package ai.eqo.actions.impl
 
 import ai.eqo.accessibility.A11yError
 import ai.eqo.accessibility.A11yResult
+import ai.eqo.accessibility.EqoAutomation
 import ai.eqo.actions.base.ActionResult
 import ai.eqo.core.agent.ExecutedAction
 import ai.eqo.core.agent.ShoppingPlans
@@ -16,6 +17,16 @@ class ShoppingPopupGuardTest {
     private val quantity =
         ExecutedAction("CLICK_TEXT", mapOf("text" to ShoppingPlans.INCREASE), plannerClaim = "shopping:milk in Zepto")
     private val missing = ActionResult.Failure("control_not_found")
+
+    @Test fun absentModalDoesNotClaimAPopupIsCoveringTheApp() =
+        runTest {
+            val guard =
+                ShoppingPopupGuard {
+                    assertEquals(ShoppingPlans.INCREASE, it)
+                    A11yResult.failure(A11yError.NodeNotFound(EqoAutomation.NO_SHOPPING_POPUP))
+                }
+            repeat(3) { assertEquals(missing, guard.execute(quantity) { missing }) }
+        }
 
     @Test fun popupDismissedThenQuantityRetriedOnce() =
         runTest {
@@ -42,7 +53,7 @@ class ShoppingPopupGuardTest {
                 dismissals++
                 A11yResult.success("closed")
             }
-            val guard = ShoppingPopupGuard(close)
+            val guard = ShoppingPopupGuard { close() }
             val cart = quantity.copy(params = mapOf("text" to ShoppingPlans.CART), plannerClaim = ShoppingPlans.HANDOFF)
             for (action in listOf(quantity, cart)) {
                 var attempts = 0
@@ -50,10 +61,10 @@ class ShoppingPopupGuardTest {
             }
             val capped = guard.execute(quantity) { missing }
             assertEquals(2, dismissals)
-            assertEquals(ActionResult.UserActionRequired(ShoppingPopupGuard.HANDOFF), capped)
+            assertEquals(ActionResult.UserActionRequired(ShoppingPopupGuard.CONTROL_HANDOFF), capped)
             var attempts = 0
             assertTrue(
-                ShoppingPopupGuard(close)
+                ShoppingPopupGuard { close() }
                     .execute(quantity) {
                         if (++attempts == 1) missing else ActionResult.Success()
                     }.success,

@@ -79,8 +79,8 @@ object GenericAppAutomator {
         }
 
     /** One close attempt only; the run-scoped shopping guard owns the dismissal budget. */
-    fun dismissShoppingPopup(): A11yResult =
-        automationOrNull()?.dismissShoppingPopup() ?: A11yResult.failure(A11yError.AccessibilityDisabled)
+    fun dismissShoppingPopup(target: String): A11yResult =
+        automationOrNull()?.dismissShoppingPopup(target) ?: A11yResult.failure(A11yError.AccessibilityDisabled)
 
     /**
      * Types into the matched field and confirms the text landed. Many search bars are buttons or launcher
