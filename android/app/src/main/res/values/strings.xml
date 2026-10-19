@@ -321,7 +321,7 @@ Licenses: Apache-2.0 and MIT. Full license texts ship with this APK in the NOTIC
     <string name="handle_settings_title">Edge handle shortcuts</string>
     <string name="handle_settings_explanation">Optional EQO shortcuts on other screens; requires EQO Accessibility. Tap or swipe inward to open. Opening the panel pauses an active run after its current action finishes. Closing it does not resume: use the task screen to confirm Resume. Drag vertically to move, or across the screen to switch edge. Long press for Hide for this app. The keyboard or full-screen videos and games may hide the handle. It never reads or sends the screen. Unavailable shortcuts are omitted from the panel; your choices are kept.</string>
     <string name="handle_enable">Enable edge handle</string>
-    <string name="dictation_switch">Dictation from the handle</string>
+    <string name="dictation_switch">Dictation</string>
     <string name="dictation_listening">● Listening — tap the mic again to finish</string>
     <string name="dictation_transcribing">Transcribing…</string>
     <string name="dictation_inserted">Dictation inserted. It is also on your clipboard.</string>

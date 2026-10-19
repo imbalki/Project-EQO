@@ -659,6 +659,79 @@ class HandleFeaturesTest {
         }
     }
 
+    @Test
+    fun `compact card puts fake shortcuts in two columns and outside tap only dismisses`() {
+        var calls = 0
+        val registry =
+            ai.eqo.accessibility.handle
+                .HandleShortcutRegistry<Context>(HandlePreferences(context))
+        listOf(R.string.handle_ask, R.string.handle_open, R.string.explain_title, R.string.dictation_switch)
+            .forEachIndexed { index, label ->
+                registry.register(BuiltInHandleShortcut("fake_$index", label, 0) { calls++ })
+            }
+        EdgeHandleFeatures.install(registry)
+        HandlePreferences(context).enabled = true
+        val overlay = createOverlay()
+        try {
+            overlay.setProbeAvailable(true)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            overlayView(overlay)!!.performClick()
+            val panel = overlayView(overlay)!!
+            val params = panel.layoutParams as android.view.WindowManager.LayoutParams
+            val density = context.resources.displayMetrics.density
+            assertEquals((240 * density).toInt(), params.width)
+            assertEquals((152 * density).toInt(), params.height)
+            val buttons = descendants(panel).filterIsInstance<android.widget.Button>()
+            assertEquals(6, buttons.size)
+            assertTrue(buttons.all { it.layoutParams.height == (48 * density).toInt() })
+            val rows = buttons.groupBy { it.parent }
+            assertEquals(listOf(2, 2, 2), rows.values.map { it.size })
+            val outside = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_OUTSIDE, 0f, 0f, 0)
+            panel.dispatchTouchEvent(outside)
+            outside.recycle()
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+            assertEquals(0, calls)
+            overlayView(overlay)!!.performClick()
+            panelButton(overlay, R.string.handle_ask).performClick()
+            assertEquals(1, calls)
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+        } finally {
+            overlay.destroy()
+        }
+    }
+
+    @Test
+    fun `hidden apps reuse stored choices and show again restores only the selected app`() {
+        EdgeHandleFeatures.install(createHandleRegistry(context))
+        val preferences = HandlePreferences(context)
+        preferences.preferences.edit { putStringSet("hidden_apps", setOf("fake.alpha", "fake.beta")) }
+        preferences.enabled = true
+        val overlay = createOverlay()
+        val lifecycle = Robolectric.buildActivity(EdgeHandleSettingsActivity::class.java).setup()
+        try {
+            overlay.updateForeground("fake.alpha")
+            overlay.setProbeAvailable(true)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertEquals(null, overlayView(overlay))
+            val buttons = descendants(lifecycle.get().window.decorView).filterIsInstance<android.widget.Button>()
+            listOf("fake.alpha", "fake.beta").forEach { app ->
+                assertTrue(buttons.any { it.text == context.getString(R.string.handle_unhide_app, app) })
+            }
+            buttons.first { it.text == context.getString(R.string.handle_unhide_app, "fake.alpha") }.performClick()
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertTrue(overlayView(overlay) != null)
+            assertEquals(setOf("fake.beta"), HandlePreferences(context).hiddenApps())
+            lifecycle.recreate()
+            val remaining = descendants(lifecycle.get().window.decorView).filterIsInstance<android.widget.Button>()
+            assertFalse(remaining.any { it.text == context.getString(R.string.handle_unhide_app, "fake.alpha") })
+            assertTrue(remaining.any { it.text == context.getString(R.string.handle_unhide_app, "fake.beta") })
+            assertTrue(preferences.enabled)
+        } finally {
+            lifecycle.pause().stop().destroy()
+            overlay.destroy()
+        }
+    }
+
     private fun drag(
         view: android.view.View,
         fromX: Float,

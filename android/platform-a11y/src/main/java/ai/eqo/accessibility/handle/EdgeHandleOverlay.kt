@@ -363,49 +363,68 @@ class EdgeHandleOverlay(
         scheduleCollapse()
         val root = PanelView()
         root.setOnClickListener { closePanel() }
-        val content = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        content.setBackgroundColor(Color.WHITE)
-        val header = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
-        addButton(header, R.string.edge_handle_close) { closePanel() }
-        addButton(header, R.string.edge_handle_hide_now) {
+        val actions = mutableListOf<Pair<Int, () -> Unit>>()
+        actions += R.string.edge_handle_close to { closePanel() }
+        actions += R.string.edge_handle_hide_now to {
             EdgeHandleFeatures.dictationCancel()
             presentation.hide(foregroundPackage)
             dismissResult()
         }
-        content.addView(header)
-        val column = LinearLayout(context)
-        column.orientation = LinearLayout.VERTICAL
-        column.setPadding(dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP))
-        column.setBackgroundColor(Color.WHITE)
-        column.isClickable = true
         EdgeHandleFeatures.registry?.visible(context)?.forEach { shortcut ->
-            addButton(column, shortcut.labelRes, shortcut.iconRes) {
+            actions += shortcut.labelRes to {
                 closePanel()
                 // Availability is checked again; a run may have ended while the panel was open.
                 if (shortcut.unavailableReason(context) == null) shortcut.run(context)
             }
         }
         if (foregroundPackage != context.packageName) {
-            addButton(column, R.string.edge_handle_hide_app) {
+            actions += R.string.edge_handle_hide_app to {
                 preferences.hide(foregroundPackage)
                 removeWindow()
             }
         }
-        val scroll = ScrollView(context)
-        scroll.addView(column)
-        content.addView(
-            scroll,
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f),
-        )
+        val column = panelGrid(actions)
         root.addView(
-            content,
+            ScrollView(context).apply { addView(column) },
             FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT),
         )
         val (width, height) = dimensions()
-        val panelParams = params(dp(PANEL_WIDTH_DP), dp(PANEL_MAX_HEIGHT_DP).coerceAtMost(height / 2))
+        val rows = (actions.size + PANEL_COLUMNS - 1) / PANEL_COLUMNS
+        val panelParams =
+            params(
+                dp(PANEL_WIDTH_DP).coerceAtMost(width),
+                dp(rows * TOUCH_WIDTH_DP + PANEL_PADDING_DP * 2).coerceAtMost(minOf(height, dp(PANEL_MAX_HEIGHT_DP))),
+            )
         panelParams.x = if (preferences.rightEdge) width - panelParams.width else 0
         panelParams.y = ((height - panelParams.height) * preferences.verticalFraction).toInt()
         attach(root, panelParams)
+    }
+
+    private fun panelGrid(actions: List<Pair<Int, () -> Unit>>): LinearLayout {
+        val column =
+            LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP))
+                setBackgroundColor(Color.WHITE)
+                isClickable = true
+            }
+        actions.chunked(PANEL_COLUMNS).forEach { entries ->
+            val row = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+            entries.forEach { (label, action) ->
+                addButton(row, label, action = action)
+                (row.getChildAt(row.childCount - 1) as Button).apply {
+                    textSize = PANEL_TEXT_SP
+                    minWidth = 0
+                    minimumWidth = 0
+                    minimumHeight = dp(TOUCH_WIDTH_DP)
+                    setPadding(dp(PANEL_PADDING_DP), 0, dp(PANEL_PADDING_DP), 0)
+                    layoutParams.height = dp(TOUCH_WIDTH_DP)
+                }
+            }
+            if (entries.size < PANEL_COLUMNS) row.addView(View(context), LinearLayout.LayoutParams(0, 0, 1f))
+            column.addView(row)
+        }
+        return column
     }
 
     private fun scheduleCollapse() {
@@ -568,9 +587,11 @@ class EdgeHandleOverlay(
         const val BAR_HEIGHT_DP = 56
         const val BAR_RADIUS_DP = 4
         const val SWIPE_IN_DP = 32
-        const val PANEL_WIDTH_DP = 260
-        const val PANEL_MAX_HEIGHT_DP = 320
-        const val PANEL_PADDING_DP = 12
+        const val PANEL_WIDTH_DP = 240
+        const val PANEL_MAX_HEIGHT_DP = 248
+        const val PANEL_PADDING_DP = 4
+        const val PANEL_COLUMNS = 2
+        const val PANEL_TEXT_SP = 12f
         const val PILL_WIDTH_DP = 120
         const val PILL_HEIGHT_DP = 32
         const val RESULT_HEIGHT_DP = 64
