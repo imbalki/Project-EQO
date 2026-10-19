@@ -58,7 +58,7 @@ class PlanPreviewPolishTest {
             var asked = 0
             val exhausted =
                 IntentPlanningSession(IntentUnderstanding(repeated, emptyList()), TaskPlanner(repeated, enabled))
-                    .prepare("make a note") {
+                    .prepare("do something") {
                         asked++
                         "More details"
                     }!!

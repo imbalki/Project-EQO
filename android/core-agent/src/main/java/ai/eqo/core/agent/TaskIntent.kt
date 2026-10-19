@@ -98,6 +98,7 @@ class IntentUnderstanding(
 ) {
     private val phoneNames = phoneActions.map { it.name }.toSet()
     private val web = WebIntents(installedApps, roleMemory)
+    internal val noteClarifications = NoteClarifications(installedApps)
 
     suspend fun understand(request: String): TaskIntent {
         require(request.isNotBlank() && request.length <= MAX_REQUEST) { "Request is too long or empty" }
@@ -107,7 +108,7 @@ class IntentUnderstanding(
             EmailIntents.from(request)?.takeIf { '\n' !in request }
                 ?: ShoppingIntents.from(request, installedApps) ?: localIntent(request, role)
                 ?: query(request, role as? RoleDecision.Use)
-        val intent = EmailIntents.normalize(request, understood)
+        val intent = AppPlanHygiene.normalize(request, EmailIntents.normalize(request, understood), installedApps)
         val bucket = if (intent.confidence >= TaskIntent.CONFIDENT) "high" else "low"
         diagnostic("intent kind=${intent.action} confidence=$bucket")
         return intent
@@ -231,8 +232,13 @@ class IntentUnderstanding(
             Multiple actions (calculate then send, or note then call): action=other, preserve all slots.
             For calculate then send include params.expression and contact; sending must not be lost.
             Tolerate paraphrases, typos, Hindi/English and missing words. Preserve supplied text exactly.
-            A note creation is not merely opening notes. Arithmetic asking for an answer is calculate;
-            normalize its expression to numbers/operators, never invent numbers or use web search.
+            A note creation is not merely opening notes.
+            Every Keep note request (make/write/add a note, including title-only or body-only) is create_note,
+            app=the installed Keep label, params.title and/or params.body with the supplied text exactly.
+            'make a note called X with Y' uses title=X, body=Y; 'add X to a new note in Keep' uses body=X.
+            Searching within any named app is search with params.query and app=that installed label, not other.
+            Arithmetic asking for an answer is calculate; normalize its expression to numbers/operators,
+            never invent numbers or use web search.
             channel: sms|whatsapp|email|telegram|null. Plain message/text means sms; WhatsApp only when named.
             Email composition (including an attachment-only email) is send_message, channel=email, not other/open_app.
             Email params: to (recipient/contact name), subject, body, attachment. Keep absent subject/body empty.
@@ -327,7 +333,11 @@ class IntentPlanningSession(
         ask: suspend (TaskIntent) -> String?,
     ): Result? {
         var enriched = request
+<<<<<<< HEAD
         var intent = understandOrQuestion(enriched)
+=======
+        var intent = understanding.noteClarifications.defaultApp(understanding.understand(enriched))
+>>>>>>> origin/main
         var rounds = 0
         while (true) {
             val question =
@@ -358,7 +368,12 @@ class IntentPlanningSession(
             }
             val answer = ask(question)?.takeIf { it.isNotBlank() } ?: return null
             enriched += "\nUser clarification ${rounds + 1}: $answer"
+<<<<<<< HEAD
             intent = EmailIntents.merge(intent, understandOrQuestion(enriched), answer)
+=======
+            val updated = EmailIntents.merge(intent, understanding.understand(enriched), answer)
+            intent = understanding.noteClarifications.merge(request, intent, updated, question, answer)
+>>>>>>> origin/main
             rounds++
         }
     }

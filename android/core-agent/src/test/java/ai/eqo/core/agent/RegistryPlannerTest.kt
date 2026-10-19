@@ -44,7 +44,7 @@ class RegistryPlannerTest {
     @Test fun noteRequestsAllowOrdinarySteps() =
         runTest {
             val plan =
-                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Keep"}},""" +
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Notes"}},""" +
                     """{"action":"WAIT","params":{"durationMs":"3000"}},""" +
                     """{"action":"CLICK_TEXT","params":{"text":"Text"}},""" +
                     """{"action":"TYPE_TEXT","params":{"searchText":"Title","content":"eqo test"}},""" +
@@ -52,7 +52,7 @@ class RegistryPlannerTest {
                     """{"action":"CLICK_TEXT","params":{"text":"Save"}},""" +
                     """{"action":"PRESS_BACK","params":{}}]}"""
             val actions = enabled + setOf("WAIT", "PRESS_BACK", "PRESS_ENTER")
-            val request = "open a note, type eqo test and save it as eqo test in Keep"
+            val request = "open a note, type eqo test and save it as eqo test in Notes"
             // An app without a pinned template keeps the AI's own plan; only Save/Done noise is dropped.
             val intent =
                 TaskIntent(
@@ -110,16 +110,16 @@ class RegistryPlannerTest {
             assertTrue(prompt.contains("Do not ASK_USER for an unambiguous contact"))
         }
 
-    @Test fun namedNotesEditingCanNavigateAndTypeBeforeApproval() =
+    @Test fun otherNotesEditingCanNavigateAndTypeBeforeApproval() =
         runTest {
             val output =
-                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
+                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Notes"}},""" +
                     """{"action":"CLICK_TEXT","params":{"text":"New note"}},""" +
                     """{"action":"TYPE_TEXT","params":{"searchText":"Title","content":"Test"}}]}"""
             val requests =
                 listOf(
-                    "write a note called Test in Keep",
-                    "type a note in Google Keep",
+                    "write a note called Test in Notes",
+                    "type a note in Notes",
                     "draft a Notes note",
                 )
             for (request in requests) {
@@ -168,7 +168,7 @@ class RegistryPlannerTest {
             }
         }
 
-    @Test fun keepPlanUsesRealSpeedDialTitleBodyAndBackWithoutWeakeningDraftGuard() =
+    @Test fun legacyKeepEditorPlanIsRejectedWithoutWeakeningDraftGuard() =
         runTest {
             val output =
                 """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
@@ -181,21 +181,16 @@ class RegistryPlannerTest {
             val actions = enabled + setOf("WAIT", "PRESS_BACK")
             val intent = TaskIntent("Create note", send = "no", confidence = 1.0)
             val fake = Fake(listOf(output))
-            val steps = TaskPlanner(fake, actions).plan("write a note called Test in Keep with body Example body")
-            assertEquals(7, steps.size)
-            assertEquals("PRESS_BACK", steps.last().action.name)
-            assertEquals("Test", steps[4].action.params["content"])
-            assertEquals("Example body", steps[5].action.params["content"])
-            assertTrue(ApprovedTaskPlan(steps).matches(steps))
-            val prompt = fake.requests.single().systemPrompt
+            try {
+                TaskPlanner(fake, actions).plan("write a note called Test in Keep with body Example body")
+                error("Keep editor typing must be rejected")
+            } catch (_: IllegalArgumentException) {
+            }
+            assertEquals(2, fake.requests.size)
+            val prompt = fake.requests.first().systemPrompt
             AppControlHints.byPackage.keys.forEach { assertTrue(prompt.contains(it)) }
-            assertTrue(prompt.contains("Create a note"))
-            assertTrue(prompt.contains("id:new_note_button"))
-            assertTrue(prompt.contains("id:editable_title"))
-            assertTrue(prompt.contains("id:edit_note_text"))
-            assertTrue(prompt.contains("Never type into toolbar"))
-            assertTrue(prompt.contains("PRESS_BACK to autosave"))
-            assertTrue(prompt.contains("omit body typing"))
+            assertTrue(prompt.contains("use CREATE_NOTE, never an editor UI chain"))
+            assertFalse(prompt.contains("PRESS_BACK to autosave"))
             val outwardTargets = listOf("Create a note,Send", "id:new_note_button,Share")
             for (unsafe in outwardTargets) {
                 try {
@@ -205,15 +200,9 @@ class RegistryPlannerTest {
                 } catch (_: IllegalArgumentException) {
                 }
             }
-            // No keyword-derived note whitelist: local controls remain the AI's plan.
-            val dropped =
-                TaskPlanner(Fake(listOf(output.replace("Create a note", "id:new_list_button"))), actions)
-                    .plan("write a note in Keep")
-            assertEquals(steps.size, dropped.size)
-            assertEquals(dropped.indices.map { "task-${it + 1}" }, dropped.map { it.stepId })
         }
 
-    @Test fun titleOnlyKeepRequestsUseTheSameFlowWithoutInventingBody() =
+    @Test fun titleOnlyKeepEditorTypingIsAlsoRejected() =
         runTest {
             val output =
                 """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
@@ -223,17 +212,12 @@ class RegistryPlannerTest {
                     """{"action":"TYPE_TEXT","params":{"searchText":"id:editable_title","content":"Test"}},""" +
                     """{"action":"PRESS_BACK","params":{}}]}"""
             for (verb in listOf("add", "write", "create")) {
-                val steps =
+                try {
                     TaskPlanner(Fake(listOf(output)), enabled + setOf("WAIT", "PRESS_BACK"))
                         .plan("$verb a note called Test in Keep")
-                assertEquals(6, steps.size)
-                assertEquals(
-                    listOf("id:editable_title"),
-                    steps
-                        .filter { it.action.name == "TYPE_TEXT" }
-                        .map { it.action.params["searchText"] },
-                )
-                assertTrue(ApprovedTaskPlan(steps).matches(steps))
+                    error("Keep editor typing must be rejected")
+                } catch (_: IllegalArgumentException) {
+                }
             }
         }
 
@@ -345,15 +329,12 @@ class RegistryPlannerTest {
                 """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
                     """{"action":"SEND_WHATSAPP","params":{"contact":"Example","message":"hi"}}]}"""
             val good =
-                """{"steps":[{"action":"OPEN_APP","params":{"appName":"Google Keep"}},""" +
-                    """{"action":"WAIT","params":{"durationMs":"3000"}},""" +
-                    """{"action":"CLICK_TEXT","params":{"text":"Create a note"}},""" +
-                    """{"action":"PRESS_BACK","params":{}}]}"""
+                """{"steps":[{"action":"CREATE_NOTE","params":{"appName":"Keep","body":"test"}}]}"""
             val fake = Fake(listOf(bad, good))
             val steps =
-                TaskPlanner(fake, enabled + setOf("WAIT", "PRESS_BACK", "SEND_WHATSAPP"))
+                TaskPlanner(fake, enabled + setOf("WAIT", "PRESS_BACK", "SEND_WHATSAPP", "CREATE_NOTE"))
                     .plan("save a note in Keep called test", intent = TaskIntent("Create note", send = "no"))
-            assertEquals(4, steps.size)
+            assertEquals("CREATE_NOTE", steps.single().action.name)
             assertEquals(2, fake.requests.size)
             assertTrue(fake.requests[1].systemPrompt.contains("Intent send=no"))
         }
