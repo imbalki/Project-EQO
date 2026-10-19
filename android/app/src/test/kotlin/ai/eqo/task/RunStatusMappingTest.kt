@@ -41,7 +41,7 @@ class RunStatusMappingTest {
             RunStatusMapping
                 .detail(progress)
                 ?.argument
-                ?.contains("adds the first search result; check the cart before paying") == true,
+                ?.contains("this may be an advertised item; check the cart before paying") == true,
         )
         assertEquals("NEEDS_YOU", RunStatusMapping.terminal(RunReceipt(listOf(progress), "COMPLETED")))
     }
@@ -55,6 +55,15 @@ class RunStatusMappingTest {
         val progress = RunStatusMapping.progress(step, failed("control_not_found"), null)
         assertEquals("I could not find the Add button for milk in Zepto", RunStatusMapping.detail(progress)?.argument)
         assertEquals(StepProgressState.NEEDS_YOU, progress.state)
+    }
+
+    @Test fun shoppingPopupHandoffIsPlainNeedsYouAndNeverCompleted() {
+        val message = ai.eqo.actions.impl.ShoppingPopupGuard.HANDOFF
+        val progress = RunStatusMapping.progress(null, failed(message).copy(name = "CLICK_TEXT"), message)
+        assertEquals(StepProgressState.NEEDS_YOU, progress.state)
+        assertEquals("A pop-up is covering Zepto; close it and try again", RunStatusMapping.detail(progress)?.argument)
+        assertEquals("NEEDS_YOU", RunStatusMapping.terminal(RunReceipt(listOf(progress), "FAILED")))
+        assertTrue(RunReceipt(listOf(progress), "FAILED").executedStepIds.isEmpty())
     }
 
     @Test fun permissionInstructionsAndFailureKindsContainNoPrivateDetail() {
