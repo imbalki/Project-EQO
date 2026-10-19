@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recipient_type_email">email address</string>
+    <string name="recipient_type_phone">phone number</string>
+    <string name="recipient_missing">I could not find a unique %1$s for %2$s. What should I use?</string>
+    <string name="recipient_type_now">Type it now</string>
+    <string name="recipient_pick_contact">Pick another contact</string>
+    <string name="recipient_enter">Type the %1$s to use.</string>
+    <string name="recipient_remember">Remember %1$s = %2$s?</string>
+    <string name="recipient_invalid">That destination is not usable. I will not guess an address or number. Nothing ran.</string>
+    <string name="recipient_cancelled">Choice cancelled. Nothing ran.</string>
+    <string name="remembered_recipients_title">Recipients EQO remembers</string>
+    <string name="remembered_recipients_empty">No recipients remembered. Choose Always when answering a recipient question to save one.</string>
+    <string name="remembered_recipients_row">%1$s = %2$s</string>
+    <string name="attachment_choose_file">Choose a file from my phone</string>
+    <string name="attachment_add_text">Add text to the email body</string>
+    <string name="attachment_keep_help">Keep notes are not files. Choose a file from your phone, or I can put the note text in the email body.</string>
+    <string name="attachment_missing_help">I could not find that attachment. Choose a file from your phone, or add text to the email body.</string>
+    <string name="attachment_paste_text">Type or paste the note text to add to the email body.</string>
+
+</resources>

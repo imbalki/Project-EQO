@@ -140,6 +140,9 @@
 | :app | `android/app/src/test/kotlin/ai/eqo/handle/HandlePlacementDeliveryTest.kt` | EQO-NEW | `ai.eqo.handle` | Service event delivery and real drag input-exclusion regressions |
 ## Explain screen additions (t_699c0abc)
 
+| :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainAnswerText.kt` | EQO-NEW | `ai.eqo.explain` | Display-only Markdown to plain answer text; literal code and non-clickable links |
+| :app | `android/app/src/test/kotlin/ai/eqo/explain/ExplainAnswerTextTest.kt` | EQO-NEW | `ai.eqo.explain` | Plain answer formatting, nested markup, code and inert HTML/link regressions |
+
 | :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainSession.kt` | EQO-NEW | `ai.eqo.explain` | Read-only explanation session, privacy bounds and protected-screen policy seam |
 | :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainRuntime.kt` | EQO-NEW | `ai.eqo.explain` | Foreground tree extraction, memory-only capture and configured provider adapter |
 | :app | `android/app/src/main/kotlin/ai/eqo/explain/ExplainEntry.kt` | EQO-NEW | `ai.eqo.explain` | Tile, transient entry, notification shortcut and Boolean preferences |
@@ -839,3 +842,12 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/CalendarInsertIntent.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, calendar fix: insert intent with when, where and who plus plain result text) |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/CalendarWhenParserTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, calendar fix: pure parser phrasing, rollover and duration cases) |
 | :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/CalendarDraftIntentTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | imbalki/project-eqo (EQO-authored, calendar fix: intent extras and refusal regressions) |
+
+## Recipient and attachment recovery (t_7114b803)
+
+| :app | `android/app/src/main/kotlin/ai/eqo/task/RememberedRecipients.kt` | EQO-NEW | `ai.eqo.task` | Owner-approved local recipient aliases and clearable settings |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskRecipientRecovery.kt` | EQO-NEW | `ai.eqo.task` | Foreground destination recovery before approval |
+| :app | `android/app/src/main/kotlin/ai/eqo/task/TaskAttachmentRecovery.kt` | EQO-NEW | `ai.eqo.task` | Attachment limitation choices before approval, no note extraction |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/RecipientRecoveryTest.kt` | EQO-NEW | `ai.eqo.task` | Synthetic recipient choices, persistence and cancellation |
+| :app | `android/app/src/test/kotlin/ai/eqo/task/AttachmentRecoveryTest.kt` | EQO-NEW | `ai.eqo.task` | Missing attachment, picker, pasted body and cancellation |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/UnresolvedPlanningTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Email questions, literal recipient and bounded invalid-plan recovery |

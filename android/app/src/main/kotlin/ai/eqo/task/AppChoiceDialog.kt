@@ -149,7 +149,9 @@ object RememberedAppsSettings {
             AlertDialog
                 .Builder(activity)
                 .setTitle(R.string.remembered_apps_title)
-                .setNegativeButton(android.R.string.cancel, null)
+                .setNeutralButton(R.string.remembered_recipients_title) { _, _ ->
+                    RememberedRecipientsSettings.show(activity)
+                }.setNegativeButton(android.R.string.cancel, null)
         if (entries.isEmpty()) {
             builder.setMessage(R.string.remembered_apps_empty)
         } else {

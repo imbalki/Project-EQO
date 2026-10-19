@@ -112,7 +112,10 @@ class AndroidActionRegistry internal constructor(
 
     /** Lookup is local and happens before approval. The approved snapshot contains the literal destination. */
     @Suppress("CyclomaticComplexMethod")
-    suspend fun prepareRecipients(steps: List<LoopStep>): RecipientPlan {
+    suspend fun prepareRecipients(
+        steps: List<LoopStep>,
+        resolver: ContactResolver = contactResolver,
+    ): RecipientPlan {
         val names = mutableMapOf<String, String>()
         // Process-only, per-plan cache: a later share uses the very same approved destination.
         val destinations = mutableMapOf<Pair<Boolean, String>, Pair<String, String>>()
@@ -142,11 +145,11 @@ class AndroidActionRegistry internal constructor(
                 }
                 val needed = requiredPermissions(name, step.action.params)
                 val permission = needed.firstOrNull { it.name == Manifest.permission.READ_CONTACTS }
-                if (permission != null && !permissions.request(permission)) {
+                if (permission != null && !permissions.request(permission) && resolver === contactResolver) {
                     throw RecipientPreparationException(ContactResolution.PermissionDenied.failureMessage())
                 }
                 if (email) {
-                    val recipients = withContext(Dispatchers.IO) { resolveEmailRecipients(input, contactResolver) }
+                    val recipients = withContext(Dispatchers.IO) { resolveEmailRecipients(input, resolver) }
 
                     names[step.stepId] = recipients.labels.joinToString(", ")
                     destinations[cacheKey] = recipients.addresses.joinToString(", ") to names.getValue(step.stepId)
@@ -159,7 +162,7 @@ class AndroidActionRegistry internal constructor(
                 }
                 val resolved =
                     withContext(Dispatchers.IO) {
-                        contactResolver.resolveWithDisambiguation(input)
+                        resolver.resolveWithDisambiguation(input)
                     }
                 if (resolved !is ContactResolution.Found) throw RecipientPreparationException(resolved.failureMessage())
                 names[step.stepId] = resolved.contact.name
@@ -171,6 +174,29 @@ class AndroidActionRegistry internal constructor(
         return RecipientPlan(prepared, names.toMap())
     }
 
+    /** Read-only attachment availability, before the owner approves any send. */
+    suspend fun unresolvedAttachments(steps: List<LoopStep>): Set<String> {
+        var screenshotPlanned = false
+        val references =
+            steps.flatMap { step ->
+                if (step.action.name == "TAKE_SCREENSHOT") screenshotPlanned = true
+                ai.eqo.core.agent.AttachmentSpec
+                    .parse(step.action.params["attachment"])
+                    .filterNot {
+                        screenshotPlanned &&
+                            ai.eqo.core.agent.AttachmentSpec
+                                .isLastScreenshot(it)
+                    }
+            }
+        if (references.isEmpty()) return emptySet()
+        return withContext(Dispatchers.IO) {
+            val attachments = SharedStorageServices.create(context, { null }, RegistryOptions()).attachments
+            references
+                .filter { attachments.needsOwnerHelp(it) }
+                .toSet()
+        }
+    }
+
     /** Settings is human-driven before a run starts, never an automation/takeover exemption. */
     suspend fun prepareFileAccess(steps: List<LoopStep>): Boolean =
         steps.none { needsSharedAccess(it.action.name, it.action.params) } || requestAllFilesAccess()
@@ -179,8 +205,13 @@ class AndroidActionRegistry internal constructor(
     fun plannedRuntimePermissions(steps: List<LoopStep>): List<ActionPermission.Runtime> =
         steps.flatMap { requiredPermissions(it.action.name, it.action.params) }.distinctBy { it.name }
 
-    suspend fun prepareRuntimeAccess(steps: List<LoopStep>): Boolean {
-        val required = plannedRuntimePermissions(steps)
+    suspend fun prepareRuntimeAccess(
+        steps: List<LoopStep>,
+        includeContacts: Boolean = true,
+    ): Boolean {
+        val required =
+            plannedRuntimePermissions(steps)
+                .filter { includeContacts || it.name != Manifest.permission.READ_CONTACTS }
         return required.all { permissions.request(it) }
     }
 

@@ -77,6 +77,7 @@ class TaskActivity : Activity() {
     private var displayedStatus = PlanStatus.PENDING
     private var preparationGeneration = 0
     private var understoodPreview = ""
+    private var attachmentRequest = ""
     private var purchasePreview = false
     private var understandingRequest = false
     private var resultSpeaker: TaskResultSpeaker? = null
@@ -781,6 +782,7 @@ class TaskActivity : Activity() {
                                 .parse(json, portedActions.enabledActionNames)
                         understoodPreview = ""
                         purchasePreview = false
+                        attachmentRequest = ""
                         if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
                     } catch (_: AppChoiceCancelled) {
                         findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
@@ -922,11 +924,14 @@ class TaskActivity : Activity() {
         }
     }
 
+    // Cancellation and a disclosed empty best guess both stop before app preparation.
+    @Suppress("ReturnCount")
     private suspend fun buildTaskPlan(
         request: String,
         generation: Int,
     ): MissingAppFallback.Result? {
         understoodPreview = ""
+        attachmentRequest = ""
         val planner =
             withContext(Dispatchers.IO) {
                 TaskPlanningRuntime.planner(applicationContext, portedActions.enabledActionNames)
@@ -935,6 +940,8 @@ class TaskActivity : Activity() {
         val understood =
             understandRequest(request, planner, generation)
                 ?.takeIf { generation == preparationGeneration } ?: return null
+        // The editable request omits clarification answers. Never revive a superseded attachment instruction.
+        attachmentRequest = TaskAttachmentRecovery.requestFor(request, understood)
         purchasePreview =
             understood.intent.action == "purchase" ||
             ai.eqo.core.agent.PlanCompleteness
@@ -947,6 +954,10 @@ class TaskActivity : Activity() {
                         .escape(it)
                 }
         understoodPreview = understoodNotes.joinToString("\n")
+        if (understood.steps.isEmpty()) {
+            findViewById<TextView>(R.id.task_state).text = understoodPreview
+            return null
+        }
         return withContext(Dispatchers.IO) {
             // Never capture EQO's key/setup/request UI; execution observations stay local.
             val apps = TaskAppPlanning(this@TaskActivity, appResolver)
@@ -1027,7 +1038,8 @@ class TaskActivity : Activity() {
         return result
     }
 
-    @Suppress("ReturnCount") // Pre-approval cancellation and permission failures must exit without showing approval.
+    // Independent cancellation and permission guards must stop each pre-approval recovery boundary.
+    @Suppress("ReturnCount", "CyclomaticComplexMethod")
     internal suspend fun prepareAndShowPlan(
         steps: List<ai.eqo.core.agent.LoopStep>,
         missing: List<String> = emptyList(),
@@ -1046,7 +1058,20 @@ class TaskActivity : Activity() {
             findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_unresolved)
             return
         }
-        val resolved = appPreparation.steps
+        val attachments = TaskAttachmentRecovery(this) { question -> askFallbackQuestion(question, generation) }
+        val fileSteps =
+            attachments.prepare(
+                appPreparation.steps,
+                emptySet(),
+                if (retry) "" else attachmentRequest,
+            )
+        if (generation != preparationGeneration || isFinishing || isDestroyed) return
+        if (!portedActions.prepareFileAccess(fileSteps)) {
+            findViewById<TextView>(R.id.task_state).setText(R.string.task_files_access_needed)
+            return
+        }
+        val resolved = attachments.prepare(fileSteps, portedActions.unresolvedAttachments(fileSteps), "")
+        if (generation != preparationGeneration || isFinishing || isDestroyed) return
         findViewById<TextView>(R.id.task_preview).text =
             getString(
                 R.string.task_preview_with_permissions,
@@ -1054,15 +1079,12 @@ class TaskActivity : Activity() {
                 TaskPlanPreview.describe(resolved),
                 permissionPreview(resolved),
             )
-        if (!portedActions.prepareRuntimeAccess(resolved)) {
+        if (!portedActions.prepareRuntimeAccess(resolved, includeContacts = false)) {
             findViewById<TextView>(R.id.task_state).setText(R.string.task_permission_not_granted)
             return
         }
-        if (!portedActions.prepareFileAccess(resolved)) {
-            findViewById<TextView>(R.id.task_state).setText(R.string.task_files_access_needed)
-            return
-        }
-        val prepared = portedActions.prepareRecipients(resolved)
+        val recipients = TaskRecipientRecovery(this, { question -> askFallbackQuestion(question, generation) })
+        val prepared = portedActions.prepareRecipients(resolved, recipients)
         if (generation == preparationGeneration && !isFinishing && !isDestroyed) {
             showPlan(ApprovedTaskPlan(prepared.steps), prepared.names, missing, retry)
         }

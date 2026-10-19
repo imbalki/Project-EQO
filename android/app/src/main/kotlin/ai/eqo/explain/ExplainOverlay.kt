@@ -299,7 +299,7 @@ class ExplainOverlay private constructor(
                             attach()
                         },
                     ).also { session = it }
-                answer = active.ask(prompt)
+                answer = ExplainAnswerText.render(active.ask(prompt))
                 val notice =
                     when (active.textOnlyReason) {
                         "vision" -> service.getString(R.string.explain_text_only_model)
