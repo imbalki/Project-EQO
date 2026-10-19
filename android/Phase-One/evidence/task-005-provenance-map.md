@@ -1,5 +1,10 @@
 # TASK-005 per-file provenance map
 
+## All-day reminder routing (t_41b9d5b7)
+
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/CalendarIntents.kt` | EQO-NEW | `ai.eqo.core.agent` | Ephemeral calendar intent slots and all-day clarification routing |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/CalendarPlanningTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Date-only and all-day reminder planning regressions |
+
 ## Handle screenshot (t_0c715719)
 
 | :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/handle/RecordingHandleCard.kt` | EQO-NEW | `ai.eqo.accessibility.handle` | Tiny recording marker and compact audio/transcript card rendering |

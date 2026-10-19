@@ -63,6 +63,7 @@ internal object CalendarWhenParser {
     private val tonight = Regex("""\btonight\b""", RegexOption.IGNORE_CASE)
     private val seconds = Regex("""^(\d{1,2}:\d{2}):\d{2}$""")
     private val spaces = Regex("""\s+""")
+    private val allDay = Regex("""\ball[ -]day[.!]?$""", RegexOption.IGNORE_CASE)
 
     private data class Split(
         val date: String,
@@ -78,14 +79,18 @@ internal object CalendarWhenParser {
                 .mapNotNull { it?.trim()?.takeIf(String::isNotEmpty) }
                 .map(::split)
         val dateText = splits.map { it.date }.firstOrNull { it.isNotEmpty() }.orEmpty()
-        val timeText = params["time"]?.trim()?.takeIf(String::isNotEmpty) ?: splits.firstNotNullOfOrNull { it.time }
+        val explicitAllDay =
+            listOf("date", "datetime", "time").any { allDay.containsMatchIn(params[it].orEmpty().trim()) }
+        val timeText =
+            (params["time"]?.trim()?.takeIf(String::isNotEmpty) ?: splits.firstNotNullOfOrNull { it.time })
+                .takeUnless { explicitAllDay }
         val minutes = CalendarDurationText.parseMinutes(params["duration"]) ?: CalendarDurationText.DEFAULT_MINUTES
         val now = ZonedDateTime.now(clock)
         val time = timeText?.let(::parseTime)
         return when {
             dateText.isEmpty() && timeText == null -> CalendarWhenResult.Unspecified
             timeText != null && time == null -> CalendarWhenResult.Invalid("time", timeText)
-            dateText.equals("now", ignoreCase = true) && time == null ->
+            dateText.equals("now", ignoreCase = true) && time == null && !explicitAllDay ->
                 CalendarWhenResult.Resolved(timed(now, minutes))
             else -> resolveDay(dateText, time, now, minutes)
         }
@@ -126,8 +131,9 @@ internal object CalendarWhenParser {
      * An ISO midnight is read as "no time", so a model that writes T00:00 for a plain date gets an all-day event.
      */
     private fun split(text: String): Split {
-        val stamp = isoStamp.matchEntire(text)
-        val spoken = tonight.replace(text, "today night")
+        val clean = allDay.replace(text, "").trim()
+        val stamp = isoStamp.matchEntire(clean)
+        val spoken = tonight.replace(clean, "today night")
         val found = clockTime.find(spoken) ?: atHour.find(spoken) ?: dayPart.find(spoken)
         return when {
             stamp != null -> {

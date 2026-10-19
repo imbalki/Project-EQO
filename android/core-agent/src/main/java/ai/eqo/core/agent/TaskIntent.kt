@@ -29,6 +29,7 @@ data class TaskIntent(
             "open_app" -> if (app.isNullOrBlank()) "app" else null
             "purchase" -> missingShoppingParameter()
             "create_note" -> missingNoteParameter()
+            "create_calendar_event" -> missingSlot("title") ?: missingSlot("date")
             "calculate" -> missingSlot("expression")
             "call" -> missingSlot("contact")
             "send_message" -> missingMessageParameter()
@@ -79,7 +80,7 @@ data class TaskIntent(
         const val CONFIDENT = 0.7
         val ACTIONS =
             setOf("open_app", "create_note", "calculate", "send_message") +
-                setOf("call", "search", "open_url", "read_screen", "purchase", "other")
+                setOf("call", "search", "open_url", "read_screen", "purchase", "create_calendar_event", "other")
     }
 }
 
@@ -106,9 +107,11 @@ class IntentUnderstanding(
         val role = AppRoles.decide(request, installedApps, roleMemory)
         val understood =
             EmailIntents.from(request)?.takeIf { '\n' !in request }
-                ?: ShoppingIntents.from(request, installedApps) ?: localIntent(request, role)
+                ?: CalendarIntents.from(request) ?: ShoppingIntents.from(request, installedApps)
+                ?: localIntent(request, role)
                 ?: query(request, role as? RoleDecision.Use)
-        val intent = AppPlanHygiene.normalize(request, EmailIntents.normalize(request, understood), installedApps)
+        val normalized = CalendarIntents.normalize(request, EmailIntents.normalize(request, understood))
+        val intent = AppPlanHygiene.normalize(request, normalized, installedApps)
         val bucket = if (intent.confidence >= TaskIntent.CONFIDENT) "high" else "low"
         diagnostic("intent kind=${intent.action} confidence=$bucket")
         return intent
@@ -214,7 +217,12 @@ class IntentUnderstanding(
             Understand EQO's user's request; do NOT plan or execute. Return only JSON:
             {"goal":"short sentence","app":null,"action":"other","params":{},"channel":null,
             "send":"unknown","confidence":0.0,"question":null,"options":[]}.
-            action: open_app|create_note|calculate|send_message|call|search|open_url|read_screen|purchase|other.
+            action: open_app|create_note|create_calendar_event|calculate|send_message|call|search|open_url|
+            read_screen|purchase|other.
+            Calendar entries and reminders use create_calendar_event, app=null, params.title and params.date.
+            Calendar params.time is OPTIONAL: a supplied date without a time means ALL DAY; do not ask what time.
+            An 'all day' clarification means time='all day', not a missing time. Preserve the earlier title/date.
+            Keep optional duration, location and attendees. Never invent a clock time for a plain date.
             Buying, ordering or adding to a shopping cart is purchase, with params.item and params.quantity
             (integer units, default 1). Never downgrade it to open_app or search. EQO stops at the cart, never pays.
             params are string values: title,body,contact,message,expression,query,subject,attachment,video,url
@@ -364,7 +372,8 @@ class IntentPlanningSession(
             }
             val answer = ask(question)?.takeIf { it.isNotBlank() } ?: return null
             enriched += "\nUser clarification ${rounds + 1}: $answer"
-            val updated = EmailIntents.merge(intent, understandOrQuestion(enriched), answer)
+            val understood = EmailIntents.merge(intent, understandOrQuestion(enriched), answer)
+            val updated = CalendarIntents.merge(request, intent, understood, question, answer)
             intent = understanding.noteClarifications.merge(request, intent, updated, question, answer)
             rounds++
         }
