@@ -17,6 +17,27 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StudyDispatchTest {
+    @Test fun shoppingPopupHandoffIsRecordedWithoutClaimingTheStepSucceeded() =
+        runTest {
+            val message = ai.eqo.actions.impl.ShoppingPopupGuard.HANDOFF
+            val step =
+                LoopStep(
+                    "quantity",
+                    ExecutedAction(
+                        "CLICK_TEXT",
+                        mapOf("text" to ai.eqo.core.agent.ShoppingPlans.INCREASE),
+                        plannerClaim = "shopping:milk in Zepto",
+                    ),
+                )
+            val executor =
+                StudyActionExecutor(RecordingPort(), ApprovedTaskPlan(listOf(step))) { _, _ ->
+                    ai.eqo.actions.base.ActionResult
+                        .UserActionRequired(message)
+                }
+            assertEquals(ExecuteResult.Failure(message), executor.execute(step))
+            assertEquals(message, executor.handoffDetail(step.stepId))
+        }
+
     @Test fun stopCancelsAnIrreversiblePermissionWaitBeforeAnyEffect() =
         runTest {
             val answer = CompletableDeferred<Boolean>()

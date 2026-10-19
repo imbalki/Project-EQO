@@ -16,6 +16,11 @@
 | :app | `android/app/src/main/kotlin/ai/eqo/handle/HandleScreenshot.kt` | EQO-NEW | `ai.eqo.handle` | User-only gated capture, local MediaStore publish and explicit share |
 | :app | `android/app/src/test/kotlin/ai/eqo/handle/HandleScreenshotTest.kt` | EQO-NEW | `ai.eqo.handle` | Fake capture gates, publication rollback, compact card and settings tests |
 
+## Close-only shopping popup recovery (t_025d5eb1)
+
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/ShoppingPopupGuard.kt` | EQO-NEW | `ai.eqo.actions.impl` | Run-scoped bounded popup recovery with existing gated actions |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/ShoppingPopupGuardTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | Fake recovery, retry, handoff and dismissal budget regressions |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/ShoppingPopupCloseTest.kt` | EQO-NEW | `ai.eqo.accessibility` | Fake-tree close allowlist, payment denial, gates and product binding |
 ## Keep note routing and search plan hygiene (t_b4152024)
 
 | :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AppPlanHygiene.kt` | EQO-NEW | `ai.eqo.core.agent` | Keep intent normalization, editor refusal and submitted-search cleanup |

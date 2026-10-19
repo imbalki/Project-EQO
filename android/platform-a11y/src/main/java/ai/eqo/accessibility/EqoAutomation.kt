@@ -98,6 +98,43 @@ class EqoAutomation(
             tapTarget(viewId, byViewId = true)
         }
 
+    /** Close-only recovery: retain the selected product and use the normal safety/takeover gate. */
+    fun dismissShoppingPopup(): A11yResult =
+        runAction {
+            ownWindowBlocked("shopping popup") ?: closeShoppingPopup()
+        }
+
+    private fun closeShoppingPopup(): A11yResult {
+        if (isSecureWindow()) return A11yResult.failure(A11yError.SecureWindow)
+        val closeLabels = setOf("close", "dismiss", "not now", "skip", "x")
+        val close =
+            rootProvider()?.let { root ->
+                NodeTreeSearch.findFirst(root) { node ->
+                    val identified =
+                        node.viewIdResourceName?.endsWith("bottomSheetClose") == true ||
+                            listOf(node.text, node.contentDescription).any {
+                                it?.toString()?.lowercase() in closeLabels
+                            }
+                    node.isClickable &&
+                        !node.isPassword &&
+                        !node.isEditable &&
+                        identified &&
+                        safeSearchInput(node) &&
+                        NodeTreeSearch.findFirst(node) { child ->
+                            !safeNode(child) ||
+                                listOf(child.text, child.contentDescription, child.hintText).any {
+                                    POPUP_COMMERCE.containsMatchIn(it?.toString().orEmpty())
+                                }
+                        } == null
+                }
+            }
+        return when {
+            close == null -> A11yResult.failure(A11yError.NodeNotFound("shopping popup close"))
+            close.click() -> A11yResult.success("shopping popup dismissed")
+            else -> A11yResult.failure(A11yError.ActionRejected("shopping popup close"))
+        }
+    }
+
     /** Types [content] into the first editable node whose text matches [searchText]. */
     fun type(
         searchText: String,
@@ -307,6 +344,7 @@ class EqoAutomation(
         }
 
     private companion object {
+        private val POPUP_COMMERCE = Regex("\\b(?:buy|apply)\\b", RegexOption.IGNORE_CASE)
         private val VIEW_ID_LOG_SAFE = Regex("[A-Za-z0-9_.:/]{1,100}")
 
         // Observed Zepto structural IDs, not payment cards. Only these UUID IDs and stepper suffixes are exempt.
