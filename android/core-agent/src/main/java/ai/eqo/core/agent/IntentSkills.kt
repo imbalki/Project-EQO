@@ -136,13 +136,9 @@ object IntentPlanProtection {
         intent: TaskIntent,
         steps: List<LoopStep>,
     ): List<LoopStep> {
-<<<<<<< HEAD
         // Questions discard the proposal and cannot reach approval or execution.
         if (RegistryPlanVocabulary.clarification(steps) != null) return steps
-        val protected = ShoppingPlans.validate(intent, steps)
-=======
         val protected = AppPlanHygiene.validate(intent, ShoppingPlans.validate(intent, steps))
->>>>>>> origin/main
         if (intent.send == "no") require(steps.none(::submits)) { "Intent send=no cannot include Send or submit steps" }
         if (intent.action == "send_message") {
             val channel = intent.channel ?: "sms"

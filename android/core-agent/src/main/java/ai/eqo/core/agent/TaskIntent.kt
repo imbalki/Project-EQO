@@ -333,11 +333,7 @@ class IntentPlanningSession(
         ask: suspend (TaskIntent) -> String?,
     ): Result? {
         var enriched = request
-<<<<<<< HEAD
-        var intent = understandOrQuestion(enriched)
-=======
-        var intent = understanding.noteClarifications.defaultApp(understanding.understand(enriched))
->>>>>>> origin/main
+        var intent = understanding.noteClarifications.defaultApp(understandOrQuestion(enriched))
         var rounds = 0
         while (true) {
             val question =
@@ -368,12 +364,8 @@ class IntentPlanningSession(
             }
             val answer = ask(question)?.takeIf { it.isNotBlank() } ?: return null
             enriched += "\nUser clarification ${rounds + 1}: $answer"
-<<<<<<< HEAD
-            intent = EmailIntents.merge(intent, understandOrQuestion(enriched), answer)
-=======
-            val updated = EmailIntents.merge(intent, understanding.understand(enriched), answer)
+            val updated = EmailIntents.merge(intent, understandOrQuestion(enriched), answer)
             intent = understanding.noteClarifications.merge(request, intent, updated, question, answer)
->>>>>>> origin/main
             rounds++
         }
     }
