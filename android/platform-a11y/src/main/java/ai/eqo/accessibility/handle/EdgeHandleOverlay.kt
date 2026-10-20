@@ -548,12 +548,22 @@ class EdgeHandleOverlay(
             setMargins(gap, gap, gap, gap)
         }
 
+    /**
+     * Icon cell that owns its click. The hold handler hands a clean tap to [View.performClick],
+     * so accessibility services and the touch path fire the action exactly once.
+     */
+    private inner class PanelCellView(
+        context: Context,
+    ) : FrameLayout(context) {
+        override fun performClick(): Boolean = super.performClick()
+    }
+
     /** One icon button: 40dp tonal circle on a 48dp cell, named for TalkBack and UI tests. */
     private fun panelCell(
         spec: PanelActionSpec,
         action: () -> Unit,
     ): View {
-        val cell = FrameLayout(context)
+        val cell = PanelCellView(context)
         cell.id = spec.viewId
         cell.contentDescription = context.getString(spec.labelRes)
         val icon = ImageView(context)
@@ -594,8 +604,12 @@ class EdgeHandleOverlay(
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
 
+    /**
+     * Shows the name chip while the finger stays down. The listener owns the gesture and hands a
+     * clean tap to [View.performClick], so a drag never fires the row it started on.
+     */
     private fun tooltipHold(anchor: View): View.OnTouchListener =
-        View.OnTouchListener { _, event ->
+        View.OnTouchListener { cell, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     pendingTooltip?.let(handler::removeCallbacks)
@@ -604,11 +618,23 @@ class EdgeHandleOverlay(
                             tooltipHolding = true
                             syncTooltip(anchor)
                         }.also { handler.postDelayed(it, TOOLTIP_LONG_PRESS_MS) }
+                    true
                 }
-                MotionEvent.ACTION_MOVE -> if (panelDragged) dismissTooltip()
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> dismissTooltip()
+                MotionEvent.ACTION_MOVE -> {
+                    if (panelDragged) dismissTooltip()
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    dismissTooltip()
+                    if (!panelDragged) cell.performClick()
+                    true
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    dismissTooltip()
+                    true
+                }
+                else -> false
             }
-            false
         }
 
     private fun tooltipHover(anchor: View): View.OnHoverListener =
