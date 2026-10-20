@@ -6,6 +6,10 @@ import ai.eqo.accessibility.TakeoverDetector
 import ai.eqo.accessibility.handle.EdgeHandleFeatures
 import ai.eqo.accessibility.handle.HandlePreferences
 import ai.eqo.accessibility.handle.HandleWindowGuard
+import ai.eqo.accessibility.handle.PanelShortcutSpec
+import ai.eqo.accessibility.handle.panelActionSpecs
+import ai.eqo.accessibility.handle.panelHeight
+import ai.eqo.accessibility.handle.panelWidthDp
 import ai.eqo.core.agent.ActionLoop
 import ai.eqo.core.agent.ExecutedAction
 import ai.eqo.core.agent.LoopState
@@ -23,6 +27,7 @@ import ai.eqo.task.TaskActivity
 import ai.eqo.task.TaskRunSession
 import android.content.Context
 import android.view.View
+import android.view.WindowInsets
 import android.widget.EditText
 import androidx.core.content.edit
 import androidx.test.core.app.ApplicationProvider
@@ -189,14 +194,14 @@ class HandleFeaturesTest {
                 assertFalse(automation.tap("Pause").isSuccess)
                 assertFalse(automation.tap("Send").isSuccess)
                 assertEquals(0, rootReads)
-                panelButton(overlay, R.string.task_pause).performClick()
+                panelAction(overlay, R.string.task_pause).performClick()
                 assertFalse(HandleWindowGuard.shared.panelOpen)
                 advanceTimeBy(9000)
                 runCurrent()
                 assertEquals(LoopState.PAUSED, controller.currentState())
                 assertEquals(0, rootReads)
                 overlayView(overlay)!!.performClick()
-                panelButton(overlay, R.string.task_stop).performClick()
+                panelAction(overlay, R.string.task_stop).performClick()
                 advanceUntilIdle()
                 assertEquals("STOPPED", run.await().terminal)
                 assertEquals(0, rootReads)
@@ -279,6 +284,15 @@ class HandleFeaturesTest {
     ): android.widget.Button =
         descendants(overlayView(overlay)!!).filterIsInstance<android.widget.Button>().first {
             it.text == context.getString(label)
+        }
+
+    /** Panel actions are icon buttons; UI tests find them by their spoken name. */
+    private fun panelAction(
+        overlay: ai.eqo.accessibility.handle.EdgeHandleOverlay,
+        label: Int,
+    ): android.view.View =
+        descendants(overlayView(overlay)!!).first {
+            it.contentDescription == context.getString(label)
         }
 
     @Test
@@ -373,7 +387,10 @@ class HandleFeaturesTest {
             assertEquals(android.view.WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY, params.type)
             handle.performClick()
             assertTrue(HandleWindowGuard.shared.panelOpen)
-            overlayView(overlay)!!.performClick()
+            // Only an outside tap dismisses the panel (a tap inside it must not).
+            val outside = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_OUTSIDE, 0f, 0f, 0)
+            overlayView(overlay)!!.dispatchTouchEvent(outside)
+            outside.recycle()
             assertFalse(HandleWindowGuard.shared.panelOpen)
             overlayView(overlay)!!.performClick()
             val panel = overlayView(overlay)!!
@@ -445,7 +462,10 @@ class HandleFeaturesTest {
             assertFalse(HandleWindowGuard.shared.panelOpen)
             drag(handle, width - 10, width - 110, 200f)
             assertTrue(HandleWindowGuard.shared.panelOpen)
-            overlayView(overlay)!!.performClick()
+            // Only an outside tap dismisses the panel.
+            val outside = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_OUTSIDE, 0f, 0f, 0)
+            overlayView(overlay)!!.dispatchTouchEvent(outside)
+            outside.recycle()
             val returned = overlayView(overlay)!!
             val oldPosition = HandlePreferences(context).verticalFraction
             drag(returned, width - 10, width - 10, 200f, 300f)
@@ -461,7 +481,7 @@ class HandleFeaturesTest {
             shadowOf(android.os.Looper.getMainLooper()).idle()
             assertTrue(overlayView(overlay) != null)
             overlayView(overlay)!!.performLongClick()
-            panelButton(overlay, ai.eqo.platform.R.string.edge_handle_hide_app).performClick()
+            panelAction(overlay, ai.eqo.platform.R.string.edge_handle_hide_app).performClick()
             assertTrue(HandlePreferences(context).isHidden("other.app"))
             assertEquals(null, overlayView(overlay))
         } finally {
@@ -496,7 +516,7 @@ class HandleFeaturesTest {
             // Idle is a slim grip; dictation starts from the non-focusable shortcuts panel.
             assertFalse(descendants(overlayView(overlay)!!).any { it is android.widget.Button })
             overlayView(overlay)!!.performClick()
-            panelButton(overlay, R.string.dictation_switch).performClick()
+            panelAction(overlay, R.string.dictation_switch).performClick()
 
             val params = overlayView(overlay)!!.layoutParams as android.view.WindowManager.LayoutParams
             assertTrue(params.flags and android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE != 0)
@@ -585,7 +605,7 @@ class HandleFeaturesTest {
             main.idle()
             assertFalse(HandleWindowGuard.shared.panelOpen)
             overlayView(overlay)!!.performClick()
-            panelButton(overlay, ai.eqo.platform.R.string.edge_handle_hide_now).performClick()
+            panelAction(overlay, ai.eqo.platform.R.string.edge_handle_hide_now).performClick()
             main.idle()
             assertEquals(null, overlayView(overlay))
             assertFalse(HandlePreferences(context).isHidden("synthetic.app"))
@@ -685,20 +705,31 @@ class HandleFeaturesTest {
             val panel = overlayView(overlay)!!
             val params = panel.layoutParams as android.view.WindowManager.LayoutParams
             val density = context.resources.displayMetrics.density
-            assertEquals((240 * density).toInt(), params.width)
+            assertEquals((panelWidthDp(2) * density).toInt(), params.width)
             val scroll = (panel as android.view.ViewGroup).getChildAt(0) as android.widget.ScrollView
             val column = scroll.getChildAt(0)
             column.measure(
                 View.MeasureSpec.makeMeasureSpec(params.width, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
             )
-            assertEquals(minOf(column.measuredHeight, (248 * density).toInt()), params.height)
-            val buttons = descendants(panel).filterIsInstance<android.widget.Button>()
-            assertEquals(6, buttons.size)
-            assertTrue(buttons.all { it.layoutParams.height == android.view.ViewGroup.LayoutParams.WRAP_CONTENT })
-            assertTrue(buttons.all { it.maxLines == 2 })
-            assertTrue(buttons.all { it.minimumHeight >= (56 * density).toInt() })
-            val rows = buttons.groupBy { it.parent }
+            val metrics = context.getSystemService(android.view.WindowManager::class.java).currentWindowMetrics
+            val insets =
+                metrics.windowInsets.getInsets(
+                    WindowInsets.Type.ime() or WindowInsets.Type.systemBars(),
+                )
+            val available = metrics.bounds.height() - insets.top - insets.bottom
+            assertEquals(panelHeight(column.measuredHeight, available), params.height)
+            val cells = descendants(panel).filter { it.contentDescription != null }
+            assertEquals(6, cells.size)
+            assertTrue(cells.all { it.layoutParams.width == (48 * density).toInt() })
+            assertTrue(cells.all { it.layoutParams.height == (48 * density).toInt() })
+            assertTrue(
+                cells.all {
+                    val icon = (it as android.widget.FrameLayout).getChildAt(0) as android.widget.ImageView
+                    icon.drawable != null && icon.layoutParams.width == (40 * density).toInt()
+                },
+            )
+            val rows = cells.groupBy { it.parent }
             assertEquals(listOf(2, 2, 2), rows.values.map { it.size })
             val outside = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_OUTSIDE, 0f, 0f, 0)
             panel.dispatchTouchEvent(outside)
@@ -706,7 +737,159 @@ class HandleFeaturesTest {
             assertFalse(HandleWindowGuard.shared.panelOpen)
             assertEquals(0, calls)
             overlayView(overlay)!!.performClick()
-            panelButton(overlay, R.string.handle_ask).performClick()
+            panelAction(overlay, R.string.handle_ask).performClick()
+            assertEquals(1, calls)
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+        } finally {
+            overlay.destroy()
+        }
+    }
+
+    @Test
+    fun `tall compact panel scrolls inside its bounds and swipes never close it`() {
+        val registry =
+            ai.eqo.accessibility.handle
+                .HandleShortcutRegistry<Context>(HandlePreferences(context))
+        (1..40).forEach { index ->
+            registry.register(BuiltInHandleShortcut("fake_$index", R.string.handle_ask, 0) {})
+        }
+        EdgeHandleFeatures.install(registry)
+        HandlePreferences(context).enabled = true
+        val overlay = createOverlay()
+        try {
+            overlay.setProbeAvailable(true)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            overlayView(overlay)!!.performClick()
+            val panel = overlayView(overlay)!!
+            val params = panel.layoutParams as android.view.WindowManager.LayoutParams
+            val scroll = (panel as android.view.ViewGroup).getChildAt(0) as android.widget.ScrollView
+            val column = scroll.getChildAt(0)
+            column.measure(
+                View.MeasureSpec.makeMeasureSpec(params.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            )
+            // The regression premise: the grid overflows the capped window and must scroll.
+            assertTrue(params.height < column.measuredHeight)
+            panel.measure(
+                View.MeasureSpec.makeMeasureSpec(params.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(params.height, View.MeasureSpec.EXACTLY),
+            )
+            panel.layout(0, 0, params.width, params.height)
+            steppedDrag(panel, 60f, params.height - 40f, 40f)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertTrue(HandleWindowGuard.shared.panelOpen)
+            assertTrue(scroll.scrollY > 0)
+        } finally {
+            overlay.destroy()
+        }
+    }
+
+    @Test
+    fun `a vertical swipe inside the panel never fires the row under the finger`() {
+        var calls = 0
+        val registry =
+            ai.eqo.accessibility.handle
+                .HandleShortcutRegistry<Context>(HandlePreferences(context))
+        listOf(R.string.handle_ask, R.string.handle_open).forEachIndexed { index, label ->
+            registry.register(BuiltInHandleShortcut("fake_$index", label, 0) { calls++ })
+        }
+        EdgeHandleFeatures.install(registry)
+        HandlePreferences(context).enabled = true
+        val overlay = createOverlay()
+        try {
+            overlay.setProbeAvailable(true)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            overlayView(overlay)!!.performClick()
+            val panel = overlayView(overlay)!!
+            val params = panel.layoutParams as android.view.WindowManager.LayoutParams
+            panel.measure(
+                View.MeasureSpec.makeMeasureSpec(params.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(params.height, View.MeasureSpec.EXACTLY),
+            )
+            panel.layout(0, 0, params.width, params.height)
+            // Beyond touch slop but fully inside the first icon cell ("Close").
+            steppedDrag(panel, 30f, 20f, 50f)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertTrue(HandleWindowGuard.shared.panelOpen)
+            assertEquals(0, calls)
+            // A real tap on the same cell still runs the action.
+            listOf(android.view.MotionEvent.ACTION_DOWN, android.view.MotionEvent.ACTION_UP).forEach { action ->
+                val tap = android.view.MotionEvent.obtain(0, 0, action, 30f, 30f, 0)
+                panel.dispatchTouchEvent(tap)
+                tap.recycle()
+            }
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertFalse(HandleWindowGuard.shared.panelOpen)
+            assertEquals(0, calls)
+        } finally {
+            overlay.destroy()
+        }
+    }
+
+    @Test
+    fun `every registered shortcut reaches the panel with an icon and a spoken name`() {
+        val registry = createHandleRegistry(context)
+        val shortcuts = registry.ordered()
+        assertTrue(shortcuts.all { it.iconRes != 0 })
+        assertTrue(shortcuts.all { it.labelRes != 0 })
+        val specs =
+            panelActionSpecs(
+                shortcuts.map { PanelShortcutSpec(it.id, it.iconRes, it.labelRes) },
+                hideAppAvailable = true,
+            )
+        assertEquals(listOf("close", "hide_now") + shortcuts.map { it.id } + "hide_app", specs.map { it.key })
+        assertTrue(specs.all { it.iconRes != 0 && it.labelRes != 0 })
+        assertTrue(specs.all { it.viewId != android.view.View.NO_ID })
+    }
+
+    @Test
+    fun `hover and touch and hold reveal the action name and never block the next tap`() {
+        var calls = 0
+        val registry =
+            ai.eqo.accessibility.handle
+                .HandleShortcutRegistry<Context>(HandlePreferences(context))
+        registry.register(BuiltInHandleShortcut("fake_0", R.string.handle_ask, 0) { calls++ })
+        EdgeHandleFeatures.install(registry)
+        HandlePreferences(context).enabled = true
+        val overlay = createOverlay()
+        try {
+            overlay.setProbeAvailable(true)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            overlayView(overlay)!!.performClick()
+            val panel = overlayView(overlay)!!
+            val params = panel.layoutParams as android.view.WindowManager.LayoutParams
+            panel.measure(
+                View.MeasureSpec.makeMeasureSpec(params.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(params.height, View.MeasureSpec.EXACTLY),
+            )
+            panel.layout(0, 0, params.width, params.height)
+            val cell = descendants(panel).first { it.contentDescription == context.getString(R.string.handle_ask) }
+            // A mouse or stylus hover shows the name chip; leaving hides it.
+            hover(cell, android.view.MotionEvent.ACTION_HOVER_ENTER)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertEquals(context.getString(R.string.handle_ask), tooltipName(panel))
+            hover(cell, android.view.MotionEvent.ACTION_HOVER_EXIT)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertEquals(null, tooltipName(panel))
+            // Touch-and-hold shows the chip too; a cancelled release hides it without firing.
+            val down = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_DOWN, 30f, 90f, 0)
+            panel.dispatchTouchEvent(down)
+            down.recycle()
+            shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(500))
+            assertEquals(context.getString(R.string.handle_ask), tooltipName(panel))
+            assertEquals(0, calls)
+            val cancel = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_CANCEL, 30f, 90f, 0)
+            panel.dispatchTouchEvent(cancel)
+            cancel.recycle()
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+            assertEquals(null, tooltipName(panel))
+            // The next tap on the same cell still runs the action.
+            listOf(android.view.MotionEvent.ACTION_DOWN, android.view.MotionEvent.ACTION_UP).forEach { action ->
+                val tap = android.view.MotionEvent.obtain(0, 0, action, 30f, 90f, 0)
+                panel.dispatchTouchEvent(tap)
+                tap.recycle()
+            }
+            shadowOf(android.os.Looper.getMainLooper()).idle()
             assertEquals(1, calls)
             assertFalse(HandleWindowGuard.shared.panelOpen)
         } finally {
@@ -763,6 +946,49 @@ class HandleFeaturesTest {
             event.recycle()
         }
     }
+
+    private fun steppedDrag(
+        view: android.view.View,
+        x: Float,
+        fromY: Float,
+        toY: Float,
+    ) {
+        val steps = 4
+        val points = (0..steps).map { fromY + (toY - fromY) * it / steps }
+        points.forEachIndexed { index, y ->
+            val action =
+                when (index) {
+                    0 -> android.view.MotionEvent.ACTION_DOWN
+                    points.size - 1 -> android.view.MotionEvent.ACTION_UP
+                    else -> android.view.MotionEvent.ACTION_MOVE
+                }
+            val event = android.view.MotionEvent.obtain(0, 0, action, x, y, 0)
+            view.dispatchTouchEvent(event)
+            event.recycle()
+        }
+    }
+
+    private fun hover(
+        target: android.view.View,
+        action: Int,
+    ) {
+        val event = android.view.MotionEvent.obtain(0, 0, action, 10f, 10f, 0)
+        // dispatchHoverEvent is protected; UI tests reach the hover listener the way input does.
+        val dispatch =
+            android.view.View::class.java
+                .getDeclaredMethod("dispatchHoverEvent", android.view.MotionEvent::class.java)
+        dispatch.isAccessible = true
+        dispatch.invoke(target, event)
+        event.recycle()
+    }
+
+    private fun tooltipName(panel: android.view.View): String? =
+        (panel as android.view.ViewGroup)
+            .let { root -> (0 until root.childCount).map { root.getChildAt(it) } }
+            .filterIsInstance<android.widget.TextView>()
+            .firstOrNull { it.visibility == View.VISIBLE }
+            ?.text
+            ?.toString()
 
     private fun overlayView(overlay: ai.eqo.accessibility.handle.EdgeHandleOverlay): android.view.View? {
         val field = overlay.javaClass.getDeclaredField("view")

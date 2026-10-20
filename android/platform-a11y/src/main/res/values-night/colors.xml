@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EQO edge-handle panel: Material 3 tonal surfaces (dark). -->
+<resources>
+    <color name="eqo_handle_panel_surface">#FF2B2930</color>
+    <color name="eqo_handle_icon_surface">#FF4A4458</color>
+    <color name="eqo_handle_icon_tint">#FFCAC4D0</color>
+    <color name="eqo_handle_tooltip_surface">#FFE6E0E9</color>
+    <color name="eqo_handle_tooltip_text">#FF312F37</color>
+</resources>

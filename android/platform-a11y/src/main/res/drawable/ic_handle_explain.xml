@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EQO edge-handle panel: Explain screen (info), no new dependencies. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M4,12 A8,8 0 1,0 20,12 A8,8 0 1,0 4,12 M12,11 L12,16"
+        android:strokeColor="@color/eqo_handle_icon_tint"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2" />
+    <path
+        android:fillColor="@color/eqo_handle_icon_tint"
+        android:pathData="M11,7 L13,7 L13,9 L11,9 Z" />
+</vector>
