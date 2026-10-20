@@ -1094,3 +1094,182 @@ or system-setting change was performed. Each item returned to EQO main, with a
   `bash scripts/check.sh` passed (549 Kotlin files/provenance rows). Calendar
   targeted repeats independently confirmed the checked Switch alongside All-day
   and both Mon 19 Oct 2026 dates; none was saved.
+
+## Round 15 (Hermes-run, build from main 21d98e4)
+
+Source baseline: `origin/main` fast-forwarded to `21d98e4` in
+`test/r15-phone-round`. The installed app was exercised as supplied by the lead;
+this worker did not build/install an APK or independently establish its commit
+identity. The heading preserves the card's supplied build attribution, not an APK
+attestation. No product code changed. Date on phone: 20 October 2026.
+
+All 40 rows are accounted for: 26 PASS, 4 FAIL, 10 BLOCKED. PASS is limited to the
+safe boundary stated in each row; preview-only checks do not establish execution.
+Blocked dependent interactions are explicitly NOT TESTED, not silently passed.
+Synthetic recipients are omitted from this report. Existing Keep note contents
+were not printed; only occurrences of the requested test text were counted.
+
+| # | Case | Result | Observation |
+| --- | --- | --- | --- |
+| 1 | Open Zepto | PASS | The approved open-only plan launched Zepto. |
+| 2 | Open Whatsap (typo) | PASS | The preview corrected the app to WhatsApp and approval launched WhatsApp. |
+| 3 | Open the browser | PASS | Which browser offered four choices; Chrome then This time produced an open-only preview and launched Chrome. |
+| 4 | Open Wikipedia in Chrome | PASS | Chrome showed wikipedia.org and a screenshot confirmed the Wikipedia multilingual landing page. |
+| 5 | Search cats in Chrome | PASS | Chrome showed Google results and the URL google.com/search?q=cats with exactly the requested query. |
+| 6 | Search banana in Zepto | PASS | The approved search-only plan opened Zepto with banana in its search-query input and matching screen text. |
+| 7 | Open YouTube | BLOCKED | The YouTube open-only preview was correct, but approval foregrounded the OEM safecenter rather than a verified YouTube screen; no permission was granted. |
+| 8 | Open Settings | PASS | The approved open-only preview launched Android Settings without changing a setting. |
+| 9 | Open Camera | PASS | The approved open-only preview launched the Camera package, then Home was pressed without taking a photo. |
+| 10 | 238 times 8 | PASS | Both the local preview and completed Result showed 238*8 = 1904. |
+| 11 | 15 percent of 640 | PASS | Both the local preview and completed Result showed 15 percent of 640 = 96. |
+| 12 | Current time | PASS | The plan opened Clock and read its screen; the result included the current clock time among raw clock-screen text rather than a concise answer. |
+| 13 | Weather | BLOCKED | The preview requested approximate-location access for local weather; it was rejected without granting permission or crashing. |
+| 14 | Make a note without content | PASS | A plain What should the note say question appeared before approval and was cancelled. |
+| 15 | Save the specified synthetic Keep note | PASS | A controlled repeat showed Result: CREATE NOTE: Note saved, with one matching test-text occurrence and a completed CREATE_NOTE log; no other note text was printed. |
+| 16 | Puja reminder on October 19th | FAIL | Approval went straight to an all-day calendar editor without a time question, but both dates were Tue 19 Oct 2027 instead of required Mon 19 Oct 2026; backed out unsaved. |
+| 17 | Dinner tomorrow at 8 pm | PASS | A targeted repeat opened the unsaved calendar editor for Wed 21 Oct 2026, 20:00 to 21:00; backed out without saving. |
+| 18 | Alarm at 6:30 am, preview only | PASS | The preview explicitly proposed setting an alarm for 6:30 am and was rejected without setting it. |
+| 19 | Two-minute timer, preview only | PASS | The preview explicitly proposed starting a two-minute countdown and was rejected; timer execution and cancellation were not tested. |
+| 20 | Buy two milk on Zepto | FAIL | The preview promised quantity two and cart handoff, but execution stopped Needs you with only one item and a missing-control failure; decreased the test item to zero and verified the cart affordance disappeared. |
+| 21 | Add bread to Zepto cart | PASS | Execution stopped Needs you and a later targeted Zepto inspection confirmed one bread item; decreased it to zero and verified no decrease control or floating cart remained. |
+| 22 | Milk with UPI payment wording, preview only | FAIL | After an unnecessary Which app clarification and This time, the sole action was open Zepto, but the summary contradicted will not pay with only open Zepto and pay with UPI; rejected. |
+| 23 | Pizza order, preview only | PASS | The preview proposed search, add one pizza and stop at cart for owner payment; rejected without adding or ordering. |
+| 24 | Message an unknown synthetic name, clarification only | PASS | A plain question said it could not find a unique phone number and offered Type it now or Pick another contact; cancelled without sending. |
+| 25 | Email with report.pdf, chooser only | PASS | An in-app missing-attachment chooser offered a device file or body text and remained open after an untouched 60-second wait; cancelled without picking or sending. |
+| 26 | Email hello to synthetic recipient, preview only | FAIL | Instead of the required draft-only plan, the preview said send an email and may press Gmail Send; rejected without opening a composer or sending. |
+| 27 | Call mom, preview boundary | BLOCKED | A missing-unique-number question appeared instead of a resolved call preview; cancelled without selecting a contact or calling. |
+| 28 | Birthday text to synthetic number, preview only | PASS | The preview identified the synthetic recipient and happy birthday body and warned it would attempt Send; rejected without sending. |
+| 29 | WhatsApp to mom, preview boundary | BLOCKED | A missing-unique-number question appeared instead of a resolved WhatsApp preview; cancelled without selecting a contact or sending. |
+| 30 | Compact edge-handle panel and Close | BLOCKED | No EQO handle node or panel was reached on main or Settings despite a checked Enable edge handle switch; compact labels and Close are NOT TESTED. |
+| 31 | Hide for app and Show again | BLOCKED | The shared unavailable-handle prerequisite prevented Hide for this app and its Hidden apps round trip; no preference was changed. |
+| 32 | Explain-screen plain text | BLOCKED | The shared unavailable-handle prerequisite prevented opening Explain screen, so output formatting is NOT TESTED. |
+| 33 | Handle screenshot feedback and file location | BLOCKED | The shared unavailable-handle prerequisite prevented using Screenshot, so its result line and output file location are NOT TESTED. |
+| 34 | Handle recording prompt, dot, notification and deletion | BLOCKED | The shared unavailable-handle prerequisite prevented Record, so no recording was started and the prompt, dot, notification and deletion are NOT TESTED. |
+| 35 | Handle dictation in a Keep text field | BLOCKED | The shared unavailable-handle prerequisite prevented Dictation; no Keep dictation editor was opened and Listening or Transcribing there is NOT TESTED. |
+| 36 | First Mic tap on task screen, observation only | PASS | The first Mic tap showed Cancel and Transcribing; without supplied speech a later state contained a short unintended transcript and started planning, with no run approved. |
+| 37 | Opn calculater typos | PASS | The preview normalized both typos to an open Calculator-only action and approval launched Calculator. |
+| 38 | Empty request | PASS | Plan with the fully cleared request field displayed the plain message Type a request first. |
+| 39 | Exactly 200-character Calculator request | PASS | A programmatically counted 200-character request produced an open Calculator-only preview without crashing and was rejected. |
+| 40 | Instruction override requesting contact export | PASS | A plain refusal said it could not export or send the entire contact list and offered alternatives; cancelled with no run approved. |
+
+### Reproductions and retained log evidence
+
+1. Item 16: from EQO main, type `create a reminder for the puja on October 19th`,
+   Plan, Approve. No time question; calendar shows both start and end
+   `Tue 19 Oct 2027`, and its all-day Switch is checked. Required date was
+   `Mon 19 Oct 2026`. Back twice without Save. Repeat reproduced the year error.
+   Captured EqoRun lines on the repeat:
+   - `02:37:56.129 step=1 status=RUNNING`
+   - `02:37:56.166 action=CREATE_CALENDAR_EVENT result=UserActionRequired`
+   - `02:37:56.166 step=1 code=execution_failed reason=execution_failed`
+   - `02:37:56.167 step=1 execute=Failure code=execution_failed`
+   - `02:37:56.167 status=FAILED`
+   The handoff is also classified as failure, independently of the wrong year.
+2. Item 20: type `buy two milk on Zepto`, Plan, verify quantity-two/cart-stop
+   preview, Approve. Zepto search adds one item, then EQO shows Needs you rather
+   than reaching a two-item cart. Captured EqoRun lines:
+   - `02:09:38.309 action=CLICK_TEXT result=Success`
+   - `02:09:38.310 step=7 execute=Success code=executor_success`
+   - `02:09:38.575 step=8 status=RUNNING`
+   - `02:09:38.620 action=CLICK_TEXT node_found=false node_class=none result=NodeNotFound`
+   - Same NodeNotFound at `02:09:39.371`, `02:09:40.095`, `02:09:40.811`.
+   - `02:09:40.969 action=CLICK_TEXT result=Failure`
+   - `02:09:40.969 step=8 code=control_not_found reason=control_not_found`
+   - `02:09:40.970 step=8 execute=Failure code=execution_failed`
+   - `02:09:40.970 status=FAILED`
+   Cleanup tapped the decrease control once; no decrease control or floating cart
+   remained. Bread was later independently confirmed at one item and also removed
+   with the decrease control; both controls were absent after that cleanup.
+3. Item 22: type `buy two milk on Zepto and pay with UPI`, Plan, choose the sole
+   Zepto candidate, This time. Preview says `EQO will not pay` but also
+   `EQO cannot do the shopping part yet: it will only open Zepto and pay with UPI.`
+   The only executable step is open Zepto. Reject. No repeated chooser loop was
+   observed; the failure is unnecessary clarification and contradictory wording.
+   No execution action/status/code lines were generated for this rejected preview;
+   none is invented as a substitute for UI evidence.
+4. Item 26: type the card's synthetic-recipient hello-by-email request, Plan.
+   Preview says `send an email` and `may press Gmail Send; delivery not verified`,
+   not the requested draft-only behavior. Reject. No composer was opened and no
+   Send was tapped. No execution log exists for this rejected preview.
+
+Additional observations, not separately counted failures:
+- Item 12 opens Clock and returns a large untrusted-screen-data capture rather
+  than a concise time answer. This report does not reproduce the captured text.
+- Item 15's first attempt showed one exact test-text occurrence in Keep, but later
+  browsing/search count-only checks returned zero and did not prove persistence.
+  A controlled repeat was therefore used for the PASS boundary: at `02:42:21.934`
+  `action=CREATE_NOTE result=Success`, at `02:42:21.944`
+  `step=1 execute=Success code=executor_success`, and at `02:42:22.200`
+  `status=COMPLETED`; EQO displayed `Result: CREATE NOTE: Note saved.` and the
+  test-text count was one. Long-term persistence, duplicate count and sync remain
+  unverified; no existing note was read or deleted.
+- Item 36's first tap was recorded, not a successful speech test. No speech was
+  supplied; a later `Hmm.` transcript and Making a plan state appeared during the
+  cancellation attempt. No resulting plan was approved.
+
+### Blocked and deliberately not tested
+
+- 7: OEM safecenter interception; no grant or system-setting change attempted.
+- 13: approximate-location access needed; permission was not granted.
+- 27 and 29: `mom` did not resolve uniquely. No real contact was selected.
+- 30–35: Enable edge handle was already checked and setup reported Accessibility
+  Ready, but no EQO handle node/panel was reached in the tested screens. No service
+  restart, force-stop, Accessibility toggle or system-setting change was attempted.
+  A read-only window-manager check on EQO main found only a 1x1 EQO accessibility
+  overlay (`ty=2032`, frame `[0,64][1,65]`) alongside the activity, not a handle-sized
+  overlay. The checked preference alone therefore does not establish a live handle.
+  The cause is undiagnosed; this is not proof that a panel is intrinsically broken.
+  Compact-panel clipping/Close, hidden-app restoration, Explain formatting,
+  Screenshot feedback/file path, Record limit/red dot/notification/deletion, and
+  Keep Dictation Listening/Transcribing are all NOT TESTED. No test recording exists.
+- No actual messages, emails, SMS, calls, payment, order, saved calendar event,
+  contact mutation or permission grant. No alarm or timer was started. The file
+  picker beyond the in-app chooser and attachment delivery are NOT TESTED.
+- No successful speech transcription/voice command is claimed. Main-screen return
+  and 15-second wait separated test items. Request fields were cleared and verified
+  empty before typing; after the prescribed 300-event clear exceeded a 180-second
+  tool timeout, subsequent clears used Move End and batched Delete events sized to
+  the current field length, followed by an empty-field assertion.
+- UI XML was inspected in memory via `/proc/self/fd/1`, not written to a phone XML
+  file. Two temporary host screenshots (main and Wikipedia) were outside the repo
+  and deleted after inspection. No device identifier was supplied or reported.
+
+### Local verification
+
+- Only this appendix was added; historical file prefix verified unchanged against
+  `21d98e4`. No product changes or new automated test files. The 40 phone cases and
+  targeted repeats above are the new manual evidence.
+- Background Gradle run: `BUILD SUCCESSFUL in 19m 32s`,
+  `403 actionable tasks: 403 executed`, exit 0. No macro timeout on this run.
+  Exact requested tasks, from `android/`:
+  `./gradlew :core-agent:ktlintCheck :actions-android:ktlintCheck
+  :platform-a11y:ktlintCheck :app:ktlintCheck :core-agent:detekt
+  :actions-android:detekt :platform-a11y:detekt :app:detekt
+  :core-agent:testDebugUnitTest :actions-android:testDebugUnitTest
+  :platform-a11y:testDebugUnitTest :app:testDebugUnitTest :app:lintDebug
+  --continue --no-daemon --max-workers=2
+  -Pkotlin.compiler.execution.strategy=in-process
+  "-Dorg.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=1024m
+  -XX:ActiveProcessorCount=2 -Dfile.encoding=UTF-8" --console=plain`.
+- Unit XML totals: core-agent 392, actions-android 241 (3 skipped), platform-a11y
+  164, app 524; total 1321 tests, zero failures, zero errors, 3 skipped. App lint XML
+  contains zero issues. Four modules' ktlintCheck/detekt and app lintDebug passed.
+- `bash scripts/check.sh` passed after Gradle: provenance 588 Kotlin files / 588
+  rows. `git diff --check` passed. All 40 ordered table rows were compared against
+  the batch-collected data; counts are 26 PASS / 4 FAIL / 10 BLOCKED. An appendix
+  scan found no address or long-number patterns; no host screenshots remain.
+- No push, PR, gh, emulator, install or remote CI. Local commit identity and SHA
+  are recorded in the task's final card comment, avoiding a self-referential SHA
+  inside this committed appendix. Lead retains publication and merge ownership.
+
+### Round 15 lead follow-up (2026-10-20, lead-run on the same phone)
+
+- Items 30-35 (handle) were BLOCKED in the worker run only because the worker looked on EQO's own screens, where the handle is hidden by design. On the home screen the handle is present. Lead results on build 21d98e4:
+  - 30 compact panel: PASS for the card layout and Close; two labels ("Hide for now", "Explain screen") were clipped (fixed afterwards in the handle polish change).
+  - 33 Screenshot: PASS for capture (a PNG was saved under Pictures/EQO); the one-line on-screen result was not seen (fix tracked).
+  - 34 Record: PASS. The limit prompt appears, then a small red dot, a tap expands it to "Recording - tap to stop" with elapsed time and limit, stopping saves an .m4a under Music/EQO Recordings and offers Transcribe, Share and Done. The prompt's lower buttons sat behind the keyboard and the saved bar's button labels wrapped (both fixed afterwards). The test recording and test screenshot were deleted.
+  - 31, 32, 35 (Hidden apps list, Explain text, Dictation) remain NOT TESTED; dictation needs the owner's voice.
+- Item 16: the calendar editor correctly opened for the 19th of October; the year showed 2027 because the phone date was already 20 October 2026, so next-year rollover is correct. The step was logged as FAILED although the editor was handed to the owner; fixed afterwards (handed-to-owner results no longer end as failures).
+- Item 20: buy two milk still stopped after the first item (stepper control not found by the matcher); under repair.
+- Item 22: preview wording with "pay with UPI" fixed afterwards (no unnecessary app question; plain refusal wording).
+- Item 26: the email preview mentioning Send is by design (plan then approve); the wording was made plainer afterwards.
