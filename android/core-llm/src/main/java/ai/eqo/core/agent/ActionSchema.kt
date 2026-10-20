@@ -314,6 +314,13 @@ object ActionSchema {
                 category = ActionCategory.SYSTEM,
             ),
             ActionDefinition(
+                name = "GET_CURRENT_TIME",
+                description = "Reads the current local time from the device clock without opening an app",
+                params = emptyList(),
+                examples = listOf("what time is it", "tell me the time"),
+                category = ActionCategory.SYSTEM,
+            ),
+            ActionDefinition(
                 name = "SET_RINGER_MODE",
                 description = "Sets ringer mode",
                 params = listOf(ParamDefinition("mode", ParamType.ENUM, true, "Ringer mode", listOf("normal", "vibrate", "silent"))),

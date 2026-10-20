@@ -17,6 +17,8 @@ object PhoneActions {
     const val PARAM = "registry_action"
     private const val MAX_DESCRIPTION = 70
     private const val MAX_WORDS = 12
+    private val timeQuestions =
+        setOf("what time is it", "what s the time", "what is the time", "what is the current time", "tell me the time")
 
     // Stage one already has dedicated skills for these, and the low-level screen controls are never a user goal.
     private val NOT_PHONE_ACTIONS =
@@ -96,6 +98,9 @@ object PhoneActions {
         request: String,
         enabled: Set<String>,
     ): String? {
+        if ("GET_CURRENT_TIME" in enabled && InstalledAppResolver.clean(request) in timeQuestions) {
+            return "GET_CURRENT_TIME"
+        }
         val words = InstalledAppResolver.clean(request.lines().first()).split(' ').filter { it.isNotEmpty() }
         val simple =
             words.isNotEmpty() &&

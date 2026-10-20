@@ -71,6 +71,7 @@ class AndroidActionRegistry internal constructor(
                 return ActionResult.UserActionRequired(
                     "Turn on All files access for EQO. This step did not run. " +
                         "Use Retry remaining steps and approve again.",
+                    handoffCompleted = false,
                 )
             }
             for (permission in requiredPermissions(actionName, ready)) {
@@ -80,6 +81,7 @@ class AndroidActionRegistry internal constructor(
                     return ActionResult.UserActionRequired(
                         "${permission.explanation} This step did not run. " +
                             "Use Retry remaining steps to grant access and approve again.",
+                        handoffCompleted = false,
                     )
                 }
             }

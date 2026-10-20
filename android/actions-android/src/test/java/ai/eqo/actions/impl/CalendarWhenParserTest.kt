@@ -1,6 +1,9 @@
 // Origin: EQO-authored (fix/r6-cal): pure date, time and duration parsing regressions for Calendar hand-offs.
 package ai.eqo.actions.impl
 
+import ai.eqo.core.agent.ApprovedTaskPlan
+import ai.eqo.core.agent.ExecutedAction
+import ai.eqo.core.agent.LoopStep
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -11,6 +14,25 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 class CalendarWhenParserTest {
+    @Test fun planPreviewShowsTheRolledOverYearWithoutChangingApprovedParameters() {
+        val at = Clock.fixed(ZonedDateTime.of(2026, 10, 20, 3, 12, 0, 0, zone).toInstant(), zone)
+        val params = mapOf("title" to "puja", "date" to "October 19th")
+        val steps = listOf(LoopStep("1", ExecutedAction("CREATE_CALENDAR_EVENT", params)))
+        val plan = ApprovedTaskPlan(steps)
+        val preview = CalendarPlanPreview.describe(plan.steps(), clock = at)
+        assertTrue(preview.contains("Tue 19 Oct 2027"))
+        assertTrue(preview.contains("all day"))
+        assertTrue(CalendarPlanPreview.summary(plan.steps(), clock = at).contains("Tue 19 Oct 2027"))
+        assertEquals(
+            params,
+            plan
+                .steps()
+                .single()
+                .action.params,
+        )
+        assertEquals(utcMidnight(2027, 10, 19), resolved("date" to "October 19th", at = at).startMillis)
+    }
+
     // Monday 12 October 2026, 3:00 pm in India.
     private val zone = ZoneId.of("Asia/Kolkata")
     private val now = ZonedDateTime.of(2026, 10, 12, 15, 0, 0, 0, zone)

@@ -19,6 +19,7 @@ internal object RegistryPreviewText {
             "RECORD_SCREEN" to "record the screen for {duration} seconds",
             "INSTALL_APP" to "open the Play Store to install {appName}",
             "GET_SYSTEM_INFO" to "read battery, storage and memory information",
+            "GET_CURRENT_TIME" to "read the current time from the device clock",
             "SET_RINGER_MODE" to "set the phone's ringing mode to {mode}",
             "CLOSE_APP" to "close the current app",
             "ANALYZE_SCREENSHOT" to "analyze a screenshot of the current screen, asking {question}",

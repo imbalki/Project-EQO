@@ -14,9 +14,9 @@ package ai.eqo.task
 
 import ai.eqo.R
 import ai.eqo.accessibility.TakeoverDetector
+import ai.eqo.actions.impl.CalendarPlanPreview
 import ai.eqo.core.agent.ApprovedTaskPlan
 import ai.eqo.core.agent.LoopState
-import ai.eqo.core.agent.TaskPlanPreview
 import ai.eqo.core.agent.UserResumeConfirmation
 import ai.eqo.core.llm.error.LLMException
 import ai.eqo.data.models.PlanStatus
@@ -1076,7 +1076,7 @@ class TaskActivity : Activity() {
             getString(
                 R.string.task_preview_with_permissions,
                 understoodFor(resolved),
-                TaskPlanPreview.describe(resolved),
+                CalendarPlanPreview.describe(resolved),
                 permissionPreview(resolved),
             )
         if (!portedActions.prepareRuntimeAccess(resolved, includeContacts = false)) {
@@ -1111,7 +1111,7 @@ class TaskActivity : Activity() {
     private fun understoodFor(steps: List<ai.eqo.core.agent.LoopStep>): String =
         getString(
             R.string.intent_understood_preview,
-            TaskPlanPreview.summary(steps, purchasePreview),
+            CalendarPlanPreview.summary(steps, purchasePreview),
             understoodPreview,
         )
 
@@ -1140,7 +1140,7 @@ class TaskActivity : Activity() {
         val retryNotice = if (retry) getString(R.string.task_retry_notice) + "\n\n" else ""
         val preview =
             understoodFor(steps) + retryNotice + notice +
-                TaskPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
+                CalendarPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
         if (!retry && !voicePlanRequiresApproval && !PlanApprovalSettings.requiredFor(this, steps)) {

@@ -23,7 +23,8 @@ internal object RunDiagnostics {
 
     fun code(result: ExecuteResult): String =
         when (result) {
-            is ExecuteResult.Success -> "executor_success_not_independent_receipt"
+            is ExecuteResult.Success ->
+                if (result.handedToOwner) "owner_handoff" else "executor_success_not_independent_receipt"
             is ExecuteResult.Failure ->
                 AttachmentFailure.kind(result.reason)
                     ?: result.reason.takeIf { it in failureCodes } ?: "execution_failed"

@@ -40,7 +40,7 @@ internal object RunStatusMapping {
                 cart ||
                 missingControl ||
                 fileNeedsYou ||
-                (handoff != null && progress.state == StepProgressState.FAILED)
+                (handoff != null && progress.state in setOf(StepProgressState.DONE, StepProgressState.FAILED))
         return progress.copy(
             state = if (needsYou) StepProgressState.NEEDS_YOU else progress.state,
             detail =
