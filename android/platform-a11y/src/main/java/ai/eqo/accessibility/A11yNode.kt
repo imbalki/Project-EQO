@@ -65,6 +65,9 @@ interface A11yNode {
 
     fun setText(value: CharSequence): Boolean
 
+    /** Selects all current text (ACTION_SET_SELECTION) so the next typed text replaces it. */
+    fun selectAll(): Boolean = false
+
     /** Replaces the field via clipboard, only when a safe selection can be made. */
     fun paste(
         value: CharSequence,
@@ -169,6 +172,15 @@ class AccessibilityNodeAdapter(
                 putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value)
             }
         return node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
+    }
+
+    override fun selectAll(): Boolean {
+        val args =
+            Bundle().apply {
+                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0)
+                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, node.text?.length ?: 0)
+            }
+        return node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, args)
     }
 
     override fun scroll(forward: Boolean): Boolean {

@@ -18,6 +18,7 @@ import ai.eqo.data.models.RoutineStatus
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -93,6 +94,11 @@ class AutomationExecutorsTest {
                     it.memoryStore = NoMemoryStore
                 },
             )
+        // The first database and executor use links their classes: seconds of one-time cost that
+        // grows with machine load, while runTest budgets real time and fails without any assertion
+        // failing. Pay it here, outside every timed body, through the same read-only call the macro
+        // tests make first.
+        runBlocking { registry.execute("LIST_MACROS", emptyMap()) }
     }
 
     @After
