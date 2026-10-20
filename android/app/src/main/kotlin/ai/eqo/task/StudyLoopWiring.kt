@@ -261,7 +261,8 @@ class StudyActionExecutor(
             .ShoppingPopupGuard()
     private val searchEntry =
         ai.eqo.actions.impl.SearchEntryGuard(
-            ai.eqo.core.agent.AppSearchEntry.of(approvedPlan?.steps().orEmpty()),
+            ai.eqo.core.agent.AppSearchEntry
+                .of(approvedPlan?.steps().orEmpty()),
         )
     private val outputs =
         ai.eqo.core.agent
