@@ -1,5 +1,6 @@
 package ai.eqo.task
 
+import ai.eqo.actions.base.ActionResult
 import ai.eqo.core.agent.ApprovedTaskPlan
 import ai.eqo.core.agent.ExecuteResult
 import ai.eqo.core.agent.ExecutedAction
@@ -17,7 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StudyDispatchTest {
-    @Test fun shoppingPopupHandoffIsRecordedWithoutClaimingTheStepSucceeded() =
+    @Test fun shoppingPopupHandoffIsRecordedWithoutClaimingTheQuantityChanged() =
         runTest {
             val message = ai.eqo.actions.impl.ShoppingPopupGuard.HANDOFF
             val step =
@@ -34,7 +35,7 @@ class StudyDispatchTest {
                     ai.eqo.actions.base.ActionResult
                         .UserActionRequired(message)
                 }
-            assertEquals(ExecuteResult.Failure(message), executor.execute(step))
+            assertEquals(ExecuteResult.Success(message, handedToOwner = true), executor.execute(step))
             assertEquals(message, executor.handoffDetail(step.stepId))
         }
 
@@ -226,7 +227,7 @@ class StudyDispatchTest {
                 )
             val receipt = controller.run()
             assertEquals(listOf("SEND_SMS"), calls)
-            assertEquals("FAILED", receipt.terminal)
+            assertEquals("COMPLETED", receipt.terminal)
             assertEquals(ai.eqo.study.StepProgressState.NEEDS_YOU, receipt.steps.first().state)
             assertEquals(ai.eqo.study.StepProgressState.PENDING, receipt.steps.last().state)
             assertEquals("NEEDS_YOU", RunStatusMapping.terminal(receipt))
@@ -245,6 +246,66 @@ class StudyDispatchTest {
             assertTrue(result is ExecuteResult.Failure)
             assertEquals("Needs user input: Choose a recipient", (result as ExecuteResult.Failure).reason)
             assertEquals("Choose a recipient", executor.handoffDetail("1"))
+        }
+
+    @Test fun everyRegistryActionCanHandOffWithoutFailingRetryingObservingOrRunningTheNextStep() =
+        runTest {
+            ai.eqo.core.agent.ActionSchema.ALL_ACTIONS.forEach { definition ->
+                val message = "Editor opened; review and finish there."
+                val steps =
+                    listOf(
+                        LoopStep("1", ExecutedAction(definition.name, expectedPostconditions = listOf("saved"))),
+                        LoopStep("2", ExecutedAction("WAIT")),
+                    )
+                val calls = mutableListOf<String>()
+                val statuses = mutableListOf<ai.eqo.data.models.PlanStatus>()
+                var observations = 0
+                val executor =
+                    StudyActionExecutor(
+                        RecordingPort(),
+                        registryExecute = { name, _ ->
+                            calls += name
+                            ActionResult.UserActionRequired(message)
+                        },
+                    )
+                val controller =
+                    StudyTaskController(
+                        steps,
+                        StudyPermissionCheck({ true }, { true }, { true }),
+                        StudyApprovalGate(StudyApprovalSurface { ai.eqo.study.ApprovalOutcome.Approved }, { 0L }),
+                        executor,
+                        observe = {
+                            observations++
+                            "owner's editor"
+                        },
+                        onPlanStatus = statuses::add,
+                        takeoverDetector = ai.eqo.accessibility.TakeoverDetector(),
+                    )
+                val receipt = controller.run()
+                assertEquals(definition.name, "COMPLETED", receipt.terminal)
+                assertEquals(listOf(definition.name), calls)
+                assertEquals(0, observations)
+                assertTrue(ai.eqo.data.models.PlanStatus.FAILED !in statuses)
+                assertEquals(ai.eqo.study.StepProgressState.NEEDS_YOU, receipt.steps.first().state)
+                assertEquals(message, receipt.steps.first().detail)
+                assertEquals(ai.eqo.study.StepProgressState.PENDING, receipt.steps.last().state)
+                assertEquals("NEEDS_YOU", RunStatusMapping.terminal(receipt))
+            }
+        }
+
+    @Test fun deniedPrerequisitesAndPendingFlowsAreNotCompletedHandoffs() =
+        runTest {
+            val step = LoopStep("1", ExecutedAction("CREATE_CALENDAR_EVENT"))
+            val results =
+                listOf(
+                    ActionResult.Failure("Calendar is unavailable"),
+                    ActionResult.PendingUserAction("Call verification pending"),
+                    ActionResult.UserActionRequired("Permission denied", handoffCompleted = false),
+                )
+            results.forEach { result ->
+                val executor = StudyActionExecutor(RecordingPort(), registryExecute = { _, _ -> result })
+                assertTrue(executor.execute(step) is ExecuteResult.Failure)
+            }
         }
 
     private class RecordingPort : StudyAutomationPort {

@@ -345,6 +345,10 @@ class HandleRecordingTest {
             HandleRecording.saved(context, Uri.parse("content://media/external/audio/media/9"), "synthetic.m4a", 5000)
             shadowOf(Looper.getMainLooper()).idle()
             val savedButtons = descendants(view(overlay)!!).filterIsInstance<Button>()
+            assertTrue(savedButtons.all { it.maxLines == 1 })
+            assertTrue(savedButtons.all { it.layoutParams.width == ViewGroup.LayoutParams.MATCH_PARENT })
+            val status = descendants(view(overlay)!!).filterIsInstance<TextView>().first { it !is Button }
+            assertEquals(14f * context.resources.displayMetrics.scaledDensity, status.textSize, 0.01f)
             savedButtons.first { it.text == "Share" }.performClick()
             savedButtons.first { it.text == "Transcribe" }.performClick()
             savedButtons.first { it.text == "Done" }.performClick()
@@ -367,6 +371,61 @@ class HandleRecordingTest {
             EdgeHandleFeatures.recordingCopy = copy
             EdgeHandleFeatures.recordingKeep = keep
             EdgeHandleFeatures.recordingDismiss = dismiss
+        }
+    }
+
+    @Test
+    fun `record confirmation scrolls resizes and IME start validates the same draft`() {
+        val lifecycle = Robolectric.buildActivity(EdgeHandleSettingsActivity::class.java, recordingIntent()).setup()
+        try {
+            val dialog = ShadowAlertDialog.getLatestAlertDialog()
+            val views = descendants(dialog.window!!.decorView)
+            val input = views.filterIsInstance<android.widget.EditText>().single()
+            assertEquals(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE,
+                dialog.window!!.attributes.softInputMode and WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST,
+            )
+            assertTrue(input.parent is android.widget.LinearLayout)
+            assertTrue((input.parent as View).parent is android.widget.ScrollView)
+            assertEquals(android.view.inputmethod.EditorInfo.IME_ACTION_GO, input.imeOptions)
+            assertEquals(context.getString(R.string.recording_start), input.imeActionLabel)
+            input.setText("-1")
+            input.onEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_GO)
+            assertTrue(dialog.isShowing)
+            assertNotNull(input.error)
+            input.setText("3")
+            input.onEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_GO)
+            assertFalse(dialog.isShowing)
+            assertEquals("3", HandlePreferences(context).recordingLimit)
+        } finally {
+            lifecycle.pause().stop().destroy()
+        }
+    }
+
+    @Test
+    fun `compact panel window fits measured two line labels rather than fixed rows`() {
+        val service = Robolectric.buildService(EQOAccessibilityService::class.java).create().get()
+        HandlePreferences(service).apply {
+            enabled = true
+            hintShown = true
+        }
+        val overlay = EdgeHandleOverlay(service, service.getSystemService(WindowManager::class.java))
+        try {
+            overlay.setProbeAvailable(true)
+            shadowOf(Looper.getMainLooper()).idle()
+            view(overlay)!!.performClick()
+            val panel = view(overlay)!!
+            val params = panel.layoutParams as WindowManager.LayoutParams
+            val scroll = (panel as ViewGroup).getChildAt(0) as android.widget.ScrollView
+            val column = scroll.getChildAt(0)
+            column.measure(
+                View.MeasureSpec.makeMeasureSpec(params.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            )
+            val maxHeight = (248 * service.resources.displayMetrics.density).toInt()
+            assertEquals(minOf(column.measuredHeight, maxHeight), params.height)
+        } finally {
+            overlay.destroy()
         }
     }
 

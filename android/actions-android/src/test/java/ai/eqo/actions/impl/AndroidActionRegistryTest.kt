@@ -109,7 +109,7 @@ class AndroidActionRegistryTest {
 
     @Test
     fun `enabled action names exist in the single schema and executor classes are internal`() {
-        assertEquals(100, registry.enabledActionNames.size)
+        assertEquals(101, registry.enabledActionNames.size)
         registry.enabledActionNames.forEach { assertNotNull(ActionSchema.getAction(it)) }
         // Public surface never exposes Action objects, constructors or family lists.
         assertFalse(AndroidActionRegistry::class.java.methods.any { it.returnType == Action::class.java })
@@ -218,6 +218,7 @@ class AndroidActionRegistryTest {
             val result = registry.execute("SEND_WHATSAPP", mapOf("contact" to "Alice Smith", "message" to "hi"))
             assertFalse(result.success)
             assertTrue(result.error!!.contains("This step did not run"))
+            assertFalse((result as ActionResult.UserActionRequired).handoffCompleted)
             assertEquals(Manifest.permission.READ_CONTACTS, (requested.single() as ActionPermission.Runtime).name)
             assertNull(shadowOf(context as android.app.Application).nextStartedActivity)
         }

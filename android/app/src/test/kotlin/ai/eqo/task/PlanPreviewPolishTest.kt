@@ -4,6 +4,8 @@ import ai.eqo.R
 import ai.eqo.actions.impl.LaunchableAppResolver
 import ai.eqo.core.agent.ExecutedAction
 import ai.eqo.core.agent.LoopStep
+import ai.eqo.core.agent.ShoppingPlans
+import ai.eqo.core.agent.TaskIntent
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Looper
@@ -212,6 +214,54 @@ class PlanPreviewPolishTest {
             listOf(LoopStep("web", ExecutedAction("WEB_SEARCH", mapOf("query" to "Running shoes"))))
         }
     }
+
+    @Test fun shoppingPaymentSummarySurvivesAppResolutionWithoutAChooser(): Unit =
+        runBlocking {
+            val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
+            val activity = lifecycle.get()
+            val resolver =
+                LaunchableAppResolver(
+                    { Intent().setPackage(it) },
+                    { listOf("com.zeptoconsumerapp" to "Zepto") },
+                )
+            val intent =
+                TaskIntent(
+                    "Add milk to cart",
+                    "Zepto",
+                    "purchase",
+                    mapOf("item" to "milk", "quantity" to "2"),
+                    confidence = 1.0,
+                )
+            val steps = ShoppingPlans.plan(intent).mapIndexed { index, action -> LoopStep("task-${index + 1}", action) }
+            val prepared =
+                AppPlanResolution(resolver, RememberedApps(activity)) {
+                    error("An exact installed Zepto target needs no chooser")
+                }.prepare(steps)
+            assertFalse(prepared.cancelled)
+            for (field in listOf("purchasePreview", "paymentRequestedPreview")) {
+                TaskActivity::class.java.getDeclaredField(field).apply {
+                    isAccessible = true
+                    setBoolean(activity, true)
+                }
+            }
+            val understood = TaskActivity::class.java.getDeclaredMethod("understoodFor", List::class.java)
+            understood.isAccessible = true
+            val line = understood.invoke(activity, prepared.steps) as String
+            assertTrue(
+                line.contains(
+                    "EQO will not pay. It will open Zepto, search milk, add 2 x milk to the cart " +
+                        "and stop so you can pay yourself.",
+                ),
+            )
+            assertFalse(line.contains("cannot do the shopping"))
+            assertEquals(
+                ShoppingPlans.CART,
+                prepared.steps
+                    .last()
+                    .action.params["text"],
+            )
+            lifecycle.pause().stop().destroy()
+        }
 
     @Test fun understoodLineUsesFinalPlanNotAnUnfulfilledPaymentGoal() {
         val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()

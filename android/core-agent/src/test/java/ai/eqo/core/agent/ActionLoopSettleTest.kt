@@ -18,6 +18,46 @@ import org.junit.Test
 import java.util.Collections
 
 class ActionLoopSettleTest {
+    @Test fun completedOwnerHandoffSettlesExactlyOnceAndUsesANonFailureDiagnostic() =
+        runTest {
+            val diagnostics = mutableListOf<String>()
+            val loop =
+                ActionLoop(
+                    steps = listOf(testStep("editor", postconditions = listOf("saved")), testStep("later")),
+                    approvalGate = { ApprovalDecision.Approved },
+                    execute = { ExecuteResult.Success("Editor opened; you save it.", handedToOwner = true) },
+                    observe = { error("No observation after handoff") },
+                    onDiagnostic = diagnostics::add,
+                )
+            val report = loop.run()
+            assertEquals(PlanTerminal.COMPLETED, report.terminal)
+            assertEquals(listOf(PlanStatus.RUNNING, PlanStatus.COMPLETED), report.planStatusEvents)
+            assertEquals(1, report.steps.first().attempts)
+            assertEquals(0, report.steps.last().attempts)
+            assertFalse(loop.isActionInFlight())
+            assertTrue(diagnostics.any { it.contains("code=owner_handoff") })
+            assertTrue(diagnostics.none { it.contains("execution_failed") || it.contains("status=FAILED") })
+        }
+
+    @Test fun stopDuringAnIrreversibleHandoffIsNotOverwrittenByCompleted() =
+        runTest {
+            lateinit var loop: ActionLoop
+            loop =
+                ActionLoop(
+                    steps = listOf(testStep("editor", irreversible = true), testStep("later")),
+                    approvalGate = { ApprovalDecision.Approved },
+                    execute = {
+                        loop.stop()
+                        ExecuteResult.Success("Editor opened; finish there.", handedToOwner = true)
+                    },
+                    observe = { error("No observation after handoff") },
+                )
+            val report = loop.run()
+            assertEquals(PlanTerminal.STOPPED, report.terminal)
+            assertEquals(listOf(PlanStatus.RUNNING, PlanStatus.CANCELLED), report.planStatusEvents)
+            assertEquals(0, report.steps.last().attempts)
+        }
+
     @Test
     fun `no action is mid-flight at settle and every step is reported exactly once`() =
         runTest {

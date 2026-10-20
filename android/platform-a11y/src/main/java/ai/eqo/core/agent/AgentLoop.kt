@@ -1122,6 +1122,8 @@ class AgentLoop
                 // not the raw plan action string — the dispatcher accepts non-canonical
                 // names (e.g. "EMAIL", "send-email") that still execute as SEND_EMAIL.
                 val canonicalActionName = actionDispatcher.canonicalActionName(stepToExecute.action)
+                val completedHandoff =
+                    (actionResult as? ActionResult.UserActionRequired)?.takeIf { it.handoffCompleted }
 
                 try {
                     memoryManager.logTaskExecution(
@@ -1134,9 +1136,14 @@ class AgentLoop
                             ),
                         actionType = stepToExecute.action,
                         params = ExecutionHistoryPrivacy.sanitizeParams(canonicalActionName, resolvedParams),
-                        success = actionResult.success,
-                        resultData = actionResult.data?.let(ai.eqo.core.crash.CrashLogRedactor::redact),
-                        errorMessage = actionResult.error?.let(ai.eqo.core.crash.CrashLogRedactor::redact),
+                        success = actionResult.success || completedHandoff != null,
+                        resultData =
+                            (completedHandoff?.message ?: actionResult.data)
+                                ?.let(ai.eqo.core.crash.CrashLogRedactor::redact),
+                        errorMessage =
+                            actionResult.error
+                                ?.takeIf { completedHandoff == null }
+                                ?.let(ai.eqo.core.crash.CrashLogRedactor::redact),
                     )
                 } catch (e: CancellationException) {
                     throw e
@@ -1163,21 +1170,24 @@ class AgentLoop
                         result = actionResult.message,
                     )
                 } else if (actionResult is ActionResult.UserActionRequired) {
-                    // A user-facing flow (for example email compose) is not an
-                    // executed side effect. Do not run an automated fallback or
-                    // allow the plan to treat the step as completed.
+                    // Only the launch/handoff completed, never the owner's save/send.
+                    // Stop the whole plan: no duplicate composer, next step or automated replan.
                     planManager.updateStepStatus(
                         stepToExecute.stepId,
-                        StepStatus.FAILED,
-                        error = actionResult.error ?: "User action is required before this step can complete.",
+                        if (actionResult.handoffCompleted) StepStatus.COMPLETED else StepStatus.FAILED,
+                        result = actionResult.message.takeIf { actionResult.handoffCompleted },
+                        error = actionResult.message.takeUnless { actionResult.handoffCompleted },
                     )
-                    // Skip the generic re-evaluation below: its prompt allows adding
-                    // alternative steps, which would let the agent launch another
-                    // action or duplicate composer while the user is still reviewing
-                    // the one just opened. Move on to the next plan step (if any)
-                    // instead of triggering an automated replan for this failure.
-                    currentPlanState = planManager.currentPlan.value ?: break
-                    continue
+                    planManager.updatePlanStatus(
+                        if (actionResult.handoffCompleted) PlanStatus.COMPLETED else PlanStatus.FAILED,
+                    )
+                    handlePendingUserAction(
+                        ActionResult.PendingUserAction("Needs you: ${actionResult.message}"),
+                        sessionId,
+                    )
+                    if (actionResult.handoffCompleted) _chatError.value = null
+                    _agentState.value = AgentState.Idle
+                    return
                 } else if (actionResult is ActionResult.UnknownAction) {
                     planManager.updateStepStatus(
                         stepToExecute.stepId,

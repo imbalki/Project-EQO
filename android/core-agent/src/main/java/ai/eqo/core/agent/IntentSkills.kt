@@ -32,6 +32,12 @@ object IntentSkills {
             "search" -> search(intent)
             "open_url" -> openUrl(intent)
             "purchase" -> ShoppingPlans.plan(intent)
+            "other" ->
+                if (intent.params[PhoneActions.PARAM] == "GET_CURRENT_TIME") {
+                    listOf(ExecutedAction("GET_CURRENT_TIME"))
+                } else {
+                    emptyList()
+                }
             else -> emptyList()
         }
 

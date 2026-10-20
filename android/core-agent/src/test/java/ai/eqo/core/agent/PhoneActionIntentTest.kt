@@ -148,4 +148,19 @@ class PhoneActionIntentTest {
         assertEquals("TOGGLE_WIFI", PhoneActions.match("wifi off", enabled))
         assertNull(PhoneActions.match("turn on the flashlight", emptySet()))
     }
+
+    @Test fun timeQuestionsPlanOnlyTheDeviceClockWithoutModelOrClockApp() =
+        runTest {
+            listOf("what time is it", "What's the time?", "what is the current time", "tell me the time").forEach {
+                val fake = IntentFixtureProvider(emptyList())
+                val planner = TaskPlanner(fake, registry)
+                val session = IntentPlanningSession(planner.understanding(apps), planner)
+                val result = session.prepare(it) { error("No clarification needed") }!!
+                assertEquals(listOf("GET_CURRENT_TIME"), result.steps.map { step -> step.action.name })
+                assertTrue(fake.requests.isEmpty())
+            }
+            assertNull(PhoneActions.match("what time is it in London", registry))
+            assertNull(PhoneActions.match("what time is it and set an alarm", registry))
+            assertNull(PhoneActions.match("what time is it", emptySet()))
+        }
 }

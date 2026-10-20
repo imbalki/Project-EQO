@@ -84,6 +84,8 @@ class ActionResultTest {
         assertFalse(result.success)
         assertNull(result.data)
         assertEquals("Review and send the draft", result.error)
+        assertTrue(result.handoffCompleted)
+        assertFalse(ActionResult.UserActionRequired("Permission denied", handoffCompleted = false).handoffCompleted)
     }
 
     // ── Companion invoke factory ────────────────────────────────────────

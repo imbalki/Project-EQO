@@ -14,6 +14,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.InputType
+import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -21,6 +23,7 @@ import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
 
+@Suppress("TooManyFunctions") // Separate dialog layout from permission and settings flows.
 class EdgeHandleSettingsActivity : Activity() {
     private val preferences by lazy { HandlePreferences(this) }
     private var recordingDialog: AlertDialog? = null
@@ -55,14 +58,16 @@ class EdgeHandleSettingsActivity : Activity() {
                 inputType = InputType.TYPE_CLASS_NUMBER
                 setHint(R.string.recording_limit_hint)
                 setText(initialLimit)
+                setSingleLine(true)
+                imeOptions = EditorInfo.IME_ACTION_GO
+                setImeActionLabel(getString(R.string.recording_start), EditorInfo.IME_ACTION_GO)
             }
         recordingInput = input
         val dialog =
             AlertDialog
                 .Builder(this)
                 .setTitle(ai.eqo.platform.R.string.edge_recording_button)
-                .setMessage(R.string.recording_start_explanation)
-                .setView(input)
+                .setView(recordingContent(input))
                 .setNegativeButton(android.R.string.cancel) { _, _ ->
                     android.util.Log.i("EqoRun", "handle=record result=cancelled reason=user_cancelled")
                     finish()
@@ -70,6 +75,7 @@ class EdgeHandleSettingsActivity : Activity() {
                 .setPositiveButton(R.string.recording_start, null)
                 .create()
         dialog.setOnShowListener {
+            configureRecordingWindow(dialog, input)
             HandleRecording.confirmationShown()
             android.util.Log.i("EqoRun", "handle=record result=prompt reason=visible_confirmation")
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
@@ -84,6 +90,41 @@ class EdgeHandleSettingsActivity : Activity() {
         dialog.setOnCancelListener { finish() }
         recordingDialog = dialog
         dialog.show()
+    }
+
+    private fun recordingContent(input: EditText): ScrollView =
+        ScrollView(this).apply {
+            val padding = (PAGE_PADDING_DP * resources.displayMetrics.density).toInt()
+            addView(
+                LinearLayout(this@EdgeHandleSettingsActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(padding, padding, padding, padding)
+                    addView(TextView(context).apply { setText(R.string.recording_start_explanation) })
+                    addView(input)
+                },
+            )
+        }
+
+    private fun configureRecordingWindow(
+        dialog: AlertDialog,
+        input: EditText,
+    ) {
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        val start = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+        // Keep every action above the IME without squeezing three long labels into a single row.
+        (start.parent as LinearLayout).orientation = LinearLayout.VERTICAL
+        listOf(AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL, AlertDialog.BUTTON_POSITIVE).forEach { id ->
+            dialog.getButton(id).apply {
+                layoutParams =
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                    )
+            }
+        }
+        input.setOnEditorActionListener { _, action, _ ->
+            if (action == EditorInfo.IME_ACTION_GO) start.performClick() else false
+        }
     }
 
     private fun startWithLimit(limit: String) {

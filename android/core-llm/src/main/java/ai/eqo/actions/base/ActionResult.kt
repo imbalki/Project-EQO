@@ -65,13 +65,15 @@ sealed class ActionResult {
     }
 
     /**
-     * The action started a user-facing flow, but the requested operation has
-     * not completed. This is deliberately non-success so callers cannot
-     * report an unverified side effect as completed.
+     * The owner must finish the operation. A completed handoff is a successful
+     * launch, not proof of saving/sending. [success] stays false for side-effect
+     * callers; task loops settle completed handoffs without retrying or continuing.
+     * Prerequisite denials explicitly set [handoffCompleted] to false.
      */
     @Serializable
     data class UserActionRequired(
         val message: String,
+        val handoffCompleted: Boolean = true,
     ) : ActionResult() {
         override val success: Boolean get() = false
         override val data: String? get() = null

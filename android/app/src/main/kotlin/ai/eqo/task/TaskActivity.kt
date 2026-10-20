@@ -14,9 +14,10 @@ package ai.eqo.task
 
 import ai.eqo.R
 import ai.eqo.accessibility.TakeoverDetector
+import ai.eqo.actions.impl.CalendarPlanPreview
 import ai.eqo.core.agent.ApprovedTaskPlan
 import ai.eqo.core.agent.LoopState
-import ai.eqo.core.agent.TaskPlanPreview
+import ai.eqo.core.agent.ShoppingPlans
 import ai.eqo.core.agent.UserResumeConfirmation
 import ai.eqo.core.llm.error.LLMException
 import ai.eqo.data.models.PlanStatus
@@ -79,6 +80,7 @@ class TaskActivity : Activity() {
     private var understoodPreview = ""
     private var attachmentRequest = ""
     private var purchasePreview = false
+    private var paymentRequestedPreview = false
     private var understandingRequest = false
     private var resultSpeaker: TaskResultSpeaker? = null
     private val displayedResults = linkedMapOf<String, StepProgress>()
@@ -142,6 +144,7 @@ class TaskActivity : Activity() {
                     try {
                         understoodPreview = ""
                         purchasePreview = false
+                        paymentRequestedPreview = false
                         prepareAndShowPlan(steps)
                     } catch (_: AppChoiceCancelled) {
                         findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
@@ -783,6 +786,7 @@ class TaskActivity : Activity() {
                         understoodPreview = ""
                         purchasePreview = false
                         attachmentRequest = ""
+                        paymentRequestedPreview = false
                         if (!isFinishing && !isDestroyed) prepareAndShowPlan(steps)
                     } catch (_: AppChoiceCancelled) {
                         findViewById<TextView>(R.id.task_state).setText(R.string.app_chooser_cancelled)
@@ -946,6 +950,7 @@ class TaskActivity : Activity() {
             understood.intent.action == "purchase" ||
             ai.eqo.core.agent.PlanCompleteness
                 .isPurchase(request)
+        paymentRequestedPreview = purchasePreview && ShoppingPlans.requestsPayment(request)
         // Keep limitations, but derive the understood line from the final resolved steps, never the wished-for goal.
         val understoodNotes =
             listOfNotNull(if (understood.bestGuess) getString(R.string.intent_best_guess) else null) +
@@ -1076,7 +1081,7 @@ class TaskActivity : Activity() {
             getString(
                 R.string.task_preview_with_permissions,
                 understoodFor(resolved),
-                TaskPlanPreview.describe(resolved),
+                CalendarPlanPreview.describe(resolved),
                 permissionPreview(resolved),
             )
         if (!portedActions.prepareRuntimeAccess(resolved, includeContacts = false)) {
@@ -1111,7 +1116,7 @@ class TaskActivity : Activity() {
     private fun understoodFor(steps: List<ai.eqo.core.agent.LoopStep>): String =
         getString(
             R.string.intent_understood_preview,
-            TaskPlanPreview.summary(steps, purchasePreview),
+            CalendarPlanPreview.summary(steps, purchasePreview, paymentRequestedPreview),
             understoodPreview,
         )
 
@@ -1140,7 +1145,7 @@ class TaskActivity : Activity() {
         val retryNotice = if (retry) getString(R.string.task_retry_notice) + "\n\n" else ""
         val preview =
             understoodFor(steps) + retryNotice + notice +
-                TaskPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
+                CalendarPlanPreview.describe(steps, recipientNames) + permissionPreview(steps)
         // Never log preview text: even debug plans can contain contact names and destinations.
         findViewById<TextView>(R.id.task_preview).text = preview
         if (!retry && !voicePlanRequiresApproval && !PlanApprovalSettings.requiredFor(this, steps)) {

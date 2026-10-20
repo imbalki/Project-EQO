@@ -22,6 +22,7 @@ import ai.eqo.task.StudyTaskController
 import ai.eqo.task.TaskActivity
 import ai.eqo.task.TaskRunSession
 import android.content.Context
+import android.view.View
 import android.widget.EditText
 import androidx.core.content.edit
 import androidx.test.core.app.ApplicationProvider
@@ -685,11 +686,18 @@ class HandleFeaturesTest {
             val params = panel.layoutParams as android.view.WindowManager.LayoutParams
             val density = context.resources.displayMetrics.density
             assertEquals((240 * density).toInt(), params.width)
-            assertEquals((152 * density).toInt(), params.height)
+            val scroll = (panel as android.view.ViewGroup).getChildAt(0) as android.widget.ScrollView
+            val column = scroll.getChildAt(0)
+            column.measure(
+                View.MeasureSpec.makeMeasureSpec(params.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            )
+            assertEquals(minOf(column.measuredHeight, (248 * density).toInt()), params.height)
             val buttons = descendants(panel).filterIsInstance<android.widget.Button>()
             assertEquals(6, buttons.size)
             assertTrue(buttons.all { it.layoutParams.height == android.view.ViewGroup.LayoutParams.WRAP_CONTENT })
             assertTrue(buttons.all { it.maxLines == 2 })
+            assertTrue(buttons.all { it.minimumHeight >= (56 * density).toInt() })
             val rows = buttons.groupBy { it.parent }
             assertEquals(listOf(2, 2, 2), rows.values.map { it.size })
             val outside = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_OUTSIDE, 0f, 0f, 0)
