@@ -254,8 +254,8 @@ class ExplainPolishTest {
             handle.performClick()
             val panel = field(edge, "view") as ViewGroup
             assertFalse(
-                buttons(panel).any {
-                    it.text == context.getString(ai.eqo.platform.R.string.edge_handle_hide_app)
+                views(panel).any {
+                    it.contentDescription == context.getString(ai.eqo.platform.R.string.edge_handle_hide_app)
                 },
             )
             lifecycle.get().findViewById<Switch>(R.id.hub_edge_handle).isChecked = false
@@ -332,6 +332,10 @@ class ExplainPolishTest {
     private fun buttons(view: View): List<Button> =
         (if (view is Button) listOf(view) else emptyList()) +
             (if (view is ViewGroup) (0 until view.childCount).flatMap { buttons(view.getChildAt(it)) } else emptyList())
+
+    private fun views(view: View): List<View> =
+        listOf(view) +
+            (if (view is ViewGroup) (0 until view.childCount).flatMap { views(view.getChildAt(it)) } else emptyList())
 
     private fun field(
         target: Any,

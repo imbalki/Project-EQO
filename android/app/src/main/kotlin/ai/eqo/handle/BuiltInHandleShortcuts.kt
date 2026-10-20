@@ -11,6 +11,7 @@ import ai.eqo.task.TaskActivity
 import ai.eqo.task.TaskRunSession
 import android.content.Context
 import android.content.Intent
+import ai.eqo.platform.R as PlatformR
 
 internal interface HandleRunControls {
     fun active(): Boolean
@@ -62,13 +63,13 @@ internal fun createHandleRegistry(
 ): HandleShortcutRegistry<Context> {
     val registry = HandleShortcutRegistry<Context>(HandlePreferences(context))
     registry.register(
-        BuiltInHandleShortcut("explain_screen", R.string.explain_title, android.R.drawable.ic_menu_info_details) {
+        BuiltInHandleShortcut("explain_screen", R.string.explain_title, PlatformR.drawable.ic_handle_explain) {
             ai.eqo.explain.ExplainEntryActivity
                 .launch(it, "edge_handle")
         },
     )
     registry.register(
-        BuiltInHandleShortcut("ask_eqo", R.string.handle_ask, android.R.drawable.ic_menu_edit) {
+        BuiltInHandleShortcut("ask_eqo", R.string.handle_ask, PlatformR.drawable.ic_handle_ask) {
             it.startActivity(
                 Intent(it, TaskActivity::class.java)
                     .putExtra(TaskActivity.FOCUS_REQUEST, true)
@@ -76,19 +77,9 @@ internal fun createHandleRegistry(
             )
         },
     )
-    val activeReason: (Context) -> Int? = { if (controls.active()) null else R.string.handle_no_run }
+    registerRunControls(registry, controls)
     registry.register(
-        BuiltInHandleShortcut("pause", R.string.task_pause, android.R.drawable.ic_media_pause, activeReason) {
-            controls.pause()
-        },
-    )
-    registry.register(
-        BuiltInHandleShortcut("stop", R.string.task_stop, android.R.drawable.ic_delete, activeReason) {
-            controls.stop()
-        },
-    )
-    registry.register(
-        BuiltInHandleShortcut("open_eqo", R.string.handle_open, android.R.drawable.ic_menu_view) {
+        BuiltInHandleShortcut("open_eqo", R.string.handle_open, PlatformR.drawable.ic_handle_open) {
             it.startActivity(Intent(it, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         },
     )
@@ -96,7 +87,7 @@ internal fun createHandleRegistry(
         BuiltInHandleShortcut(
             ai.eqo.accessibility.handle.EdgeHandleFeatures.DICTATION_ID,
             R.string.dictation_switch,
-            android.R.drawable.ic_btn_speak_now,
+            PlatformR.drawable.ic_handle_dictation,
         ) {
             ai.eqo.task.HandleDictation
                 .tap(it)
@@ -105,16 +96,34 @@ internal fun createHandleRegistry(
     registry.register(
         BuiltInHandleShortcut(
             ai.eqo.accessibility.handle.EdgeHandleFeatures.RECORDING_ID,
-            ai.eqo.platform.R.string.edge_recording_button,
+            PlatformR.string.edge_recording_button,
             R.drawable.ic_record_note,
         ) { HandleRecording.tap(it) },
     )
     registry.register(
         BuiltInHandleShortcut(
             ai.eqo.accessibility.handle.EdgeHandleFeatures.SCREENSHOT_ID,
-            ai.eqo.platform.R.string.edge_screenshot_button,
-            android.R.drawable.ic_menu_camera,
+            PlatformR.string.edge_screenshot_button,
+            PlatformR.drawable.ic_handle_screenshot,
         ) { HandleScreenshot.tap(it) },
     )
     return registry
+}
+
+/** Pause and Stop only exist during a run; they call the controller's own controls. */
+private fun registerRunControls(
+    registry: HandleShortcutRegistry<Context>,
+    controls: HandleRunControls,
+) {
+    val activeReason: (Context) -> Int? = { if (controls.active()) null else R.string.handle_no_run }
+    registry.register(
+        BuiltInHandleShortcut("pause", R.string.task_pause, PlatformR.drawable.ic_handle_pause, activeReason) {
+            controls.pause()
+        },
+    )
+    registry.register(
+        BuiltInHandleShortcut("stop", R.string.task_stop, PlatformR.drawable.ic_handle_stop, activeReason) {
+            controls.stop()
+        },
+    )
 }
