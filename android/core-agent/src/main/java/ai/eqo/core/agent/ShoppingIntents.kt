@@ -10,8 +10,16 @@ internal object ShoppingIntents {
     private val start = Regex("^(?:please\\s+)?(?:buy|purchase|order|add)\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val appSuffix =
         Regex("\\s+(?:on|from|in|at|using|via|to(?:\\s+my)?)\\s+(.+?)(?:\\s+cart)?$", RegexOption.IGNORE_CASE)
+    private val paymentTail =
+        Regex(
+            "\\s+(?:and\\s+)?(?:pay(?:\\s+(?:with|by|using|via)\\s+" +
+                "(?:upi|(?:credit\\s+|debit\\s+)?card|cash|gpay))?|checkout|check\\s+out)[.!]?\\s*$",
+            RegexOption.IGNORE_CASE,
+        )
     private val words =
         listOf("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve")
+
+    fun requestsPayment(request: String): Boolean = paymentTail.containsMatchIn(request.lines().first())
 
     fun supported(app: String?): Boolean {
         val label = app?.let(InstalledAppResolver::normalize)?.replace(" ", "").orEmpty()
@@ -26,7 +34,14 @@ internal object ShoppingIntents {
         request: String,
         installed: List<String>,
     ): TaskIntent? {
-        val body = start.matchEntire(request.lines().first().trim())?.groupValues?.get(1) ?: return null
+        // A trailing payment wish is refused in the preview, never an app name or executable shopping step.
+        val shopping =
+            request
+                .lines()
+                .first()
+                .trim()
+                .replace(paymentTail, "")
+        val body = start.matchEntire(shopping)?.groupValues?.get(1) ?: return null
         if (Regex("^(?:status|history|number|id|details|tracking)\\b", RegexOption.IGNORE_CASE).containsMatchIn(body)) {
             return null
         }
