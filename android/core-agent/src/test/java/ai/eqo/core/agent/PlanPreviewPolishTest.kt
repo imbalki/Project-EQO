@@ -17,6 +17,51 @@ class PlanPreviewPolishTest {
     private val completeNote =
         TaskIntent("Save a note", "Keep", "create_note", mapOf("body" to "Buy bananas"), confidence = 1.0)
 
+    @Test fun emailSendPreviewUsesPlainApprovalWordingAndKeepsDraftsUnsent() {
+        val send = step("SEND_EMAIL", mapOf("body" to "hello"))
+        val preview = TaskPlanPreview.describe(listOf(send))
+        assertTrue(preview.contains("Open Gmail, write the email, and press Send after you approve"))
+        assertTrue(preview.contains("hello"))
+        assertFalse(preview.contains("may press"))
+        assertFalse(preview.contains("delivery not verified"))
+        val draft = send.copy(action = send.action.copy(params = send.action.params + ("draftOnly" to "true")))
+        assertTrue(TaskPlanPreview.describe(listOf(draft)).contains("you press Send"))
+        assertFalse(TaskPlanPreview.describe(listOf(draft)).contains("press Send after you approve"))
+    }
+
+    @Test fun sendHelloByEmailKeepsNativeSendActionAndSuppliedContent() =
+        runTest {
+            // Assemble a reserved synthetic destination only in memory, never persist an address fixture.
+            val destination = listOf("test", listOf("example", "com").joinToString(".")).joinToString("@")
+            val intent =
+                TaskIntent(
+                    "Send hello by email",
+                    action = "send_message",
+                    params = mapOf("to" to destination, "body" to "hello"),
+                    channel = "email",
+                    send = "yes",
+                    confidence = 1.0,
+                )
+            val fake = IntentFixtureProvider(listOf(json(intent)))
+            val planner = TaskPlanner(fake, enabled)
+            val result =
+                requireNotNull(
+                    IntentPlanningSession(planner.understanding(listOf("Gmail")), planner)
+                        .prepare("send hello to $destination by email") { error("Email is complete") },
+                )
+            val action = result.steps.single().action
+            assertEquals("SEND_EMAIL", action.name)
+            assertEquals(destination, action.params["to"])
+            assertEquals("hello", action.params["body"])
+            assertEquals("false", action.params["draftOnly"])
+            assertEquals(1, fake.requests.size)
+            assertTrue(
+                TaskPlanPreview.summary(result.steps).contains(
+                    "Open Gmail, write the email, and press Send after you approve",
+                ),
+            )
+        }
+
     @Test fun plannerQuestionIsAskedBeforeReturningAnyExecutableSteps() =
         runTest {
             val fake = IntentFixtureProvider(listOf(json(uncertainNote), question, json(completeNote)))

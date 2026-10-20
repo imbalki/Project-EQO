@@ -469,11 +469,16 @@ class EdgeHandleOverlay(
             FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT),
         )
         val (width, height) = dimensions()
-        val rows = (actions.size + PANEL_COLUMNS - 1) / PANEL_COLUMNS
+        val panelWidth = dp(PANEL_WIDTH_DP).coerceAtMost(width)
+        // Measure wrapped labels, including theme insets and font scale, before sizing the window.
+        column.measure(
+            View.MeasureSpec.makeMeasureSpec(panelWidth, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+        )
         val panelParams =
             params(
-                dp(PANEL_WIDTH_DP).coerceAtMost(width),
-                dp(rows * TOUCH_WIDTH_DP + PANEL_PADDING_DP * 2).coerceAtMost(minOf(height, dp(PANEL_MAX_HEIGHT_DP))),
+                panelWidth,
+                column.measuredHeight.coerceAtMost(minOf(height, dp(PANEL_MAX_HEIGHT_DP))),
             )
         panelParams.x = if (preferences.rightEdge) width - panelParams.width else 0
         panelParams.y = ((height - panelParams.height) * preferences.verticalFraction).toInt()
@@ -496,9 +501,15 @@ class EdgeHandleOverlay(
                     textSize = PANEL_TEXT_SP
                     minWidth = 0
                     minimumWidth = 0
-                    minimumHeight = dp(TOUCH_WIDTH_DP)
+                    minHeight = dp(PANEL_ROW_MIN_DP)
+                    minimumHeight = dp(PANEL_ROW_MIN_DP)
                     maxLines = PANEL_LABEL_LINES
-                    setPadding(dp(PANEL_PADDING_DP), 0, dp(PANEL_PADDING_DP), 0)
+                    setPadding(
+                        dp(PANEL_PADDING_DP),
+                        dp(PANEL_PADDING_DP),
+                        dp(PANEL_PADDING_DP),
+                        dp(PANEL_PADDING_DP),
+                    )
                     // Theme insets and scaled fonts must not crop the second label line.
                     layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT
                 }
@@ -674,12 +685,13 @@ class EdgeHandleOverlay(
         const val PANEL_PADDING_DP = 4
         const val PANEL_COLUMNS = 2
         const val PANEL_LABEL_LINES = 2
+        const val PANEL_ROW_MIN_DP = 56
         const val PANEL_TEXT_SP = 12f
         const val PILL_WIDTH_DP = 120
         const val PILL_HEIGHT_DP = 32
         const val RESULT_HEIGHT_DP = 64
         const val RESULT_PADDING_DP = 6
-        const val RESULT_TEXT_SP = 13f
+        const val RESULT_TEXT_SP = 14f
         const val STATUS_LINES = 3
 
         const val HANDLE_COLOR = -1773116276 // ARGB 150,80,100,140

@@ -23,8 +23,9 @@ object CalendarPlanPreview {
     fun summary(
         steps: List<LoopStep>,
         noPayment: Boolean = false,
+        paymentRequested: Boolean = false,
         clock: Clock = Clock.systemDefaultZone(),
-    ): String = TaskPlanPreview.summary(displaySteps(steps, clock), noPayment)
+    ): String = TaskPlanPreview.summary(displaySteps(steps, clock), noPayment, paymentRequested)
 
     private fun displaySteps(
         steps: List<LoopStep>,

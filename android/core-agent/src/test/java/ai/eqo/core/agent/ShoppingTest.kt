@@ -11,6 +11,67 @@ import org.junit.Test
 class ShoppingTest {
     private val enabled = setOf("OPEN_APP", "WAIT", "CLICK_TEXT", "TYPE_TEXT", "PRESS_ENTER")
 
+    @Test fun paymentTailsKeepNamedAppAndCartOnlyPlanWithoutQuestions() =
+        runTest {
+            val tails =
+                listOf(
+                    "and pay with UPI",
+                    "and pay with card",
+                    "and pay with cash",
+                    "and pay with gpay",
+                    "and pay",
+                    "and checkout",
+                    "checkout",
+                    "and check out",
+                    "pay with UPI.",
+                )
+            for (tail in tails) {
+                val fake = IntentFixtureProvider(emptyList())
+                val session =
+                    IntentPlanningSession(
+                        IntentUnderstanding(fake, listOf("Zepto")),
+                        TaskPlanner(fake, enabled),
+                    )
+                val result =
+                    requireNotNull(
+                        session.prepare("buy two milk on Zepto $tail") {
+                            error("A named shopping app must not need a question")
+                        },
+                    )
+                assertEquals("Zepto", result.intent.app)
+                assertEquals(mapOf("item" to "milk", "quantity" to "2"), result.intent.params)
+                assertEquals(ShoppingPlans.plan(intent()), result.steps.map { it.action })
+                assertEquals(listOf(ShoppingPlans.HANDOFF), result.notes)
+                assertTrue(ShoppingPlans.requestsPayment("buy two milk on Zepto $tail"))
+                assertEquals(
+                    "EQO will not pay. It will open Zepto, search milk, add 2 x milk to the cart " +
+                        "and stop so you can pay yourself.",
+                    TaskPlanPreview.summary(result.steps, noPayment = true, paymentRequested = true),
+                )
+                assertTrue(fake.requests.isEmpty())
+            }
+        }
+
+    @Test fun pizzaWithoutPaymentKeepsExistingShoppingPreview() =
+        runTest {
+            val fake = IntentFixtureProvider(emptyList())
+            val intent = IntentUnderstanding(fake, listOf("Zepto")).understand("order a pizza on Zepto")
+            val plan = TaskPlanner(fake, enabled).planWithNotes("order a pizza on Zepto", intent = intent)
+            assertEquals(
+                "EQO will:\n1. open Zepto\n2. search pizza\n" +
+                    "3. add 1 x pizza to the cart (EQO ${ShoppingPlans.FIRST_RESULT})\n" +
+                    "4. open the cart and stop so you can pay",
+                TaskPlanPreview.describe(plan.steps),
+            )
+            assertEquals(listOf(ShoppingPlans.HANDOFF), plan.notes)
+            assertFalse(ShoppingPlans.requestsPayment("order a pizza on Zepto"))
+            assertEquals(
+                "EQO will not pay; it will open Zepto; then search pizza; then add 1 x pizza to the cart " +
+                    "(EQO ${ShoppingPlans.FIRST_RESULT}); then open the cart and stop so you can pay",
+                TaskPlanPreview.summary(plan.steps, noPayment = true),
+            )
+        }
+
     @Test fun codResourceIdsAreDeniedInGenericModelAndRepairWithRegistryParameters() =
         runTest {
             for (id in listOf("shop:id/cod_button", "shop:id/select_cod", "shop:id/COD", "shop:id/cod-option")) {
