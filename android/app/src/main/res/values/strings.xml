@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="recording_start_explanation">Save an audio note locally. EQO returns to your other app after starting. Tap the red dot to show Stop, or use Stop in the quiet recording notification. No audio uploads unless you choose Transcribe. Transcription supports notes up to 90 seconds only.</string>
+    <string name="recording_start_explanation">Record locally and return to your app. Stop via the red dot or notification. Audio uploads only with Transcribe (up to 90 seconds).</string>
     <string name="recording_start">Start recording</string>
     <string name="recording_stop">Stop</string>
     <string name="recording_notification">EQO recording</string>
