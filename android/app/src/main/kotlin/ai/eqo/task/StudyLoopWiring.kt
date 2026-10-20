@@ -19,6 +19,7 @@
  */
 package ai.eqo.task
 
+import ai.eqo.actions.base.ActionResult
 import ai.eqo.core.agent.ActionLoop
 import ai.eqo.core.agent.AppBlockDecision
 import ai.eqo.core.agent.AppBlockPolicy
@@ -298,10 +299,9 @@ class StudyActionExecutor(
                 is ai.eqo.actions.base.ActionResult.NeedsInput -> handoffs[stepId] = result.question
                 else -> Unit
             }
-            android.util.Log.i("EqoRun", "action=${action.name} result=${result.javaClass.simpleName}")
-            // App launches carry fixed error text and no user content, so the reason is safe to record.
-            if (!result.success && action.name == "OPEN_APP") {
-                android.util.Log.i("EqoRun", "action=OPEN_APP reason=${result.error.orEmpty().take(MAX_REASON)}")
+            logRegistryResult(action, result)
+            if (result is ai.eqo.actions.base.ActionResult.UserActionRequired && result.handoffCompleted) {
+                return ExecuteResult.Success(result.message, handedToOwner = true)
             }
             return if (result.success) {
                 val values = (result as? ai.eqo.actions.base.ActionResult.Success)?.dataMap.orEmpty()
@@ -320,6 +320,17 @@ class StudyActionExecutor(
             ExecuteResult.Success(successDetail(verb))
         } else {
             actionFailure(verb, action)
+        }
+    }
+
+    private fun logRegistryResult(
+        action: ExecutedAction,
+        result: ActionResult,
+    ) {
+        android.util.Log.i("EqoRun", "action=${action.name} result=${result.javaClass.simpleName}")
+        // App launches carry fixed error text and no user content, so the reason is safe to record.
+        if (!result.success && action.name == "OPEN_APP") {
+            android.util.Log.i("EqoRun", "action=OPEN_APP reason=${result.error.orEmpty().take(MAX_REASON)}")
         }
     }
 

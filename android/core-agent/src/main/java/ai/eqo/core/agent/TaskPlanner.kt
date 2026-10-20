@@ -356,7 +356,7 @@ class ApprovedTaskPlan(
 
 @Suppress("TooManyFunctions") // Display-only summary and step wording share escaping and specialized templates.
 object TaskPlanPreview {
-    private const val EMAIL_SEND_HANDOFF = "; may press Gmail Send; delivery not verified"
+    private const val EMAIL_SEND_HANDOFF = "Open Gmail, write the email, and press Send after you approve"
 
     fun describe(
         steps: List<LoopStep>,
@@ -389,6 +389,7 @@ object TaskPlanPreview {
     fun summary(
         steps: List<LoopStep>,
         noPayment: Boolean = false,
+        paymentRequested: Boolean = false,
     ): String {
         require(RegistryPlanVocabulary.clarification(steps) == null) { "Clarify the task before approval" }
         val visible = steps.filterNot { it.action.name == "WAIT" }
@@ -397,14 +398,24 @@ object TaskPlanPreview {
             if (searchPreview(steps) != null) {
                 requireNotNull(searchPreview(steps))
             } else if (steps.lastOrNull()?.action?.plannerClaim == ShoppingPlans.HANDOFF) {
-                shoppingPreview(steps)
-                    .lineSequence()
-                    .drop(1)
-                    .joinToString("; then ") { it.substringAfter(". ") }
+                if (paymentRequested) {
+                    shoppingPaymentSummary(steps)
+                } else {
+                    shoppingPreview(steps)
+                        .lineSequence()
+                        .drop(1)
+                        .joinToString("; then ") { it.substringAfter(". ") }
+                }
             } else {
                 visible.joinToString("; then ") { describe(it) }
             }
-        return (if (noPayment) "EQO will not pay; it will " else "") + actions + if (openOnly) " only" else ""
+        val prefix =
+            when {
+                paymentRequested -> "EQO will not pay. It will "
+                noPayment -> "EQO will not pay; it will "
+                else -> ""
+            }
+        return prefix + actions + if (openOnly) " only" else ""
     }
 
     private fun searchPreview(steps: List<LoopStep>): String? {
@@ -424,6 +435,22 @@ object TaskPlanPreview {
         } else {
             null
         }
+    }
+
+    private fun shoppingPaymentSummary(steps: List<LoopStep>): String {
+        val app =
+            steps
+                .first()
+                .action.params["appName"]
+                .orEmpty()
+        val item =
+            steps
+                .first { it.action.name == "TYPE_TEXT" }
+                .action.params["content"]
+                .orEmpty()
+        val quantity = steps.count { it.action.params["text"] == ShoppingPlans.INCREASE } + 1
+        return "open ${webText(app)}, search ${webText(item)}, add $quantity x ${webText(item)} to the cart " +
+            "and stop so you can pay yourself."
     }
 
     private fun shoppingPreview(steps: List<LoopStep>): String {
@@ -505,9 +532,9 @@ object TaskPlanPreview {
                     (if (p["draftOnly"] == "true") "; you press Send" else "; EQO presses Send") +
                     attachmentSuffix(p[AttachmentSpec.PARAM])
             "SEND_EMAIL" ->
-                "${if (p["draftOnly"] == "true") "draft" else "send"} an email to $recipient, " +
+                emailOpening(p, recipient) +
                     "subject ${quote(p["subject"].orEmpty())}, body ${quote(p["body"].orEmpty())}" +
-                    (if (p["draftOnly"] == "true") "; you press Send" else EMAIL_SEND_HANDOFF) +
+                    (if (p["draftOnly"] == "true") "; you press Send" else "") +
                     attachmentSuffix(p[AttachmentSpec.PARAM])
             "FIND_FILES", "LIST_FILES" ->
                 RegistryPreviewText.describe(step.action.name, p) +
@@ -541,4 +568,14 @@ object TaskPlanPreview {
             else -> RegistryPreviewText.describe(step.action.name, p) + attachmentSuffix(p[AttachmentSpec.PARAM])
         }
     }
+
+    private fun emailOpening(
+        params: Map<String, String>,
+        recipient: String,
+    ): String =
+        if (params["draftOnly"] == "true") {
+            "draft an email to $recipient, "
+        } else {
+            "$EMAIL_SEND_HANDOFF; to $recipient, "
+        }
 }

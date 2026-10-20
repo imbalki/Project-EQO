@@ -6,9 +6,23 @@ package ai.eqo.actions.impl
 import ai.eqo.actions.base.Action
 import ai.eqo.actions.base.ActionResult
 import android.content.Context
+import java.time.Clock
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-internal class ConversationActions {
-    fun getActions(): List<Action> = listOf(ChatAction(), AskUserAction())
+internal class ConversationActions(
+    private val clock: Clock = Clock.systemDefaultZone(),
+) {
+    fun getActions(): List<Action> =
+        listOf(
+            ChatAction(),
+            AskUserAction(),
+            RegisteredExecutor("GET_CURRENT_TIME") { _, _ ->
+                val time = LocalTime.now(clock).format(DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT))
+                ActionResult.Success(mapOf("message" to "It is $time"))
+            },
+        )
 
     private companion object {
         const val MAX_OPTIONS = 10

@@ -28,6 +28,31 @@ import kotlin.time.Duration.Companion.seconds
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
 class ProductivityInformationTest {
+    @Test fun fixedDeviceTimeUsesItsLocalZoneAndIsReadAtExecution() =
+        runTest {
+            val zone = java.time.ZoneId.of("Asia/Kolkata")
+            val clock = java.time.Clock.fixed(java.time.Instant.parse("2026-10-19T21:42:00Z"), zone)
+            val action = ConversationActions(clock).getActions().single { it.name == "GET_CURRENT_TIME" }
+            assertEquals("It is 03:12", executeRegistered(action, emptyMap(), context).data)
+            val utc = ConversationActions(clock.withZone(java.time.ZoneOffset.UTC)).getActions()
+            assertEquals(
+                "It is 21:42",
+                executeRegistered(utc.single { it.name == "GET_CURRENT_TIME" }, emptyMap(), context).data,
+            )
+        }
+
+    @Test fun currentTimeUsesTheDeviceClockWithoutPermissionsNetworkOrAnActivity() =
+        runTest {
+            val before = System.currentTimeMillis()
+            val result = registry.execute("GET_CURRENT_TIME", emptyMap())
+            val after = System.currentTimeMillis()
+            val format = java.text.SimpleDateFormat("HH:mm", java.util.Locale.ROOT)
+            assertTrue(result is ActionResult.Success)
+            assertTrue(result.data in listOf("It is ${format.format(before)}", "It is ${format.format(after)}"))
+            assertTrue(requested.isEmpty())
+            assertNull(shadowOf(context as android.app.Application).nextStartedActivity)
+        }
+
     @Test fun titleOnlyNoteSavesTheTitleAsContentWithAFakeStore() =
         runTest {
             val saved = mutableListOf<ProductivityMemory>()

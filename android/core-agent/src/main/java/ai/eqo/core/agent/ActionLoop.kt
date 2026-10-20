@@ -177,13 +177,7 @@ class ActionLoop(
             records += record
             // A typed partial-apply on an irreversible action stops the plan:
             // the effect is uncertain, so nothing else may run on top of it.
-            val halted =
-                when (record.outcome) {
-                    is StepOutcome.Completed -> false
-                    is StepOutcome.PartialApply -> step.action.irreversible
-                    else -> true
-                }
-            if (halted) {
+            if (shouldHalt(record, step)) {
                 if (terminal.get() == null) {
                     terminalize(PlanTerminal.FAILED)
                 }
@@ -208,6 +202,17 @@ class ActionLoop(
             .map { StepRecord(it.stepId, StepOutcome.NotExecuted("earlier step did not complete"), 0) }
     }
 
+    private fun shouldHalt(
+        record: StepRecord,
+        step: LoopStep,
+    ): Boolean =
+        terminal.get() != null ||
+            when (record.outcome) {
+                is StepOutcome.Completed -> false
+                is StepOutcome.PartialApply -> step.action.irreversible
+                else -> true
+            }
+
     @Suppress("ReturnCount") // every outcome returns its own typed record
     private suspend fun runStep(step: LoopStep): StepRecord {
         var attempts = 0
@@ -226,14 +231,13 @@ class ActionLoop(
                         attempts - 1,
                     )
             onDiagnostic("step=${steps.indexOf(step) + 1} execute=${apply.diagnosticKind} code=${apply.diagnosticCode}")
-            val observed =
-                try {
-                    observe()
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (_: Exception) {
-                    ""
-                }
+            if (apply is ExecuteResult.Success && apply.handedToOwner) {
+                // The editor/chooser belongs to the owner now. No observation, effect verification, retry or next step.
+                settleBeforeStep()
+                terminalize(PlanTerminal.COMPLETED)
+                return StepRecord(step.stepId, StepOutcome.Completed(apply.detail), attempts)
+            }
+            val observed = observeSafely()
             val outcome =
                 if (apply is ExecuteResult.Interrupted) {
                     verifier.interruptedApply(step.action, apply.note)
@@ -262,6 +266,15 @@ class ActionLoop(
             }
         }
     }
+
+    private suspend fun observeSafely(): String =
+        try {
+            observe()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            ""
+        }
 
     private fun successSummary(step: LoopStep): String =
         if (step.action.expectedPostconditions.isEmpty()) {
@@ -514,7 +527,7 @@ private val StepOutcome.diagnosticKind: String
 private val ExecuteResult.diagnosticCode: String
     get() =
         when (this) {
-            is ExecuteResult.Success -> "executor_success"
+            is ExecuteResult.Success -> if (handedToOwner) "owner_handoff" else "executor_success"
             is ExecuteResult.Failure -> "execution_failed"
             is ExecuteResult.Interrupted -> "apply_interrupted_effect_unknown"
         }

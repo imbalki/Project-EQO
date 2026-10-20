@@ -1,11 +1,51 @@
 // Origin: EQO-authored (fix/r6-cal): resolves calendar date, time and duration params to epoch millis.
 package ai.eqo.actions.impl
 
+import ai.eqo.core.agent.LoopStep
+import ai.eqo.core.agent.TaskPlanPreview
 import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.format.TextStyle
 import java.util.Locale
+
+/** Display-only copies: resolve dates with the executor's parser, never change the approved payload. */
+object CalendarPlanPreview {
+    fun describe(
+        steps: List<LoopStep>,
+        recipients: Map<String, String> = emptyMap(),
+        clock: Clock = Clock.systemDefaultZone(),
+    ): String = TaskPlanPreview.describe(displaySteps(steps, clock), recipients)
+
+    fun summary(
+        steps: List<LoopStep>,
+        noPayment: Boolean = false,
+        paymentRequested: Boolean = false,
+        clock: Clock = Clock.systemDefaultZone(),
+    ): String = TaskPlanPreview.summary(displaySteps(steps, clock), noPayment, paymentRequested)
+
+    private fun displaySteps(
+        steps: List<LoopStep>,
+        clock: Clock,
+    ): List<LoopStep> =
+        steps.map { step ->
+            val calendar = step.action.name in setOf("CREATE_CALENDAR_EVENT", "SET_REMINDER")
+            val result = if (calendar) CalendarWhenParser.resolve(step.action.params, clock) else null
+            if (result is CalendarWhenResult.Resolved) {
+                val value = result.value
+                val zone = if (value.allDay) ZoneOffset.UTC else clock.zone
+                val day = Instant.ofEpochMilli(value.startMillis).atZone(zone).dayOfWeek
+                val label = "${day.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)} ${value.label}"
+                val slot = if (step.action.name == "SET_REMINDER") "datetime" else "date"
+                step.copy(action = step.action.copy(params = step.action.params - "time" + (slot to label)))
+            } else {
+                step
+            }
+        }
+}
 
 /**
  * A resolved start and end for a Calendar hand-off. All-day events use UTC midnight boundaries, which is what the

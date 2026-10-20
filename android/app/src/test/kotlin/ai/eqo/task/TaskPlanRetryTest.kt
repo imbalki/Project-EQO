@@ -54,7 +54,7 @@ class TaskPlanRetryTest {
                 if (name == "SEND_WHATSAPP") {
                     ActionResult.Success()
                 } else {
-                    ActionResult.UserActionRequired("Allow location. This step did not run.")
+                    ActionResult.UserActionRequired("Allow location. This step did not run.", handoffCompleted = false)
                 }
             }
         val controller =

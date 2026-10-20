@@ -18,6 +18,8 @@ data class LoopStep(
 sealed class ExecuteResult {
     data class Success(
         val detail: String,
+        /** Only the owner handoff completed: stop here, never claim or verify the owner's remaining side effect. */
+        val handedToOwner: Boolean = false,
     ) : ExecuteResult()
 
     data class Failure(

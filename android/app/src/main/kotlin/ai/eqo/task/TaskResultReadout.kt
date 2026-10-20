@@ -10,12 +10,15 @@ import android.os.Looper
 import android.speech.tts.TextToSpeech
 import java.util.Locale
 
-/** The same completed result feeds the visible line and optional speech; failures are never announced as answers. */
+/** Visible handoffs say Needs you; only completed answers feed speech, never failures or unverified effects. */
 internal object TaskResultPresentation {
     fun lines(steps: List<StepProgress>): String =
-        completed(steps).joinToString("\n") {
-            "${it.name.replace('_', ' ')}: ${TaskDisplayText.escape(it.detail)}"
-        }
+        steps
+            .filter { it.state in setOf(StepProgressState.DONE, StepProgressState.NEEDS_YOU) && it.detail.isNotBlank() }
+            .joinToString("\n") {
+                val prefix = if (it.state == StepProgressState.NEEDS_YOU) "Needs you: " else ""
+                "$prefix${it.name.replace('_', ' ')}: ${TaskDisplayText.escape(it.detail)}"
+            }
 
     fun completed(steps: List<StepProgress>): List<StepProgress> =
         steps.filter { it.state == StepProgressState.DONE && it.detail.isNotBlank() }

@@ -15,6 +15,8 @@ object ShoppingPlans {
         )
     private val taps = setOf("CLICK_TEXT", "CLICK_ID", "TAP_TEXT", "TAP_ID", "TYPE_TEXT", "TYPE_ID", "PASTE")
 
+    fun requestsPayment(request: String): Boolean = ShoppingIntents.requestsPayment(request)
+
     fun plan(intent: TaskIntent): List<ExecutedAction> {
         require(intent.missingParameter() == null && !intent.needsClarification()) { "Shopping needs clarification" }
         val app = requireNotNull(intent.app)
