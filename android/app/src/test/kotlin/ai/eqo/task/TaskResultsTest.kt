@@ -61,6 +61,25 @@ class TaskResultsTest {
         assertEquals(2, spoken.size)
     }
 
+    @Test fun calendarHandoffScreenShowsNeedsYouAndThePlainInstructionNotCouldNotFinish() {
+        clearSession()
+        val step =
+            StepProgress(
+                "calendar",
+                "CREATE_CALENDAR_EVENT",
+                StepProgressState.NEEDS_YOU,
+                detail = "Calendar editor opened. Review it and tap Save; nothing was saved by EQO.",
+            )
+        TaskRunSession.progress[step.stepId] = step
+        TaskRunSession.receipt = ai.eqo.study.RunReceipt(listOf(step), "COMPLETED")
+        val lifecycle = Robolectric.buildActivity(TaskActivity::class.java).setup()
+        val activity = lifecycle.get()
+        assertEquals("Needs you", activity.findViewById<TextView>(R.id.task_state).text.toString())
+        val resultText = activity.findViewById<TextView>(R.id.task_result).text.toString()
+        assertTrue(resultText.contains("Calendar editor opened"))
+        lifecycle.pause().stop().destroy()
+    }
+
     @Test fun registryResultsChainToTheApprovedPayloadWithoutChangingItsSnapshot() =
         runTest {
             val steps = steps()
@@ -77,7 +96,8 @@ class TaskResultsTest {
                 }
             val first = executor.execute(steps[0]) as ExecuteResult.Success
             assertEquals(answer.detail, first.detail)
-            assertTrue(executor.execute(steps[1]) is ExecuteResult.Failure) // Draft handoff stays honest.
+            val draft = executor.execute(steps[1]) as ExecuteResult.Success
+            assertTrue(draft.handedToOwner) // Only the handoff completed, not sending.
             assertEquals("The answer is 1904", received[1]["message"])
             assertEquals("Example", received[1]["contact"])
             assertTrue(plan.matches(steps))

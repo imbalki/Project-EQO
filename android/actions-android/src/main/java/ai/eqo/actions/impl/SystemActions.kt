@@ -189,6 +189,7 @@ internal class SystemActions(
                     ActionResult.UserActionRequired(
                         "Open the app you want to capture, then ask EQO again. " +
                             "EQO cannot capture its own permission or approval screen.",
+                        handoffCompleted = false,
                     )
                 !gate.isSuccess -> gate.toActionResult()
                 else ->

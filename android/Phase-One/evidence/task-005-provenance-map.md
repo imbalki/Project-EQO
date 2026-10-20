@@ -602,6 +602,7 @@ have no upstream counterpart, and are recorded as **EQO-NEW** rows.
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/OwnWindowGuardTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/UntrustedScreenTextTest.kt` | EQO-NEW | `ai.eqo.accessibility` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 | :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/core/agent/TakeoverResumeUserOnlyTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/core/agent/OwnerHandoffWiringTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO-authored, fix/r16-calfix handoff rule) |
 | :platform-a11y | `android/platform-a11y/src/androidTest/java/ai/eqo/test/EqoActionLoopScenarioDriver.kt` | EQO-NEW | `ai.eqo.test` | imbalki/project-eqo (EQO-authored, TASK-012 issue #17) |
 
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/SecurityReproRetryGateTest.kt` | EQO-NEW | `ai.eqo.core.agent` | imbalki/project-eqo (EQO security reviewer repro, TASK-012 issue #17, t_d306e5bb; syntax repaired, regression retained) |
