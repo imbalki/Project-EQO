@@ -83,6 +83,25 @@ object GenericAppAutomator {
         automationOrNull()?.dismissShoppingPopup(target) ?: A11yResult.failure(A11yError.AccessibilityDisabled)
 
     /**
+     * The guarded app-search entry of the shopping and 'search X in <app>' skills: types into an
+     * already-open search field or backs up inside the app until the Search entry returns (see
+     * [SearchEntryRecovery]). Runs against the live automation; a missing service is a typed error.
+     */
+    suspend fun openSearchEntry(
+        entry: String,
+        query: String,
+        app: String,
+    ): SearchEntryRecovery.Outcome {
+        val automation =
+            automationOrNull()
+                ?: return SearchEntryRecovery.Outcome(
+                    A11yResult.failure(A11yError.AccessibilityDisabled),
+                    queryEntered = false,
+                )
+        return SearchEntryRecovery(automation).recover(entry, query, app) { clickText(it) }
+    }
+
+    /**
      * Types into the matched field and confirms the text landed. Many search bars are buttons or launcher
      * fields that open a separate search screen whose own field is then focused and empty, so:
      *  - typed but the focused field is empty (or the attempt was rejected): type once more into the focused field;

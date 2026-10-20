@@ -207,6 +207,50 @@ class EqoAutomation(
             NodeTreeSearch.findFirst(root) { node -> NodeTreeSearch.isTextInput(node) && node.isFocused }
         } != null
 
+    /**
+     * Types [content] into a search field that is already open (the app resumed on its search or
+     * results screen): the old query is selected first so typing replaces it, never appends. The
+     * field must look like a search field and pass the payment deny-list, like every search-only
+     * typing target; anything else is a typed NodeNotFound.
+     */
+    fun typeIntoSearchField(content: String): A11yResult =
+        runAction {
+            ownWindowBlocked("open search field") ?: run {
+                when {
+                    isSecureWindow() -> typingResult(null, A11yResult.failure(A11yError.SecureWindow))
+                    else -> {
+                        val field = rootProvider()?.let(::openSearchField)
+                        if (field == null) {
+                            typingResult(null, A11yResult.failure(A11yError.NodeNotFound("open search field")))
+                        } else {
+                            typeSelected(field, content)
+                        }
+                    }
+                }
+            }
+        }
+
+    /**
+     * Screen text only: true when a payment/address/checkout screen is showing — recovery must
+     * never press Back there. A protected or unreadable window counts as a payment screen.
+     */
+    fun paymentScreenVisible(): Boolean {
+        val root = if (isSecureWindow()) null else rootProvider()
+        return root == null || paymentTextVisible(root)
+    }
+
+    private fun paymentTextVisible(root: A11yNode): Boolean =
+        NodeTreeSearch.findFirst(root) { node ->
+            node.isVisibleToUser &&
+                !node.isPassword &&
+                listOf(node.text, node.contentDescription, node.hintText).any {
+                    PAYMENT_INPUT.containsMatchIn(it?.toString().orEmpty())
+                }
+        } != null
+
+    /** The active window's package, when one is known; recovery stays inside it. */
+    fun windowPackage(): String? = rootProvider()?.packageName?.toString()
+
     /** Types [content] into the first editable node with the resource id [viewId]. */
     fun typeById(
         viewId: String,
@@ -442,6 +486,47 @@ class EqoAutomation(
     }
 
     private fun safeSearchInput(node: A11yNode): Boolean = generateSequence(node) { it.parent }.all(::safeNode)
+
+    /** The first editable node the screen presents as a search field (label, hint or resource id). */
+    private fun openSearchField(root: A11yNode): A11yNode? =
+        NodeTreeSearch.findFirst(root) { node ->
+            node.isEditable &&
+                !node.isPassword &&
+                node.isVisibleToUser &&
+                safeSearchInput(node) &&
+                (
+                    listOf(node.hintText, node.text, node.contentDescription)
+                        .any { it?.toString()?.contains("search", ignoreCase = true) == true } ||
+                        node.viewIdResourceName?.contains("search", ignoreCase = true) == true
+                )
+        }
+
+    /** The recovery's mutation sequence: focus, select the old query, SET_TEXT, clipboard fallback. */
+    @Suppress("ReturnCount") // Mirrors typeTarget: the live gate is re-checked between every mutation.
+    private fun typeSelected(
+        field: A11yNode,
+        content: String,
+    ): A11yResult {
+        currentGateFailure()?.let { return typingResult(field, it) }
+        field.focus()
+        currentGateFailure()?.let { return typingResult(field, it) }
+        if (field.isClickable) field.click()
+        currentGateFailure()?.let { return typingResult(field, it) }
+        // Select the old query first so typing replaces it, never appends.
+        if (!field.text.isNullOrEmpty()) field.selectAll()
+        currentGateFailure()?.let { return typingResult(field, it) }
+        if (field.setText(content)) {
+            return typingResult(field, A11yResult.success("typed into the open search field"))
+        }
+        currentGateFailure()?.let { return typingResult(field, it) }
+        val result =
+            if (field.paste(content) { currentGateFailure() == null }) {
+                A11yResult.success("typed into the open search field")
+            } else {
+                currentGateFailure() ?: A11yResult.failure(A11yError.ActionRejected("open search field"))
+            }
+        return typingResult(field, result)
+    }
 
     private fun safeNode(node: A11yNode): Boolean {
         val id = node.viewIdResourceName.orEmpty()

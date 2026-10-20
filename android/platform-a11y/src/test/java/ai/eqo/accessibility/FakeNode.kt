@@ -91,6 +91,11 @@ class FakeNode(
         return true
     }
 
+    override fun selectAll(): Boolean {
+        record("selectAll")
+        return !rejectActions
+    }
+
     override fun scroll(forward: Boolean): Boolean {
         if (rejectActions) return false
         scrollCount++
