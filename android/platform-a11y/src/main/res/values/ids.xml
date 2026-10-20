@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EQO edge-handle panel: stable ids so UI tests can target every action button. -->
+<resources>
+    <item name="eqo_handle_panel" type="id" />
+    <item name="eqo_handle_action_close" type="id" />
+    <item name="eqo_handle_action_hide_now" type="id" />
+    <item name="eqo_handle_action_hide_app" type="id" />
+    <item name="eqo_handle_action_explain_screen" type="id" />
+    <item name="eqo_handle_action_ask_eqo" type="id" />
+    <item name="eqo_handle_action_pause" type="id" />
+    <item name="eqo_handle_action_stop" type="id" />
+    <item name="eqo_handle_action_open_eqo" type="id" />
+    <item name="eqo_handle_action_dictation" type="id" />
+    <item name="eqo_handle_action_recording" type="id" />
+    <item name="eqo_handle_action_screenshot" type="id" />
+</resources>

@@ -6,6 +6,7 @@ import ai.eqo.accessibility.EQOAccessibilityService
 import ai.eqo.accessibility.handle.EdgeHandleFeatures
 import ai.eqo.accessibility.handle.EdgeHandleOverlay
 import ai.eqo.accessibility.handle.HandlePreferences
+import ai.eqo.accessibility.handle.panelHeight
 import android.app.NotificationManager
 import android.content.ContentProvider
 import android.content.ContentValues
@@ -18,6 +19,7 @@ import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
@@ -403,7 +405,7 @@ class HandleRecordingTest {
     }
 
     @Test
-    fun `compact panel window fits measured two line labels rather than fixed rows`() {
+    fun `compact panel window fits the measured icon rows rather than a fixed height`() {
         val service = Robolectric.buildService(EQOAccessibilityService::class.java).create().get()
         HandlePreferences(service).apply {
             enabled = true
@@ -422,8 +424,10 @@ class HandleRecordingTest {
                 View.MeasureSpec.makeMeasureSpec(params.width, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
             )
-            val maxHeight = (248 * service.resources.displayMetrics.density).toInt()
-            assertEquals(minOf(column.measuredHeight, maxHeight), params.height)
+            val metrics = service.getSystemService(WindowManager::class.java).currentWindowMetrics
+            val insets = metrics.windowInsets.getInsets(WindowInsets.Type.ime() or WindowInsets.Type.systemBars())
+            val available = metrics.bounds.height() - insets.top - insets.bottom
+            assertEquals(panelHeight(column.measuredHeight, available), params.height)
         } finally {
             overlay.destroy()
         }

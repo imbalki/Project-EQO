@@ -24,13 +24,17 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import kotlin.math.abs
 
-/** No screen-text reads, broadcasts, permission grants or resume entry points. */
-@Suppress("TooManyFunctions")
+/**
+ * No screen-text reads, broadcasts, permission grants or resume entry points.
+ * One overlay owns the handle, panel, tooltip and result windows, so it stays one class.
+ */
+@Suppress("TooManyFunctions", "LargeClass")
 class EdgeHandleOverlay(
     private val context: Context,
     private val manager: WindowManager,
@@ -46,15 +50,29 @@ class EdgeHandleOverlay(
     private var recordingExpanded = false
     private var renderedRecording = false
     private var recordingStatusView: TextView? = null
+    private val panelTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
+    private var panelDownX = 0f
+    private var panelDownY = 0f
+    private var panelGestureActive = false
+    private var panelDragged = false
+    private var tooltipChip: TextView? = null
+    private var pendingTooltip: Runnable? = null
+    private var tooltipHovering = false
+    private var tooltipHolding = false
     private val listener =
-        SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+        SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             handler.post {
                 val micEnabled = EdgeHandleFeatures.registry?.enabled(EdgeHandleFeatures.DICTATION_ID) == true
                 if (!preferences.enabled || !micEnabled) {
                     EdgeHandleFeatures.dictationCancel()
                 }
-                removeWindow()
-                refresh()
+                // Shortcut-choice bookkeeping (order/known/enabled) must not tear down an open
+                // panel mid-interaction; only a real opt-out or hidden app closes it early.
+                val keepPanel = key in CHOICE_KEYS && guard.panelOpen && preferences.enabled && !hidden()
+                if (!keepPanel) {
+                    removeWindow()
+                    refresh()
+                }
             }
         }
     private val refreshTask = Runnable { render() }
@@ -442,82 +460,247 @@ class EdgeHandleOverlay(
         presentation.open()
         scheduleCollapse()
         val root = PanelView()
-        root.setOnClickListener { closePanel() }
-        val actions = mutableListOf<Pair<Int, () -> Unit>>()
-        actions += R.string.edge_handle_close to { closePanel() }
-        actions += R.string.edge_handle_hide_now to {
-            EdgeHandleFeatures.dictationCancel()
-            presentation.hide(foregroundPackage)
-            dismissResult()
-        }
-        EdgeHandleFeatures.registry?.visible(context)?.forEach { shortcut ->
-            actions += shortcut.labelRes to {
-                closePanel()
-                // Availability is checked again; a run may have ended while the panel was open.
-                if (shortcut.unavailableReason(context) == null) shortcut.run(context)
-            }
-        }
-        if (foregroundPackage != context.packageName) {
-            actions += R.string.edge_handle_hide_app to {
-                preferences.hide(foregroundPackage)
-                removeWindow()
-            }
-        }
-        val column = panelGrid(actions)
-        root.addView(
-            ScrollView(context).apply { addView(column) },
-            FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT),
-        )
+        val specs =
+            panelActionSpecs(
+                shortcutSpecs(),
+                foregroundPackage != context.packageName,
+            )
+        val column = panelGrid(specs, panelHandlers())
         val (width, height) = dimensions()
-        val panelWidth = dp(PANEL_WIDTH_DP).coerceAtMost(width)
-        // Measure wrapped labels, including theme insets and font scale, before sizing the window.
+        val panelWidth = dp(panelWidthDp(PANEL_COLUMNS)).coerceAtMost(width)
+        // Measure the icon grid, including theme insets and spacing, before sizing the window.
         column.measure(
             View.MeasureSpec.makeMeasureSpec(panelWidth, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
         )
-        val panelParams =
-            params(
-                panelWidth,
-                column.measuredHeight.coerceAtMost(minOf(height, dp(PANEL_MAX_HEIGHT_DP))),
-            )
+        val contentHeight = column.measuredHeight
+        root.addView(
+            // Pinning the measured content height keeps the grid scrollable whenever the window is
+            // capped and exact-fit when it is not, whatever height rule the ScrollView applies.
+            ScrollView(context).apply {
+                addView(column, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, contentHeight))
+            },
+            FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT),
+        )
+        tooltipHovering = false
+        tooltipHolding = false
+        tooltipChip = tooltipChipView().also { root.addView(it) }
+        val panelParams = params(panelWidth, panelHeight(contentHeight, height))
         panelParams.x = if (preferences.rightEdge) width - panelParams.width else 0
         panelParams.y = ((height - panelParams.height) * preferences.verticalFraction).toInt()
         attach(root, panelParams)
     }
 
-    private fun panelGrid(actions: List<Pair<Int, () -> Unit>>): LinearLayout {
+    private fun shortcutSpecs(): List<PanelShortcutSpec> =
+        EdgeHandleFeatures.registry
+            ?.visible(context)
+            .orEmpty()
+            .map { PanelShortcutSpec(it.id, it.iconRes, it.labelRes) }
+
+    private fun panelHandlers(): Map<String, () -> Unit> {
+        val handlers = mutableMapOf<String, () -> Unit>()
+        handlers[PANEL_KEY_CLOSE] = { closePanel() }
+        handlers[PANEL_KEY_HIDE_NOW] = {
+            EdgeHandleFeatures.dictationCancel()
+            presentation.hide(foregroundPackage)
+            dismissResult()
+        }
+        EdgeHandleFeatures.registry?.visible(context)?.forEach { shortcut ->
+            handlers[shortcut.id] = {
+                closePanel()
+                // Availability is checked again; a run may have ended while the panel was open.
+                if (shortcut.unavailableReason(context) == null) shortcut.run(context)
+            }
+        }
+        handlers[PANEL_KEY_HIDE_APP] = {
+            preferences.hide(foregroundPackage)
+            removeWindow()
+        }
+        return handlers
+    }
+
+    private fun panelGrid(
+        specs: List<PanelActionSpec>,
+        handlers: Map<String, () -> Unit>,
+    ): LinearLayout {
         val column =
             LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP), dp(PANEL_PADDING_DP))
-                setBackgroundColor(Color.WHITE)
                 isClickable = true
             }
-        actions.chunked(PANEL_COLUMNS).forEach { entries ->
+        panelRows(specs.size, PANEL_COLUMNS).forEach { rowSpan ->
             val row = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
-            entries.forEach { (label, action) ->
-                addButton(row, label, action = action)
-                (row.getChildAt(row.childCount - 1) as Button).apply {
-                    textSize = PANEL_TEXT_SP
-                    minWidth = 0
-                    minimumWidth = 0
-                    minHeight = dp(PANEL_ROW_MIN_DP)
-                    minimumHeight = dp(PANEL_ROW_MIN_DP)
-                    maxLines = PANEL_LABEL_LINES
-                    setPadding(
-                        dp(PANEL_PADDING_DP),
-                        dp(PANEL_PADDING_DP),
-                        dp(PANEL_PADDING_DP),
-                        dp(PANEL_PADDING_DP),
-                    )
-                    // Theme insets and scaled fonts must not crop the second label line.
-                    layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT
-                }
+            specs.slice(rowSpan).forEach { spec ->
+                row.addView(panelCell(spec, handlers.getValue(spec.key)), panelCellLayout())
             }
-            if (entries.size < PANEL_COLUMNS) row.addView(View(context), LinearLayout.LayoutParams(0, 0, 1f))
+            if (rowSpan.count() < PANEL_COLUMNS) {
+                row.addView(View(context), LinearLayout.LayoutParams(0, 0, 1f))
+            }
             column.addView(row)
         }
         return column
+    }
+
+    private fun panelCellLayout(): LinearLayout.LayoutParams =
+        LinearLayout.LayoutParams(dp(PANEL_CELL_DP), dp(PANEL_CELL_DP)).apply {
+            val gap = dp(PANEL_CELL_GAP_DP) / 2
+            setMargins(gap, gap, gap, gap)
+        }
+
+    /**
+     * Icon cell that owns its click. The hold handler hands a clean tap to [View.performClick],
+     * so accessibility services and the touch path fire the action exactly once.
+     */
+    private inner class PanelCellView(
+        context: Context,
+    ) : FrameLayout(context) {
+        override fun performClick(): Boolean = super.performClick()
+    }
+
+    /** One icon button: 40dp tonal circle on a 48dp cell, named for TalkBack and UI tests. */
+    private fun panelCell(
+        spec: PanelActionSpec,
+        action: () -> Unit,
+    ): View {
+        val cell = PanelCellView(context)
+        cell.id = spec.viewId
+        cell.contentDescription = context.getString(spec.labelRes)
+        val icon = ImageView(context)
+        icon.setImageResource(spec.iconRes)
+        icon.scaleType = ImageView.ScaleType.FIT_CENTER
+        val iconPadding = dp(PANEL_ICON_PADDING_DP)
+        icon.setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
+        icon.background =
+            GradientDrawable().apply {
+                setColor(color(R.color.eqo_handle_icon_surface))
+                cornerRadius = dp(PANEL_ICON_DP) / 2f
+            }
+        cell.addView(icon, FrameLayout.LayoutParams(dp(PANEL_ICON_DP), dp(PANEL_ICON_DP), Gravity.CENTER))
+        // A drag inside the panel scrolls; it must never fire a row action or close it.
+        cell.setOnClickListener { if (!panelDragged) action() }
+        cell.setOnTouchListener(tooltipHold(cell))
+        cell.setOnHoverListener(tooltipHover(cell))
+        return cell
+    }
+
+    private fun color(res: Int): Int = context.resources.getColor(res, context.theme)
+
+    /** Small rounded name chip; never clickable so the next tap still reaches its icon. */
+    private fun tooltipChipView(): TextView =
+        TextView(context).apply {
+            textSize = TOOLTIP_TEXT_SP
+            setTextColor(color(R.color.eqo_handle_tooltip_text))
+            background =
+                GradientDrawable().apply {
+                    setColor(color(R.color.eqo_handle_tooltip_surface))
+                    cornerRadius = dp(TOOLTIP_RADIUS_DP).toFloat()
+                }
+            val padding = dp(TOOLTIP_PADDING_DP)
+            setPadding(padding, padding, padding, padding)
+            visibility = View.GONE
+            isClickable = false
+            isLongClickable = false
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
+
+    /**
+     * Shows the name chip while the finger stays down. The listener owns the gesture and hands a
+     * clean tap to [View.performClick], so a drag never fires the row it started on.
+     */
+    private fun tooltipHold(anchor: View): View.OnTouchListener =
+        View.OnTouchListener { cell, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    pendingTooltip?.let(handler::removeCallbacks)
+                    pendingTooltip =
+                        Runnable {
+                            tooltipHolding = true
+                            syncTooltip(anchor)
+                        }.also { handler.postDelayed(it, TOOLTIP_LONG_PRESS_MS) }
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    if (panelDragged) dismissTooltip()
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    dismissTooltip()
+                    if (!panelDragged) cell.performClick()
+                    true
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    dismissTooltip()
+                    true
+                }
+                else -> false
+            }
+        }
+
+    private fun tooltipHover(anchor: View): View.OnHoverListener =
+        View.OnHoverListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_HOVER_ENTER -> {
+                    tooltipHovering = true
+                    syncTooltip(anchor)
+                }
+                MotionEvent.ACTION_HOVER_MOVE -> syncTooltip(anchor)
+                MotionEvent.ACTION_HOVER_EXIT -> {
+                    // The name disappears the moment the pointer leaves, held or not.
+                    tooltipHovering = false
+                    dismissTooltip()
+                }
+            }
+            false
+        }
+
+    private fun syncTooltip(anchor: View) {
+        if (tooltipVisible(tooltipHovering, tooltipHolding)) {
+            showTooltip(anchor)
+        } else {
+            tooltipChip?.visibility = View.GONE
+        }
+    }
+
+    private fun dismissTooltip() {
+        pendingTooltip?.let(handler::removeCallbacks)
+        pendingTooltip = null
+        tooltipHolding = false
+        tooltipChip?.visibility = View.GONE
+    }
+
+    private fun showTooltip(anchor: View) {
+        val panel = view ?: return
+        val chip = tooltipChip ?: return
+        chip.text = anchor.contentDescription
+        chip.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+        )
+        val placement =
+            tooltipPlacement(
+                anchorRect(anchor, panel),
+                PanelRect(0, 0, panel.width, panel.height),
+                chip.measuredWidth,
+                chip.measuredHeight,
+                dp(TOOLTIP_GAP_DP),
+            )
+        chip.x = placement.x.toFloat()
+        chip.y = placement.y.toFloat()
+        chip.visibility = View.VISIBLE
+    }
+
+    private fun anchorRect(
+        anchor: View,
+        panel: View,
+    ): PanelRect {
+        val panelLocation = IntArray(2)
+        panel.getLocationOnScreen(panelLocation)
+        val anchorLocation = IntArray(2)
+        anchor.getLocationOnScreen(anchorLocation)
+        val left = anchorLocation[0] - panelLocation[0]
+        val top = anchorLocation[1] - panelLocation[1]
+        return PanelRect(left, top, left + anchor.width, top + anchor.height)
     }
 
     private fun scheduleCollapse() {
@@ -639,6 +822,9 @@ class EdgeHandleOverlay(
         presentation.collapse()
         pendingLongPress?.let(handler::removeCallbacks)
         pendingLongPress = null
+        pendingTooltip?.let(handler::removeCallbacks)
+        pendingTooltip = null
+        tooltipChip = null
         view?.let { target ->
             try {
                 manager.removeViewImmediate(target)
@@ -652,15 +838,50 @@ class EdgeHandleOverlay(
         return true
     }
 
+    private fun trackPanelGesture(event: MotionEvent) {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                panelDownX = event.rawX
+                panelDownY = event.rawY
+                panelGestureActive = true
+                panelDragged = false
+            }
+            MotionEvent.ACTION_MOVE ->
+                if (abs(event.rawX - panelDownX) > panelTouchSlop || abs(event.rawY - panelDownY) > panelTouchSlop) {
+                    panelDragged = true
+                }
+        }
+    }
+
     private inner class PanelView : FrameLayout(context) {
+        init {
+            id = R.id.eqo_handle_panel
+            background =
+                GradientDrawable().apply {
+                    setColor(color(R.color.eqo_handle_panel_surface))
+                    cornerRadius = dp(PANEL_RADIUS_DP).toFloat()
+                }
+            clipToOutline = true
+            elevation = dp(PANEL_ELEVATION_DP).toFloat()
+        }
+
         override fun dispatchTouchEvent(event: MotionEvent): Boolean {
             if (event.actionMasked == MotionEvent.ACTION_OUTSIDE) {
-                closePanel()
+                // Only an outside tap dismisses; a gesture already inside the panel must never be
+                // reinterpreted as one (Android also reports ACTION_OUTSIDE during moved windows).
+                if (!panelGestureActive) closePanel()
                 return true
             }
+            trackPanelGesture(event)
             presentation.interact()
             scheduleCollapse()
-            return super.dispatchTouchEvent(event)
+            val handled = super.dispatchTouchEvent(event)
+            if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                panelGestureActive = false
+                // panelDragged stays set until the next gesture's DOWN: View may deliver the tap
+                // click after this dispatch returns and it must still see the drag suppression.
+            }
+            return handled
         }
 
         override fun dispatchKeyEvent(event: KeyEvent): Boolean =
@@ -673,6 +894,8 @@ class EdgeHandleOverlay(
     }
 
     private companion object {
+        // HandlePreferences keeps the shortcut choice in the same store: pure bookkeeping writes.
+        val CHOICE_KEYS = setOf("order", "known", "enabled")
         const val PANEL_SETTLE_POLL_MS = 50L
         const val TOUCH_WIDTH_DP = 48
         const val TOUCH_HEIGHT_DP = 72
@@ -681,12 +904,11 @@ class EdgeHandleOverlay(
         const val BAR_RADIUS_DP = 4
         const val SWIPE_IN_DP = 32
         const val PANEL_WIDTH_DP = 240
-        const val PANEL_MAX_HEIGHT_DP = 248
-        const val PANEL_PADDING_DP = 4
-        const val PANEL_COLUMNS = 2
-        const val PANEL_LABEL_LINES = 2
-        const val PANEL_ROW_MIN_DP = 56
-        const val PANEL_TEXT_SP = 12f
+        const val PANEL_ELEVATION_DP = 6
+        const val PANEL_ICON_PADDING_DP = 8
+        const val TOOLTIP_RADIUS_DP = 8
+        const val TOOLTIP_PADDING_DP = 8
+        const val TOOLTIP_TEXT_SP = 12f
         const val PILL_WIDTH_DP = 120
         const val PILL_HEIGHT_DP = 32
         const val RESULT_HEIGHT_DP = 64
