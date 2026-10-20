@@ -519,19 +519,13 @@ private data class ShoppingSelection(
         val matches = entries.map { it.second }
         val controls = entriesForControl(row, INCREASE)
         val slot = addPath.fold(row) { node, index -> node?.childAt(index) }
-        val slotLabels =
-            slot
-                ?.let(::nodes)
-                .orEmpty()
-                .map { it.second }
-                .let(::productLabels)
-        // Inline recommendations can add labels inside the same bound row. Retry only the exact
-        // description, never an arbitrary + elsewhere on the screen or another product's stepper.
+        // The slot that held Add becomes the quantity stepper: its picker description ("N item")
+        // and digit texts are stepper chrome, so ambiguity is judged by structure instead.
         val describedIncrease =
             controls.singleOrNull()?.let { (controlPath, control) ->
                 controlPath.take(addPath.size) == addPath &&
                     slot != null &&
-                    slotLabels.isEmpty() &&
+                    slotIsStepper(slot) &&
                     control.contentDescription
                         ?.toString()
                         ?.trim()
@@ -552,7 +546,10 @@ private data class ShoppingSelection(
     companion object {
         private val ADD = listOf("Add", "Add to cart")
         private val INCREASE = listOf("+", "Increase quantity")
+        private val STEPPER_CHROME = listOf("+", "Increase quantity", "-", "Decrease quantity")
         private val CONTROLS = ADD + INCREASE + listOf("-", "Decrease quantity", "Cart", "View cart", "Go to cart")
+        private const val QUANTITY_ITEMS_PATTERN = "\\d+ items?"
+        private val QUANTITY_ITEMS = Regex(QUANTITY_ITEMS_PATTERN)
 
         fun capture(
             root: A11yNode,
@@ -578,7 +575,7 @@ private data class ShoppingSelection(
                 val path = requireNotNull(hit).first.take(depth)
                 val row = path.fold(root as A11yNode?) { node, index -> node?.childAt(index) }
                 val entries = row?.let(::nodes).orEmpty().map { it.second }
-                val name = productLabels(entries).singleOrNull()
+                val name = productLabels(entries).firstOrNull { label -> uniqueLabel(root, label) }
                 val addPath = entriesForControl(row, ADD).singleOrNull()?.first
                 val boundAdd = addPath?.let { controlPath -> row?.let { scopedClickable(it, controlPath) } }
                 val unambiguous =
@@ -631,6 +628,22 @@ private data class ShoppingSelection(
                     .take(depth)
                     .fold(row as A11yNode?) { node, index -> node?.childAt(index) }
                     ?.takeIf { it.isClickable }
+            }
+
+        /** Stepper chrome only: slot clickables are the labelled quantity controls; other slot text
+         * must be quantity-picker chrome (digits or an "N item" description). Product text, an "Add"
+         * from an inline recommendation or any other control rejects the binding.
+         */
+        private fun slotIsStepper(slot: A11yNode): Boolean =
+            nodes(slot).all { (_, node) ->
+                when {
+                    node.isPassword -> true
+                    node.isClickable -> isControl(node, STEPPER_CHROME)
+                    else ->
+                        listOfNotNull(node.text?.toString(), node.contentDescription?.toString())
+                            .filter(String::isNotBlank)
+                            .all { it.trim().all(Char::isDigit) || QUANTITY_ITEMS.matches(it.trim()) }
+                }
             }
 
         private fun productLabels(entries: List<A11yNode>): List<String> =

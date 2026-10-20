@@ -162,4 +162,143 @@ class ShoppingObservedControlsTest {
         assertTrue(runner.tap(actions[2].params.getValue("text")).isSuccess)
         assertEquals(listOf(1, 0, 1, 1), listOf(add, minus, plus, cart).map { it.clickCount })
     }
+
+    @Test fun realZeptoProductCardWithManyLabelsBindsAndReachesCapturedStepper() {
+        // Failing-first reproducer for build 21d98e4 (real captured attributes, w-shopfix3 dumps):
+        // the card carries a summary node, product name and pack size, so the old single-label
+        // capture never bound, and the step Increase reported NodeNotFound until the run failed.
+        val summary = "₹40, Milky Mist Lactose Free Milk, 1 pack (250 ml), ₹\u200a34"
+        val neighbourSummary = "₹42, Nandini Good Life Milk, 500 ml"
+        var root =
+            FakeNode()
+                .child(FakeNode().child(card(firstUuid, summary)))
+                .child(FakeNode().child(card(neighbourUuid, neighbourSummary)))
+        val runner = EqoAutomation({ root }, { EqoAutomation.ServiceState.AVAILABLE }, TakeoverDetector())
+        assertTrue(runner.tap("exact:Add,exact:ADD,exact:Add to cart").isSuccess)
+        val minus = stepper("${slotId(firstUuid)}-minus")
+        val plus = stepper("${slotId(firstUuid)}-plus")
+        root =
+            FakeNode()
+                .child(
+                    FakeNode().child(stepperCard(firstUuid, summary, "1 item", minus, plus)),
+                ).child(FakeNode().child(card(neighbourUuid, neighbourSummary)))
+        val result = runner.tap(ai.eqo.core.agent.ShoppingPlans.INCREASE)
+        assertTrue("expected success, got $result", result.isSuccess)
+        assertEquals(1, plus.clickCount)
+        assertEquals(0, minus.clickCount)
+        // The neighbouring product's Add must stay untouched.
+        assertEquals(0, neighbourAddClicks(root))
+    }
+
+    @Test fun unrelatedClickableInsideBoundSlotFailsClosed() {
+        val summary = "₹40, Milky Mist Lactose Free Milk, 1 pack (250 ml), ₹\u200a34"
+        val root = FakeNode().child(FakeNode().child(card(firstUuid, summary)))
+        val runner = EqoAutomation({ root }, { EqoAutomation.ServiceState.AVAILABLE }, TakeoverDetector())
+        assertTrue(runner.tap("exact:Add,exact:ADD,exact:Add to cart").isSuccess)
+        // After-Add tree: the slot subtree carries an inline recommendation with its own Add control.
+        val recoAdd =
+            FakeNode(
+                contentDescription = "Add to Cart ",
+                viewIdResourceName = "${slotId(firstUuid)}-reco",
+                packageName = zeptoPackage,
+                isClickable = true,
+            )
+        val after =
+            FakeNode()
+                .child(
+                    FakeNode()
+                        .child(FakeNode(text = "Milky Mist Lactose Free Milk", className = "android.widget.TextView"))
+                        .child(
+                            FakeNode(
+                                contentDescription = "1 item",
+                                className = "android.widget.ImageView",
+                                packageName = zeptoPackage,
+                            ).child(FakeNode(text = "1", className = "android.widget.TextView")).child(recoAdd),
+                        ).child(FakeNode(text = "1 pack (250 ml)", className = "android.widget.TextView")),
+                )
+        val result =
+            EqoAutomation({ after }, { EqoAutomation.ServiceState.AVAILABLE }, TakeoverDetector())
+                .tap(ai.eqo.core.agent.ShoppingPlans.INCREASE)
+        assertTrue(result is A11yResult.Failure && result.error is A11yError.NodeNotFound)
+        assertEquals(0, recoAdd.clickCount)
+    }
+
+    private val zeptoPackage = "com.zeptoconsumerapp"
+    private val firstUuid = "556c3d3e-f376-4dc4-b98a-e452d14f81d8"
+    private val neighbourUuid = "9a8b7c6d-1234-4567-abcd-000000000002"
+
+    private fun containerId(uuid: String): String = "$zeptoPackage:id/product-card-container$uuid"
+
+    private fun slotId(uuid: String): String = "$zeptoPackage:id/product-card-add-button$uuid"
+
+    /** Observed Zepto card (before Add): summary description, price, slot with Add, name, pack. */
+    private fun card(
+        uuid: String,
+        summary: String,
+    ): FakeNode =
+        FakeNode(
+            contentDescription = summary,
+            className = "android.view.ViewGroup",
+            viewIdResourceName = containerId(uuid),
+            packageName = zeptoPackage,
+        ).child(
+            FakeNode(text = "₹\u200a34", className = "android.widget.TextView", packageName = zeptoPackage),
+        ).child(
+            FakeNode(
+                contentDescription = "Add to Cart ",
+                className = "android.widget.Button",
+                viewIdResourceName = slotId(uuid),
+                packageName = zeptoPackage,
+                isClickable = true,
+            ),
+        ).child(
+            FakeNode(text = "Milky Mist Lactose Free Milk", className = "android.widget.TextView"),
+        ).child(
+            FakeNode(text = "1 pack (250 ml)", className = "android.widget.TextView"),
+        )
+
+    /** Observed Zepto card (after Add): the Add slot holds the quantity picker with both steppers. */
+    private fun stepperCard(
+        uuid: String,
+        summary: String,
+        quantityDesc: String,
+        minus: FakeNode,
+        plus: FakeNode,
+    ): FakeNode =
+        FakeNode(
+            contentDescription = summary,
+            className = "android.view.ViewGroup",
+            viewIdResourceName = containerId(uuid),
+            packageName = zeptoPackage,
+        ).child(
+            FakeNode(text = "₹\u200a34", className = "android.widget.TextView", packageName = zeptoPackage),
+        ).child(
+            FakeNode(
+                contentDescription = quantityDesc,
+                className = "android.widget.ImageView",
+                packageName = zeptoPackage,
+            ).child(FakeNode(text = "1", className = "android.widget.TextView")).child(minus).child(plus),
+        ).child(
+            FakeNode(text = "Milky Mist Lactose Free Milk", className = "android.widget.TextView"),
+        ).child(
+            FakeNode(text = "1 pack (250 ml)", className = "android.widget.TextView"),
+        )
+
+    private fun stepper(viewId: String): FakeNode =
+        FakeNode(
+            text = "",
+            contentDescription = if (viewId.endsWith("-plus")) "increase quantity" else "decrease quantity",
+            className = "android.widget.Button",
+            viewIdResourceName = viewId,
+            packageName = zeptoPackage,
+            isClickable = true,
+        )
+
+    private fun neighbourAddClicks(root: FakeNode): Int =
+        root
+            .childAt(1)
+            ?.childAt(0)
+            ?.childAt(1)
+            .let { it as? FakeNode }
+            ?.clickCount ?: 0
 }
