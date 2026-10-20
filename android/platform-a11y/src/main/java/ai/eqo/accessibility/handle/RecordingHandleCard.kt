@@ -41,7 +41,7 @@ internal fun addRecordingHandleCard(
     val status =
         TextView(context).apply {
             text = EdgeHandleFeatures.recordingMessage
-            textSize = RECORDING_TEXT_SP
+            textSize = RECORDING_RESULT_TEXT_SP
             setTextColor(Color.BLACK)
             setBackgroundColor(Color.WHITE)
             setTextIsSelectable(EdgeHandleFeatures.recordingHasTranscript)
@@ -63,7 +63,8 @@ internal fun addRecordingHandleCard(
 
 private fun addRecordingActions(column: LinearLayout) {
     val context = column.context
-    val actions = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+    // Full-width rows leave Transcribe and Save as Keep note readable at large font scales too.
+    val actions = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
     when {
         EdgeHandleFeatures.recordingActive ->
             recordingButton(actions, R.string.edge_recording_stop) { EdgeHandleFeatures.recordingStop(context) }
@@ -99,14 +100,18 @@ private fun recordingButton(
     parent.addView(
         Button(context).apply {
             setText(label)
+            setSingleLine(true)
+            textSize = RECORDING_ACTION_TEXT_SP
             minHeight = (RECORDING_TOUCH_DP * context.resources.displayMetrics.density).toInt()
             setOnClickListener { action() }
         },
-        LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f),
+        LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT),
     )
 }
 
 private const val RECORDING_TEXT_SP = 13f
+private const val RECORDING_RESULT_TEXT_SP = 14f
+private const val RECORDING_ACTION_TEXT_SP = 12f
 private const val RECORDING_TOUCH_DP = 48
 private const val RECORDING_DOT_HEIGHT_DP = 32
 private const val RECORDING_RESULT_LINES = 5
