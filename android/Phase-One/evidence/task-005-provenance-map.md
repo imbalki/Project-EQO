@@ -858,3 +858,12 @@ rows below with provenance `imbalki/project-eqo (EQO-authored, TASK-015 issue #2
 | :app | `android/app/src/test/kotlin/ai/eqo/task/RecipientRecoveryTest.kt` | EQO-NEW | `ai.eqo.task` | Synthetic recipient choices, persistence and cancellation |
 | :app | `android/app/src/test/kotlin/ai/eqo/task/AttachmentRecoveryTest.kt` | EQO-NEW | `ai.eqo.task` | Missing attachment, picker, pasted body and cancellation |
 | :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/UnresolvedPlanningTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Email questions, literal recipient and bounded invalid-plan recovery |
+
+## Guarded app-search entry on resumed app screens (t_db204381)
+
+| :core-agent | `android/core-agent/src/main/java/ai/eqo/core/agent/AppSearchEntry.kt` | EQO-NEW | `ai.eqo.core.agent` | One guarded search-entry spec shared by the shopping and 'search X in <app>' skills |
+| :core-agent | `android/core-agent/src/test/java/ai/eqo/core/agent/AppSearchEntryTest.kt` | EQO-NEW | `ai.eqo.core.agent` | Search-entry recognition, WhatsApp fail-closed and plain missing-reason regressions |
+| :platform-a11y | `android/platform-a11y/src/main/java/ai/eqo/accessibility/SearchEntryRecovery.kt` | EQO-NEW | `ai.eqo.accessibility` | Bounded in-app recovery: open search field, payment-safe Backs, plain failure |
+| :platform-a11y | `android/platform-a11y/src/test/java/ai/eqo/accessibility/SearchEntryRecoveryTest.kt` | EQO-NEW | `ai.eqo.accessibility` | Fake-tree resumed-screen scenarios: results, old query, deep screen, checkout, not found |
+| :actions-android | `android/actions-android/src/main/java/ai/eqo/actions/impl/SearchEntryGuard.kt` | EQO-NEW | `ai.eqo.actions.impl` | Run-scoped guarded entry wiring with the plan's type step short-circuit |
+| :actions-android | `android/actions-android/src/test/java/ai/eqo/actions/impl/SearchEntryGuardTest.kt` | EQO-NEW | `ai.eqo.actions.impl` | Guard wiring, type-step short-circuit and plain-reason failure regressions |

@@ -38,6 +38,7 @@ internal object RunDiagnostics {
         Log.i("EqoRun", "step=$stepIndex code=${code(result)} reason=${failureKind(result)}")
     }
 
+    @Suppress("CyclomaticComplexMethod") // One flat reason-to-code table; splitting it would hide the order.
     fun failureKind(result: ExecuteResult): String {
         val reason = (result as? ExecuteResult.Failure)?.reason.orEmpty()
         return when {
@@ -52,6 +53,7 @@ internal object RunDiagnostics {
                 "protected_screen"
             reason.contains("empty", ignoreCase = true) -> "empty"
             reason == "control_not_found" -> "control_not_found"
+            reason.startsWith("I could not find Search in ") -> "search_entry_missing"
             reason.contains("not found", ignoreCase = true) -> "not_found"
             result is ExecuteResult.Failure -> "execution_failed"
             else -> "none"

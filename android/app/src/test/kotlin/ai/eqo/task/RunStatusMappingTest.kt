@@ -90,6 +90,21 @@ class RunStatusMappingTest {
         )
     }
 
+    @Test fun missingSearchEntryFailsWithThePlainReasonAndKind() {
+        val step =
+            LoopStep(
+                "task-3",
+                ExecutedAction("CLICK_TEXT", mapOf("text" to "exact:Search"), plannerClaim = "shopping:milk in Zepto"),
+            )
+        val progress = RunStatusMapping.progress(step, failed("I could not find Search in Zepto"), null)
+        assertEquals(StepProgressState.FAILED, progress.state)
+        assertEquals("I could not find Search in Zepto", RunStatusMapping.detail(progress)?.argument)
+        assertEquals(
+            "search_entry_missing",
+            RunDiagnostics.failureKind(ExecuteResult.Failure("I could not find Search in Zepto")),
+        )
+    }
+
     @Test fun missingControlStopsAsNeedsYouWithPlainCopyAndFixedDiagnostics() {
         val progress = RunStatusMapping.progress(null, failed("control_not_found").copy(name = "CLICK_TEXT"), null)
         assertEquals(StepProgressState.NEEDS_YOU, progress.state)

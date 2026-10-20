@@ -41,7 +41,11 @@ object ShoppingPlans {
             }
             add(action("CLICK_TEXT", "text" to CART).copy(plannerClaim = HANDOFF))
         }.map { action ->
-            if (action.plannerClaim == HANDOFF) action else action.copy(plannerClaim = "shopping:$item in $app")
+            if (action.plannerClaim == HANDOFF) {
+                action
+            } else {
+                action.copy(plannerClaim = "${AppSearchEntry.SHOPPING_CLAIM}$item in $app")
+            }
         }
     }
 

@@ -124,6 +124,8 @@ internal object RunStatusMapping {
                     R.string.run_target_missing,
                     TaskDisplayText.escape(step.targetLabel.ifBlank { "the planned button or field" }),
                 )
+            step.detail.startsWith("I could not find Search in ") ->
+                Text(R.string.run_user_action, TaskDisplayText.escape(step.detail))
             step.detail in
                 setOf(
                     "a11y_action_rejected",
