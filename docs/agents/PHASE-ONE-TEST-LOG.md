@@ -1261,3 +1261,15 @@ Additional observations, not separately counted failures:
 - No push, PR, gh, emulator, install or remote CI. Local commit identity and SHA
   are recorded in the task's final card comment, avoiding a self-referential SHA
   inside this committed appendix. Lead retains publication and merge ownership.
+
+### Round 15 lead follow-up (2026-10-20, lead-run on the same phone)
+
+- Items 30-35 (handle) were BLOCKED in the worker run only because the worker looked on EQO's own screens, where the handle is hidden by design. On the home screen the handle is present. Lead results on build 21d98e4:
+  - 30 compact panel: PASS for the card layout and Close; two labels ("Hide for now", "Explain screen") were clipped (fixed afterwards in the handle polish change).
+  - 33 Screenshot: PASS for capture (a PNG was saved under Pictures/EQO); the one-line on-screen result was not seen (fix tracked).
+  - 34 Record: PASS. The limit prompt appears, then a small red dot, a tap expands it to "Recording - tap to stop" with elapsed time and limit, stopping saves an .m4a under Music/EQO Recordings and offers Transcribe, Share and Done. The prompt's lower buttons sat behind the keyboard and the saved bar's button labels wrapped (both fixed afterwards). The test recording and test screenshot were deleted.
+  - 31, 32, 35 (Hidden apps list, Explain text, Dictation) remain NOT TESTED; dictation needs the owner's voice.
+- Item 16: the calendar editor correctly opened for the 19th of October; the year showed 2027 because the phone date was already 20 October 2026, so next-year rollover is correct. The step was logged as FAILED although the editor was handed to the owner; fixed afterwards (handed-to-owner results no longer end as failures).
+- Item 20: buy two milk still stopped after the first item (stepper control not found by the matcher); under repair.
+- Item 22: preview wording with "pay with UPI" fixed afterwards (no unnecessary app question; plain refusal wording).
+- Item 26: the email preview mentioning Send is by design (plan then approve); the wording was made plainer afterwards.
